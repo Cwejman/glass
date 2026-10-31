@@ -4,9 +4,12 @@
 import { createResource, createSignal, For, Show } from 'solid-js'
 import { register, type C } from './mount'
 import { get, href, idOf, path, time, lastCommit, type Commit } from './field'
+import { Code, ComponentSource, SourceFile } from './code'
 
 const at = (id: string) => '/~' + href(id)
 const here = () => idOf(path().replace(/^\/~/, '') || '/')
+// a file of the engine or the interface, read at /~code/ followed by its path
+const file = () => (path().startsWith('/~code/') ? path().slice(7) : undefined)
 
 const [opened, setOpened] = createSignal(new Set<string>(['/']))
 const toggle = (id: string) => setOpened(s => (s.has(id) ? (s.delete(id), new Set(s)) : new Set(s.add(id))))
@@ -91,6 +94,51 @@ function Commits(p: { id: string; count: number }) {
   )
 }
 
+// what is held outside the field and offered to be read: the engine, the interface, how they are put together
+function Sources() {
+  const [files] = createResource(() => fetch('/source').then(r => r.json() as Promise<string[]>))
+  const [open, setOpen] = createSignal(!!file())
+  return (
+    <ul class="sources">
+      <li>
+        <span class="place">
+          <button class="twig" onClick={() => setOpen(!open())}>{open() ? '−' : '+'}</button>
+          <span>Source</span>
+          <small>{files()?.length}</small>
+        </span>
+        <Show when={open()}>
+          <ul>
+            <For each={files()}>
+              {f => (
+                <li>
+                  <span class="place" classList={{ here: file() === f }}>
+                    <i class="twig" />
+                    <a href={'/~code/' + f}>{f}</a>
+                  </span>
+                </li>
+              )}
+            </For>
+          </ul>
+        </Show>
+      </li>
+    </ul>
+  )
+}
+
+const ReadFile = (p: { file: string }) => (
+  <>
+    <nav class="crumbs">
+      <span>Source</span>
+    </nav>
+    <h1>{p.file}</h1>
+    <p class="identity">
+      <code>held outside the field, read as it is</code>
+      <a class="badge" href={'/source/' + p.file}>raw</a>
+    </p>
+    <SourceFile file={p.file} />
+  </>
+)
+
 const reader: C = () => {
   const h = () => get(here())
   const chain = () => {
@@ -114,8 +162,10 @@ const reader: C = () => {
         <ul>
           <Place id="/" />
         </ul>
+        <Sources />
       </nav>
       <section class="read">
+        <Show when={!file()} fallback={<ReadFile file={file()!} />}>
         <Show when={h()} fallback={<p class="fault">Nothing stands at {here()}</p>}>
           {h => {
             openTo(h().id)
@@ -133,7 +183,7 @@ const reader: C = () => {
                 <Show when={Object.keys(h().data).length}>
                   <table class="data">
                     <tbody>
-                      <For each={Object.entries(h().data)}>
+                      <For each={Object.entries(h().data).filter(([k]) => k !== 'code')}>
                         {([k, v]) => (
                           <tr>
                             <th>{k}</th>
@@ -144,16 +194,33 @@ const reader: C = () => {
                     </tbody>
                   </table>
                 </Show>
+                <Show when={typeof h().data.code === 'string'}>
+                  <section class="ids">
+                    <h3>Code</h3>
+                    <Code text={h().data.code} />
+                  </section>
+                </Show>
+                <Show when={h().above === '/components'}>
+                  <section class="ids">
+                    <h3>Source</h3>
+                    <ComponentSource name={h().id.slice('/components/'.length)} />
+                  </section>
+                </Show>
                 <Ids label="Beneath" ids={h().beneath} />
                 <Ids label="Links to" ids={h().links.filter(id => get(id))} />
                 <Ids label="Linked from" ids={h().linked} />
                 <Commits id={h().id} count={h().history.commits} />
+                <details class="json">
+                  <summary>As JSON</summary>
+                  <Code text={JSON.stringify(h(), null, 2)} lang="json" />
+                </details>
                 <p class="ways">
-                  <a href={href(h().id)}>As drawn</a> · <a href={'/field' + (h().id === '/' ? '' : h().id)}>As data</a>
+                  <a href={href(h().id)}>As drawn</a> · <a href={'/field' + (h().id === '/' ? '' : h().id)}>As data, raw</a>
                 </p>
               </>
             )
           }}
+        </Show>
         </Show>
       </section>
     </div>

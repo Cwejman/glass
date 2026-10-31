@@ -4,7 +4,7 @@
 // `bun src/engine.ts` serves at http://localhost:4321.
 
 import { watch } from 'node:fs'
-import { writeFile, rm } from 'node:fs/promises'
+import { writeFile, rm, readdir } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { tmpdir } from 'node:os'
 import { open, typesOf, mayAdd, mayPut, aboveOf, type Holon, type Effect } from './field'
@@ -99,6 +99,37 @@ function record(req: Request, path: string) {
   })
 }
 
+// ---------------------------------------------------------------- source
+
+// what is open to read: the engine, the interface, and how they are put together; nothing else on the machine
+async function sources() {
+  const within = async (dir: string) =>
+    (await readdir(join(root, dir))).filter(f => /\.(tsx?|css)$/.test(f)).sort().map(f => `${dir}/${f}`)
+  return [...(await within('src')), ...(await within('ui')), 'package.json', 'tsconfig.json', 'README.md']
+}
+
+// where a component's code stands: the file that registers it, and the lines that define it with the words above them
+async function sourceOf(name: string) {
+  for (const file of (await sources()).filter(f => f.startsWith('ui/'))) {
+    const text = await Bun.file(join(root, file)).text()
+    const registered = text.match(/register\(\{([^}]*)\}\)/)?.[1]
+    const local = registered
+      ?.split(',')
+      .map(s => s.split(':').map(x => x.trim()))
+      .find(([n]) => n === name)
+    if (!local) continue
+    const lines = text.split('\n')
+    const start = lines.findIndex(l => new RegExp(`^(const|function) ${local.at(-1)}\\b`).test(l))
+    if (start < 0) continue
+    let from = start
+    while (from > 0 && lines[from - 1].startsWith('//')) from--
+    let to = start + 1
+    while (to < lines.length && !/^(const |function |export |register\(|\/\/ )/.test(lines[to])) to++
+    while (to > start + 1 && lines[to - 1].trim() === '') to--
+    return { file, from: from + 1, to, code: lines.slice(from, to).join('\n') }
+  }
+}
+
 // ---------------------------------------------------------------- serving
 
 const page = `<!doctype html>
@@ -132,6 +163,22 @@ const server = Bun.serve({
     if (path.startsWith('/field/')) {
       const h = field.get(path.slice(6).replace(/\/$/, '') || '/')
       return h ? Response.json({ ...face(h), commits: field.history(h.id) }) : new Response('nothing stands there', { status: 404 })
+    }
+
+    // the engine's own code and the interface's, readable as they are
+    if (path === '/source') {
+      const component = new URL(req.url).searchParams.get('component')
+      if (component) {
+        const found = await sourceOf(component)
+        return found ? Response.json(found) : new Response(`no source for ${component}`, { status: 404 })
+      }
+      return Response.json(await sources())
+    }
+    if (path.startsWith('/source/')) {
+      const file = path.slice(8)
+      return (await sources()).includes(file)
+        ? new Response(Bun.file(join(root, file)), { headers: { 'content-type': 'text/plain; charset=utf-8' } })
+        : new Response('not a source file', { status: 404 })
     }
 
     if (path === '/act' && req.method === 'POST') {

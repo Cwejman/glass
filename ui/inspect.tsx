@@ -6,6 +6,7 @@
 import { createEffect, createSignal, For, onCleanup, Show, untrack } from 'solid-js'
 import { drawnBy, drawing, type Mounted } from './mount'
 import { get, href, lastCommit, time, type H } from './field'
+import { Code, ComponentSource } from './code'
 
 const remembered = () => {
   try {
@@ -198,6 +199,12 @@ function HolonPart(p: { h: H }) {
         <span>words</span>
         <textarea rows={Math.min(14, Math.max(4, prose().split('\n').length + 2))} value={prose()} onInput={e => setProse(e.currentTarget.value)} onKeyDown={saveOnChord} />
       </label>
+      <Show when={typeof p.h.data.code === 'string'}>
+        <details open>
+          <summary>code</summary>
+          <Code text={p.h.data.code} />
+        </details>
+      </Show>
       <details>
         <summary>data</summary>
         <textarea class="code" rows={Math.min(16, data().split('\n').length + 1)} value={data()} onInput={e => setData(e.currentTarget.value)} onKeyDown={saveOnChord} />
@@ -239,6 +246,10 @@ function Opened(p: { m: Mounted }) {
           <Show when={declaration()?.data.takes}>{t => <span class="quiet"> takes {t()}</span>}</Show>
         </p>
         <Show when={declaration()?.html}><div class="quiet" innerHTML={declaration()!.html} /></Show>
+        <details>
+          <summary>its code</summary>
+          <ComponentSource name={p.m.m.draw!} />
+        </details>
       </section>
       <Show when={get(p.m.holon)} keyed>
         {h => <HolonPart h={h} />}

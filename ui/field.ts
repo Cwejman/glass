@@ -53,8 +53,8 @@ export const idOf = (p: string) => p.replace(/\/+$/, '') || '/'
 
 export function go(to: string) {
   history.pushState(null, '', to)
-  setPath(to)
-  scrollTo(0, 0)
+  setPath(new URL(to, location.href).pathname)
+  if (!location.hash) scrollTo(0, 0)
 }
 addEventListener('popstate', () => setPath(location.pathname))
 
@@ -63,9 +63,9 @@ document.addEventListener('click', e => {
   const a = (e.target as Element).closest?.('a')
   if (!a || a.target || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
   const to = new URL(a.href)
-  if (to.origin !== location.origin || to.pathname.startsWith('/field')) return
+  if (to.origin !== location.origin || /^\/(field|source)(\/|$)/.test(to.pathname)) return
   e.preventDefault()
-  go(to.pathname)
+  go(to.pathname + to.hash)
 })
 
 // ---------------------------------------------------------------- saying things plainly

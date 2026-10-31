@@ -8,6 +8,9 @@
   --rule: #e2ded5;
   --tint: #f1eee7;
   --accent: #8a3b12;
+  --code-string: #4f6b2a;
+  --code-number: #2d5f7a;
+  --code-key: #6b4a8a;
 
   --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
   --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
@@ -27,11 +30,13 @@
   :root:not([data-theme="light"]) {
     --paper: #161513; --ink: #e9e5dc; --soft: #aaa397; --faint: #7a746a;
     --rule: #302d28; --tint: #201e1b; --accent: #e0915f; color-scheme: dark;
+    --code-string: #a9c27f; --code-number: #8fbdd6; --code-key: #c3a6e0;
   }
 }
 :root[data-theme="dark"] {
   --paper: #161513; --ink: #e9e5dc; --soft: #aaa397; --faint: #7a746a;
   --rule: #302d28; --tint: #201e1b; --accent: #e0915f; color-scheme: dark;
+  --code-string: #a9c27f; --code-number: #8fbdd6; --code-key: #c3a6e0;
 }
 
 * { box-sizing: border-box; }
@@ -197,6 +202,34 @@ table.data .values { display: flex; flex-wrap: wrap; gap: 0.2rem 0.8rem; }
   .reader { grid-template-columns: 1fr; }
   .tree { position: static; max-height: 40vh; margin-bottom: 2rem; border-bottom: 1px solid var(--rule); }
 }
+
+/* ---------------------------------------------------------------- code, read as it is */
+
+pre.code {
+  margin: 0 0 1.5rem; padding: 0.6rem 0; overflow-x: auto; background: var(--tint);
+  font: var(--chrome)/1.6 var(--mono); color: var(--ink); tab-size: 2;
+}
+pre.code code { display: block; min-width: max-content; font: inherit; }
+pre.code .line { display: block; padding-right: 1rem; }
+pre.code .line.aimed { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+pre.code .no {
+  display: inline-block; width: 3.2rem; padding-right: 1rem; text-align: right;
+  color: var(--faint); opacity: 0.6; user-select: none;
+}
+.t-comment { color: var(--faint); font-style: italic; }
+.t-string { color: var(--code-string); }
+.t-number { color: var(--code-number); }
+.t-key { color: var(--code-key); }
+.t-keyword, .t-tag { color: var(--accent); }
+
+details.json { margin: 0 0 1.5rem; }
+details.json summary, .inspector details summary { cursor: pointer; font: 600 var(--chrome)/1.6 var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); }
+details.json[open] summary { margin-bottom: 0.5rem; }
+.read .ids pre.code { columns: auto; }
+.tree .sources { margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--rule); }
+.tree .sources .place > span { color: var(--soft); }
+.inspector pre.code { margin: 0.4rem 0 0.8rem; font-size: 0.6875rem; }
+.inspector pre.code .no { width: 2.4rem; padding-right: 0.7rem; }
 
 /* ---------------------------------------------------------------- inspecting */
 
