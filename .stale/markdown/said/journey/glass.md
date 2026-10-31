@@ -1,0 +1,9 @@
+---
+said: 2026-10-30
+---
+
+# Glass
+
+I am making my own purpose: my website and my CV, from the same unit of open data. To me, the layout as data is the foundation of doing something beautiful. Less is more.
+
+The data can be browsed by opening the data browser, where you have the free ability to look upon the data. You can read it, get your own URL if you want the data immediately as JSON, and query it immediately. So I'm offering my data, and I can fill it with more and more things.

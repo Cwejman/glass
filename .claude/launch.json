@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "glass",
+      "runtimeExecutable": "/Users/jcwejman/.bun/bin/bun",
+      "runtimeArgs": ["src/engine.ts"],
+      "port": 4321
+    }
+  ]
+}
