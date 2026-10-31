@@ -19,6 +19,7 @@ export type Commit = { seq: number; at: string; by: string; touched: string; eff
 export type Effect =
   | { put: { id: string; title?: string; data?: Record<string, any>; prose?: string } }
   | { add: { beneath: string; title?: string; data?: Record<string, any>; prose?: string } }
+  | { remove: { id: string } }
 
 export const aboveOf = (id: string) => (id === '/' ? null : id.slice(0, id.lastIndexOf('/')) || '/')
 
@@ -44,6 +45,7 @@ export function open(path: string) {
     get: db.query('select * from holon where id = ?'),
     all: db.query('select * from holon order by id'),
     beneath: db.query('select * from holon where above = ? order by id'),
+    remove: db.query('delete from holon where id = ?'),
     put: db.query(`insert into holon (id, above, title, data, prose, born, changed) values ($id, $above, $title, $data, $prose, $at, $at)
       on conflict(id) do update set title = $title, data = $data, prose = $prose, changed = $at`),
     commit: db.query('insert into commits (at, by, touched, effect) values (?, ?, ?, ?) returning seq'),
@@ -73,6 +75,16 @@ export function open(path: string) {
       const at = new Date().toISOString()
       const run = db.transaction(() => {
         let id: string, title: string, data: Record<string, any>, prose: string
+        // a removal is a commit like any other; the holon is gone from the field, and the commit keeps what it was
+        if ('remove' in effect) {
+          const was = field.get(effect.remove.id)
+          if (!was) throw new Error(`nothing stands at ${effect.remove.id}`)
+          if (field.beneath(was.id).length) throw new Error(`${was.id} holds holons beneath it`)
+          q.remove.run(was.id)
+          const kept = { remove: { id: was.id }, was }
+          const { seq } = q.commit.get(at, by, was.id, JSON.stringify(kept)) as any
+          return { commit: { seq, at, by, touched: was.id, effect: kept }, holon: was }
+        }
         if ('put' in effect) {
           id = effect.put.id
           title = effect.put.title ?? id
@@ -123,11 +135,11 @@ export function mayAdd(field: Field, by: string, beneath: string) {
   return Array.isArray(open?.add) && open.add.includes(by)
 }
 
-// and which programs may put a holon, declared on the holon or the nearest place above it that says
-export function mayPut(field: Field, by: string, id: string) {
+// and which programs may put or remove a holon, declared on the holon or the nearest place above it that says
+export function mayDo(field: Field, verb: 'put' | 'remove', by: string, id: string) {
   for (let at: string | null = id; at; at = aboveOf(at)) {
-    const put = field.get(at)?.data.open?.put
-    if (put) return Array.isArray(put) && put.includes(by)
+    const open = field.get(at)?.data.open?.[verb]
+    if (open) return Array.isArray(open) && open.includes(by)
   }
   return false
 }

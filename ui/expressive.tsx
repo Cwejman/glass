@@ -2,9 +2,11 @@
 
 import { createSignal, For, Show } from 'solid-js'
 import { register, type C } from './mount'
-import { all, get, href, date, time, type H } from './field'
+import { all, get, link, date, time, type H } from './field'
+import { Title, Words } from './edit'
+import { Bar } from './views'
 
-const Name = (p: { id: string }) => <a href={href(p.id)}>{get(p.id)?.title ?? p.id}</a>
+const Name = (p: { id: string }) => <a href={link(p.id)}>{get(p.id)?.title ?? p.id}</a>
 
 const Rel = (p: { label: string; ids: string[] }) => (
   <Show when={p.ids.length}>
@@ -25,7 +27,7 @@ const holon: C = p => {
     <For each={from()}>
       {s => (
         <blockquote class="said">
-          <a class="said-name" href={href(s.id)}>{s.title}</a>
+          <a class="said-name" href={link(s.id)}>{s.title}</a>
           <div innerHTML={s.html} />
           <p class="when">said {date(s.data.said)}</p>
         </blockquote>
@@ -34,10 +36,10 @@ const holon: C = p => {
   )
   return (
     <article class="holon" classList={{ whole: !!p.m.whole }} style={{ '--size': `${size(p.h, !!p.m.whole).toFixed(2)}rem` }}>
-      <Show when={p.m.whole} fallback={<h2 class="name"><a href={href(p.h.id)}>{p.h.title}</a></h2>}>
-        <h1 class="name">{p.h.title}</h1>
+      <Show when={p.m.whole} fallback={<h2 class="name"><a href={link(p.h.id)}>{p.h.title}</a></h2>}>
+        <Title h={p.h} class="name" />
       </Show>
-      <div class="words" innerHTML={p.h.html} />
+      <Words h={p.h} />
       <Rel label="shows" ids={p.h.data.shows ?? []} />
       <Rel label="shown by" ids={shownBy()} />
       <Show when={!p.m.whole && !p.m.bare}>
@@ -82,15 +84,7 @@ const act: C = p => {
   )
 }
 
-const bar: C = p => (
-  <header class="bar">
-    <a href="/">{p.h.id === '/' ? '' : get('/')?.title}</a>
-    <nav>
-      <a href={'/~' + (p.h.id === '/' ? '/' : p.h.id + '/')}>Field</a>
-      <a href={'/field' + (p.h.id === '/' ? '' : p.h.id)}>Data</a>
-    </nav>
-  </header>
-)
+const bar: C = () => <Bar />
 
 // the way down from the root, line by line
 const pathC: C = p => {
@@ -102,7 +96,7 @@ const pathC: C = p => {
   return (
     <Show when={chain().length}>
       <nav class="path">
-        <For each={chain()}>{(id, i) => <a href={href(id)} style={{ '--depth': i() }}>{get(id)?.title ?? id}</a>}</For>
+        <For each={chain()}>{(id, i) => <a href={link(id)} style={{ '--depth': i() }}>{get(id)?.title ?? id}</a>}</For>
       </nav>
     </Show>
   )
@@ -121,7 +115,7 @@ const linked: C = p => (
 const open: C = p => (
   <footer class="open">
     <p>
-      <a href={'/~' + href(p.h.id)}>Read it in the field</a> · <a href={'/field' + (p.h.id === '/' ? '' : p.h.id)}>as data</a>
+      <a href={link(p.h.id, 'field')}>Read it in the field</a> · <a href={'/field' + (p.h.id === '/' ? '' : p.h.id)}>as data</a>
     </p>
     <p class="history">
       born {time(p.h.born)} · {p.h.history.commits} {p.h.history.commits === 1 ? 'commit' : 'commits'}

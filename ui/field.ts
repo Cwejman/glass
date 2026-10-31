@@ -38,6 +38,7 @@ export async function connect() {
       const told = JSON.parse(e.data)
       if (told.reload) return location.reload()
       for (const h of told.holons) setHolons(h.id, reconcile(h))
+      if (told.removed) setHolons(told.removed, undefined!)
       setLastCommit(told.commit)
     }
     ws.onclose = () => setTimeout(listen, 1000)
@@ -47,25 +48,42 @@ export async function connect() {
 
 // ---------------------------------------------------------------- where we are
 
+// one address, where we are, shared by every view; the view is the root component drawing from it, named by ?as=
 export const [path, setPath] = createSignal(location.pathname)
+export const [view, setView] = createSignal(new URLSearchParams(location.search).get('as') ?? '')
+export const address = () => idOf(path())
 export const href = (id: string) => (id === '/' ? '/' : id + '/')
 export const idOf = (p: string) => p.replace(/\/+$/, '') || '/'
+// the way to a holon in the view we are in, or in another
+export const link = (id: string, as = view()) => href(id) + (as ? '?as=' + as : '')
+
+function follow() {
+  setPath(location.pathname)
+  setView(new URLSearchParams(location.search).get('as') ?? '')
+}
 
 export function go(to: string) {
   history.pushState(null, '', to)
-  setPath(new URL(to, location.href).pathname)
+  follow()
   if (!location.hash) scrollTo(0, 0)
 }
-addEventListener('popstate', () => setPath(location.pathname))
+addEventListener('popstate', follow)
+
+// the reader's old addresses still lead where they did
+if (location.pathname.startsWith('/~/') || location.pathname === '/~') {
+  history.replaceState(null, '', link(idOf(location.pathname.slice(2) || '/'), 'field'))
+  follow()
+}
 
 // links within the field are followed in place; data and the world outside open as themselves
 document.addEventListener('click', e => {
+  if (e.defaultPrevented) return
   const a = (e.target as Element).closest?.('a')
   if (!a || a.target || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
   const to = new URL(a.href)
   if (to.origin !== location.origin || /^\/(field|source)(\/|$)/.test(to.pathname)) return
   e.preventDefault()
-  go(to.pathname + to.hash)
+  go(to.pathname + to.search + to.hash)
 })
 
 // ---------------------------------------------------------------- saying things plainly

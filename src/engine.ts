@@ -7,7 +7,7 @@ import { watch } from 'node:fs'
 import { writeFile, rm, readdir } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { tmpdir } from 'node:os'
-import { open, typesOf, mayAdd, mayPut, aboveOf, type Holon, type Effect } from './field'
+import { open, typesOf, mayAdd, mayDo, aboveOf, type Holon, type Effect } from './field'
 import { buildInterface } from './build'
 
 const root = resolve(import.meta.dir, '..')
@@ -60,9 +60,13 @@ async function run(id: string, input: any): Promise<Effect> {
 
 // the engine carries out an effect only where the field declares it open to whoever asks
 function apply(by: string, effect: Effect) {
+  if ('remove' in effect) {
+    if (!mayDo(field, 'remove', by, effect.remove.id)) throw new Error(`${effect.remove.id} is not open to ${by} removing it`)
+    return field.commit(by, effect)
+  }
   if ('put' in effect) {
     const { id } = effect.put
-    if (!mayPut(field, by, id)) throw new Error(`${id} is not open to ${by}`)
+    if (!mayDo(field, 'put', by, id)) throw new Error(`${id} is not open to ${by}`)
     // what a put leaves unsaid stays as it was, and the commit keeps the whole of what the holon became
     const was = field.get(id)
     return field.commit(by, {
@@ -207,7 +211,8 @@ const server = Bun.serve({
 field.listen((commit, touched) => {
   const ids = new Set([touched.id, aboveOf(touched.id), ...linksOf(touched)].filter(Boolean) as string[])
   const holons = [...ids].map(id => field.get(id)).filter(Boolean).map(h => face(h!))
-  server.publish('field', JSON.stringify({ commit, holons }))
+  const removed = 'remove' in commit.effect ? touched.id : undefined
+  server.publish('field', JSON.stringify({ commit, holons, removed }))
 })
 
 // the interface is rebuilt when its source changes, and the pages are told to load it again
