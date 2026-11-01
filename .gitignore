@@ -1,10 +1,2 @@
-dist/
-dist.next/
-node_modules/
 .DS_Store
-*.db-shm
-*.db-wal
-grant.html
-.stale/*
-!.stale/markdown/
-.run/
+.stale/
