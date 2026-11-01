@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "surface",
+      "runtimeExecutable": "/Users/jcwejman/.bun/bin/bun",
+      "runtimeArgs": ["/Users/jcwejman/git/the-rule/poc/surface/surface.ts", "/Users/jcwejman/git/glass", "--port", "4322"],
+      "port": 4322
+    }
+  ]
+}
