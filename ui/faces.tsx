@@ -6,6 +6,7 @@ import { createSignal, For, Show } from 'solid-js'
 import { register, type C } from './mount'
 import { all, get, link, date, time, type H } from './field'
 import { Holds, put, Title, Words } from './edit'
+import { Mount } from './mount'
 import { Code, ComponentSource } from './code'
 
 const plain = (html: string) => html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
@@ -26,12 +27,14 @@ const Types = (p: { h: H }) => (
   </p>
 )
 
-// what is around a holon: what it shows and what shows it, what it links and what links it, and how it came to be
+// what is around a holon: what it shows and what shows it, what it links and what links it, the runs that acted on it, and how it came to be
 const Around = (p: { h: H }) => {
   const shownBy = () => all().filter(x => x.data.shows?.includes(p.h.id)).map(x => x.id)
+  const actedOn = () => all().filter(x => x.data.run && x.data.touched === p.h.id).map(x => x.id).sort().reverse()
   return (
     <>
       <Chips label="shown by" ids={shownBy()} />
+      <Chips label="acted on by" ids={actedOn()} />
       <Chips label="links to" ids={p.h.links.filter(id => get(id))} />
       <Chips label="linked from" ids={p.h.linked} />
       <p class="history">
@@ -133,4 +136,80 @@ const component: C = p =>
     </Whole>
   )
 
-register({ face, visit, said, program, component })
+// ---------------------------------------------------------------- runs
+
+const json = (v: any) => <Code text={JSON.stringify(v, null, 2)} lang="json" />
+const state = (h: H) =>
+  h.data.refused ? 'refused' : !h.data.ended ? 'running' : h.data.commit ? `commit #${h.data.commit}` : 'gave'
+
+// what came of a run: the commit its effect became, what it gave, or why it was refused
+function Came(p: { h: H }) {
+  const d = () => p.h.data
+  const blocks = () => (Array.isArray(d().gave?.content) ? d().gave.content : undefined)
+  return (
+    <Show when={d().ended} fallback={<p class="running">running since {time(d().at)}</p>}>
+      <Show when={!d().refused} fallback={<p class="fault">{d().refused}</p>}>
+        <Show when={d().commit} fallback={
+          <Show when={blocks()} fallback={<Show when={d().gave?.said} fallback={<Show when={d().gave != null}>{json(d().gave)}</Show>}>{s => <div class="said-back">{s()}</div>}</Show>}>
+            {b => (
+              <For each={b()}>
+                {block =>
+                  block.type === 'text' ? <div class="said-back">{block.text}</div>
+                  : block.type === 'tool_use' ? <p class="calls">calls <code>{block.name}</code> {JSON.stringify(block.input)}</p>
+                  : null}
+              </For>
+            )}
+          </Show>
+        }>
+          <p class="calls">
+            became commit #{d().commit} on <a class="chip" href={link(d().touched)}>{get(d().touched)?.title ?? d().touched}</a>
+          </p>
+        </Show>
+      </Show>
+    </Show>
+  )
+}
+
+// a run: a program run once, what it was asked, what came of it, and the runs it called, in order, as its thread
+const run: C = p => {
+  const asked = () => p.h.data.input
+  const steps = () => p.h.beneath
+  return p.m.grade === 'row' ? (
+    <Row h={p.h} lead={state(p.h)} note={p.h.data.at?.slice(11, 19)} />
+  ) : p.m.grade === 'step' ? (
+    <section class="step" classList={{ refused: !!p.h.data.refused, running: !p.h.data.ended }}>
+      <header>
+        <a href={link(p.h.id)}>{p.h.title}</a>
+        <small>{state(p.h)}</small>
+      </header>
+      <Show when={!Array.isArray(asked()?.messages)}>
+        <details><summary>asked</summary>{json(asked())}</details>
+      </Show>
+      <Came h={p.h} />
+      <Show when={steps().length}>
+        <ol class="thread">
+          <For each={steps()}>{c => <li><Mount m={{ grade: 'step' }} h={get(c)!} /></li>}</For>
+        </ol>
+      </Show>
+    </section>
+  ) : (
+    <Whole h={p.h} skip={['run', 'input', 'gave', 'at', 'ended', 'commit', 'touched', 'refused', 'open']}>
+      <p class="rel">
+        <span>runs</span>
+        <a class="chip" href={link(p.h.data.run)}>{get(p.h.data.run)?.title ?? p.h.data.run}</a>
+        <small>{time(p.h.data.at)} · {state(p.h)}</small>
+      </p>
+      <Show when={asked()?.words} fallback={<details><summary>asked</summary>{json(asked())}</details>}>
+        {w => <blockquote class="asked">{w()}</blockquote>}
+      </Show>
+      <Show when={steps().length}>
+        <ol class="thread">
+          <For each={steps()}>{c => <li><Mount m={{ grade: 'step' }} h={get(c)!} /></li>}</For>
+        </ol>
+      </Show>
+      <Came h={p.h} />
+    </Whole>
+  )
+}
+
+register({ face, visit, said, program, component, run })

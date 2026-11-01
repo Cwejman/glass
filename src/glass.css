@@ -374,3 +374,15 @@ form.act .why { margin: 0.4rem 0 0; color: var(--accent); }
   a { text-decoration: none; }
   @page { margin: 16mm 18mm; }
 }
+
+/* ---------------------------------------------------------------- runs */
+ol.thread { list-style: none; margin: 0.75rem 0; padding: 0 0 0 0.75rem; border-left: 1px solid var(--rule); }
+ol.thread > li { margin: 0 0 0.75rem; }
+.step header { display: flex; gap: 0.5rem; align-items: baseline; font-size: var(--chrome); }
+.step header small, .running { color: var(--faint); font-size: var(--chrome); }
+.step details summary { color: var(--faint); font-size: var(--chrome); cursor: pointer; }
+.step.running header a::after { content: ' …'; }
+.said-back { white-space: pre-wrap; margin: 0.25rem 0; }
+.calls { font-size: var(--chrome); margin: 0.25rem 0; }
+.calls code { font-weight: 600; }
+blockquote.asked { margin: 0.5rem 0; padding: 0; font-size: 1.1em; }

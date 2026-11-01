@@ -64,7 +64,7 @@ export function open(path: string) {
       // beneath stands in the order its holon names, and the rest after, by name
       const named: string[] = (field.get(id)?.data.beneath ?? []).map((n: string) => (id === '/' ? '' : id) + '/' + n)
       const rank = (h: Holon) => (named.includes(h.id) ? named.indexOf(h.id) : named.length)
-      return list.sort((a, b) => rank(a) - rank(b) || a.id.localeCompare(b.id))
+      return list.sort((a, b) => rank(a) - rank(b) || a.id.localeCompare(b.id, undefined, { numeric: true }))
     },
     history: (id: string) => (q.history.all(id) as any[]).map(c => ({ ...c, effect: JSON.parse(c.effect) })) as Commit[],
     since: (seq: number, limit = 200) => (q.since.all(seq, limit) as any[]).map(c => ({ ...c, effect: JSON.parse(c.effect) })) as Commit[],

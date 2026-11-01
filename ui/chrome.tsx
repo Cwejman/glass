@@ -80,6 +80,26 @@ function actions(m: Mounted): Action[][] {
           ? [{ name: 'Draw with another', note: `derived by ${m.parent?.draw}; change it there` }]
           : []),
     ],
+    ...(h.data.code && h.data.asks
+      ? [
+          [
+            {
+              name: `Run ${h.title}`,
+              run: async () => {
+                const words = prompt(`${h.title}, asked:`)?.trim()
+                if (!words) return
+                const r = await fetch('/act', {
+                  method: 'POST',
+                  headers: { 'content-type': 'application/json' },
+                  body: JSON.stringify({ program: id, input: { words }, wait: false }),
+                })
+                if (!r.ok) return setWhy(await r.text())
+                go(link((await r.json()).run))
+              },
+            },
+          ],
+        ]
+      : []),
     [
       {
         name: 'Add a holon beneath',

@@ -4,9 +4,8 @@
 // `bun src/engine.ts` serves at http://localhost:4321.
 
 import { watch } from 'node:fs'
-import { writeFile, rm, readdir } from 'node:fs/promises'
-import { join, resolve } from 'node:path'
-import { tmpdir } from 'node:os'
+import { writeFile, rm, readdir, mkdir } from 'node:fs/promises'
+import { dirname, join, resolve } from 'node:path'
 import { open, typesOf, mayAdd, mayDo, aboveOf, type Holon, type Effect } from './field'
 import { buildInterface } from './build'
 
@@ -45,17 +44,67 @@ function face(h: Holon) {
 
 // ---------------------------------------------------------------- acting
 
-// a program is a holon beneath /programs holding code; it returns the effect it wants and carries out nothing
-async function run(id: string, input: any): Promise<Effect> {
+// a program is a holon beneath /programs holding code; it returns the effect it wants, or what it gives, and carries out nothing.
+// It is handed what it was asked, and its run: to read the field, and to call other programs as steps of itself
+type Run = { id: string; call: (program: string, input: any) => Promise<any>; get: (id: string) => Holon | undefined; beneath: (id: string) => Holon[] }
+
+async function load(id: string, input: any, run: Run) {
   const p = field.get(id)
   if (!p?.id.startsWith('/programs/') || typeof p.data.code !== 'string') throw new Error(`no program at ${id}`)
-  const path = join(tmpdir(), `glass-${p.id.replaceAll('/', '-')}-${Date.now()}.ts`)
+  // written within the repository, so what it imports resolves as the engine's own imports do
+  const path = join(root, '.run', `${p.id.replaceAll('/', '-')}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.ts`)
+  await mkdir(dirname(path), { recursive: true })
   await writeFile(path, p.data.code)
   try {
-    return await (await import(path)).default(input ?? {})
+    return await (await import(path)).default(input ?? {}, run)
   } finally {
     await rm(path, { force: true })
   }
+}
+
+// where runs are kept is born with the engine's first run, declared open to the engine alone
+if (!field.get('/runs'))
+  field.commit('/engine', { put: { id: '/runs', title: 'Runs', data: { open: { put: ['/engine'] } }, prose: 'Every program run, kept as it went: what it was asked, the runs it called, and what came of it.' } })
+
+const isEffect = (x: any) => x && typeof x === 'object' && ('put' in x || 'add' in x || 'remove' in x)
+const now = () => new Date().toISOString()
+
+// every run is kept in the field as it goes: beneath the day it ran, or beneath the run that called it.
+// It holds what it was asked, and when it ends, what came of it: the commit its effect became, what it gave, or why it was refused
+function perform(program: string, input: any, within?: string): { id: string; done: Promise<any> } {
+  let place = within
+  if (!place) {
+    const day = now().slice(0, 10)
+    place = `/runs/${day}`
+    if (!field.get(place)) apply('/engine', { put: { id: place, title: day, data: { day, open: { add: ['/engine'] } } } })
+  }
+  const title = field.get(program)?.title ?? program
+  const { holon } = apply('/engine', { add: { beneath: place, title, data: { run: program, input: input ?? {}, at: now(), open: { add: ['/engine'] } } } })
+  const id = holon.id
+  const end = (came: Record<string, any>) => apply('/engine', { put: { id, data: { ...field.get(id)!.data, ...came, ended: now() } } })
+  const run: Run = {
+    id,
+    call: (p, i) => perform(p, i, id).done,
+    get: id => field.get(id),
+    beneath: id => field.beneath(id),
+  }
+  const done = (async () => {
+    try {
+      const out = await load(program, input, run)
+      if (isEffect(out)) {
+        const { commit } = apply(program, out)
+        end({ commit: commit.seq, touched: commit.touched })
+        return { commit: commit.seq, touched: commit.touched }
+      }
+      end({ gave: out ?? null })
+      return out
+    } catch (e: any) {
+      end({ refused: String(e?.message ?? e) })
+      throw e
+    }
+  })()
+  done.catch(() => {})
+  return { id, done }
 }
 
 // the engine carries out an effect only where the field declares it open to whoever asks
@@ -187,8 +236,10 @@ const server = Bun.serve({
 
     if (path === '/act' && req.method === 'POST') {
       try {
-        const { program, input } = await req.json()
-        return Response.json(apply(program, await run(program, input)))
+        // a run answers with where it is kept; asked to wait, with what came of it
+        const { program, input, wait = true } = await req.json()
+        const { id, done } = perform(program, input)
+        return Response.json(wait ? { run: id, came: await done } : { run: id })
       } catch (e: any) {
         return new Response(e.message, { status: 400 })
       }

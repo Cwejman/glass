@@ -7,3 +7,4 @@ node_modules/
 grant.html
 .stale/*
 !.stale/markdown/
+.run/
