@@ -36,3 +36,11 @@ The tone, register and nuance in which glass is understood is how its code looks
 The primitives are built to make a world of programs, and a program and its code are not always the same unit. Descending into the code, it is looked upon as artfully as anything else built on the primitives, for what it shows of the archetypal foundations of building applications.
 
 *The author's, [2026-11-02](said/2026-11-02.md#13-fields-as-connectors).*
+
+## 4. Three notions, one ontology
+
+Glass is three notions meeting: ontology, pure functional compute, and language models. Inference chooses, pure compute acts, and both work on one ontology: a field's shape lets a program compute over a holon, and its prose lets a model understand the same holon, so a model can choose and compose programs by what they mean, and the programs then run with no inference in them at all.
+
+What it serves is giving and receiving. Good compute, technology, interfaces and connections go both ways: from the person using it, to the group, to the greater whole.
+
+*The three notions and both ways the author's, [2026-11-02](said/2026-11-02.md#14-both-ways); inference choosing and pure compute acting on one ontology the session's words, which the author took as his.*
