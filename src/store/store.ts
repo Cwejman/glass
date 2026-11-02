@@ -1,9 +1,10 @@
 import { canonical, type Json } from "./canonical.ts";
 import type { Backend } from "./backend.ts";
-import type { Id } from "./id.ts";
-import { nameOf, nameOfText, type Name } from "./name.ts";
+import { isId, type Id } from "./id.ts";
+import { nameOfText, type Name } from "./name.ts";
 import {
   asObject,
+  isRecord,
   leafSize,
   type Body,
   type Branch,
@@ -44,15 +45,15 @@ export class Store {
     if ((await nameOfText(text)) !== name) throw new Error(`object ${name} does not hold what its name says`);
     const value = asObject(JSON.parse(text));
     if (canonical(value) !== text) throw new Error(`object ${name} is not in canonical form`);
-    this.cache.set(name, value);
+    this.cache.set(name, freeze(value));
     return value as T;
   }
 
   // Objects that arrived another way, as in a bundle, are checked the same.
   async seed(name: Name, value: unknown) {
-    const object = asObject(value);
-    if ((await nameOf(object)) !== name) throw new Error(`object ${name} does not hold what its name says`);
-    this.cache.set(name, object);
+    const text = canonical(value);
+    if ((await nameOfText(text)) !== name) throw new Error(`object ${name} does not hold what its name says`);
+    this.cache.set(name, freeze(asObject(JSON.parse(text))));
   }
 
   async head(ref = "main") {
@@ -63,34 +64,58 @@ export class Store {
     return this.object<Index>((await this.object<Commit>(commit)).index);
   }
 
+  // A walk checks that each node stands where it says, and that each id in a
+  // leaf belongs on the path to it, so a tree cannot pass one holon off as
+  // another.
+  private async node(name: Name, path: string): Promise<Leaf | Branch> {
+    const node = await this.object<Leaf | Branch>(name);
+    if (node.kind !== "index-leaf" && node.kind !== "index-branch") throw new Error(`${name} is not a node of an index`);
+    if (node.depth !== path.length) throw new Error(`${name} stands at depth ${path.length}, not ${node.depth}`);
+    if (node.kind === "index-leaf")
+      for (const id of Object.keys(node.versions))
+        if (suffix(id, path.length) !== path) throw new Error(`${name} holds ${id}, which does not belong under it`);
+    return node;
+  }
+
   async lookup(index: Index, id: Id): Promise<Name | undefined> {
-    let node = await this.object<Leaf | Branch>(index.holons);
+    let path = "";
+    let node = await this.node(index.holons, path);
     while (node.kind === "index-branch") {
-      const next = node.branches[charAt(id, node.depth)];
+      const char = charAt(id, node.depth);
+      const next = node.branches[char];
       if (!next) return undefined;
-      node = await this.object<Leaf | Branch>(next);
+      path = char + path;
+      node = await this.node(next, path);
     }
     return node.versions[id];
   }
 
   async *entries(index: Index): AsyncGenerator<[Id, Name]> {
-    const walk = async function* (store: Store, name: Name): AsyncGenerator<[Id, Name]> {
-      const node = await store.object<Leaf | Branch>(name);
+    const walk = async function* (store: Store, name: Name, path: string): AsyncGenerator<[Id, Name]> {
+      const node = await store.node(name, path);
       if (node.kind === "index-leaf") yield* Object.entries(node.versions) as [Id, Name][];
-      else for (const child of Object.values(node.branches)) yield* walk(store, child);
+      else for (const [char, child] of Object.entries(node.branches)) yield* walk(store, child, char + path);
     };
-    yield* walk(this, index.holons);
+    yield* walk(this, index.holons, "");
   }
 
   async version(id: Id, commit?: Name): Promise<[Name, Version] | undefined> {
     commit ??= await this.head();
     if (!commit) return undefined;
     const name = await this.lookup(await this.index(commit), id);
-    return name ? [name, await this.object<Version>(name)] : undefined;
+    return name ? [name, await this.versionOf(id, name)] : undefined;
+  }
+
+  async versionOf(id: Id, name: Name): Promise<Version> {
+    const version = await this.object<Version>(name);
+    if (version.kind !== "version" || version.id !== id) throw new Error(`${name} is not a version of ${id}`);
+    return version;
   }
 
   async write(change: Change, ref = "main"): Promise<Name | undefined> {
     if (!this.backend.writable) throw new Error("this store is read only");
+    const problem = changeProblem(change);
+    if (problem) throw new Error(problem);
     const from = await this.head(ref);
     const last = from ? await this.index(from) : undefined;
 
@@ -99,22 +124,23 @@ export class Store {
       if (updates.has(holon.id)) throw new Error(`holon ${holon.id} changed twice in one commit`);
       const prevName = last ? await this.lookup(last, holon.id) : undefined;
       if (prevName) {
-        const prev = await this.object<Version>(prevName);
+        const prev = await this.versionOf(holon.id, prevName);
         if (canonical([prev.instance, prev.body]) === canonical([holon.instance, holon.body])) continue;
       }
       const version: Version = { kind: "version", id: holon.id, prev: prevName ?? null, instance: holon.instance, body: holon.body };
       updates.set(holon.id, await this.put(version));
     }
 
-    const names = { ...last?.names };
+    const given = new Map(Object.entries(last?.names ?? {}));
     for (const [name, id] of Object.entries(change.names ?? {})) {
-      if (id === null) delete names[name];
-      else names[name] = id;
+      if (id === null) given.delete(name);
+      else given.set(name, id);
     }
+    const names = Object.fromEntries(given);
     const namesChanged = canonical(names) !== canonical(last?.names ?? {});
     if (updates.size === 0 && !namesChanged) return undefined;
 
-    const holons = await this.grow(last?.holons, 0, updates);
+    const holons = last && updates.size === 0 ? last.holons : await this.grow(last?.holons, 0, updates);
     const index = await this.put({ kind: "index", names, holons } satisfies Index);
     const commit = await this.put({ kind: "commit", parent: from ?? null, at: change.at, index } satisfies Commit);
     if (!(await this.backend.moveRef(ref, commit, from))) throw new Error(`ref ${ref} moved while writing`);
@@ -145,7 +171,7 @@ export class Store {
     const text = canonical(object);
     const name = await nameOfText(text);
     await this.backend.put(name, text);
-    this.cache.set(name, object);
+    this.cache.set(name, freeze(JSON.parse(text)));
     return name;
   }
 
@@ -164,6 +190,30 @@ export class Store {
     for (const [char, group] of groupBy([...updates], depth)) branches[char] = await this.grow(branches[char], depth + 1, group);
     return this.put({ kind: "index-branch", depth, branches });
   }
+}
+
+function changeProblem(change: Change): string | undefined {
+  if (typeof change.at !== "string") return "a change must say when it was made";
+  for (const holon of change.holons) {
+    if (!isId(holon.id)) return `${holon.id} is not an id`;
+    if (!Array.isArray(holon.instance) || !holon.instance.every(isId)) return `${holon.id}'s instance is not a list of ids`;
+    if (!isRecord(holon.body)) return `${holon.id}'s body is not a JSON object`;
+  }
+  for (const [name, id] of Object.entries(change.names ?? {}))
+    if (id !== null && !isId(id)) return `the name ${name} must give an id`;
+  return undefined;
+}
+
+function freeze<T>(value: T): T {
+  if (typeof value === "object" && value !== null) {
+    for (const child of Object.values(value)) freeze(child);
+    Object.freeze(value);
+  }
+  return value;
+}
+
+function suffix(id: Id, length: number) {
+  return length === 0 ? "" : id.slice(-length);
 }
 
 function charAt(id: Id, depth: number) {

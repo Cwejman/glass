@@ -1,7 +1,7 @@
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { canonical } from "./canonical.ts";
-import { path, type Backend } from "./backend.ts";
+import { asRef, path, type Backend } from "./backend.ts";
 import type { Name } from "./name.ts";
 import type { Store } from "./store.ts";
 
@@ -22,7 +22,8 @@ export class FileBackend implements Backend {
     await writeFile(file, text);
   }
   async ref(ref: string) {
-    return (await read(join(this.dir, "refs", ref)))?.trim() as Name | undefined;
+    const text = await read(join(this.dir, "refs", ref));
+    return text === undefined ? undefined : asRef(text);
   }
   async moveRef(ref: string, to: Name, from: Name | undefined) {
     const file = join(this.dir, "refs", ref);

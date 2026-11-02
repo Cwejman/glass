@@ -43,89 +43,115 @@ const canonicalCases = [
   },
 ].map((c) => ({ ...c, name: name(c.canonical) }));
 
-// Three commits on one store, each listing every object it adds.
+// Commits on one store, each listing every object it adds. The tree is built
+// here from scratch, from the whole set of ids at each commit, by its rule: a
+// leaf holds at most 64; past that it is a branch over the next character
+// from the end. The store under test grows its tree commit by commit instead.
+
+const alphabet = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+const id = (group: string, n: number, end: string) => {
+  let digits = "";
+  for (let rest = n, i = 0; i < 22 - end.length; i++, rest = Math.floor(rest / 32)) digits = alphabet[rest % 32] + digits;
+  const made = `01J${group}${digits}${end}`;
+  if (made.length !== 26) throw new Error(`a bad id ${made}`);
+  return made;
+};
+
+const TYPE = "01JB0000000000000000000000";
 const A = "01JB0000000000000000000001";
 const B = "01JB0000000000000000000002";
-const TYPE = "01JB0000000000000000000000";
-const steps: { about: string; change: unknown; objects: unknown[] }[] = [];
-const named = (object: unknown) => [name(canonical(object)), object] as const;
 
-const typeV1 = named({ kind: "version", id: TYPE, prev: null, instance: [TYPE], body: { title: "Note" } });
-const aV1 = named({ kind: "version", id: A, prev: null, instance: [TYPE], body: { title: "First" } });
-const bV1 = named({ kind: "version", id: B, prev: null, instance: [TYPE], body: { title: "Second", about: { $ref: A } } });
-const leaf1 = named({ kind: "index-leaf", depth: 0, versions: { [TYPE]: typeV1[0], [A]: aV1[0], [B]: bV1[0] } });
-const index1 = named({ kind: "index", names: { note: TYPE }, holons: leaf1[0] });
-const commit1 = named({ kind: "commit", parent: null, at: "2026-11-03T09:00:00Z", index: index1[0] });
-steps.push({
-  about: "a first commit: three holons born, one name given",
-  change: {
-    at: "2026-11-03T09:00:00Z",
-    names: { note: TYPE },
-    holons: [
-      { id: TYPE, instance: [TYPE], body: { title: "Note" } },
-      { id: A, instance: [TYPE], body: { title: "First" } },
-      { id: B, instance: [TYPE], body: { title: "Second", about: { $ref: A } } },
-    ],
-  },
-  objects: [typeV1, aV1, bV1, leaf1, index1, commit1],
-});
+type Named = readonly [string, unknown];
+const named = (object: unknown): Named => [name(canonical(object)), object];
 
-const aV2 = named({ kind: "version", id: A, prev: aV1[0], instance: [TYPE], body: { title: "First, again" } });
-const leaf2 = named({ kind: "index-leaf", depth: 0, versions: { [TYPE]: typeV1[0], [A]: aV2[0], [B]: bV1[0] } });
-const index2 = named({ kind: "index", names: { note: TYPE }, holons: leaf2[0] });
-const commit2 = named({ kind: "commit", parent: commit1[0], at: "2026-11-03T09:01:00Z", index: index2[0] });
-steps.push({
-  about: "one holon changed, one left as it was: only the changed one gets a version",
-  change: {
-    at: "2026-11-03T09:01:00Z",
-    holons: [
-      { id: A, instance: [TYPE], body: { title: "First, again" } },
-      { id: B, instance: [TYPE], body: { title: "Second", about: { $ref: A } } },
-    ],
-  },
-  objects: [aV2, leaf2, index2, commit2],
-});
+const versions = new Map<string, Named>();
+let names: Record<string, string> = {};
+let head: string | null = null;
+const written = new Set<string>();
 
-// 64 more holons make 67, past a leaf's 64, so the tree branches on the last
-// character of the ids. Their ids end in each of 32 characters, two or three
-// to a character.
-const alphabet = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
-const many = Array.from({ length: 64 }, (_, i) => `01JC${String(i).padStart(20, "0").slice(0, 20)}${alphabet[i % 32]}${alphabet[i % 32]}`.slice(0, 26));
-const manyVersions = many.map((id, i) => named({ kind: "version", id, prev: null, instance: [TYPE], body: { title: `Note ${i}` } }));
-const all: [string, string][] = [
-  [TYPE, typeV1[0]],
-  [A, aV2[0]],
-  [B, bV1[0]],
-  ...many.map((id, i) => [id, manyVersions[i]![0]] as [string, string]),
-];
-const leaves = new Map<string, Record<string, string>>();
-for (const [id, version] of all) {
-  const char = id[id.length - 1]!;
-  leaves.set(char, { ...leaves.get(char), [id]: version });
+function tree(entries: [string, string][], depth: number, out: Named[]): string {
+  if (entries.length <= 64) {
+    const leaf = named({ kind: "index-leaf", depth, versions: Object.fromEntries(entries) });
+    out.push(leaf);
+    return leaf[0];
+  }
+  const groups = new Map<string, [string, string][]>();
+  for (const entry of entries) {
+    const char = entry[0][entry[0].length - 1 - depth]!;
+    groups.set(char, [...(groups.get(char) ?? []), entry]);
+  }
+  const branches: Record<string, string> = {};
+  for (const [char, group] of groups) branches[char] = tree(group, depth + 1, out);
+  const branch = named({ kind: "index-branch", depth, branches });
+  out.push(branch);
+  return branch[0];
 }
-const leafObjects = [...leaves].map(([char, versions]) => [char, named({ kind: "index-leaf", depth: 1, versions })] as const);
-const branch = named({ kind: "index-branch", depth: 0, branches: Object.fromEntries(leafObjects.map(([char, leaf]) => [char, leaf[0]])) });
-const index3 = named({ kind: "index", names: { note: TYPE }, holons: branch[0] });
-const commit3 = named({ kind: "commit", parent: commit2[0], at: "2026-11-03T09:02:00Z", index: index3[0] });
-steps.push({
-  about: "past 64 holons the leaf becomes a branch over the last character of the ids",
-  change: {
-    at: "2026-11-03T09:02:00Z",
-    holons: many.map((id, i) => ({ id, instance: [TYPE], body: { title: `Note ${i}` } })),
-  },
-  objects: [...manyVersions, ...leafObjects.map(([, leaf]) => leaf), branch, index3, commit3],
+
+type Holon = { id: string; instance: string[]; body: Record<string, unknown> };
+const steps: { about: string; change: unknown; ref: string | null; objects: Record<string, unknown> }[] = [];
+
+function step(about: string, at: string, holons: Holon[], givenNames?: Record<string, string | null>) {
+  const made: Named[] = [];
+  for (const holon of holons) {
+    const prev = versions.get(holon.id);
+    const old = prev?.[1] as Holon | undefined;
+    if (old && canonical([old.instance, old.body]) === canonical([holon.instance, holon.body])) continue;
+    const version = named({ kind: "version", id: holon.id, prev: prev?.[0] ?? null, instance: holon.instance, body: holon.body });
+    versions.set(holon.id, version);
+    made.push(version);
+  }
+  const nextNames = { ...names };
+  for (const [key, value] of Object.entries(givenNames ?? {})) {
+    if (value === null) delete nextNames[key];
+    else nextNames[key] = value;
+  }
+  const namesChanged = canonical(nextNames) !== canonical(names);
+  const change = { at, holons, ...(givenNames ? { names: givenNames } : {}) };
+  if (made.length === 0 && !namesChanged) {
+    steps.push({ about, change, ref: head, objects: {} });
+    return;
+  }
+  names = nextNames;
+  tree([...versions].map(([key, version]) => [key, version[0]]), 0, made);
+  const holonsRoot = made.at(-1)![0];
+  const index = named({ kind: "index", names, holons: holonsRoot });
+  const commit = named({ kind: "commit", parent: head, at, index: index[0] });
+  made.push(index, commit);
+  head = commit[0];
+  const objects: Record<string, unknown> = {};
+  for (const [key, object] of made) if (!written.has(key)) objects[key] = object;
+  for (const key of Object.keys(objects)) written.add(key);
+  steps.push({ about, change, ref: head, objects });
+}
+
+const note = (holonId: string, title: string, extra: Record<string, unknown> = {}): Holon => ({
+  id: holonId,
+  instance: [TYPE],
+  body: { title, ...extra },
 });
+
+step("a first commit: three holons born, one name given", "2026-11-03T09:00:00Z",
+  [note(TYPE, "Note"), note(A, "First"), note(B, "Second", { about: { $ref: A } })], { note: TYPE });
+step("one holon changed, one left as it was: only the changed one gets a version", "2026-11-03T09:01:00Z",
+  [note(A, "First, again"), note(B, "Second", { about: { $ref: A } })]);
+step("61 more make 64 holons, which one leaf still holds", "2026-11-03T09:02:00Z",
+  Array.from({ length: 61 }, (_, i) => note(id("C", i, alphabet[i % 32]!), `Note ${i}`)));
+step("one more makes 65, and the leaf becomes a branch over the last character of the ids", "2026-11-03T09:03:00Z",
+  [note(id("C", 61, "Q"), "Note 61")]);
+step("65 holons whose ids all end in Z: that leaf passes 64 and branches over the second character from the end", "2026-11-03T09:04:00Z",
+  Array.from({ length: 65 }, (_, i) => note(id("D", i, alphabet[i % 32]! + "Z"), `Zed ${i}`)));
+step("only names change: one taken away, one given; the tree is shared whole", "2026-11-03T09:05:00Z",
+  [], { note: null, type: TYPE });
+step("only what a holon is an instance of changes", "2026-11-03T09:06:00Z",
+  [{ id: B, instance: [TYPE, A], body: { title: "Second", about: { $ref: A } } }]);
+step("a change that changes nothing makes no commit, and the ref stays", "2026-11-03T09:07:00Z",
+  [note(A, "First, again")]);
 
 const store = {
-  about: "Commits applied in order to an empty store. After each, the ref main names the step's last object, and the store has gained exactly the objects listed, each at its name.",
-  steps: steps.map((step) => ({
-    about: step.about,
-    change: step.change,
-    ref: (step.objects.at(-1) as readonly [string, unknown])[0],
-    objects: Object.fromEntries(step.objects as (readonly [string, unknown])[]),
-  })),
+  about: "Changes applied in order to an empty store. After each, the ref main names the step's ref, and the store has gained exactly the objects listed, each at its name. A step that adds nothing makes no commit.",
+  steps,
 };
 
 writeFileSync(join(here, "canonical.json"), JSON.stringify(canonicalCases, null, 2) + "\n");
 writeFileSync(join(here, "store.json"), JSON.stringify(store, null, 2) + "\n");
-console.log(`${canonicalCases.length} canonical cases, ${steps.length} store steps`);
+console.log(`${canonicalCases.length} canonical cases, ${steps.length} store steps, ${written.size} objects`);

@@ -1,4 +1,4 @@
-import type { Name } from "./name.ts";
+import { isName, type Name } from "./name.ts";
 
 // Where a store's files live. A backend only moves text; the store checks it.
 // Objects are only ever added, and a ref moves only from the commit its writer
@@ -54,7 +54,7 @@ export class HttpBackend implements Backend {
     const response = await fetch(`${this.base}refs/${ref}`, { cache: "no-cache" });
     if (response.status === 404) return undefined;
     if (!response.ok) throw new Error(`fetching ref ${ref}: ${response.status}`);
-    return (await response.text()).trim() as Name;
+    return asRef(await response.text());
   }
   async moveRef(): Promise<boolean> {
     throw new Error("a pulled store is read only");
@@ -65,8 +65,15 @@ export class HttpBackend implements Backend {
   }
 }
 
+export function asRef(text: string): Name {
+  const name = text.trim();
+  if (!isName(name)) throw new Error("a ref must hold a commit's name");
+  return name;
+}
+
 // Objects fanned into folders by the first two characters of their hash.
 export function path(name: Name) {
+  if (!isName(name)) throw new Error(`not a name: ${name}`);
   const hex = name.slice("sha256-".length);
   return `${hex.slice(0, 2)}/${hex.slice(2)}.json`;
 }

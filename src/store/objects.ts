@@ -52,12 +52,24 @@ export const leafSize = 64;
 const isNameMap = (value: unknown) =>
   typeof value === "object" && value !== null && !Array.isArray(value) && Object.values(value).every(isName);
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
+export const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
-// What came over the wire is checked for its shape before anything trusts it.
+const keysOf: Record<StoreObject["kind"], string[]> = {
+  commit: ["kind", "parent", "at", "index"],
+  index: ["kind", "names", "holons"],
+  "index-leaf": ["kind", "depth", "versions"],
+  "index-branch": ["kind", "depth", "branches"],
+  version: ["kind", "id", "prev", "instance", "body"],
+};
+
+// What came over the wire is checked for its shape before anything trusts it:
+// exactly the keys its kind has, each of its kind of value.
 export function asObject(value: unknown): StoreObject {
   if (!isRecord(value)) throw new Error("an object must be a JSON object");
+  const keys = keysOf[value.kind as StoreObject["kind"]];
+  if (!keys || Object.keys(value).length !== keys.length || !keys.every((key) => key in value))
+    throw new Error(`not a well-formed ${String(value.kind)} object`);
   const ok = (() => {
     switch (value.kind) {
       case "commit":
@@ -67,7 +79,11 @@ export function asObject(value: unknown): StoreObject {
       case "index-leaf":
         return Number.isInteger(value.depth) && isNameMap(value.versions) && Object.keys(value.versions as object).every(isId);
       case "index-branch":
-        return Number.isInteger(value.depth) && isNameMap(value.branches);
+        return (
+          Number.isInteger(value.depth) &&
+          isNameMap(value.branches) &&
+          Object.keys(value.branches as object).every((char) => /^[0-9A-HJKMNP-TV-Z]$/.test(char))
+        );
       case "version":
         return (
           isId(value.id) &&
