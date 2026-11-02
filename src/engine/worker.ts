@@ -1,9 +1,9 @@
 /// <reference lib="webworker" />
 import type { Json } from "../store/canonical.ts";
 import { canonical } from "../store/canonical.ts";
-import { Store } from "../store/store.ts";
-import { Engine, type Read } from "./engine.ts";
-import { IdbBackend } from "./idb.ts";
+import { openStore } from "../store/store.ts";
+import { startEngine, type Read } from "./engine.ts";
+import { idbBackend } from "./idb.ts";
 import type { Message, Reply } from "./protocol.ts";
 import { pull } from "./pull.ts";
 
@@ -12,11 +12,7 @@ import { pull } from "./pull.ts";
 
 declare const self: DedicatedWorkerGlobalScope;
 
-const started = (async () => {
-  const engine = new Engine(new Store(await IdbBackend.open("glass-home")));
-  await engine.start();
-  return engine;
-})();
+const started = idbBackend("glass-home").then((home) => startEngine(openStore(home)));
 
 const subscriptions = new Map<number, { read: Read; last: string }>();
 const send = (reply: Reply) => self.postMessage(reply);

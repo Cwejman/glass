@@ -2,11 +2,11 @@ import { afterAll, describe, expect, test } from "bun:test";
 import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { MemoryBackend, path } from "../store/backend.ts";
-import { FileBackend, writeBundle } from "../store/files.ts";
+import { memoryBackend, path } from "../store/backend.ts";
+import { fileBackend, writeBundle } from "../store/files.ts";
 import { newId } from "../store/id.ts";
-import { Store } from "../store/store.ts";
-import { Engine, type HolonRead } from "./engine.ts";
+import { openStore } from "../store/store.ts";
+import { startEngine, type HolonRead } from "./engine.ts";
 import { pull } from "./pull.ts";
 import { references } from "./references.ts";
 
@@ -37,10 +37,9 @@ const noteType = {
 };
 
 async function glass() {
-  const store = new Store(new MemoryBackend());
+  const store = openStore(memoryBackend());
   await store.write({ at: "t", names: { note: NOTE }, holons: [typeType, noteType] });
-  const engine = new Engine(new Store(new MemoryBackend()));
-  await engine.start();
+  const engine = await startEngine(openStore(memoryBackend()));
   await engine.attach("glass", store);
   return engine;
 }
@@ -135,7 +134,7 @@ test("references are found without knowing the type", () => {
 
 describe("a store pulled over HTTP", async () => {
   const dir = await mkdtemp(join(tmpdir(), "glass-served-"));
-  const store = new Store(new FileBackend(dir));
+  const store = openStore(fileBackend(dir));
   const commit = (await store.write({ at: "t", names: { note: NOTE }, holons: [typeType, noteType] }))!;
   await writeBundle(store, dir, commit);
   let fetched: string[] = [];
@@ -153,7 +152,7 @@ describe("a store pulled over HTTP", async () => {
 
   test("a first visit fetches the ref and one bundle", async () => {
     fetched = [];
-    const engine = new Engine(new Store(new MemoryBackend()));
+    const engine = await startEngine(openStore(memoryBackend()));
     await engine.attach("glass", await pull(base));
     expect(await engine.read({ name: "note" })).toBe(NOTE);
     expect(fetched.filter((file) => file.startsWith("/objects/"))).toEqual([]);
@@ -164,7 +163,7 @@ describe("a store pulled over HTTP", async () => {
     const honest = await readFile(file, "utf8");
     await writeFile(file, honest.replace('"Note"', '"Forged"'));
     fetched = [];
-    const engine = new Engine(new Store(new MemoryBackend()));
+    const engine = await startEngine(openStore(memoryBackend()));
     await engine.attach("glass", await pull(base));
     expect(((await engine.read({ holon: NOTE })) as unknown as HolonRead).body.title).toBe("Note");
     expect(fetched.some((file) => file.startsWith("/objects/"))).toBe(true);
@@ -177,7 +176,7 @@ describe("a store pulled over HTTP", async () => {
     const honest = await readFile(file, "utf8");
     await writeFile(file, honest.replace('"Note"', '"Forged"'));
     await writeFile(join(dir, "bundles", `${commit}.json`), "{}");
-    const engine = new Engine(new Store(new MemoryBackend()));
+    const engine = await startEngine(openStore(memoryBackend()));
     await expect(engine.attach("glass", await pull(base))).rejects.toThrow("does not hold what its name says");
     await writeFile(file, honest);
   });
@@ -243,11 +242,10 @@ describe("what the engine's fresh reading found", () => {
   });
 
   test("attaching a store tells whoever listens", async () => {
-    const engine = new Engine(new Store(new MemoryBackend()));
-    await engine.start();
+    const engine = await startEngine(openStore(memoryBackend()));
     let told = 0;
     engine.onChange(() => told++);
-    const store = new Store(new MemoryBackend());
+    const store = openStore(memoryBackend());
     await store.write({ at: "t", holons: [typeType] });
     await engine.attach("glass", store);
     expect(told).toBe(1);

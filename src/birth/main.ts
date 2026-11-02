@@ -1,10 +1,10 @@
 import { readdir, readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
-import { FileBackend, writeBundle } from "../store/files.ts";
+import { fileBackend, writeBundle } from "../store/files.ts";
 import { newId, type Id } from "../store/id.ts";
 import type { Body } from "../store/objects.ts";
-import { Store } from "../store/store.ts";
-import { Engine } from "../engine/engine.ts";
+import { openStore } from "../store/store.ts";
+import { startEngine } from "../engine/engine.ts";
 import { components, entry, materials, types, wiki, type Born, type ComponentFile, type TypeFile } from "./holons.ts";
 import { linkTargets, parseFile, resolve, walk, type WikiFile } from "./wiki.ts";
 
@@ -19,7 +19,7 @@ import { linkTargets, parseFile, resolve, walk, type WikiFile } from "./wiki.ts"
 
 const repo = join(import.meta.dir, "../..");
 const storeDir = join(repo, "site/store");
-const store = new Store(new FileBackend(storeDir));
+const store = openStore(fileBackend(storeDir));
 const head = await store.head();
 
 const born = new Map<string, Id>();
@@ -79,8 +79,7 @@ const holons = field.flatMap(({ holons }) => holons);
 const names = Object.assign({}, ...field.map(({ names }) => names));
 const gone = [...before].filter((id) => !holons.some((holon) => holon.id === id));
 
-const engine = new Engine(store);
-await engine.start();
+const engine = await startEngine(store);
 const commit = await engine.commit({ holons, names, gone });
 
 // One bundle, for the commit the ref names; older ones are only a

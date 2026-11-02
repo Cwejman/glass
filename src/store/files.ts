@@ -8,31 +8,31 @@ import type { Store } from "./store.ts";
 // A store as a directory on disk: refs/main, objects/ab/cdef….json, and an
 // optional bundle per commit.
 
-export class FileBackend implements Backend {
-  readonly writable = true;
-  constructor(readonly dir: string) {}
-
-  async get(name: Name) {
-    return read(join(this.dir, "objects", path(name)));
-  }
-  async put(name: Name, text: string) {
-    const file = join(this.dir, "objects", path(name));
-    if ((await read(file)) !== undefined) return;
-    await mkdir(dirname(file), { recursive: true });
-    await writeFile(file, text);
-  }
-  async ref(ref: string) {
-    const text = await read(join(this.dir, "refs", ref));
+export function fileBackend(dir: string): Backend {
+  const ref = async (name: string) => {
+    const text = await read(join(dir, "refs", name));
     return text === undefined ? undefined : asRef(text);
-  }
-  async moveRef(ref: string, to: Name, from: Name | undefined) {
-    const file = join(this.dir, "refs", ref);
-    if ((await this.ref(ref)) !== from) return false;
-    await mkdir(dirname(file), { recursive: true });
-    await writeFile(file + ".next", to + "\n");
-    await rename(file + ".next", file);
-    return true;
-  }
+  };
+  return {
+    writable: true,
+    get: (name) => read(join(dir, "objects", path(name))),
+    async put(name, text) {
+      const file = join(dir, "objects", path(name));
+      if ((await read(file)) !== undefined) return;
+      await mkdir(dirname(file), { recursive: true });
+      await writeFile(file, text);
+    },
+    ref,
+    // Written beside and renamed into place, so a ref is never half written.
+    async moveRef(name, to, from) {
+      const file = join(dir, "refs", name);
+      if ((await ref(name)) !== from) return false;
+      await mkdir(dirname(file), { recursive: true });
+      await writeFile(`${file}.next`, `${to}\n`);
+      await rename(`${file}.next`, file);
+      return true;
+    },
+  };
 }
 
 // Everything one commit reaches, in one file, for a first visit.

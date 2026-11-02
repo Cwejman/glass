@@ -13,59 +13,58 @@ export interface Subscription<T> {
   close: () => void;
 }
 
-export class Connection {
-  private next = 1;
-  private readonly waiting = new Map<number, { resolve: (value: Json) => void; reject: (error: Error) => void }>();
-  private readonly listeners = new Map<number, (value: Json) => void>();
+export interface Connection {
+  attach(key: string, url: string): Promise<Json>;
+  read(read: Read): Promise<Json>;
+  holon(id: Id, at?: Name): Promise<HolonRead | null>;
+  commit(change: Change): Promise<Name | null>;
+  subscribe(read: Read, listener: (value: Json) => void): Promise<Subscription<Json>>;
+  subscribeHolon(id: Id, listener: (holon: HolonRead | null) => void): Promise<Subscription<HolonRead | null>>;
+}
 
-  constructor(private readonly worker: Worker) {
-    worker.onmessage = ({ data }: MessageEvent<Reply>) => {
-      if ("subscription" in data) return this.listeners.get(data.subscription)?.(data.value);
-      const waiting = this.waiting.get(data.id);
-      this.waiting.delete(data.id);
-      if (data.ok) waiting?.resolve(data.value);
-      else waiting?.reject(new Error(data.error));
-    };
-  }
+export function connect(worker: Worker): Connection {
+  let next = 1;
+  const waiting = new Map<number, { resolve: (value: Json) => void; reject: (error: Error) => void }>();
+  const listeners = new Map<number, (value: Json) => void>();
 
-  attach(key: string, url: string) {
-    return this.send(this.next++, { op: "attach", key, url });
-  }
+  worker.onmessage = ({ data }: MessageEvent<Reply>) => {
+    if ("subscription" in data) return listeners.get(data.subscription)?.(data.value);
+    const answer = waiting.get(data.id);
+    waiting.delete(data.id);
+    if (data.ok) answer?.resolve(data.value);
+    else answer?.reject(new Error(data.error));
+  };
 
-  read(read: Read) {
-    return this.send(this.next++, { op: "read", read });
-  }
+  const send = (request: Request, id = next++): Promise<Json> =>
+    new Promise((resolve, reject) => {
+      waiting.set(id, { resolve, reject });
+      worker.postMessage({ id, ...request } satisfies Message);
+    });
 
-  async holon(id: Id, at?: Name): Promise<HolonRead | null> {
-    return (await this.read(at ? { holon: id, at } : { holon: id })) as unknown as HolonRead | null;
-  }
+  const read = (query: Read) => send({ op: "read", read: query });
 
-  async commit(change: Change) {
-    return (await this.send(this.next++, { op: "commit", change })) as Name | null;
-  }
-
-  async subscribe(read: Read, listener: (value: Json) => void): Promise<Subscription<Json>> {
-    const id = this.next++;
-    this.listeners.set(id, listener);
-    const { value } = (await this.send(id, { op: "subscribe", read })) as { subscription: number; value: Json };
+  const subscribe = async (query: Read, listener: (value: Json) => void): Promise<Subscription<Json>> => {
+    const id = next++;
+    listeners.set(id, listener);
+    const { value } = (await send({ op: "subscribe", read: query }, id)) as { subscription: number; value: Json };
     return {
       value,
       close: () => {
-        this.listeners.delete(id);
-        void this.send(this.next++, { op: "unsubscribe", subscription: id });
+        listeners.delete(id);
+        void send({ op: "unsubscribe", subscription: id });
       },
     };
-  }
+  };
 
-  async subscribeHolon(id: Id, listener: (holon: HolonRead | null) => void): Promise<Subscription<HolonRead | null>> {
-    const subscription = await this.subscribe({ holon: id }, (value) => listener(value as unknown as HolonRead | null));
-    return { ...subscription, value: subscription.value as unknown as HolonRead | null };
-  }
-
-  private send(id: number, request: Request): Promise<Json> {
-    return new Promise((resolve, reject) => {
-      this.waiting.set(id, { resolve, reject });
-      this.worker.postMessage({ id, ...request } satisfies Message);
-    });
-  }
+  return {
+    attach: (key, url) => send({ op: "attach", key, url }),
+    read,
+    holon: async (id, at) => (await read(at ? { holon: id, at } : { holon: id })) as unknown as HolonRead | null,
+    commit: async (change) => (await send({ op: "commit", change })) as Name | null,
+    subscribe,
+    subscribeHolon: async (id, listener) => {
+      const subscription = await subscribe({ holon: id }, (value) => listener(value as unknown as HolonRead | null));
+      return { ...subscription, value: subscription.value as unknown as HolonRead | null };
+    },
+  };
 }
