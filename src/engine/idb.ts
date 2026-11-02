@@ -19,8 +19,15 @@ export class IdbBackend implements Backend {
   async get(name: Name) {
     return done<string | undefined>(this.db.transaction("objects").objectStore("objects").get(name));
   }
-  async put(name: Name, text: string) {
-    await done(this.db.transaction("objects", "readwrite").objectStore("objects").put(text, name));
+  // An object is written once its transaction completes, so a ref never
+  // names an object that might yet be lost.
+  put(name: Name, text: string) {
+    return new Promise<void>((resolve, reject) => {
+      const transaction = this.db.transaction("objects", "readwrite");
+      transaction.objectStore("objects").put(text, name);
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = transaction.onabort = () => reject(transaction.error ?? new Error("the write was aborted"));
+    });
   }
   async ref(ref: string) {
     return done<Name | undefined>(this.db.transaction("refs").objectStore("refs").get(ref));
@@ -38,7 +45,7 @@ export class IdbBackend implements Backend {
         moved = true;
       };
       transaction.oncomplete = () => resolve(moved);
-      transaction.onerror = () => reject(transaction.error);
+      transaction.onerror = transaction.onabort = () => reject(transaction.error ?? new Error("the move was aborted"));
     });
   }
 }

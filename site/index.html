@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en" data-store="./store/">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Glass</title>
+    <style>
+      :root {
+        --ground: #fbfaf7;
+        --ink: #23211d;
+        --quiet: #6f6a61;
+        --line: #e4e0d7;
+        --raised: #ffffff;
+        --accent: #3d5a80;
+        color-scheme: light dark;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --ground: #171614;
+          --ink: #e8e4dc;
+          --quiet: #9b958a;
+          --line: #2f2c28;
+          --raised: #1e1d1a;
+          --accent: #9db4d6;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--ground);
+        color: var(--ink);
+        font: 18px/1.6 "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      #glass {
+        max-width: 40rem;
+        margin: 0 auto;
+        padding: 3rem 1rem 6rem;
+      }
+      a {
+        color: var(--accent);
+      }
+      .glass-note {
+        color: var(--quiet);
+        font: 14px/1.5 ui-sans-serif, system-ui, sans-serif;
+      }
+    </style>
+    <script type="module" src="./chassis.js"></script>
+  </head>
+  <body>
+    <main id="glass"></main>
+  </body>
+</html>

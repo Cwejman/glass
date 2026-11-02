@@ -55,21 +55,29 @@ function shapeProblem(shape: Json | undefined, at: string): string | undefined {
 }
 
 // What is wrong with a body held against the fields of all its types, if
-// anything: every required field present, every key declared by some type,
-// every value of its shape.
+// anything: every key declared by some type, and each type held against the
+// body on its own, so a key two types declare must fit both.
 export function bodyProblem(body: Body, types: Fields[]): string | undefined {
-  return valuesProblem(body, Object.assign({}, ...types), "");
+  for (const key of Object.keys(body))
+    if (!types.some((fields) => Object.hasOwn(fields, key))) return `${key} is not a field of its types`;
+  for (const fields of types) {
+    const problem = valuesProblem(body, fields, "", false);
+    if (problem) return problem;
+  }
+  return undefined;
 }
 
-function valuesProblem(values: { [key: string]: Json }, fields: Fields, at: string): string | undefined {
+function valuesProblem(values: { [key: string]: Json }, fields: Fields, at: string, closed = true): string | undefined {
   for (const [key, value] of Object.entries(values)) {
-    const field = fields[key];
-    if (!field) return `${at}${key} is not a field of its types`;
-    const problem = valueProblem(value, field.shape, `${at}${key}`);
+    if (!Object.hasOwn(fields, key)) {
+      if (closed) return `${at}${key} is not a field of its types`;
+      continue;
+    }
+    const problem = valueProblem(value, fields[key]!.shape, `${at}${key}`);
     if (problem) return problem;
   }
   for (const [key, field] of Object.entries(fields))
-    if (!field.optional && values[key] === undefined) return `${at}${key} is missing`;
+    if (!field.optional && !Object.hasOwn(values, key)) return `${at}${key} is missing`;
   return undefined;
 }
 

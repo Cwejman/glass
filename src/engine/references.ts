@@ -25,7 +25,7 @@ export function isRef(value: unknown): value is { $ref: Id; "@"?: Name } {
   );
 }
 
-const proseLink = /\]\(ref:([0-9A-HJKMNP-TV-Z]{26})(?:@(sha256-[0-9a-f]{64}))?\)/g;
+const proseLink = /\]\(ref:([0-9A-HJKMNP-TV-Z]{26})(?:@(sha256-[0-9a-f]{64}))?(?:\s+"[^"]*")?\)/g;
 
 export function references(body: Body): Reference[] {
   const found: Reference[] = [];

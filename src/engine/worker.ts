@@ -42,17 +42,20 @@ async function answer(message: Message): Promise<Json> {
   }
 }
 
-// After every commit, each subscription is read again, and told only if what
+// After every change to the field, each subscription is read again, and told only if what
 // it reads has changed.
 engine.then((field) =>
-  field.onChange(async () => {
-    for (const [subscription, entry] of subscriptions) {
-      const value = await field.read(entry.read);
-      const text = canonical(value);
-      if (text === entry.last) continue;
-      entry.last = text;
-      send({ subscription, value });
-    }
+  field.onChange(() => {
+    for (const [subscription, entry] of subscriptions)
+      field.read(entry.read).then(
+        (value) => {
+          const text = canonical(value);
+          if (text === entry.last || !subscriptions.has(subscription)) return;
+          entry.last = text;
+          send({ subscription, value });
+        },
+        (error) => console.error(`subscription ${subscription}:`, error),
+      );
   }),
 );
 

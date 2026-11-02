@@ -16,7 +16,8 @@ export type Read =
   | { holon: Id; at?: Name }
   | { name: string }
   | { holders: Id }
-  | { instances: Id };
+  | { instances: Id }
+  | { head: string };
 
 export interface HolonRead {
   id: Id;
@@ -49,6 +50,7 @@ export class Engine {
   private readonly known = new Map<Id, Known>();
   private readonly holders = new Map<Id, (Reference & { from: Id })[]>();
   private readonly listeners = new Set<() => void>();
+  private queue: Promise<unknown> = Promise.resolve();
 
   constructor(home: Store) {
     this.stores.push({ key: "home", store: home, holons: new Map() });
@@ -60,12 +62,15 @@ export class Engine {
 
   // Attaching reads a store's head whole into the engine's index. The home is
   // read the same way when the engine starts.
-  async attach(key: string, store: Store) {
-    if (this.stores.some((attached) => attached.key === key)) throw new Error(`a store is already attached as ${key}`);
-    const attached: Attached = { key, store, holons: new Map() };
-    this.stores.push(attached);
-    await this.load(attached);
-    this.reindex();
+  attach(key: string, store: Store) {
+    return this.inTurn(async () => {
+      if (this.stores.some((attached) => attached.key === key)) throw new Error(`a store is already attached as ${key}`);
+      const attached: Attached = { key, store, holons: new Map() };
+      await this.load(attached);
+      this.stores.push(attached);
+      this.reindex();
+      this.changed();
+    });
   }
 
   async start() {
@@ -87,6 +92,7 @@ export class Engine {
       }
       return null;
     }
+    if ("head" in read) return this.stores.find((attached) => attached.key === read.head)?.head ?? null;
     if ("holders" in read)
       return (this.holders.get(read.holders) ?? []).map(({ from, key, pinned }) => ({ id: from, key, ...(pinned ? { pinned } : {}) }));
     return [...this.known.values()].filter((known) => known.version.instance.includes(read.instances)).map((known) => known.version.id);
@@ -95,21 +101,37 @@ export class Engine {
   // A commit lands in the home. Each holon is judged first: it may not be one a
   // pulled store holds, its types must be in the field, its body must fit
   // them, and everything it references must be in the field.
-  async commit(commit: Commit): Promise<Name | undefined> {
-    const born = new Map(commit.holons.map((holon) => [holon.id, holon]));
-    for (const holon of commit.holons) {
-      const known = this.known.get(holon.id);
-      if (known && known.store !== this.home) throw new Error(`${holon.id} belongs to ${known.store.key}, which is only read`);
-      const problem = this.judge(holon, born);
-      if (problem) throw new Error(`${holon.id}: ${problem}`);
-    }
-    const name = await this.home.store.write({ ...commit, at: new Date().toISOString() });
-    if (name) {
-      await this.load(this.home);
-      this.reindex();
-      for (const listener of this.listeners) listener();
-    }
-    return name;
+  // Commits are taken one at a time, each judged against the field as the one
+  // before left it.
+  commit(commit: Commit): Promise<Name | undefined> {
+    return this.inTurn(async () => {
+      const born = new Map(commit.holons.map((holon) => [holon.id, holon]));
+      for (const holon of commit.holons) {
+        const known = this.known.get(holon.id);
+        if (known && known.store !== this.home) throw new Error(`${holon.id} belongs to ${known.store.key}, which is only read`);
+        const problem = await this.judge(holon, born);
+        if (problem) throw new Error(`${holon.id}: ${problem}`);
+      }
+      for (const [name, id] of Object.entries(commit.names ?? {}))
+        if (id !== null && !born.has(id) && !this.known.has(id)) throw new Error(`the name ${name} gives ${id}, which is not in the field`);
+      const name = await this.home.store.write({ ...commit, at: new Date().toISOString() });
+      if (name) {
+        await this.load(this.home);
+        this.reindex();
+        this.changed();
+      }
+      return name;
+    });
+  }
+
+  private inTurn<T>(work: () => Promise<T>): Promise<T> {
+    const turn = this.queue.then(work);
+    this.queue = turn.catch(() => undefined);
+    return turn;
+  }
+
+  private changed() {
+    for (const listener of this.listeners) listener();
   }
 
   onChange(listener: () => void) {
@@ -117,21 +139,34 @@ export class Engine {
     return () => this.listeners.delete(listener);
   }
 
-  private judge(holon: Holon, born: Map<Id, Holon>): string | undefined {
+  private async judge(holon: Holon, born: Map<Id, Holon>): Promise<string | undefined> {
     if (holon.instance.length === 0) return "it is an instance of nothing";
     const types: Fields[] = [];
-    for (const type of holon.instance) {
-      const body = born.get(type)?.body ?? this.known.get(type)?.version.body;
-      if (!body) return `its type ${type} is not in the field`;
-      const fields = fieldsOf(body);
-      if (!fields) return `${type} is not a type`;
-      types.push(fields);
+    try {
+      if (holon.body.fields !== undefined) fieldsOf(holon.body);
+      for (const type of holon.instance) {
+        const body = born.get(type)?.body ?? this.known.get(type)?.version.body;
+        if (!body) return `its type ${type} is not in the field`;
+        const fields = fieldsOf(body);
+        if (!fields) return `${type} is not a type`;
+        types.push(fields);
+      }
+    } catch (error) {
+      return (error as Error).message;
     }
     const problem = bodyProblem(holon.body, types);
     if (problem) return problem;
-    for (const reference of references(holon.body))
+    for (const reference of references(holon.body)) {
       if (!born.has(reference.id) && !this.known.has(reference.id)) return `it references ${reference.id}, which is not in the field`;
+      if (reference.pinned && !(await this.pinned(reference.id, reference.pinned)))
+        return `it pins ${reference.pinned}, which is not a version of ${reference.id} in the field`;
+    }
     return undefined;
+  }
+
+  private async pinned(id: Id, version: Name) {
+    for (const attached of this.stores) if (await attached.store.versionOf(id, version).catch(() => undefined)) return true;
+    return false;
   }
 
   private async readAt(id: Id, at: Name): Promise<Json> {

@@ -1,0 +1,19 @@
+{
+  "title": "Layout",
+  "says": "Mounts held as data: which component is called with what it reads. The layout a client boots into is the store's entry, and the reader's own arrangement is a layout in their home.",
+  "fields": {
+    "title": { "says": "What the layout is called.", "shape": "string" },
+    "mounts": {
+      "says": "Each mount, a component called with the holon it reads, drawn in order.",
+      "shape": {
+        "list": {
+          "fields": {
+            "component": { "says": "The component the mount calls.", "shape": "ref" },
+            "reads": { "says": "The holon the component is given.", "shape": "ref" }
+          }
+        }
+      }
+    },
+    "from": { "says": "Where the holon was born from, as a path in the files it arrived from.", "shape": "string", "optional": true }
+  }
+}
