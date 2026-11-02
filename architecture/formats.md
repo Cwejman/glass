@@ -65,7 +65,7 @@ Tim Berners-Lee's answer, from 2016: your data in a pod, described in RDF, with 
 
 Inside the box: objects named by their hash, never changed, linking to each other by hash; history as commit objects; a store published as plain files any host can serve; and a client that fetches only what it needs and checks every object itself.
 
-Outside it lies what the format does not decide, among them proving who made a commit, merging, finding a store by name, networking between peers and who may read what; those still to be settled are gathered in [the plan](../plan.md#3-what-is-open).
+Outside it lies what the format does not decide, among them proving who published, merging, finding a store by name, networking between peers and who may read what; those still to be settled are gathered in [the plan](../plan.md#3-what-is-open).
 
 *Reasoned, the session's, 2026-11-01.*
 

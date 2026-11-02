@@ -31,14 +31,16 @@ A ref is a name, `main`, holding the name of one commit. It is the only thing in
 
 ### 2.2 A commit says how the field came to be this way
 
-A commit names its parent, the commit before it, and the index it produced, and says when and by whom: which program, in which run. Following parents back walks the whole history of the field, one act at a time.
+A commit is one change to the field, whole. It holds three things: the commit before it, called its parent, the index it produced, and when it was made. What it changed is the difference between its index and its parent's. Following parents back walks the whole history of the field, one change at a time.
 
 ```json
 { "kind": "commit", "parent": "sha256-b1…", "at": "2026-11-01T10:12:00Z",
-  "by": "/programs/edit", "index": "sha256-e8…" }
+  "index": "sha256-e8…" }
 ```
 
-*Reasoned, the session's, 2026-11-01; that a commit names the program and the run is OpenLight's traceability, chunk to commit to process to program.*
+A commit does not say who made it. A change is made by a program's run, and the run records the commits it made, so the run is what connects a commit to the program behind it. The run is kept in the home of whoever ran it, which is often not the store the commit lands in, so the link runs from the run to the commit, never back.
+
+*The author's, 2026-11-02: a commit is added to the program run that made it, so it is already connected, and there may be no need for a by. The shape and the direction of the link reasoned, the session's.*
 
 ### 2.3 The index is the whole field at one commit
 
@@ -69,7 +71,7 @@ Nothing old is touched. The holons that did not change are shared by both indexe
 
 ## 4. Two histories, one store
 
-The field's history is read from commit to parent: each step one act, with who did it and the state it left. A holon's history is read from version to version: every state it has had, whichever acts made them. Both are in the store already, and neither needs a log kept beside it.
+The field's history is read from commit to parent: each step one change and the state it left. A holon's history is read from version to version: every state it has had, whichever acts made them. Both are in the store already, and neither needs a log kept beside it.
 
 *Reasoned, the session's, 2026-11-01.*
 

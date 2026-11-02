@@ -66,7 +66,7 @@ Questions the first mark meets, and those beyond it, each to be settled when the
 
 - **Merging**, when two lines of commits meet.
 
-- **Who made a commit, provably**: keys and signatures.
+- **Who published, provably**: keys and signatures on what a store's ref points at.
 
 - **When the shape of kept state changes**, as [the home](architecture/home.md#7-when-the-shape-of-state-changes) says.
 
