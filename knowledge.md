@@ -29,6 +29,10 @@ The reader is what is wanted, as OpenLight held: a component that draws whatever
 
 *The reader as what is wanted, and settling something small as the first goal, the author's, 2026-11-01; the small reader's shape the session's proposal.*
 
+Built, it is two components: the reader draws a brief whole, with the way down to it numbered as the rule numbers it, its prose with each part it places drawn by its face, and its parts beneath; the face draws a brief by its number, title and first paragraph. A record's entries are not numbered, being kept by time. A link into the field places the reader there; a link to the web stays a link; one to where the field cannot reach, such as a git commit, is shown as text.
+
+*Built by the session, 2026-11-03.*
+
 ## 4. How knowledge enters the store
 
 The spec could go straight into a store, but nothing could read it yet; that was the author's catch-22. The rule names a folder with its entry file as a lawful form of a holarchy, so this wiki is written that way now, and the first commit of glass's store will be born from it. From then on the store holds the wiki, and the files are how it arrived.

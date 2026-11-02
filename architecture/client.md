@@ -53,6 +53,10 @@ Everything that speaks to the engine uses the same few operations: read, commit,
 
 *The operations OpenLight's; the browser's thread reasoned, the session's, 2026-11-01. How a read is asked, before an expression language exists, is [open](../plan.md#3-what-is-open).*
 
+As built, a read asks for a holon by identity, now or at a commit, for what a name gives, for what points at a holon, for a type's instances, or for a store's head. Beside read, commit and subscribe there is attach, which the chassis uses to attach the store the page names; run, await and cancel wait for programs.
+
+*Built by the session, 2026-11-03.*
+
 ## 4. Only the engine and the chassis switch
 
 Running glass on one's own machine is the same store and the same interface with another engine and another chassis: the engine as a program of its own, the chassis as a window. Nothing in the store or the interface depends on which.

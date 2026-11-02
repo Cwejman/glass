@@ -6,9 +6,9 @@ status: proposed
 
 # The plan
 
-The first mark proposed is to read this wiki from a real store, through a real engine in the browser, along the gradient. It makes the store, the engine, the interface and the first reader real, each well made, and everything after stands on them.
+The first mark is to read this wiki from a real store, through a real engine in the browser, along the gradient. It makes the store, the engine, the interface and the first reader real, each well made, and everything after stands on them. It is built, and waits for the author to read it.
 
-*Proposed, the session's, 2026-11-01, on the author's call to settle something small as a clear goal; in force once the author ratifies this wiki, before anything is built.*
+*Proposed, the session's, 2026-11-01, on the author's call to settle something small as a clear goal; built 2026-11-03, on his word that the whole of what is to be built is now to be seen.*
 
 ## 1. The first mark
 
@@ -34,7 +34,23 @@ Tests come first at every layer, and the work is done by agents orchestrated to 
 
 *The author's, 2026-11-02: for every finished thing there always spawns a new agent to take its angle.*
 
-### 1.2 Written in TypeScript
+### 1.2 Where the first mark stands
+
+Each step is built, tested, read by a fresh agent and mended:
+
+- **The store**: its vectors, made apart from its code; a store as files, in memory and in the browser's storage; every object checked by its name, its form and where it stands in the tree.
+- **The engine**: stores attached and read as one, every commit judged against its types and taken in turn, references indexed, the home the one store written, on its own thread in the browser.
+- **The interface**: the chassis, components born as holons from their code, mounts held by a layout, type-matched spaces, and the arrangement kept in the home, so moving through the wiki, back and forward, and a reload all stand on its commits.
+- **The reader**: a brief whole with the way down to it, its prose with the parts it places, and the briefs beneath by their faces; a face for a brief seen from above; and a plain view for any other holon.
+- **The wiki in the store**: born from these files with glass's types and components, 188 holons, each judged by the engine, keeping its id across births.
+
+Not yet built, though the briefs describe them: what is attached is named by the page, not kept in the home; run, await and cancel wait for programs; components run in the page itself, not apart, which is safe only while the one store attached is glass's own; and a brief's prose is one piece of markdown.
+
+[How the code is laid out, and run](src/README.md)
+
+*Built and written by the session, 2026-11-03.*
+
+### 1.3 Written in TypeScript
 
 The engine and the interface are written in TypeScript first. The store asks almost no code of any language, and the browser hashes natively, so nothing yet argues for another. The store's test vectors keep the door open: an engine in Rust compiled to WebAssembly, one engine for the browser and the author's machine with programs contained in it, can come later and pass the same tests without any store rewritten.
 
