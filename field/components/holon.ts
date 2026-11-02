@@ -7,11 +7,11 @@ import { element } from "./prose.ts";
 // body as the JSON it is, code shown as code.
 
 export const style = `
-.holon-whole h1 { font-size: 1.6rem; margin: 0 0 .5rem; }
-.holon-whole .instance, .holon-face .instance { font: 13px/1.5 ui-sans-serif, system-ui, sans-serif; color: var(--quiet); }
-.holon-whole pre { background: var(--raised); border: 1px solid var(--line); border-radius: 6px; padding: .8rem 1rem;
-  overflow-x: auto; font-size: .78em; line-height: 1.5; }
-.holon-face { padding: .8rem 1rem; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; }
+.holon-whole h1 { font-size: var(--title); line-height: 1.2; margin: 0 0 0.25em; }
+.holon-whole .instance, .holon-face .instance { font: var(--small) / 1.5 var(--sans); color: var(--quiet); }
+.holon-whole pre { background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius); padding: 0.8em 1em;
+  overflow-x: auto; font-size: 0.78em; line-height: 1.5; }
+.holon-face { padding: var(--gap); border: 1px solid var(--line); border-radius: var(--radius); background: var(--raised); cursor: pointer; }
 `;
 
 export default async function draw({ holon, draws }: Given, space: Space) {

@@ -65,6 +65,7 @@ export class Interface {
       }),
     );
     await this.know(components.value as Id[]);
+    await this.lay();
     addEventListener("popstate", (event: PopStateEvent) =>
       void this.inTurn(() => this.walk((event.state as { commit?: Name | null } | null)?.commit ?? null)),
     );
@@ -77,6 +78,27 @@ export class Interface {
     const turn = this.moves.then(move);
     this.moves = turn.catch((error) => console.error(error));
     return turn;
+  }
+
+  // Every material in the field is laid on the page, and laid again when it
+  // changes, so everything drawn is made of what the field says.
+  private async lay() {
+    const materialType = (await this.engine.read({ name: "material" })) as Id | null;
+    if (!materialType) return;
+    const laid = new Map<Id, HTMLStyleElement>();
+    const layOne = (material: HolonRead | null, id: Id) => {
+      if (!laid.has(id)) {
+        const style = document.createElement("style");
+        style.dataset.material = id;
+        document.head.prepend(style);
+        laid.set(id, style);
+      }
+      laid.get(id)!.textContent = material ? String(material.body.css ?? "") : "";
+    };
+    for (const id of (await this.engine.read({ instances: materialType })) as Id[]) {
+      const material = await this.engine.subscribe({ holon: id }, (value) => layOne(value as unknown as HolonRead | null, id));
+      layOne(material.value as unknown as HolonRead | null, id);
+    }
   }
 
   private async know(ids: Id[]) {

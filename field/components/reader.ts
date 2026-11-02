@@ -10,22 +10,23 @@ import { element, isConfidence, markdown, placed } from "./prose.ts";
 // a record's are kept in the order of time, and are not.
 
 export const style = `
-.reader nav { font: 14px/1.5 ui-sans-serif, system-ui, sans-serif; color: var(--quiet); margin-bottom: 2.5rem; }
+.reader nav { font: var(--small) / 1.5 var(--sans); color: var(--quiet); margin-bottom: calc(var(--gap) * 2.5); }
 .reader nav a { color: inherit; text-decoration: none; }
 .reader nav a:hover { color: var(--ink); }
-.reader nav .step + .step::before { content: "›"; margin: 0 .5em; opacity: .6; }
-.reader h1 { font-size: 2rem; line-height: 1.2; font-weight: 600; margin: 0 0 1.25rem; letter-spacing: -0.01em; }
-.reader h1 .number { color: var(--quiet); font-weight: 400; margin-right: .4em; }
-.reader .status { font: 12px/1 ui-sans-serif, system-ui, sans-serif; text-transform: uppercase; letter-spacing: .06em;
-  color: var(--quiet); border: 1px solid var(--line); border-radius: 99px; padding: .3em .7em; vertical-align: middle; margin-left: .6em; }
-.reader .prose > p:first-child { font-size: 1.12em; }
-.reader .confidence { color: var(--quiet); font-size: .9em; }
-.reader pre { background: var(--raised); border: 1px solid var(--line); border-radius: 6px; padding: .8rem 1rem; overflow-x: auto; font-size: .8em; line-height: 1.5; }
-.reader code { font-size: .88em; }
-.reader blockquote { margin: 1rem 0; padding-left: 1rem; border-left: 3px solid var(--line); color: var(--quiet); }
+.reader nav .step + .step::before { content: "›"; margin: 0 0.5em; opacity: 0.6; }
+.reader h1 { font-size: var(--title); line-height: 1.2; font-weight: 600; margin: 0 0 calc(var(--gap) * 1.25); letter-spacing: -0.01em; }
+.reader h1 .number { color: var(--quiet); font-weight: 400; margin-right: 0.4em; }
+.reader .status { font: var(--smaller) / 1 var(--sans); text-transform: uppercase; letter-spacing: 0.06em; color: var(--quiet);
+  border: 1px solid var(--line); border-radius: 99px; padding: 0.3em 0.7em; vertical-align: middle; margin-left: 0.6em; }
+.reader .prose > p:first-child { font-size: var(--lead); }
+.reader .confidence { color: var(--quiet); font-size: 0.9em; }
+.reader pre { background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius); padding: 0.8em 1em;
+  overflow-x: auto; font-size: 0.8em; line-height: 1.5; }
+.reader code { font-size: 0.88em; }
+.reader blockquote { margin: var(--gap) 0; padding-left: var(--gap); border-left: 3px solid var(--line); color: var(--quiet); }
 .reader .unlinked { border-bottom: 1px dotted var(--quiet); cursor: help; }
-.reader .parts { list-style: none; padding: 0; margin: 2.5rem 0 0; display: grid; gap: .75rem; }
-.reader .space.face { margin: 1.25rem 0; }
+.reader .parts { list-style: none; padding: 0; margin: calc(var(--gap) * 2.5) 0 0; display: grid; gap: calc(var(--gap) * 0.75); }
+.reader .space.face { margin: calc(var(--gap) * 1.25) 0; }
 `;
 
 interface Step {

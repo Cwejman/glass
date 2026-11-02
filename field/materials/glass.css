@@ -1,0 +1,70 @@
+/* Glass's material: everything drawn is made of these names, and nothing
+   else. Colours come in a light and a dark; type is a serif to read in and a
+   sans for what stands around the reading; the measure keeps a line short
+   enough to read. */
+
+:root {
+  --ground: #fbfaf7;
+  --raised: #ffffff;
+  --ink: #23211d;
+  --quiet: #6f6a61;
+  --line: #e4e0d7;
+  --accent: #3d5a80;
+
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --text: 18px;
+  --leading: 1.6;
+  --lead: 1.12em;
+  --title: 2rem;
+  --heading: 1.1rem;
+  --small: 0.875rem;
+  --smaller: 0.75rem;
+
+  --measure: 40rem;
+  --gap: 1rem;
+  --radius: 8px;
+
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground: #171614;
+    --raised: #1e1d1a;
+    --ink: #e8e4dc;
+    --quiet: #9b958a;
+    --line: #2f2c28;
+    --accent: #9db4d6;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font: var(--text) / var(--leading) var(--serif);
+  -webkit-font-smoothing: antialiased;
+}
+
+#glass {
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: calc(var(--gap) * 3) var(--gap) calc(var(--gap) * 6);
+}
+
+a {
+  color: var(--accent);
+}
+
+code,
+pre {
+  font-family: var(--mono);
+}
+
+.glass-note {
+  color: var(--quiet);
+  font: var(--small) / 1.5 var(--sans);
+}
