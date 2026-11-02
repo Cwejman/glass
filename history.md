@@ -9,6 +9,12 @@ How glass came to be what it is, told over its commits, newest first, each day b
 
 *Begun 2026-11-02, on the author's word that the effort be noted in the log as the work goes. Each story reasoned by the session that did the work, from the commits and the author's words.*
 
+## Where code and knowledge stand
+
+On 2026-11-03 a subagent weighed glass as a name against OpenLight's own naming: it serves this iteration, and would not pass as a public name, being an everyday word held already by Apple and Google, and in OpenLight's reasoning a word for what has no structure. The author then asked whether code and markdown were mixing at the root. The session first proposed gathering the field and the vectors into the code, then, asked to reconsider, found the root holds real kinds side by side: the knowledge, the field, the contract, the code and the site. It went on to say code would one day leave the files for the field, which the author did not see the point of: code stays as files in git, its source and history, and is born into the field. The briefs that leaned that way were reworded.
+
+*Reasoned on 2026-11-03 by the session.*
+
 ## The first mark is built
 
 On 2026-11-03 the author asked for the whole of what is to be built to be seen, the details left to the session, which was to check and reason enough from every level. The store, the engine, the interface and the reader were built in that order, tests first, each read cold by a fresh agent and mended before the next stood on it, and the wiki was born into glass's own store and read in the browser from it.
@@ -79,7 +85,13 @@ The author named glass as three notions meeting, ontology, pure functional compu
 
 [Three notions meeting on one ontology, and both ways, in the grounds](git:f4ce609)
 
-### The first mark is built properly
+### Where code and knowledge stand
+
+On 2026-11-03 a subagent weighed glass as a name against OpenLight's own naming: it serves this iteration, and would not pass as a public name, being an everyday word held already by Apple and Google, and in OpenLight's reasoning a word for what has no structure. The author then asked whether code and markdown were mixing at the root. The session first proposed gathering the field and the vectors into the code, then, asked to reconsider, found the root holds real kinds side by side: the knowledge, the field, the contract, the code and the site. It went on to say code would one day leave the files for the field, which the author did not see the point of: code stays as files in git, its source and history, and is born into the field. The briefs that leaned that way were reworded.
+
+*Reasoned on 2026-11-03 by the session.*
+
+## The first mark is built properly
 
 Asked what comes next, the session proposed building the first mark in one orchestrated run, with the store as language-free test vectors and the engine in TypeScript. The author saw no reason against TypeScript, since the store asks almost no code, and asked whether a reader before the interface was a shortcut. It was. The plan now builds the interface primitive before the reader, births the wiki only once it can be navigated, and has every finished piece taken up by a fresh agent from its own angle. A misheard word first took TypeScript out, and Rust in; the author set it right, and TypeScript stands, with Rust kept possible by the vectors.
 

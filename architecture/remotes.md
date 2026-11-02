@@ -50,6 +50,8 @@ So the site is its field, whole and with its history, and anyone who points anot
 
 ### 4.1 Toward glass as a store
 
-In OpenLight a module is a store, and what a store ships to draw itself is served from the store. Followed through, glass's components become holons in a store of glass's own, which a site attaches beside its content, and only a small bootstrap, the chassis and the engine, stays a plain script. Then anyone could draw a field with other components, or draw other fields with glass's.
+In OpenLight a module is a store, and what a store ships to draw itself is served from the store. Glass's components are already holons, born into its store from their code, so a site could attach glass's store beside its own content and be drawn by glass's components, and anyone could draw a field with other components, or draw other fields with glass's.
 
-*Reasoned, the session's, 2026-11-01; a direction, not the first step.*
+The code stays where it is written, as files kept in git, and that is its source and its history. Born into the field, it is a holon the engine can match and the interface can run and show; being in the field does not take it out of the files.
+
+*Reasoned, the session's, 2026-11-01; a direction, not the first step. That code is kept as files in git and born into the field, not moved into it, the author's, [2026-11-03](../said/2026-11-03.md#5-code-stays-as-files).*

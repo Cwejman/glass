@@ -35,6 +35,6 @@ Built, it is two components: the reader draws a brief whole, with the way down t
 
 ## 4. How knowledge enters the store
 
-The spec could go straight into a store, but nothing could read it yet; that was the author's catch-22. The rule names a folder with its entry file as a lawful form of a holarchy, so this wiki is written that way now, and the first commit of glass's store will be born from it. From then on the store holds the wiki, and the files are how it arrived.
+The spec could go straight into a store, but nothing could read it yet; that was the author's catch-22. The rule names a folder with its entry file as a lawful form of a holarchy, so this wiki is written that way now, and the first commit of glass's store will be born from it. From then on the store holds the wiki, born again from the files whenever they change, and the files are its source and git its history, as they are for glass's code.
 
-*The catch-22 and the wish to put the spec in the store the author's, 2026-11-01; birthing it from the files the session's proposal, agreed in the outline.*
+*The catch-22 and the wish to put the spec in the store the author's, 2026-11-01; birthing it from the files the session's proposal, agreed in the outline. The files kept as the source the author's, 2026-11-02: no need to move from markdown and git prematurely.*
