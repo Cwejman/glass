@@ -41,6 +41,8 @@ The relations raised what makes a holon whole once part and whole are read from 
 
 With the relations settled, the author asked that the effort be noted in this log, kept in markdown and git until the store holds it, and gave a little philosophy for the culture glass grows in: what matters is the ontology, the store stands separate, the engine is where the field is tested, interfaces are decoupled, and the code carries the tone of the primitives.
 
+[The grounds glass rests on, and its history logged in markdown and git until the store holds it](git:0f29d37)
+
 ## The wiki under the rule
 
 On 2026-11-01 the author turned glass back to its architecture: no faking until making, the engine in the client, the store glass's own object model served as files. The first iteration was cleared and this wiki written in its place, outlined first, read by fresh heads, and then read by the author, who named the store and the engine as primitives.
