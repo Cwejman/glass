@@ -43,6 +43,10 @@ With the relations settled, the author asked that the effort be noted in this lo
 
 [The grounds glass rests on, and its history logged in markdown and git until the store holds it](git:0f29d37)
 
+### A type's fields are said in prose
+
+The author spoke of a web of gradient knowledge, programs and code ontologically connected rather than hung off the briefs, and asked the session to lead. The session proposed that a type's contract be written in language as well as structure, and he agreed: a holon's fields are the contact points for prose, the connectors where holons meet into a larger ontology. That is now in the type primitive, and in the grounds that code is looked upon as built on the primitives.
+
 ## The wiki under the rule
 
 On 2026-11-01 the author turned glass back to its architecture: no faking until making, the engine in the client, the store glass's own object model served as files. The first iteration was cleared and this wiki written in its place, outlined first, read by fresh heads, and then read by the author, who named the store and the engine as primitives.

@@ -32,3 +32,7 @@ Interfaces stand on the engine. Each is coupled only to itself and to the holons
 The tone, register and nuance in which glass is understood is how its code looks, how it is to use, and how its pieces compose. The architecture reflects the ontology of the primitives, and that reflection carries on outward into everything made: the data, the contracts types and the protocol set, and the code. Code that reads like the primitives it serves is the culture kept.
 
 *The author's, 2026-11-02; the contracts named as types' and the protocol's the session's reading.*
+
+The primitives are built to make a world of programs, and a program and its code are not always the same unit. Descending into the code, it is looked upon as artfully as anything else built on the primitives, for what it shows of the archetypal foundations of building applications.
+
+*The author's, [2026-11-02](said/2026-11-02.md#13-fields-as-connectors).*

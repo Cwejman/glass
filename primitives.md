@@ -23,6 +23,10 @@ A type is a schema in the field: the structure a holon's data has. Data is by it
 
 *The author's, 2026-11-01: type is what allows you to create schemas within the field, what allows for structure, and that is what programs need. How a type is written, and how the store checks a holon against it, is [open](plan.md#3-what-is-open).*
 
+Each field a type declares is said in prose as well as in structure: what the key means, beside the shape the engine checks. A field is where holons connect, so the fields are the field's ontological connectors, and holons joined at them form a larger ontology, readable by a person, a program or a language model alike.
+
+*The author's, 2026-11-02: the fields of a holon are contact points for prose, so that we can build ontologically upon them; where each holon connects are the ontological connectors, forming larger ontology. That the prose stands beside the checked shape, and models read it, the session's proposal of the same day, which he answered yes.*
+
 ## 3. Store
 
 A store is where holons are kept and how they travel: every version of every holon, and every commit that changed them, as objects that never change, with one pointer saying which commit is current. A store can be copied, served and attached anywhere, and every copy is whole.
