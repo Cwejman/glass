@@ -6,7 +6,7 @@ import { Interface } from "./interface.ts";
 // its root. Which components draw, and what, is all field data.
 
 const page = document.documentElement.dataset;
-const engine = new Connection(new Worker(new URL("./engine.js", import.meta.url), { type: "module" }));
+const engine = new Connection(new Worker(new URL("./worker.js", import.meta.url), { type: "module" }));
 
 try {
   await engine.attach("glass", page.store ?? "./store/");

@@ -1,0 +1,23 @@
+[
+  {
+    "file": "reader.ts",
+    "title": "Reader",
+    "says": "A brief whole, read along the gradient: the way down to it, its prose with the parts it places, and the briefs beneath it by their faces.",
+    "takes": ["brief", "record"],
+    "draws": ["whole"]
+  },
+  {
+    "file": "face.ts",
+    "title": "Face",
+    "says": "A brief seen from above: its number, its title and its first paragraph.",
+    "takes": ["brief", "record"],
+    "draws": ["face"]
+  },
+  {
+    "file": "holon.ts",
+    "title": "Holon",
+    "says": "Any holon nothing closer draws: what it is an instance of, and its body as the JSON it is.",
+    "takes": [],
+    "draws": ["whole", "face"]
+  }
+]

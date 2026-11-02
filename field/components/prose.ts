@@ -1,0 +1,53 @@
+import { Marked, type Token, type Tokens } from "marked";
+
+// Prose under the rule, drawn: markdown whose links into the field are
+// `ref:<id>`. A paragraph that is nothing but one such link places a part
+// there; any other link only mentions. A link to the web stays a link; one
+// to somewhere the field cannot reach, as a git commit, is shown as text
+// with its address where the pointer rests. Raw HTML in prose is shown as text, never run.
+
+export const refOf = (href: string) => /^ref:([0-9A-HJKMNP-TV-Z]{26})/.exec(href)?.[1];
+
+const escape = (text: string) =>
+  text.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!);
+
+export const markdown = new Marked({
+  renderer: {
+    html: ({ text }) => escape(text),
+    link({ href, title, tokens }) {
+      const text = this.parser.parseInline(tokens);
+      const ref = refOf(href);
+      if (ref) return `<a href="#" data-ref="${ref}"${title ? ` title="${escape(title)}"` : ""}>${text}</a>`;
+      if (/^(https?|mailto):/i.test(href)) return `<a href="${escape(href)}"${title ? ` title="${escape(title)}"` : ""}>${text}</a>`;
+      return `<span class="unlinked" title="${escape(href)}">${text}</span>`;
+    },
+  },
+});
+
+// The part a paragraph places, if it is nothing but a link into the field.
+export function placed(token: Token): string | undefined {
+  if (token.type !== "paragraph") return undefined;
+  const inner = (token as Tokens.Paragraph).tokens.filter((t) => !(t.type === "text" && t.raw.trim() === ""));
+  if (inner.length !== 1 || inner[0]!.type !== "link") return undefined;
+  return refOf((inner[0] as Tokens.Link).href);
+}
+
+// A paragraph that is all emphasis, as the rule's confidence line is.
+export function isConfidence(token: Token) {
+  if (token.type !== "paragraph") return false;
+  const inner = (token as Tokens.Paragraph).tokens;
+  return inner.length === 1 && inner[0]!.type === "em";
+}
+
+// The face: the first paragraph, as plain inline text.
+export function faceOf(prose: string): string {
+  const first = markdown.lexer(prose).find((token) => token.type === "paragraph" && !placed(token) && !isConfidence(token));
+  return first ? markdown.parseInline((first as Tokens.Paragraph).text) as string : "";
+}
+
+export function element<K extends keyof HTMLElementTagNameMap>(tag: K, className?: string, text?: string) {
+  const made = document.createElement(tag);
+  if (className) made.className = className;
+  if (text !== undefined) made.textContent = text;
+  return made;
+}

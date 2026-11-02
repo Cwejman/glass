@@ -48,7 +48,7 @@ export class Interface {
     if (!componentType) throw new Error("the field holds no component type");
     const ids = (await this.engine.read({ instances: componentType })) as Id[];
     this.components = (await Promise.all(ids.map((id) => this.engine.read({ holon: id })))) as unknown as HolonRead[];
-    addEventListener("popstate", (event) => void this.walk((event.state as { commit?: Name } | null)?.commit ?? null));
+    addEventListener("popstate", (event: PopStateEvent) => void this.walk((event.state as { commit?: Name } | null)?.commit ?? null));
     if (!history.state) history.replaceState({ commit: await this.engine.read({ head: "home" }) }, "");
     await this.draw();
   }
