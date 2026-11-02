@@ -56,15 +56,16 @@ const componentFiles: ComponentFile[] = await Promise.all(
 );
 const bornComponents = components(componentFiles, idOf, bornTypes.names);
 
+const declaredMaterials = JSON.parse(await readFile(join(repo, "field/materials.json"), "utf8")) as { file: string; title: string; says: string }[];
 const bornMaterials = materials(
-  [
-    {
-      from: "field/materials/glass.css",
-      title: "Glass",
-      says: "Glass's own material: a warm ground in light and dark, a serif to read in, a sans around the reading, and a short measure.",
-      css: await readFile(join(repo, "field/materials/glass.css"), "utf8"),
-    },
-  ],
+  await Promise.all(
+    declaredMaterials.map(async ({ file, title, says }) => ({
+      from: `field/materials/${file}`,
+      title,
+      says,
+      css: await readFile(join(repo, "field/materials", file), "utf8"),
+    })),
+  ),
   idOf,
   bornTypes.names,
 );

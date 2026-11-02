@@ -12,7 +12,7 @@ import { pull } from "./pull.ts";
 
 declare const self: DedicatedWorkerGlobalScope;
 
-const engine = (async () => {
+const started = (async () => {
   const engine = new Engine(new Store(await IdbBackend.open("glass-home")));
   await engine.start();
   return engine;
@@ -22,17 +22,17 @@ const subscriptions = new Map<number, { read: Read; last: string }>();
 const send = (reply: Reply) => self.postMessage(reply);
 
 async function answer(message: Message): Promise<Json> {
-  const field = await engine;
+  const engine = await started;
   switch (message.op) {
     case "attach":
-      await field.attach(message.key, await pull(new URL(message.url, self.location.href).href));
+      await engine.attach(message.key, await pull(new URL(message.url, self.location.href).href));
       return null;
     case "read":
-      return field.read(message.read);
+      return engine.read(message.read);
     case "commit":
-      return (await field.commit(message.commit)) ?? null;
+      return (await engine.commit(message.change)) ?? null;
     case "subscribe": {
-      const value = await field.read(message.read);
+      const value = await engine.read(message.read);
       subscriptions.set(message.id, { read: message.read, last: canonical(value) });
       return { subscription: message.id, value };
     }
@@ -42,12 +42,12 @@ async function answer(message: Message): Promise<Json> {
   }
 }
 
-// After every change to the field, each subscription is read again, and told only if what
-// it reads has changed.
-engine.then((field) =>
-  field.onChange(() => {
+// After every change to the field, each subscription is read again, and told
+// only if what it reads has changed.
+started.then((engine) =>
+  engine.onChange(() => {
     for (const [subscription, entry] of subscriptions)
-      field.read(entry.read).then(
+      engine.read(entry.read).then(
         (value) => {
           const text = canonical(value);
           if (text === entry.last || !subscriptions.has(subscription)) return;

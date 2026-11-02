@@ -5,11 +5,13 @@ import type { Body } from "../store/objects.ts";
 import type { HolonRead, Read } from "../engine/engine.ts";
 import type { Connection } from "./connection.ts";
 
-// The interface draws and holds nothing. It mounts what the layout names, and
-// each component encloses what it is given and opens space in it, where what
-// it holds is drawn in turn by the component whose type matches. What lasts,
-// even where the reader stands, is in the field: the arrangement is a layout
-// in the home, and every move is a commit to it.
+// The interface mounts what the layout names, and each component encloses
+// what it is given and opens space in it, where what it holds is drawn in
+// turn by the component whose type matches. Nothing it holds lasts: what it
+// keeps is what it is drawing now, the components it knows and their loaded
+// code, and the moves it has yet to take. What lasts, even where the reader
+// stands, is in the field: the arrangement is a layout in the home, and every
+// move is a commit to it.
 
 export interface Given {
   holon: HolonRead;
@@ -17,9 +19,13 @@ export interface Given {
   with: Json;
 }
 
+// What a component is given to work with: a space to open for what it holds,
+// reads of the field, which draw it again when what they read changes, and
+// a way to place the reader.
 export interface Space {
   open(id: Id, draws: string, given?: Json): HTMLElement;
   read(read: Read): Promise<Json>;
+  holon(id: Id): Promise<HolonRead | null>;
   place(id: Id): Promise<void>;
 }
 
@@ -96,19 +102,19 @@ export class Interface {
       laid.get(id)!.textContent = material ? String(material.body.css ?? "") : "";
     };
     for (const id of (await this.engine.read({ instances: materialType })) as Id[]) {
-      const material = await this.engine.subscribe({ holon: id }, (value) => layOne(value as unknown as HolonRead | null, id));
-      layOne(material.value as unknown as HolonRead | null, id);
+      const material = await this.engine.subscribeHolon(id, (value) => layOne(value, id));
+      layOne(material.value, id);
     }
   }
 
   private async know(ids: Id[]) {
-    this.components = (await Promise.all(ids.map((id) => this.engine.read({ holon: id })))) as unknown as HolonRead[];
+    this.components = (await Promise.all(ids.map((id) => this.engine.holon(id)))).filter((holon) => holon !== null);
   }
 
   private async layout(): Promise<HolonRead> {
     const id = ((await this.engine.read({ name: "arrangement" })) ?? (await this.engine.read({ name: "entry" }))) as Id | null;
     if (!id) throw new Error("the field has no entry to boot into");
-    return (await this.engine.read({ holon: id })) as unknown as HolonRead;
+    return (await this.engine.holon(id))!;
   }
 
   private async draw() {
@@ -146,8 +152,8 @@ export class Interface {
   // reader's first move it stood as the entry.
   private async walk(commit: Name | null) {
     const layout = await this.layout();
-    const then = commit && layout.store === "home" ? ((await this.engine.read({ holon: layout.id, at: commit })) as unknown as HolonRead | null) : null;
-    const entry = (await this.engine.read({ holon: (await this.engine.read({ name: "entry" })) as Id })) as unknown as HolonRead;
+    const then = commit && layout.store === "home" ? await this.engine.holon(layout.id, commit) : null;
+    const entry = (await this.engine.holon((await this.engine.read({ name: "entry" })) as Id))!;
     await this.arrange(layout, (then ?? entry).body);
     await this.draw();
   }
@@ -163,15 +169,6 @@ export class Interface {
       holons: [{ id, instance: layout.instance, body: { ...arrangement, title: "Arrangement" } }],
       names: { arrangement: id },
     });
-  }
-
-  private match(holon: HolonRead, draws: string): HolonRead | undefined {
-    const able = this.components.filter((component) => (component.body.draws as string[]).includes(draws));
-    const takes = (component: HolonRead) => (component.body.takes as { $ref: Id }[]).map((ref) => ref.$ref);
-    return (
-      able.find((component) => takes(component).some((type) => holon.instance.includes(type))) ??
-      able.find((component) => takes(component).length === 0)
-    );
   }
 
   private load(component: HolonRead): Promise<Module> {
@@ -206,9 +203,15 @@ export class Interface {
       this.release(hosted);
       const current = () => !hosted.closed && hosted.drawing === drawing;
       if (!holon) return host.replaceChildren(note(`${id} is not in the field`));
-      const component = called ? this.components.find((candidate) => candidate.id === called) : this.match(holon, draws);
+      const component = called ? this.components.find((candidate) => candidate.id === called) : match(this.components, holon, draws);
       if (!component) return host.replaceChildren(note(`nothing draws ${holon.id} as ${draws}`));
 
+      const read = async (query: Read) => {
+        const subscription = await this.engine.subscribe(query, () => void (current() && render()));
+        if (current()) hosted.reads.push(subscription.close);
+        else subscription.close();
+        return subscription.value;
+      };
       const space: Space = {
         open: (child, childDraws, childGiven = null) => {
           const childHost = document.createElement("div");
@@ -219,12 +222,8 @@ export class Interface {
           }
           return childHost;
         },
-        read: async (read) => {
-          const subscription = await this.engine.subscribe(read, () => void (current() && render()));
-          if (current()) hosted.reads.push(subscription.close);
-          else subscription.close();
-          return subscription.value;
-        },
+        read,
+        holon: async (child) => (await read({ holon: child })) as unknown as HolonRead | null,
         place: (to) => this.place(mount, to),
       };
 
@@ -241,13 +240,13 @@ export class Interface {
       }
     };
 
-    const subscription = await this.engine.subscribe({ holon: id }, (value) => {
-      holon = value as unknown as HolonRead | null;
+    const subscription = await this.engine.subscribeHolon(id, (value) => {
+      holon = value;
       void render();
     });
     if (hosted.closed) return subscription.close();
     hosted.unsubscribe = subscription.close;
-    holon = subscription.value as unknown as HolonRead | null;
+    holon = subscription.value;
     await render();
   }
 
@@ -266,6 +265,17 @@ export class Interface {
     hosted.unsubscribe?.();
     this.release(hosted);
   }
+}
+
+// The component that draws a holon in the way asked: one that takes one of
+// its types, or else one that takes any holon.
+export function match(components: readonly HolonRead[], holon: HolonRead, draws: string): HolonRead | undefined {
+  const able = components.filter((component) => (component.body.draws as string[]).includes(draws));
+  const takes = (component: HolonRead) => (component.body.takes as { $ref: Id }[]).map((ref) => ref.$ref);
+  return (
+    able.find((component) => takes(component).some((type) => holon.instance.includes(type))) ??
+    able.find((component) => takes(component).length === 0)
+  );
 }
 
 function note(text: string) {

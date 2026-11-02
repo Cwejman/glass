@@ -1,5 +1,5 @@
 import type { Json } from "../store/canonical.ts";
-import type { Commit, Read } from "./engine.ts";
+import type { Change, Read } from "./engine.ts";
 
 // The one protocol: everything that speaks to the engine sends these, and
 // nothing that speaks to it depends on how it is built. Run, await and cancel
@@ -8,7 +8,7 @@ import type { Commit, Read } from "./engine.ts";
 export type Request =
   | { op: "attach"; key: string; url: string }
   | { op: "read"; read: Read }
-  | { op: "commit"; commit: Commit }
+  | { op: "commit"; change: Change }
   | { op: "subscribe"; read: Read }
   | { op: "unsubscribe"; subscription: number };
 

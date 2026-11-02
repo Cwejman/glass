@@ -10,21 +10,21 @@ import { element, isConfidence, markdown, placed } from "./prose.ts";
 // a record's are kept in the order of time, and are not.
 
 export const style = `
-.reader nav { font: var(--small) / 1.5 var(--sans); color: var(--quiet); margin-bottom: calc(var(--gap) * 2.5); }
+.reader nav { font: var(--small) / var(--leading-close) var(--sans); color: var(--quiet); margin-bottom: calc(var(--gap) * 2.5); }
 .reader nav a { color: inherit; text-decoration: none; }
 .reader nav a:hover { color: var(--ink); }
 .reader nav .step + .step::before { content: "›"; margin: 0 0.5em; opacity: 0.6; }
-.reader h1 { font-size: var(--title); line-height: 1.2; font-weight: 600; margin: 0 0 calc(var(--gap) * 1.25); letter-spacing: -0.01em; }
+.reader h1 { font-size: var(--title); line-height: var(--leading-tight); font-weight: 600; margin: 0 0 calc(var(--gap) * 1.25); letter-spacing: -0.01em; }
 .reader h1 .number { color: var(--quiet); font-weight: 400; margin-right: 0.4em; }
 .reader .status { font: var(--smaller) / 1 var(--sans); text-transform: uppercase; letter-spacing: 0.06em; color: var(--quiet);
-  border: 1px solid var(--line); border-radius: 99px; padding: 0.3em 0.7em; vertical-align: middle; margin-left: 0.6em; }
+  border: var(--hairline) solid var(--line); border-radius: var(--pill); padding: 0.3em 0.7em; vertical-align: middle; margin-left: 0.6em; }
 .reader .prose > p:first-child { font-size: var(--lead); }
-.reader .confidence { color: var(--quiet); font-size: 0.9em; }
-.reader pre { background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius); padding: 0.8em 1em;
-  overflow-x: auto; font-size: 0.8em; line-height: 1.5; }
-.reader code { font-size: 0.88em; }
-.reader blockquote { margin: var(--gap) 0; padding-left: var(--gap); border-left: 3px solid var(--line); color: var(--quiet); }
-.reader .unlinked { border-bottom: 1px dotted var(--quiet); cursor: help; }
+.reader .confidence { color: var(--quiet); font-size: var(--aside); }
+.reader pre { background: var(--raised); border: var(--hairline) solid var(--line); border-radius: var(--radius); padding: var(--inset);
+  overflow-x: auto; font-size: var(--code); line-height: var(--leading-close); }
+.reader :not(pre) > code { font-size: var(--aside); }
+.reader blockquote { margin: var(--gap) 0; padding-left: var(--gap); border-left: var(--rule) solid var(--line); color: var(--quiet); }
+.reader .unlinked { border-bottom: var(--hairline) dotted var(--quiet); cursor: help; }
 .reader .parts { list-style: none; padding: 0; margin: calc(var(--gap) * 2.5) 0 0; display: grid; gap: calc(var(--gap) * 0.75); }
 .reader .space.face { margin: calc(var(--gap) * 1.25) 0; }
 `;
@@ -93,40 +93,38 @@ export default async function draw({ holon }: Given, space: Space) {
   return article;
 }
 
-// From the root down to this brief: up through whatever holds it, as a part
-// or by a lone link, and numbered within its file as the rule numbers it.
-async function wayDown(holon: HolonRead, space: Space, numbers: (whole: HolonRead) => boolean): Promise<Step[]> {
-  const way: Step[] = [];
-  const seen = new Set<Id>();
-  let current: HolonRead | null = holon;
-  while (current && !seen.has(current.id)) {
-    seen.add(current.id);
-    const holders = (await space.read({ holders: current.id })) as { id: Id; key: string }[];
-    let parent: HolonRead | null = null;
-    let index = -1;
-    for (const holder of holders) {
-      const read = (await space.read({ holon: holder.id })) as unknown as HolonRead | null;
-      if (!read) continue;
-      if (holder.key === "parts") {
-        index = ((read.body.parts ?? []) as { $ref: Id }[]).findIndex((part) => part.$ref === current!.id);
-        parent = read;
-        break;
-      }
-      if (holder.key === "prose" && placesById(String(read.body.prose ?? ""), current.id)) {
-        parent = read;
-        break;
-      }
-    }
-    const numbered = index >= 0 && parent !== null && numbers(parent);
-    way.unshift({ id: current.id, title: String(current.body.title ?? ""), number: numbered ? `${index + 1}` : "" });
-    current = parent;
-  }
-  // A number runs on from its parent's while the parent is a part too.
-  for (let i = 1; i < way.length; i++)
-    if (way[i]!.number && way[i - 1]!.number) way[i]!.number = `${way[i - 1]!.number}.${way[i]!.number}`;
-  return way;
+// What holds a brief, and where: the whole that lists it among its parts, at
+// its place there, or the whole whose prose places it by a lone link.
+interface Holder {
+  whole: HolonRead;
+  place?: number;
 }
 
-function placesById(prose: string, id: Id) {
-  return markdown.lexer(prose).some((token) => placed(token) === id);
+async function holderOf(holon: HolonRead, space: Space): Promise<Holder | undefined> {
+  for (const { id, key } of (await space.read({ holders: holon.id })) as { id: Id; key: string }[]) {
+    const whole = await space.holon(id);
+    if (!whole) continue;
+    if (key === "parts") return { whole, place: ((whole.body.parts ?? []) as { $ref: Id }[]).findIndex((part) => part.$ref === holon.id) };
+    if (key === "prose" && markdown.lexer(String(whole.body.prose ?? "")).some((token) => placed(token) === holon.id)) return { whole };
+  }
+  return undefined;
+}
+
+// From the root down to this brief, each step numbered as the rule numbers
+// it: by its place among its whole's parts, running on from the whole's own
+// number while the whole is a part too, and starting again across a file.
+async function wayDown(holon: HolonRead, space: Space, numbers: (whole: HolonRead) => boolean): Promise<Step[]> {
+  const up: { holon: HolonRead; place?: number }[] = [];
+  const seen = new Set<Id>();
+  for (let at: Holder | undefined = { whole: holon }; at && !seen.has(at.whole.id); ) {
+    seen.add(at.whole.id);
+    const holder = await holderOf(at.whole, space);
+    up.push({ holon: at.whole, place: holder && holder.place !== undefined && numbers(holder.whole) ? holder.place : undefined });
+    at = holder;
+  }
+  return up.reverse().reduce<Step[]>((way, { holon, place }) => {
+    const above = way.at(-1)?.number;
+    const number = place === undefined ? "" : above ? `${above}.${place + 1}` : `${place + 1}`;
+    return [...way, { id: holon.id, title: String(holon.body.title ?? ""), number }];
+  }, []);
 }

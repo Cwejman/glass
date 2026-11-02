@@ -17,7 +17,11 @@
 
   --text: 18px;
   --leading: 1.6;
+  --leading-close: 1.5;
+  --leading-tight: 1.2;
   --lead: 1.12em;
+  --aside: 0.93em;
+  --code: 0.8em;
   --title: 2rem;
   --heading: 1.1rem;
   --small: 0.875rem;
@@ -25,7 +29,11 @@
 
   --measure: 40rem;
   --gap: 1rem;
+  --inset: 0.8em 1em;
   --radius: 8px;
+  --pill: 99px;
+  --hairline: 1px;
+  --rule: 3px;
 
   color-scheme: light dark;
 }
@@ -66,5 +74,5 @@ pre {
 
 .glass-note {
   color: var(--quiet);
-  font: var(--small) / 1.5 var(--sans);
+  font: var(--small) / var(--leading-close) var(--sans);
 }

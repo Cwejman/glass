@@ -1,5 +1,4 @@
 import type { Id } from "../../src/store/id.ts";
-import type { HolonRead } from "../../src/engine/engine.ts";
 import type { Given, Space } from "../../src/interface/interface.ts";
 import { element } from "./prose.ts";
 
@@ -7,16 +6,16 @@ import { element } from "./prose.ts";
 // body as the JSON it is, code shown as code.
 
 export const style = `
-.holon-whole h1 { font-size: var(--title); line-height: 1.2; margin: 0 0 0.25em; }
-.holon-whole .instance, .holon-face .instance { font: var(--small) / 1.5 var(--sans); color: var(--quiet); }
-.holon-whole pre { background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius); padding: 0.8em 1em;
-  overflow-x: auto; font-size: 0.78em; line-height: 1.5; }
-.holon-face { padding: var(--gap); border: 1px solid var(--line); border-radius: var(--radius); background: var(--raised); cursor: pointer; }
+.holon-whole h1 { font-size: var(--title); line-height: var(--leading-tight); margin: 0 0 0.25em; }
+.holon-whole .instance, .holon-face .instance { font: var(--small) / var(--leading-close) var(--sans); color: var(--quiet); }
+.holon-whole pre { background: var(--raised); border: var(--hairline) solid var(--line); border-radius: var(--radius); padding: var(--inset);
+  overflow-x: auto; font-size: var(--code); line-height: var(--leading-close); }
+.holon-face { padding: var(--gap); border: var(--hairline) solid var(--line); border-radius: var(--radius); background: var(--raised); cursor: pointer; }
 `;
 
 export default async function draw({ holon, draws }: Given, space: Space) {
   const types = await Promise.all(
-    holon.instance.map(async (id: Id) => ((await space.read({ holon: id })) as unknown as HolonRead | null)?.body.title ?? id),
+    holon.instance.map(async (id: Id) => (await space.holon(id))?.body.title ?? id),
   );
   const title = String(holon.body.title ?? holon.id);
   const instance = element("div", "instance", `${types.join(", ")} · ${holon.store}`);

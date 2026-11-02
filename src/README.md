@@ -14,14 +14,14 @@ Glass's code is laid out as its primitives stand: the store, the engine on it, t
 The code, in `src/`:
 
 - `src/store/`: canonical JSON, names, ids, the objects and the store over a backend: in memory, as files, or served over HTTP. The store's format is fixed by `vectors/`, made apart from this code.
-- `src/engine/`: the engine, the references it finds in bodies, the types it judges by, pulling a served store, the home in the browser's storage, the protocol, and the worker it runs in.
+- `src/engine/`: the field as a value and what reads and judges it, the engine that keeps it, the references it finds in bodies, the types it judges by, pulling a served store, the home in the browser's storage, the protocol, and the worker it runs in.
 - `src/interface/`: the chassis, the interface's end of the protocol, and the interface that mounts what the layout names.
-- `src/birth/`: reading the wiki's files under the rule, and committing them with the field into `site/store/`.
+- `src/birth/`: reading the wiki's files under the rule, what the field's holons are made from what the files hold, and committing them into `site/store/`.
 
 Beside it:
 
 - The knowledge: this wiki's files, `architecture/` and `said/`, born into the store.
-- `field/`: the field glass ships, born into the store beside the knowledge: the types as JSON, each field said in prose, and the components, holons that hold code, declared in `components.json`.
+- `field/`: the field glass ships, born into the store beside the knowledge: the types as JSON, each field said in prose; the components, holons that hold code, declared in `components.json`; and the materials everything is drawn with, declared in `materials.json`.
 - `vectors/`: the store's contract, in no language, which any implementation answers to.
 - `site/`: the page, the built client, and the store, as a static host serves them.
 

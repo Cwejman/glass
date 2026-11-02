@@ -4,7 +4,7 @@ import { isRef } from "./references.ts";
 
 // A type is a holon whose body declares fields. Each field is said in prose,
 // what the key means, beside the shape the engine checks: the fields are where
-// holons connect, so each connector carries both.
+// holons connect, the field's connectors, so each carries both.
 
 export type Shape =
   | "string"
@@ -14,22 +14,22 @@ export type Shape =
   | "ref"
   | "json"
   | { list: Shape }
-  | { fields: Fields };
+  | { fields: Connectors };
 
-export interface Field {
+export interface Connector {
   says: string;
   shape: Shape;
   optional?: boolean;
 }
 
-export type Fields = { [key: string]: Field };
+export type Connectors = { [key: string]: Connector };
 
-export function fieldsOf(body: Body): Fields | undefined {
+export function connectorsOf(body: Body): Connectors | undefined {
   const fields = body.fields;
   if (fields === undefined) return undefined;
   const problem = fieldsProblem(fields, "fields");
   if (problem) throw new Error(`a type's ${problem}`);
-  return fields as unknown as Fields;
+  return fields as unknown as Connectors;
 }
 
 function fieldsProblem(fields: Json, at: string): string | undefined {
@@ -57,7 +57,7 @@ function shapeProblem(shape: Json | undefined, at: string): string | undefined {
 // What is wrong with a body held against the fields of all its types, if
 // anything: every key declared by some type, and each type held against the
 // body on its own, so a key two types declare must fit both.
-export function bodyProblem(body: Body, types: Fields[]): string | undefined {
+export function bodyProblem(body: Body, types: Connectors[]): string | undefined {
   for (const key of Object.keys(body))
     if (!types.some((fields) => Object.hasOwn(fields, key))) return `${key} is not a field of its types`;
   for (const fields of types) {
@@ -67,7 +67,7 @@ export function bodyProblem(body: Body, types: Fields[]): string | undefined {
   return undefined;
 }
 
-function valuesProblem(values: { [key: string]: Json }, fields: Fields, at: string, closed = true): string | undefined {
+function valuesProblem(values: { [key: string]: Json }, fields: Connectors, at: string, closed = true): string | undefined {
   for (const [key, value] of Object.entries(values)) {
     if (!Object.hasOwn(fields, key)) {
       if (closed) return `${at}${key} is not a field of its types`;

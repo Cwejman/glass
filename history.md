@@ -9,6 +9,12 @@ How glass came to be what it is, told over its commits, newest first, each day b
 
 *Begun 2026-11-02, on the author's word that the effort be noted in the log as the work goes. Each story reasoned by the session that did the work, from the commits and the author's words.*
 
+## The code read for its tone
+
+Asked whether classes and imperative code matter, the author answered that the material one builds in goes into everything: every component, the code and the styling. The engine's core became a pure field value, plain data with the stores' past asked for by its own name, and the engine a thin shell that keeps the field as it stands and takes acts in turn. The birth became functions of what its files hold, with the reading and writing kept at the edge. The material, the colours, type and measure everything is drawn with, became a holon in the field, laid by the interface, and the chassis page holds no style of its own. A fresh agent then read all of it for how it reads; it found the field still holding stores, a comment saying the interface holds nothing, one cast written ten times, two pairs of colliding names, and styles going around the material, and each was mended.
+
+*Reasoned on 2026-11-03 by the session.*
+
 ## Where code and knowledge stand
 
 On 2026-11-03 a subagent weighed glass as a name against OpenLight's own naming: it serves this iteration, and would not pass as a public name, being an everyday word held already by Apple and Google, and in OpenLight's reasoning a word for what has no structure. The author then asked whether code and markdown were mixing at the root. The session first proposed gathering the field and the vectors into the code, then, asked to reconsider, found the root holds real kinds side by side: the knowledge, the field, the contract, the code and the site. It went on to say code would one day leave the files for the field, which the author did not see the point of: code stays as files in git, its source and history, and is born into the field. The briefs that leaned that way were reworded.
