@@ -42,7 +42,7 @@ Each step is built, tested, read by a fresh agent and mended:
 - **The engine**: stores attached and read as one, every commit judged against its types and taken in turn, references indexed, the home the one store written, on its own thread in the browser.
 - **The interface**: the chassis, components born as holons from their code, mounts held by a layout, type-matched spaces, and the arrangement kept in the home, so moving through the wiki, back and forward, and a reload all stand on its commits.
 - **The reader**: a brief whole with the way down to it, its prose with the parts it places, and the briefs beneath by their faces; a face for a brief seen from above; and a plain view for any other holon.
-- **The wiki in the store**: born from these files with glass's types and components, 188 holons, each judged by the engine, keeping its id across births.
+- **The wiki in the store**: born from these files with glass's types and components, each brief a holon judged by the engine, keeping its id across births by its file and heading; a heading renamed is born as a new holon, and what the files no longer hold is taken out of the field, its history kept.
 
 Not yet built, though the briefs describe them: what is attached is named by the page, not kept in the home; run, await and cancel wait for programs; components run in the page itself, not apart, which is safe only while the one store attached is glass's own; and a brief's prose is one piece of markdown.
 

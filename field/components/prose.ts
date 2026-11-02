@@ -14,6 +14,9 @@ const escape = (text: string) =>
 export const markdown = new Marked({
   renderer: {
     html: ({ text }) => escape(text),
+    // An image is not fetched: loading it would tell whoever serves it who
+    // reads, and when. It is shown by what it says, its address beside.
+    image: ({ href, text }) => `<span class="unlinked" title="${escape(href)}">${escape(text || "an image")}</span>`,
     link({ href, title, tokens }) {
       const text = this.parser.parseInline(tokens);
       const ref = refOf(href);

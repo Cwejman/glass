@@ -29,7 +29,7 @@ The reader is what is wanted, as OpenLight held: a component that draws whatever
 
 *The reader as what is wanted, and settling something small as the first goal, the author's, 2026-11-01; the small reader's shape the session's proposal.*
 
-Built, it is two components: the reader draws a brief whole, with the way down to it numbered as the rule numbers it, its prose with each part it places drawn by its face, and its parts beneath; the face draws a brief by its number, title and first paragraph. A record's entries are not numbered, being kept by time. A link into the field places the reader there; a link to the web stays a link; one to where the field cannot reach, such as a git commit, is shown as text.
+Built, it is two components: the reader draws a brief whole, with the way down to it numbered as the rule numbers it, its prose with each part it places drawn by its face, and its parts beneath; the face draws a brief by its number, title and first paragraph. A record's entries are not numbered, being kept by time. A link into the field places the reader there; a link to the web stays a link; one to where the field cannot reach, such as a git commit, is shown as text, and so is an image, which is never fetched, since fetching it would tell whoever serves it who reads.
 
 *Built by the session, 2026-11-03.*
 

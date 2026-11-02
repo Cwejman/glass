@@ -30,6 +30,7 @@ export interface HolonRead {
 export interface Commit {
   holons: Holon[];
   names?: { [name: string]: Id | null };
+  gone?: Id[];
 }
 
 interface Attached {
@@ -112,8 +113,21 @@ export class Engine {
         const problem = await this.judge(holon, born);
         if (problem) throw new Error(`${holon.id}: ${problem}`);
       }
+      const gone = new Set(commit.gone ?? []);
+      for (const id of gone) {
+        const known = this.known.get(id);
+        if (known && known.store !== this.home) throw new Error(`${id} belongs to ${known.store.key}, which is only read`);
+      }
+      if (gone.size)
+        for (const known of [...this.known.values(), ...commit.holons.map((holon) => ({ version: holon }))]) {
+          if (gone.has(known.version.id)) continue;
+          const holon = born.get(known.version.id) ?? known.version;
+          const lost = references(holon.body).find((reference) => gone.has(reference.id));
+          if (lost) throw new Error(`${holon.id} still references ${lost.id}, which would be gone`);
+        }
       for (const [name, id] of Object.entries(commit.names ?? {}))
-        if (id !== null && !born.has(id) && !this.known.has(id)) throw new Error(`the name ${name} gives ${id}, which is not in the field`);
+        if (id !== null && ((!born.has(id) && !this.known.has(id)) || gone.has(id)))
+          throw new Error(`the name ${name} gives ${id}, which is not in the field`);
       const name = await this.home.store.write({ ...commit, at: new Date().toISOString() });
       if (name) {
         await this.load(this.home);

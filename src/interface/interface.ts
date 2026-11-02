@@ -33,10 +33,22 @@ interface Mount {
   reads: { $ref: Id };
 }
 
+// What a host holds while it is drawn: its own subscription, the hosts it
+// opened and the reads it made in its last drawing. A drawing that a newer
+// one or a close has overtaken changes nothing.
+interface Hosted {
+  closed: boolean;
+  drawing: number;
+  unsubscribe?: () => void;
+  children: HTMLElement[];
+  reads: (() => void)[];
+}
+
 export class Interface {
   private components: HolonRead[] = [];
   private readonly modules = new Map<Name, Promise<Module>>();
-  private readonly closers = new Map<HTMLElement, (() => void)[]>();
+  private readonly hosted = new Map<HTMLElement, Hosted>();
+  private moves: Promise<unknown> = Promise.resolve();
 
   constructor(
     private readonly engine: Connection,
@@ -46,11 +58,29 @@ export class Interface {
   async boot() {
     const componentType = (await this.engine.read({ name: "component" })) as Id | null;
     if (!componentType) throw new Error("the field holds no component type");
-    const ids = (await this.engine.read({ instances: componentType })) as Id[];
-    this.components = (await Promise.all(ids.map((id) => this.engine.read({ holon: id })))) as unknown as HolonRead[];
-    addEventListener("popstate", (event: PopStateEvent) => void this.walk((event.state as { commit?: Name } | null)?.commit ?? null));
+    const components = await this.engine.subscribe({ instances: componentType }, (ids) =>
+      void this.inTurn(async () => {
+        await this.know(ids as Id[]);
+        await this.draw();
+      }),
+    );
+    await this.know(components.value as Id[]);
+    addEventListener("popstate", (event: PopStateEvent) =>
+      void this.inTurn(() => this.walk((event.state as { commit?: Name | null } | null)?.commit ?? null)),
+    );
     if (!history.state) history.replaceState({ commit: await this.engine.read({ head: "home" }) }, "");
-    await this.draw();
+    await this.inTurn(() => this.draw());
+  }
+
+  // Moves are taken one at a time, each from where the one before left.
+  private inTurn(move: () => Promise<void>) {
+    const turn = this.moves.then(move);
+    this.moves = turn.catch((error) => console.error(error));
+    return turn;
+  }
+
+  private async know(ids: Id[]) {
+    this.components = (await Promise.all(ids.map((id) => this.engine.read({ holon: id })))) as unknown as HolonRead[];
   }
 
   private async layout(): Promise<HolonRead> {
@@ -74,42 +104,43 @@ export class Interface {
   }
 
   // Placing changes what a mount reads, and is a commit to the arrangement.
-  // The first places the reader's own copy of the entry in the home.
-  private async place(index: number, id: Id) {
-    const layout = await this.layout();
-    const body = structuredClone(layout.body) as Body & { mounts: Mount[] };
-    body.mounts[index]!.reads = { $ref: id };
-    const commit = await this.arrange(layout, body);
-    history.pushState({ commit }, "");
-    scrollTo(0, 0);
-    await this.draw();
+  // The first places the reader's own copy of the entry in the home. The
+  // browser's history holds the home's commit after each move.
+  private place(index: number, id: Id) {
+    return this.inTurn(async () => {
+      const layout = await this.layout();
+      const body = structuredClone(layout.body) as Body & { mounts: Mount[] };
+      if (body.mounts[index]?.reads.$ref === id) return;
+      body.mounts[index]!.reads = { $ref: id };
+      await this.arrange(layout, body);
+      history.pushState({ commit: await this.engine.read({ head: "home" }) }, "");
+      scrollTo(0, 0);
+      await this.draw();
+    });
   }
 
   // Back and forward walk the arrangement's commits: the arrangement as it
-  // stood then is committed again, so history only ever grows.
+  // stood then is committed again, so history only ever grows. Before the
+  // reader's first move it stood as the entry.
   private async walk(commit: Name | null) {
     const layout = await this.layout();
-    let body: Body;
-    if (commit && layout.store === "home") {
-      const then = (await this.engine.read({ holon: layout.id, at: commit })) as unknown as HolonRead | null;
-      body = then?.body ?? ((await this.engine.read({ holon: (await this.engine.read({ name: "entry" })) as Id })) as unknown as HolonRead).body;
-    } else {
-      const entry = (await this.engine.read({ name: "entry" })) as Id;
-      body = ((await this.engine.read({ holon: entry })) as unknown as HolonRead).body;
-    }
-    await this.arrange(layout, body);
+    const then = commit && layout.store === "home" ? ((await this.engine.read({ holon: layout.id, at: commit })) as unknown as HolonRead | null) : null;
+    const entry = (await this.engine.read({ holon: (await this.engine.read({ name: "entry" })) as Id })) as unknown as HolonRead;
+    await this.arrange(layout, (then ?? entry).body);
     await this.draw();
   }
 
-  private async arrange(layout: HolonRead, body: Body): Promise<Name | null> {
+  private async arrange(layout: HolonRead, body: Body) {
     const { from: _, ...arrangement } = body;
-    if (layout.store === "home")
-      return (await this.engine.commit({ holons: [{ id: layout.id, instance: layout.instance, body: arrangement }] })) as Name | null;
+    if (layout.store === "home") {
+      await this.engine.commit({ holons: [{ id: layout.id, instance: layout.instance, body: arrangement }] });
+      return;
+    }
     const id = newId();
-    return (await this.engine.commit({
+    await this.engine.commit({
       holons: [{ id, instance: layout.instance, body: { ...arrangement, title: "Arrangement" } }],
       names: { arrangement: id },
-    })) as Name | null;
+    });
   }
 
   private match(holon: HolonRead, draws: string): HolonRead | undefined {
@@ -140,50 +171,78 @@ export class Interface {
     return this.modules.get(component.version)!;
   }
 
-  // Draws a holon into its host, and draws it again whenever it changes.
+  // Draws a holon into its host, and draws it again whenever it, or anything
+  // its component read, changes.
   private async drawInto(host: HTMLElement, id: Id, draws: string, given: Json, mount: number, called?: Id) {
-    const space: Space = {
-      open: (child, childDraws, childGiven = null) => {
-        const childHost = document.createElement("div");
-        childHost.className = `space ${childDraws}`;
-        void this.drawInto(childHost, child, childDraws, childGiven, mount);
-        this.closers.get(host)?.push(() => this.close(childHost));
-        return childHost;
-      },
-      read: (read) => this.engine.read(read),
-      place: (to) => this.place(mount, to),
-    };
+    this.close(host);
+    const hosted: Hosted = { closed: false, drawing: 0, children: [], reads: [] };
+    this.hosted.set(host, hosted);
+    let holon: HolonRead | null = null;
 
-    const render = async (holon: HolonRead | null) => {
-      for (const close of this.closers.get(host)?.splice(1) ?? []) close();
+    const render = async () => {
+      const drawing = ++hosted.drawing;
+      this.release(hosted);
+      const current = () => !hosted.closed && hosted.drawing === drawing;
       if (!holon) return host.replaceChildren(note(`${id} is not in the field`));
-      const component = called
-        ? this.components.find((candidate) => candidate.id === called)
-        : this.match(holon, draws);
+      const component = called ? this.components.find((candidate) => candidate.id === called) : this.match(holon, draws);
       if (!component) return host.replaceChildren(note(`nothing draws ${holon.id} as ${draws}`));
+
+      const space: Space = {
+        open: (child, childDraws, childGiven = null) => {
+          const childHost = document.createElement("div");
+          childHost.className = `space ${childDraws}`;
+          if (current()) {
+            hosted.children.push(childHost);
+            void this.drawInto(childHost, child, childDraws, childGiven, mount);
+          }
+          return childHost;
+        },
+        read: async (read) => {
+          const subscription = await this.engine.subscribe(read, () => void (current() && render()));
+          if (current()) hosted.reads.push(subscription.close);
+          else subscription.close();
+          return subscription.value;
+        },
+        place: (to) => this.place(mount, to),
+      };
+
       try {
         const module = await this.load(component);
+        if (!current()) return;
         const drawn = await module.default({ holon, draws, with: given }, space);
+        if (!current()) return;
         host.dataset.holon = holon.id;
         host.dataset.component = component.id;
         host.replaceChildren(drawn);
       } catch (error) {
-        host.replaceChildren(note(`${component.body.title as string} could not draw ${holon.id}: ${String(error)}`));
+        if (current()) host.replaceChildren(note(`${component.body.title as string} could not draw ${holon.id}: ${String(error)}`));
       }
     };
 
-    this.close(host);
-    const subscription = await this.engine.subscribe({ holon: id }, (value) => void render(value as unknown as HolonRead | null));
-    this.closers.set(host, [subscription.close]);
-    await render(subscription.value as unknown as HolonRead | null);
+    const subscription = await this.engine.subscribe({ holon: id }, (value) => {
+      holon = value as unknown as HolonRead | null;
+      void render();
+    });
+    if (hosted.closed) return subscription.close();
+    hosted.unsubscribe = subscription.close;
+    holon = subscription.value as unknown as HolonRead | null;
+    await render();
   }
 
-  // Closing a host closes its subscription and, through the spaces it opened,
-  // every host beneath it.
+  // What a host's last drawing opened and read is let go before it draws
+  // again, and when it closes.
+  private release(hosted: Hosted) {
+    for (const child of hosted.children.splice(0)) this.close(child);
+    for (const close of hosted.reads.splice(0)) close();
+  }
+
   private close(host: HTMLElement) {
-    const closers = this.closers.get(host) ?? [];
-    this.closers.delete(host);
-    for (const close of closers) close();
+    const hosted = this.hosted.get(host);
+    if (!hosted) return;
+    hosted.closed = true;
+    this.hosted.delete(host);
+    hosted.unsubscribe?.();
+    this.release(hosted);
   }
 }
 

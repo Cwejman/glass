@@ -26,9 +26,13 @@ export interface Holon {
   body: Body;
 }
 
+// A change writes holons, gives or takes names, and may take holons out of
+// the field: they are gone from its index from then on, and every version
+// they had stays in the store, read from the commits before.
 export interface Change {
   holons: Holon[];
   names?: { [name: string]: Id | null };
+  gone?: Id[];
   at: string;
 }
 
@@ -138,9 +142,20 @@ export class Store {
     }
     const names = Object.fromEntries(given);
     const namesChanged = canonical(names) !== canonical(last?.names ?? {});
-    if (updates.size === 0 && !namesChanged) return undefined;
+    const gone = new Set<Id>();
+    for (const id of change.gone ?? []) {
+      if (updates.has(id)) throw new Error(`holon ${id} written and taken out in one commit`);
+      if (last && (await this.lookup(last, id))) gone.add(id);
+    }
+    if (updates.size === 0 && gone.size === 0 && !namesChanged) return undefined;
 
-    const holons = last && updates.size === 0 ? last.holons : await this.grow(last?.holons, 0, updates);
+    let holons: Name;
+    if (gone.size) {
+      const kept = new Map<Id, Name>();
+      if (last) for await (const [id, name] of this.entries(last)) if (!gone.has(id)) kept.set(id, name);
+      for (const [id, name] of updates) kept.set(id, name);
+      holons = await this.grow(undefined, 0, kept);
+    } else holons = last && updates.size === 0 ? last.holons : await this.grow(last?.holons, 0, updates);
     const index = await this.put({ kind: "index", names, holons } satisfies Index);
     const commit = await this.put({ kind: "commit", parent: from ?? null, at: change.at, index } satisfies Commit);
     if (!(await this.backend.moveRef(ref, commit, from))) throw new Error(`ref ${ref} moved while writing`);
@@ -176,6 +191,9 @@ export class Store {
   }
 
   // Sets entries in the tree under `at`, writing only the nodes on their way.
+  // Taking entries out grows the tree anew from what is kept, which gives the
+  // same nodes wherever nothing changed, so it is the same tree it would have
+  // been had they never been there.
   private async grow(at: Name | undefined, depth: number, updates: Map<Id, Name>): Promise<Name> {
     const node: Leaf | Branch = at ? await this.object<Leaf | Branch>(at) : { kind: "index-leaf", depth, versions: {} };
     if (node.kind === "index-leaf") {
@@ -201,6 +219,7 @@ function changeProblem(change: Change): string | undefined {
   }
   for (const [name, id] of Object.entries(change.names ?? {}))
     if (id !== null && !isId(id)) return `the name ${name} must give an id`;
+  if (change.gone !== undefined && (!Array.isArray(change.gone) || !change.gone.every(isId))) return "what is gone must be a list of ids";
   return undefined;
 }
 

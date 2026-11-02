@@ -88,6 +88,12 @@ Nothing old is touched. The holons that did not change are shared by both indexe
 
 *Reasoned, the session's, 2026-11-01.*
 
+### 3.1 Taking a holon out
+
+A change may also take holons out of the field: they are gone from its index from that commit on, while every version they had stays, read from the commits before. The tree is then grown anew from what is kept, so it is the same tree it would have been had they never been there.
+
+*The session's, 2026-11-03, when the birth needed to let go of a section whose heading was renamed.*
+
 ## 4. Two histories, one store
 
 The field's history is read from commit to parent: each step one change and the state it left. A holon's history is read from version to version: every state it has had, whichever acts made them. Both are in the store already, and neither needs a log kept beside it.

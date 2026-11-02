@@ -253,3 +253,26 @@ describe("what the engine's fresh reading found", () => {
     expect(told).toBe(1);
   });
 });
+
+describe("taking holons out of the field", () => {
+  test("a holon the home holds may go, once nothing points at it", async () => {
+    const engine = await glass();
+    const a = newId();
+    const b = newId();
+    await engine.commit({
+      holons: [
+        { id: a, instance: [NOTE], body: { title: "A" } },
+        { id: b, instance: [NOTE], body: { title: "B", about: { $ref: a } } },
+      ],
+    });
+    await expect(engine.commit({ holons: [], gone: [a] })).rejects.toThrow(`${b} still references ${a}`);
+    expect(await engine.commit({ holons: [], gone: [a, b] })).toBeDefined();
+    expect(await engine.read({ holon: a })).toBeNull();
+    expect(await engine.read({ holders: a })).toEqual([]);
+  });
+
+  test("a holon a pulled store holds may not go", async () => {
+    const engine = await glass();
+    await expect(engine.commit({ holons: [], gone: [NOTE] })).rejects.toThrow("only read");
+  });
+});

@@ -9,6 +9,30 @@ How glass came to be what it is, told over its commits, newest first, each day b
 
 *Begun 2026-11-02, on the author's word that the effort be noted in the log as the work goes. Each story reasoned by the session that did the work, from the commits and the author's words.*
 
+## The first mark is built
+
+On 2026-11-03 the author asked for the whole of what is to be built to be seen, the details left to the session, which was to check and reason enough from every level. The store, the engine, the interface and the reader were built in that order, tests first, each read cold by a fresh agent and mended before the next stood on it, and the wiki was born into glass's own store and read in the browser from it.
+
+*Reasoned on 2026-11-03 by the session that built it.*
+
+### The store
+
+The store's format was written first as vectors, built by hand apart from glass's code and named by the system's own hasher, then the store that passes them. Its fresh reading found that a forged tree could pass one holon off as another, that a malformed change could be written, that what was read could be changed under the store, and that the vectors did not fix the tree's rule. Walks now check that the tree means what it says, changes are checked before they are written, the cache cannot be changed, and the vectors pin the leaf's size, a second level, names and a change that changes nothing.
+
+[The store, built](git:ee779bc..9934fac)
+
+### The engine
+
+The engine reads the stores it attaches as one field, indexes every reference in every body, and judges each commit against the types, writing only to the home. Its fresh reading found a holon of two types checked against only one, types not checked as types, names and pinned versions not judged, commits that could cross, attaching that told no one, and IndexedDB writes settling too soon. Each was mended, with a test for each.
+
+[The engine, built and mended](git:75f920e..8332739)
+
+### The interface, the reader and the wiki in the store
+
+The types glass ships say each field in prose. The components, a reader, a face and a plain view of any holon, are written as code and born into the store as holons, and the interface runs them from there. The arrangement is a layout in the home, so moving, back and forward, and a reload all stand on its commits. The wiki was born with them and read in the browser, in dark and light and at a phone's width. The fresh reading found moves that could cross and point history at the wrong page, drawings that leaked when overtaken, a renamed heading leaving its old holon in the field, a store left behind its files, drawings blind to what they read through others, and images fetched from anywhere. Moves are now taken in turn, a drawing overtaken changes nothing and lets go of all it held, what a component reads redraws it, the birth takes out what the files no longer hold, and images are never fetched.
+
+[The interface, the reader and the wiki in the store](git:cc61c24..HEAD)
+
 ## Relations are settled, and a holon is part of the field
 
 On 2026-11-02 the author read the primitives and the store and settled what a store holds and how holons relate. It was the longest day of thinking so far, about 2,300 of his words, and nothing was built.

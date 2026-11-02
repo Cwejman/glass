@@ -11,19 +11,23 @@ import { linkTargets, parseFile, resolve, rewriteLinks, walk, type Section, type
 // Births glass's field into its store as one commit: the types, the
 // components built from their code, the entry, and this wiki, each brief a
 // holon. A holon keeps the id it was first born with, found by where it came
-// from, so a birth after the files change is a change to the same holons.
-// Everything is committed through an engine, so every holon is judged.
+// from, its file and its heading's anchor, so a birth after the files change
+// is a change to the same holons; a heading renamed is a new holon, and what
+// the files no longer hold is taken out of the field. Everything is committed
+// through an engine, so every holon is judged.
 
 const repo = join(import.meta.dir, "../..");
 const storeDir = join(repo, "site/store");
 
 const store = new Store(new FileBackend(storeDir));
 const born = new Map<string, Id>();
+const before = new Set<Id>();
 const head = await store.head();
 if (head)
   for await (const [id, name] of store.entries(await store.index(head))) {
     const from = (await store.versionOf(id, name)).body.from;
     if (typeof from === "string") born.set(from, id);
+    before.add(id);
   }
 const idFor = (from: string) => {
   if (!born.has(from)) born.set(from, newId());
@@ -133,7 +137,9 @@ holons.push({
 
 const engine = new Engine(store);
 await engine.start();
-const commit = await engine.commit({ holons, names });
+const made = new Set(holons.map((holon) => holon.id));
+const gone = [...before].filter((id) => !made.has(id));
+const commit = await engine.commit({ holons, names, gone });
 const now = commit ?? head;
 // One bundle, for the commit the ref names; older ones are only a
 // convenience made from objects that stay.
@@ -151,6 +157,6 @@ if (commit)
   }
 console.log(
   commit
-    ? `born ${commit}: ${holons.length} holons from ${files.size} files, ${changed} new or changed`
+    ? `born ${commit}: ${holons.length} holons from ${files.size} files, ${changed} new or changed, ${gone.length} gone`
     : `nothing changed; the store stands at ${head}`,
 );

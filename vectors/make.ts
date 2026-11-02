@@ -90,7 +90,7 @@ function tree(entries: [string, string][], depth: number, out: Named[]): string 
 type Holon = { id: string; instance: string[]; body: Record<string, unknown> };
 const steps: { about: string; change: unknown; ref: string | null; objects: Record<string, unknown> }[] = [];
 
-function step(about: string, at: string, holons: Holon[], givenNames?: Record<string, string | null>) {
+function step(about: string, at: string, holons: Holon[], givenNames?: Record<string, string | null>, gone: string[] = []) {
   const made: Named[] = [];
   for (const holon of holons) {
     const prev = versions.get(holon.id);
@@ -106,8 +106,10 @@ function step(about: string, at: string, holons: Holon[], givenNames?: Record<st
     else nextNames[key] = value;
   }
   const namesChanged = canonical(nextNames) !== canonical(names);
-  const change = { at, holons, ...(givenNames ? { names: givenNames } : {}) };
-  if (made.length === 0 && !namesChanged) {
+  const taken = gone.filter((id) => versions.has(id));
+  for (const id of taken) versions.delete(id);
+  const change = { at, holons, ...(givenNames ? { names: givenNames } : {}), ...(gone.length ? { gone } : {}) };
+  if (made.length === 0 && !namesChanged && taken.length === 0) {
     steps.push({ about, change, ref: head, objects: {} });
     return;
   }
@@ -146,6 +148,8 @@ step("only what a holon is an instance of changes", "2026-11-03T09:06:00Z",
   [{ id: B, instance: [TYPE, A], body: { title: "Second", about: { $ref: A } } }]);
 step("a change that changes nothing makes no commit, and the ref stays", "2026-11-03T09:07:00Z",
   [note(A, "First, again")]);
+step("three holons taken out: the 66 ending in Z fall to 64, and their branch becomes a leaf again, as if the others had never been", "2026-11-03T09:08:00Z",
+  [], undefined, [id("D", 0, "0Z"), id("D", 1, "1Z"), A]);
 
 const store = {
   about: "Changes applied in order to an empty store. After each, the ref main names the step's ref, and the store has gained exactly the objects listed, each at its name. A step that adds nothing makes no commit.",
