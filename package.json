@@ -1,0 +1,14 @@
+{
+  "name": "glass",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "bun test",
+    "birth": "bun src/birth/main.ts",
+    "build": "bun src/build.ts",
+    "serve": "bun src/serve.ts"
+  },
+  "dependencies": {
+    "marked": "18.0.13"
+  }
+}

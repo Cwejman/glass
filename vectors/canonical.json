@@ -1,0 +1,20 @@
+[
+  {
+    "about": "RFC 8785, section 3.2.2: literals, numbers and strings",
+    "json": "{\"numbers\":[333333333.33333329,1E30,4.50,2e-3,0.000000000000000000000000001],\"string\":\"\\u20ac$\\u000F\\u000aA'\\u0042\\u0022\\u005c\\\\\\\"\\/\",\"literals\":[null,true,false]}",
+    "canonical": "{\"literals\":[null,true,false],\"numbers\":[333333333.3333333,1e+30,4.5,0.002,1e-27],\"string\":\"€$\\u000f\\nA'B\\\"\\\\\\\\\\\"/\"}",
+    "name": "sha256-2d5e01a318d0f0879ab568c4be289c8b1f64ef8921a53c6277d5e069978baacb"
+  },
+  {
+    "about": "RFC 8785, section 3.2.3: keys sorted by UTF-16 code units",
+    "json": "{\"\\u20ac\":\"Euro Sign\",\"\\r\":\"Carriage Return\",\"\\ufb33\":\"Hebrew Letter Dalet With Dagesh\",\"1\":\"One\",\"\\ud83d\\ude00\":\"Emoji: Grinning Face\",\"\\u0080\":\"Control\",\"\\u00f6\":\"Latin Small Letter O With Diaeresis\"}",
+    "canonical": "{\"\\r\":\"Carriage Return\",\"1\":\"One\",\"\":\"Control\",\"ö\":\"Latin Small Letter O With Diaeresis\",\"€\":\"Euro Sign\",\"😀\":\"Emoji: Grinning Face\",\"דּ\":\"Hebrew Letter Dalet With Dagesh\"}",
+    "name": "sha256-5e321556d22018a9656991a9e94f77ec175fa193e52a2429d312f8419ec8b08c"
+  },
+  {
+    "about": "nesting and whitespace",
+    "json": "{ \"b\" : [ 1 , { \"z\" : null , \"a\" : \"x\" } ] , \"a\" : { } }",
+    "canonical": "{\"a\":{},\"b\":[1,{\"a\":\"x\",\"z\":null}]}",
+    "name": "sha256-5e8c6c980309456628afd449308a88002a41049b5e714c210e75f85369fba90d"
+  }
+]

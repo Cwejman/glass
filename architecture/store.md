@@ -44,11 +44,27 @@ A commit does not say who made it. A change is made by a program's run, and the 
 
 ### 2.3 The index is the whole field at one commit
 
-An index maps every holon's id to the version it has at that commit. It holds no content itself, only which state of each holon is current, so one index is the whole field at one moment.
+An index maps every holon's id to the version it has at that commit, and every name given in the store to the holon it names. It holds no content itself, only which state of each holon is current, so one index is the whole field at one moment.
 
-It is split by id, as the object folders are: a root maps the first characters of an id to a part, and each part maps its ids to versions. A change writes a new root and the one part it touched, and shares every other part with the commit before, so the index stays light however large the field grows. The same field always gives the same index, so two copies are compared by one name.
+```json
+{ "kind": "index", "names": { "entry": "01JB…layout" }, "holons": "sha256-4c…" }
+```
 
-*The author's, 2026-11-02: a smart index rather than one that bloats, done right from the start; its shape the session's, left to it by the author.*
+The holons are a tree split by the characters of their ids, read from the end, where ids are random. A leaf holds at most 64 holons; past that it becomes a branch over the next character, with a leaf or a branch beneath each. A change writes new nodes only on the way to the holons it touched, and shares every other node with the commit before, so the index stays light however large the field grows. The tree's shape depends only on which ids there are, so the same field always gives the same index, and two copies are compared by one name.
+
+*The author's, 2026-11-02: a smart index rather than one that bloats, done right from the start; its shape the session's, left to it by the author, and built 2026-11-03.*
+
+#### 2.3.1 A holon's identity
+
+An id is a ULID: ten characters of the moment the holon was born and sixteen of randomness, so ids sort by birth and their last characters spread evenly through the tree.
+
+*The session's, 2026-11-03, the details left to it by the author.*
+
+#### 2.3.2 Names
+
+A name is unique within its store and resolves to an identity, so references never break when a name changes. The store says only what its names are; `entry`, the layout a client boots into, is the first.
+
+*The store as the namespace the author's, 2026-11-02; names held in the index the session's, 2026-11-03.*
 
 ### 2.4 A version is one holon as it stood
 
@@ -103,6 +119,10 @@ store/
 ```
 
 Any program that can read files can read a store, and any host that can serve files can serve one.
+
+The format is fixed by test vectors anyone can run, in any language: canonical texts with their names, and commits applied to an empty store with every object each adds. They are made apart from glass's own code, named by the system's own hasher.
+
+[The store's vectors](../vectors/README.md)
 
 *Reasoned, the session's, 2026-11-01; the fan-out is git's.*
 

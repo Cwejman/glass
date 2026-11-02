@@ -1,2 +1,4 @@
 .DS_Store
 .stale/
+node_modules/
+site/*.js
