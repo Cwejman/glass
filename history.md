@@ -31,7 +31,7 @@ The engine reads the stores it attaches as one field, indexes every reference in
 
 The types glass ships say each field in prose. The components, a reader, a face and a plain view of any holon, are written as code and born into the store as holons, and the interface runs them from there. The arrangement is a layout in the home, so moving, back and forward, and a reload all stand on its commits. The wiki was born with them and read in the browser, in dark and light and at a phone's width. The fresh reading found moves that could cross and point history at the wrong page, drawings that leaked when overtaken, a renamed heading leaving its old holon in the field, a store left behind its files, drawings blind to what they read through others, and images fetched from anywhere. Moves are now taken in turn, a drawing overtaken changes nothing and lets go of all it held, what a component reads redraws it, the birth takes out what the files no longer hold, and images are never fetched.
 
-[The interface, the reader and the wiki in the store](git:cc61c24..HEAD)
+[The interface, the reader and the wiki in the store](git:cc61c24..151aefc)
 
 ## Relations are settled, and a holon is part of the field
 
