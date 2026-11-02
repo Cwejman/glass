@@ -46,20 +46,23 @@ A commit does not say who made it. A change is made by a program's run, and the 
 
 An index maps every holon's id to the version it has at that commit. It holds no content itself, only which state of each holon is current, so one index is the whole field at one moment.
 
-At glass's size one index is one object. A field large enough for that to cost can split it into a tree, so a commit rewrites only the part it touched.
+It is split by id, as the object folders are: a root maps the first characters of an id to a part, and each part maps its ids to versions. A change writes a new root and the one part it touched, and shares every other part with the commit before, so the index stays light however large the field grows. The same field always gives the same index, so two copies are compared by one name.
 
-*Reasoned, the session's, 2026-11-01; the split is not needed yet.*
+*The author's, 2026-11-02: a smart index rather than one that bloats, done right from the start; its shape the session's, left to it by the author.*
 
 ### 2.4 A version is one holon as it stood
 
-A version holds a holon's content, its title, data and prose, together with its id, where it stands, and the version before it. Versions are the atoms: everything else in the store only points at them.
+A version holds what the store needs and the holon's body: the holon's id, the version before it, what the holon is an instance of, and its body. The body is whatever the holon holds, shaped by its types: a brief's title and prose live there, as a track's title and length would. Versions are the atoms: everything else in the store only points at them.
 
 ```json
-{ "kind": "version", "holon": "01JB…notes", "prev": "sha256-27…",
-  "above": "01JB…root", "title": "Notes", "data": {}, "prose": "…" }
+{ "kind": "version", "id": "01JB…store", "prev": "sha256-27…",
+  "instance": ["01JA…brief"],
+  "body": { "title": "The store", "prose": "A store is where a field is kept …" } }
 ```
 
-*Reasoned, the session's, 2026-11-01; whether where a holon stands belongs in its version or in connections of its own is [open](../plan.md#3-what-is-open).*
+Every object says what kind it is, so any one of them can be read alone, by a person browsing the files or a program checking them, without knowing how it was reached.
+
+*The author's, 2026-11-02: a holon is what the storage needs and then its body, and title and prose go into the body. Keeping `kind` the session's.*
 
 ## 3. A change adds and never rewrites
 
@@ -103,7 +106,15 @@ Any program that can read files can read a store, and any host that can serve fi
 
 *Reasoned, the session's, 2026-11-01; the fan-out is git's.*
 
-## 8. A format of its own
+## 8. Relations
+
+A version stores nothing about other holons beside its body: every relation is a reference inside a body, and part and whole is read from the whole's. How that came to be, and what was let go, is told in the relations.
+
+[How holons relate](relations.md)
+
+*The author's decisions, 2026-11-02, after reasoning through OpenLight's relations and six simulated fields.*
+
+## 9. A format of its own
 
 Glass's object model is its own, with only the smallest standards beneath it; the background, and why, are in the formats.
 

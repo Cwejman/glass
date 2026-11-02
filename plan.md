@@ -56,9 +56,13 @@ Questions the first mark meets, and those beyond it, each to be settled when the
 
 - **A holon's identity.** The session leans to a sortable random id, so an id also carries when the holon was born.
 
-- **Where a holon stands.** In its own version, as one place above it, or as connections of their own, as in OpenLight, so a holon can stand in several places.
+- **How a type's contract is written**, and how the engine checks a body against it at commit; that a holon's types are stored as its instance is settled.
 
-- **What a type is**, which the author asked to have reconsidered completely, and whether the store checks a version against it.
+- **Provenance.** A published commit says nothing of the run that made it, so only the runner's home knows; whether published history should say how it was made.
+
+- **Events as holons.** Thousands of visits nobody edits or points at may be better as rows within one holon each day.
+
+- **Whether a store ships its index** of references and values, or every engine builds it.
 
 - **How a read is asked.** OpenLight reads by expression, and glass has no expression language yet; the first reads are by identity and by what stands beneath.
 

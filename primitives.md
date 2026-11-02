@@ -13,7 +13,7 @@ Data, types, programs, AI and interfaces are one field of whole pieces, and ever
 
 A holon is a small piece that is whole in itself and part of what holds it. A note is a holon, and so is a program, a type, a component and a layout: the same kind of piece throughout.
 
-A holon has an identity of its own, given when it is born, and every state it has had is kept as a version, each pointing back at the one before. What it is now is its latest version, and how it came to be stays readable.
+A holon is its identity, what it is an instance of, and its body: what it holds. The identity is given when it is born and never changes; every state it has had is kept as a version, each pointing back at the one before, so how it came to be stays readable.
 
 *Whole pieces the author's, from the grant; that holons have ids and history his, 2026-11-01 ("holons have to have ids I think and have to have commits"); the shape of versions the session's, laid out in [the store](architecture/store.md).*
 
@@ -37,13 +37,13 @@ The engine holds the stores it attaches and is the only way into them. It reads 
 
 ## 5. Field
 
-The field is the stores an engine holds, read as one: where holons live together, and what programs and people ask. A holon that others stand beneath is a place, and the field is places within places, a holarchy.
+The field is the stores an engine holds, read as one: where holons live together, and what programs and people ask. Holons hold each other as parts and point at each other from their bodies, so from any holon the field can be read upward to what holds it, downward to what it holds, and outward to what points at it.
 
-*The one field the author's, from the grant; stores read as one and places carried from OpenLight.*
+*The one field the author's, from the grant; stores read as one carried from OpenLight; how holons relate, the author's, 2026-11-02, told in [the relations](architecture/relations.md).*
 
 ## 6. Program
 
-A program is a holon holding code that the engine runs. It declares the types it takes, the engine brings it the data that fits, and what it does, it does through the engine. A run is a program run once, and it is kept as a holon too, so what was done stays readable.
+A program is a holon holding code that the engine runs. It declares the types it takes, the engine brings it the data that fits, and what it does, it does through the engine. A run is a program run once, kept as a holon too: what it was given, its result, and the commits its effects became.
 
 A program exists only through the engine: it is data until the engine runs it. How a run is carried out is the engine's, and still open.
 
