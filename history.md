@@ -57,7 +57,7 @@ The author named glass as three notions meeting, ontology, pure functional compu
 
 ### The first mark is built properly
 
-Asked what comes next, the session proposed building the first mark in one orchestrated run, with the store as language-free test vectors and the engine in TypeScript. The author saw no reason for TypeScript, since the store asks almost no code, and asked whether a reader before the interface was a shortcut. It was. The plan now builds the interface primitive before the reader, births the wiki only once it can be navigated, and has every finished piece taken up by a fresh agent from its own angle. The engine's language is open, leaning to Rust.
+Asked what comes next, the session proposed building the first mark in one orchestrated run, with the store as language-free test vectors and the engine in TypeScript. The author saw no reason against TypeScript, since the store asks almost no code, and asked whether a reader before the interface was a shortcut. It was. The plan now builds the interface primitive before the reader, births the wiki only once it can be navigated, and has every finished piece taken up by a fresh agent from its own angle. A misheard word first took TypeScript out, and Rust in; the author set it right, and TypeScript stands, with Rust kept possible by the vectors.
 
 ## The wiki under the rule
 

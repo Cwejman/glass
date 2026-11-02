@@ -34,6 +34,12 @@ Tests come first at every layer, and the work is done by agents orchestrated to 
 
 *The author's, 2026-11-02: for every finished thing there always spawns a new agent to take its angle.*
 
+### 1.2 Written in TypeScript
+
+The engine and the interface are written in TypeScript first. The store asks almost no code of any language, and the browser hashes natively, so nothing yet argues for another. The store's test vectors keep the door open: an engine in Rust compiled to WebAssembly, one engine for the browser and the author's machine with programs contained in it, can come later and pass the same tests without any store rewritten.
+
+*The session's recommendation, which the author saw no reason against, 2026-11-02.*
+
 ## 2. After the first mark
 
 What waits, roughly in the order it stands on what comes before it. None of it is begun, and the order is a claim to be agreed or refused.
@@ -61,8 +67,6 @@ What waits, roughly in the order it stands on what comes before it. None of it i
 ## 3. What is open
 
 Questions the first mark meets, and those beyond it, each to be settled when the work reaches it.
-
-- **The engine's language.** Not TypeScript, the author's, 2026-11-02, since the store asks almost no code of any language; the session leans to Rust compiled to WebAssembly, one engine for the browser and the author's machine, with programs contained in it. What the interface is written in follows from it.
 
 - **A holon's identity.** The session leans to a sortable random id, so an id also carries when the holon was born.
 
