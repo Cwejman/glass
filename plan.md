@@ -6,25 +6,33 @@ status: proposed
 
 # The plan
 
-The first mark proposed is to read this wiki from a real store, through a real engine in the browser, along the gradient. It is small on purpose: it makes the store, the client and the first reader component real at once, and everything after stands on them.
+The first mark proposed is to read this wiki from a real store, through a real engine in the browser, along the gradient. It makes the store, the engine, the interface and the first reader real, each well made, and everything after stands on them.
 
 *Proposed, the session's, 2026-11-01, on the author's call to settle something small as a clear goal; in force once the author ratifies this wiki, before anything is built.*
 
 ## 1. The first mark
 
-Four steps, each standing on the one before.
+Five steps, each standing on the one before, and none a shortcut: the reader is built on the interface, not in its place, and the wiki is born in once a person can really navigate it.
 
-1. **The store.** The objects of [the store](architecture/store.md), ref, commit, index and versions, and a writer that births a folder of briefs written under the rule into a store as its first commit.
+1. **The store.** Its format written as test vectors that any implementation must pass: given objects, their canonical text and their names; given changes, the commits, indexes and versions they make. Then a writer and a reader that pass them. The store needs almost no code, and no language of its own.
 
-2. **The wiki in the store.** This wiki, born into a store as that first commit, so the store holds its own spec.
+2. **The engine.** It attaches a store over HTTP, checks everything it fetches, keeps its own store for the home, and answers reads and commits in [the one protocol](architecture/client.md#3-one-protocol), tested at its own layer with no interface.
 
-3. **The client.** A chassis page and an engine in the browser that attaches a store over HTTP, read only, checks what it fetches, and answers reads in [the one protocol](architecture/client.md#3-one-protocol).
+3. **The interface.** Components as holons that declare the type they take, mounts as calls to them, layouts held as data, and a component enclosing what it is given and opening space in it for what matches, so [the interface](primitives.md#9-interface) assembles itself level by level. The chassis hosts it and decides nothing.
 
-4. **The reader component.** A component that draws a brief's prose, and [the first reader](knowledge.md#3-the-first-reader-component) built on it.
+4. **The reader component.** A component on that interface that draws a brief along the gradient, and [the first reader](knowledge.md#3-the-first-reader-component) built from it: a person can move through the whole wiki, down into parts and back.
 
-It is done when the author opens the page and reads this wiki from the store.
+5. **The wiki in the store.** This wiki born into a store as its first commit, each brief an instance of the brief type, whose fields are said in prose, so the store holds its own spec.
 
-*Proposed, 2026-11-01.*
+It is done when the author opens the page and navigates this wiki from the store, everything beneath it well made.
+
+*Proposed, the session's, 2026-11-01; the interface built properly before the reader, and the wiki born in once it can be navigated, the author's, [2026-11-02](said/2026-11-02.md#16-well-done-when-i-arrive): if there is no reason to shortcut, build it with quality.*
+
+### 1.1 How it is built
+
+Tests come first at every layer, and the work is done by agents orchestrated to it, with rigour and freedom both: every finished piece is taken up by a new agent, fresh to it, who reads it from its own angle, and what that agent finds is mended before the next piece stands on it.
+
+*The author's, 2026-11-02: for every finished thing there always spawns a new agent to take its angle.*
 
 ## 2. After the first mark
 
@@ -36,7 +44,7 @@ What waits, roughly in the order it stands on what comes before it. None of it i
 
 - **Runs, visible.** Runs kept in the home and drawn as they go, like an agent session; actions a component declares, such as adding a holon, that run a program; and the harness with its completion model and tools.
 
-- **Components as code and as data**: expressive components and layout components in TSX, and components that are data, templates.
+- **Components as code and as data**: expressive components and layout components written as code, and components that are data, templates.
 
 - **The URL**, and sharing as an act.
 
@@ -53,6 +61,8 @@ What waits, roughly in the order it stands on what comes before it. None of it i
 ## 3. What is open
 
 Questions the first mark meets, and those beyond it, each to be settled when the work reaches it.
+
+- **The engine's language.** Not TypeScript, the author's, 2026-11-02, since the store asks almost no code of any language; the session leans to Rust compiled to WebAssembly, one engine for the browser and the author's machine, with programs contained in it. What the interface is written in follows from it.
 
 - **A holon's identity.** The session leans to a sortable random id, so an id also carries when the holon was born.
 

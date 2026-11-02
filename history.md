@@ -53,6 +53,12 @@ The author spoke of a web of gradient knowledge, programs and code ontologically
 
 The author named glass as three notions meeting, ontology, pure functional compute and language models, and took the session's words for how they join: inference chooses, pure compute acts, both on one ontology. What it serves, he said, is giving and receiving, both ways, from the person to the greater whole.
 
+[Three notions meeting on one ontology, and both ways, in the grounds](git:f4ce609)
+
+### The first mark is built properly
+
+Asked what comes next, the session proposed building the first mark in one orchestrated run, with the store as language-free test vectors and the engine in TypeScript. The author saw no reason for TypeScript, since the store asks almost no code, and asked whether a reader before the interface was a shortcut. It was. The plan now builds the interface primitive before the reader, births the wiki only once it can be navigated, and has every finished piece taken up by a fresh agent from its own angle. The engine's language is open, leaning to Rust.
+
 ## The wiki under the rule
 
 On 2026-11-01 the author turned glass back to its architecture: no faking until making, the engine in the client, the store glass's own object model served as files. The first iteration was cleared and this wiki written in its place, outlined first, read by fresh heads, and then read by the author, who named the store and the engine as primitives.
