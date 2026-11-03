@@ -58,17 +58,16 @@ export default function draw(given: Given, space: Space) {
           <div class="names">
             {Object.entries(names).map(([name, id]) => [
               <span class="name">{name}</span>,
-              space.open(id, "face"),
+              space.open(id, { offer: { kind: "face" } }),
             ])}
           </div>
         ),
       ])}
 
       <h2>Its types</h2>
-      {space.openList(
+      {space.open(
         field.types.map(({ id }): Id => id),
-        "full",
-        { kind: "face" },
+        { offer: { kind: "face" } },
       )}
     </article>
   );

@@ -9,6 +9,12 @@ How glass came to be what it is, told over its commits, newest first, each day b
 
 *Begun 2026-11-02, on the author's word that the effort be noted in the log as the work goes. Each story reasoned by the session that did the work, from the commits and the author's words.*
 
+## The kind as an offer
+
+Asked to show plainly how a brief is drawn, the session laid it out, and the author saw the kind of a slot as a holon passed down as an offer: face unless a parent offers full. The interface was aligned to it: the page offers full to the arrangement, a layout to its panes, a brief and a list offer face to what they hold, and a slot's own word comes first. Slots are now opened at a single `where`, an id, several, or an expression, and a brief opens its parts as what it holds under parts. The record type, a bad name for knowledge kept by time, gave way to a brief that says its parts are kept by time; such knowledge is likely to become typed holons in time.
+
+*Reasoned on 2026-11-04 by the session.*
+
 ## Many angles, and components held to what they may do
 
 Three fresh readings followed, from correctness, from OpenLight's design and from writing a component. They found reach to be a convention a component could open its way past, declarations kept apart from the code that depended on them and checked late, no way to gather what a holon holds, and failures that left blank panes. Each was mended: reach became a ceiling over what was handed and read, a component declares itself in its own module and is typed by it, an expression can look outward, and every failure is said in its slot. A second round found reach still open to a query with keys beside its form and to a list changed while it was judged, a typed list component able to take over every list, reach widening with every read, and named components quietly replaced; those too were mended: a read is now one form and nothing beside it, checked by the engine, everything a component opens is copied before it is judged, only declared reads reach further, and a typed list component draws only where named. A third reading, set only to break reach, found a layout's mounts opened unchecked and a space still reading after its drawing had passed; both were closed, and what remains outside the ceiling is what the brief says, that code in one page can reach what the page can. One thing was left for the author: where the data of a slot opened in code would live.

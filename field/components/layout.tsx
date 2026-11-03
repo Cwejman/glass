@@ -38,7 +38,8 @@ export const style = `
 
 export default function draw(given: Given<LayoutBody, LayoutSettings>, space: Space) {
   const { mounts } = given.holon!.body;
-  const panes = mounts.map((_, index) => space.openMount(index));
+  // A layout offers each of its panes, and what lies in it, a full view.
+  const panes = mounts.map((_, index) => space.openMount(index, { offer: { kind: "full" } }));
   for (const pane of panes)
     pane.addEventListener("scroll", () => pane.toggleAttribute("data-scrolled", pane.scrollTop > 0), {
       passive: true,

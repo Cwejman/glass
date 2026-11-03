@@ -67,7 +67,7 @@ export default async function draw(given: Given, space: Space) {
       <p class="meta">{what}</p>
 
       <h2>Is an instance of</h2>
-      {space.openList(holon.instance, "full", { kind: "face" })}
+      {space.open(holon.instance, { offer: { kind: "face" } })}
 
       <h2>Holds</h2>
       <Values of={holon.body} space={space} />
@@ -91,10 +91,9 @@ function valueOf(value: Json, space: Space): Child {
 
   if (Array.isArray(value)) {
     if (value.length > 0 && value.every((item) => isRef(item) && !item["@"]))
-      return space.openList(
+      return space.open(
         value.map((item) => (item as { $ref: Id }).$ref),
-        "full",
-        { kind: "face" },
+        { offer: { kind: "face" } },
       );
     return (
       <ol>
@@ -116,7 +115,7 @@ function valueOf(value: Json, space: Space): Child {
 // A pinned reference says so, since what is drawn is the holon as it stands
 // now, not the version it pins.
 function refOf(ref: { $ref: Id; "@"?: string }, space: Space): Child {
-  const face = space.open(ref.$ref, "face");
+  const face = space.open(ref.$ref, { offer: { kind: "face" } });
   if (!ref["@"]) return face;
   return [face, <span class="meta">pinned to {ref["@"].slice(0, 15)}…, shown as it stands now</span>];
 }

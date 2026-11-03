@@ -13,7 +13,7 @@ export const declared = {
   says: "A type: what its instances are, each field it declares with what it means and its shape, and its instances.",
   takes: ["type"],
   kinds: ["full", "face"],
-  reads: ["instances"],
+  reads: ["gather"],
 } satisfies Declaration;
 
 export const style = `
@@ -47,7 +47,7 @@ interface Connector {
 export default async function draw(given: Given<TypeBody>, space: Space) {
   const type = given.holon!;
   const { title, says, fields: declared } = type.body;
-  const instances = await space.read({ instances: type.id });
+  const instances = await space.read({ gather: { instances: type.id } });
 
   if (given.kind === "face")
     return (
@@ -79,7 +79,7 @@ export default async function draw(given: Given<TypeBody>, space: Space) {
       </dl>
 
       <h2>Its instances, {instances.length}</h2>
-      {space.openList(instances, "full", { kind: "face" })}
+      {space.open({ instances: type.id }, { offer: { kind: "face" } })}
     </article>
   );
 }

@@ -17,6 +17,8 @@ export interface BriefBody {
   parts?: Ref[];
   /** Where the brief stands, when it is not yet in force, as proposed. */
   status?: string;
+  /** How its parts stand, where not each on those before it: by time, as a day's words or a history's stories, kept in the order they came and not numbered. */
+  kept?: string;
   /** Where the holon was born from, as a path in the files it arrived from. */
   from?: string;
 }
@@ -90,18 +92,6 @@ export interface MaterialBody {
   from?: string;
 }
 
-/** Knowledge kept in the order of time rather than by importance, like the author's words kept by day. */
-export interface RecordBody {
-  /** What is recorded, in a few words. */
-  title: string;
-  /** What the record holds, in markdown, its entries placed by links standing alone. */
-  prose: string;
-  /** The entries beneath, in the order they were kept. */
-  parts?: Ref[];
-  /** Where the holon was born from, as a path in the files it arrived from. */
-  from?: string;
-}
-
 /** A schema in the field: the structure a holon's data has. Each field is said in prose beside its shape, for the fields are where holons connect. */
 export interface TypeBody {
   /** What the type is called. */
@@ -128,8 +118,6 @@ export interface LayoutSettings {
 
 /** The settings the List component takes from the slot that opens it. */
 export interface ListSettings {
-  /** The kind of slot each item is, face unless it says full. */
-  kind?: string;
   /** Whether each item is numbered by its place. */
   numbered?: boolean;
   /** The number of the whole whose items these are, which each item's number runs on from. */

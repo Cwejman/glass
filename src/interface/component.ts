@@ -48,16 +48,36 @@ export type Reading = { holon: Id } | { list: Id[] } | { gather: Expression } | 
 export type HolonOf<B> = Omit<HolonRead, "body"> & { body: B };
 
 // What a component is given: what its slot reads, the holon, the list or
-// the field, the kind of slot it stands in, and the settings the slot that
-// opened it gave, checked against those the component declares. A
-// component names the body it draws and the settings it takes, and is
-// given them as those.
+// the field; the kind of slot it stands in; what the holders above it
+// offer; and the settings the slot that opened it gave, checked against
+// those the component declares. A component names the body it draws and
+// the settings it takes, and is given them as those.
 export interface Given<B = Body, S = Settings> {
   holon?: HolonOf<B>;
   list?: Id[];
   field?: FieldPlace;
   kind: Kind;
+  offered: Offer;
   settings: S;
+}
+
+// What a holder offers a slot and everything beneath it. Offers trickle
+// down, and the nearest shadows the farther: so the kind of a slot is what
+// its holders offer, face where nothing offers otherwise, unless the slot
+// itself says.
+export type Offer = { kind?: Kind; [key: string]: Json | undefined };
+
+// Where a slot reads: one holon by its id, several by theirs, or whatever
+// an expression gathers.
+export type Where = Id | Id[] | Expression;
+
+// How a slot is opened: what its holder offers it and what lies beneath,
+// the settings it gives the component drawn in it, and the slot's own word
+// on its kind, which comes before any offer.
+export interface Opening {
+  offer?: Offer;
+  settings?: Settings;
+  kind?: Kind;
 }
 
 // Settings a slot gives the component drawn in it.
@@ -79,17 +99,14 @@ export type Answer<R extends Read> = R extends { holon: Id }
           ? Name | null
           : FieldPlace;
 
-// What a component works with: slots to open for what it holds, one holon,
-// a list of them or what an expression gathers, each of the kind it says;
+// What a component works with: slots to open where what it holds stands;
 // a layout's own mounts, each opened as the slot the mount says it is;
 // reads of the field, answered as their form says and drawing it again when
 // what they read changes; and a way to place the reader, which the
 // interface carries out as the reader's move, not the component's act.
 export interface Space {
-  open(id: Id, kind: Kind, settings?: Settings): HTMLElement;
-  openList(ids: Id[], kind: Kind, settings?: Settings): HTMLElement;
-  openGathered(expression: Expression, kind: Kind, settings?: Settings): HTMLElement;
-  openMount(index: number): HTMLElement;
+  open(where: Where, opening?: Opening): HTMLElement;
+  openMount(index: number, opening?: Opening): HTMLElement;
   read<R extends Read>(read: R): Promise<Answer<R>>;
   holon<B = Body>(id: Id): Promise<HolonOf<B> | null>;
   place(to: Target): Promise<void>;

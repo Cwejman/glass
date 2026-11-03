@@ -106,7 +106,14 @@ const bornLayouts = layouts(layoutFiles, idOf, bornTypes.names, fieldNames, comp
 
 const field: Born[] = [bornTypes, bornKinds, bornMaterials, bornComponents, bornWiki, bornEntry, bornLayouts];
 const holons = field.flatMap(({ holons }) => holons);
-const names = Object.assign({}, ...field.map(({ names }) => names));
+const given: Record<string, Id> = Object.assign({}, ...field.map(({ names }) => names));
+
+// A name the store gave before and the files no longer give is taken back.
+const namedBefore = head ? Object.keys((await store.index(head)).names) : [];
+const names: Record<string, Id | null> = {
+  ...Object.fromEntries(namedBefore.filter((name) => !Object.hasOwn(given, name)).map((name) => [name, null])),
+  ...given,
+};
 const gone = [...before].filter((id) => !holons.some((holon) => holon.id === id));
 
 const engine = await startEngine(store);

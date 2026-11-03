@@ -28,18 +28,18 @@ export async function mount(engine: Connection, root: HTMLElement) {
   let moves: Promise<unknown> = Promise.resolve();
 
   const kinds = await kindsOf(engine);
-  const kindNamed = (id: Id | undefined): Kind => (id === kinds.face ? "face" : "full");
+  const kindNamed = (id: Id): Kind => (id === kinds.face ? "face" : "full");
 
   // A layout's mount as a slot. The arrangement's mounts are where the
   // reader stands, so a move inside one moves that mount, and a change from
   // its chrome is kept in it; any other layout is only shown, and a move
   // inside it moves the slot that shows it.
-  const paneOf = (layout: HolonRead, index: number, outer: Call): Call => {
+  const paneOf = (layout: HolonRead, index: number, outer: Call): Omit<Call, "offered"> => {
     const each = mountsOf(layout)[index]!;
     const own = layout.id === arranged?.id;
     return {
       reads: readingOf(each),
-      kind: kindNamed(each.kind?.$ref),
+      ...(each.kind ? { own: kindNamed(each.kind.$ref) } : {}),
       settings: (each.settings ?? {}) as Settings,
       called: each.component?.$ref,
       place: own ? (to) => moveTo(index, to) : outer.place,
@@ -91,9 +91,10 @@ export async function mount(engine: Connection, root: HTMLElement) {
   const draw = async () => {
     arranged = await arrangement(engine);
     dismiss();
+    // The page offers its one slot, and what lies beneath, a full view.
     const call: Call = {
       reads: { holon: arranged.id },
-      kind: "full",
+      offered: { kind: "full" },
       settings: { alone: true },
       place: (to) => moveTo(0, to),
       root: true,

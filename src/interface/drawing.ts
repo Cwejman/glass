@@ -8,7 +8,7 @@ import type { Expression, Read } from "../engine/engine.ts";
 import { isMount } from "./arrangement.ts";
 import { readProblem } from "../engine/field.ts";
 import { references } from "../engine/references.ts";
-import type { Component, Given, Kind, Reading, Settings, Space } from "./component.ts";
+import type { Component, Given, Kind, Offer, Opening, Reading, Settings, Space, Where } from "./component.ts";
 import { settingsProblem } from "./settings.ts";
 import { offer, type Action } from "./chrome.ts";
 
@@ -19,13 +19,15 @@ import { offer, type Action } from "./chrome.ts";
 // overtaken changes nothing, and lets go of what it held. Every slot answers
 // the secondary press with its chrome.
 
-// What a slot is asked to draw: what it reads, the kind of slot it is, what
-// its whole passed along, the component it names, if any, and where a move
-// from inside it places the reader. Where the slot's own data is kept
-// somewhere writable, `keep` writes a change to it.
+// What a slot is asked to draw: what it reads, what its holders offer it,
+// its own word on its kind, if it has one, the settings its whole gave, the
+// component it names, if any, and where a move from inside it places the
+// reader. Where the slot's own data is kept somewhere writable, `keep`
+// writes a change to it.
 export interface Call {
   reads: Reading;
-  kind: Kind;
+  offered: Offer;
+  own?: Kind;
   settings: Settings;
   place: Space["place"];
   called?: Id;
@@ -44,9 +46,14 @@ export interface Options {
   // The kinds of slot, by name, as the field holds them.
   kinds: Record<Kind, Id>;
   // The slot a layout's mount makes: what it reads and calls, the kind it
-  // says, and where its moves and changes go.
-  paneOf: (layout: HolonRead, index: number, outer: Call) => Call;
+  // says, and where its moves and changes go. What is offered it the
+  // drawing adds.
+  paneOf: (layout: HolonRead, index: number, outer: Call) => Omit<Call, "offered">;
 }
+
+// The kind of slot a call is: its own word, else what its holders offer,
+// else a face.
+export const kindOf = (call: Pick<Call, "own" | "offered">): Kind => call.own ?? call.offered.kind ?? "face";
 
 // What a host holds while it is drawn: its own subscription, the hosts it
 // opened and the reads it made in its last drawing.
@@ -119,7 +126,7 @@ export function drawing(engine: Connection, options: Options): Drawing {
     holon: HolonRead | null,
     guarded: boolean,
   ): HolonRead | string | undefined => {
-    const kind = options.kinds[call.kind];
+    const kind = options.kinds[kindOf(call)];
     const known = options.components();
     if (!call.called) return match(known, call.reads, holon, kind);
 
@@ -129,7 +136,7 @@ export function drawing(engine: Connection, options: Options): Drawing {
     // ask for it, so what it named is not at fault.
     if (guarded) return match(known, call.reads, holon, kind);
     if (!named) return "the component named here is not in the field, or is not among those run";
-    return `${named.body.title as string} is named here, but cannot draw ${describe(call.reads, holon)} as a ${call.kind} slot`;
+    return `${named.body.title as string} is named here, but cannot draw ${describe(call.reads, holon)} as a ${kindOf(call)} slot`;
   };
 
   // A component's code, run once for each of its versions, its style laid
@@ -232,51 +239,53 @@ export function drawing(engine: Connection, options: Options): Drawing {
     // Slots opened from inside a full slot carry what it draws, so none of
     // them draws that holon full again: a holon that would stand in full
     // inside itself shows its face instead.
-    const around = call.kind === "full" && holon ? new Set([...(call.around ?? []), holon.id]) : call.around;
+    const around =
+      kindOf(call) === "full" && holon ? new Set([...(call.around ?? []), holon.id]) : call.around;
 
     const slot = (inner: Call) => {
       if (!current()) refuse("opens a slot from a drawing that has been overtaken");
       const host = document.createElement("div");
-      host.className = `slot ${inner.kind}`;
+      host.className = `slot ${kindOf(inner)}`;
       if (current()) {
         held.children.push(host);
         void draw(host, inner);
       }
       return host;
     };
-    const opened = (reads: Reading, kind: Kind, settings: Settings | null | undefined): Call => ({
-      reads,
-      kind,
-      settings: settings ?? {},
-      place: call.place,
-      why,
-      ...(around ? { around } : {}),
-    });
+    // A slot opened here: what it reads, offered what this slot was offered
+    // and what this component offers it, nearer over farther.
+    const opened = (reads: Reading, opening: Opening | undefined): Call => {
+      const { offer, settings, kind } = (copied(opening ?? {}) ?? {}) as Opening;
+      return {
+        reads,
+        offered: { ...call.offered, ...offer },
+        ...(kind === "full" || kind === "face" ? { own: kind } : {}),
+        settings: settings ?? {},
+        place: call.place,
+        why,
+        ...(around ? { around } : {}),
+      };
+    };
 
     const space: Space = {
-      open: (asked, kind, settings) => {
-        const id = copied(asked) as Id;
-        within([id], "opens");
-        return slot(opened({ holon: id }, kind, copied(settings ?? {}) as Settings));
-      },
-      openList: (asked, kind, settings) => {
-        const ids = copied(asked) as Id[];
-        if (!Array.isArray(ids)) refuse("opens a list that is not a list");
-        within(ids, "opens");
-        return slot(opened({ list: ids }, kind, copied(settings ?? {}) as Settings));
-      },
-      openGathered: (asked, kind, settings) => {
-        const expression = copied(asked) as Expression;
+      // One holon by its id, several by theirs, or what an expression gathers.
+      open: (asked, opening) => {
+        const where = copied(asked) as Where;
+        if (typeof where === "string") {
+          within([where], "opens");
+          return slot(opened({ holon: where }, opening));
+        }
+        if (Array.isArray(where)) {
+          within(where, "opens");
+          return slot(opened({ list: where }, opening));
+        }
         if (!declared.has("gather")) refuse("gathers, which it does not declare it reads");
-        const wrong = readProblem({ gather: expression });
+        const wrong = readProblem({ gather: where });
         if (wrong) refuse(`gathers by ${wrong}`);
-        within(idsIn(expression), "gathers by");
-        return slot(opened({ gather: expression }, kind, copied(settings ?? {}) as Settings));
+        within(idsIn(where), "gathers by");
+        return slot(opened({ gather: where }, opening));
       },
-      // A layout's own mount, by its place among the mounts: what it reads
-      // is the layout's to say, so it needs no read declared, but it must
-      // still stand within what the layout's component reaches.
-      openMount: (asked) => {
+      openMount: (asked, opening) => {
         const index = copied(asked);
         const mounts = holon?.body.mounts;
         if (!Array.isArray(mounts)) refuse("opens a mount of what is not a layout");
@@ -290,7 +299,8 @@ export function drawing(engine: Connection, options: Options): Drawing {
         if (!isMount(mount)) refuse(`opens mount ${String(index)}, which says nothing of what it reads`);
         const pane = options.paneOf(holon!, index as number, call);
         within("list" in pane.reads ? pane.reads.list : askedIds(pane.reads as Read), "opens a mount of");
-        return slot({ ...pane, ...(around ? { around } : {}) });
+        const { offer } = (copied(opening ?? {}) ?? {}) as Opening;
+        return slot({ ...pane, offered: { ...call.offered, ...offer }, ...(around ? { around } : {}) });
       },
       read,
       holon: async (id) => (await read({ holon: id })) as never,
@@ -309,14 +319,14 @@ export function drawing(engine: Connection, options: Options): Drawing {
     if (holon && !call.root)
       actions.push({ label: "Open as the place", run: () => void call.place(holon.id) });
 
-    const other: Kind = call.kind === "full" ? "face" : "full";
+    const other: Kind = kindOf(call) === "full" ? "face" : "full";
     if (candidates(options.components(), call.reads, holon, options.kinds[other]).length)
       actions.push({
         label: other === "full" ? "Show in full" : "Show as a face",
         ...(call.keep ? { run: () => void call.keep!({ kind: other }) } : { why: notKept }),
       });
 
-    for (const component of candidates(options.components(), call.reads, holon, options.kinds[call.kind]))
+    for (const component of candidates(options.components(), call.reads, holon, options.kinds[kindOf(call)]))
       if (component.id !== drawnBy?.id)
         actions.push({
           label: `Draw with ${component.body.title as string}`,
@@ -357,14 +367,14 @@ export function drawing(engine: Connection, options: Options): Drawing {
 
       // A holon already standing in full around this slot is shown here as
       // its face.
-      const guarded = asked.kind === "full" && !!holon && !!asked.around?.has(holon.id);
-      const call: Call = guarded ? { ...asked, kind: "face" } : asked;
+      const guarded = kindOf(asked) === "full" && !!holon && !!asked.around?.has(holon.id);
+      const call: Call = guarded ? { ...asked, own: "face" } : asked;
 
       const found = componentFor(call, holon, guarded);
       if (typeof found !== "object") {
         chrome = () => chromeOf(call, holon, undefined);
         return host.replaceChildren(
-          note(found ?? `nothing draws ${describe(call.reads, read)} as a ${call.kind} slot`),
+          note(found ?? `nothing draws ${describe(call.reads, read)} as a ${kindOf(call)} slot`),
         );
       }
       const component = found;
@@ -383,7 +393,8 @@ export function drawing(engine: Connection, options: Options): Drawing {
           ...("list" in call.reads ? { list: call.reads.list } : {}),
           ...("gather" in call.reads ? { list: (read as Id[] | null) ?? [] } : {}),
           ...("field" in call.reads ? { field: read as FieldPlace } : {}),
-          kind: call.kind,
+          kind: kindOf(call),
+          offered: call.offered,
           settings: call.settings,
         };
 

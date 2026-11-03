@@ -141,8 +141,10 @@ export function materials(files: MaterialFile[], idOf: IdOf, typeOf: Record<stri
   };
 }
 
-// The wiki: each file a brief or a record, each heading a brief beneath it,
-// every link to a file or heading in the wiki made a reference to its holon.
+// The wiki: each file a brief, each heading a brief beneath it, every link
+// to a file or heading in the wiki made a reference to its holon. A file the
+// rule keeps as a record, by time, is a brief that says its parts are kept
+// so.
 export function wiki(
   files: ReadonlyMap<string, WikiFile>,
   entry: string,
@@ -171,9 +173,10 @@ export function wiki(
     const body: Body = { title: section.title, prose };
     if (section.parts.length) body.parts = section.parts.map((part) => ({ $ref: idOf(fromOf(file, part)) }));
     if (section === file.root && file.status) body.status = file.status;
+    if (file.kind === "record") body.kept = "time";
     body.from = fromOf(file, section);
 
-    return { id: idOf(fromOf(file, section)), instance: [typeOf[file.kind]!], body };
+    return { id: idOf(fromOf(file, section)), instance: [typeOf.brief!], body };
   };
 
   const holons = [...files.values()].flatMap((file) =>

@@ -3,7 +3,7 @@ import { newId } from "../store/id.ts";
 import { wiki } from "./holons.ts";
 import { parseFile } from "./wiki.ts";
 
-const typeOf = { brief: newId(), record: newId() };
+const typeOf = { brief: newId() };
 const ids = new Map<string, string>();
 const idOf = (from: string) => {
   if (!ids.has(from)) ids.set(from, newId());

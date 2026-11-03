@@ -7,16 +7,17 @@ import { Card, follow, Way } from "./way.tsx";
 
 // A brief, in either kind of slot. In full: the way down to it, its title
 // and prose, each part its prose places a slot where it stands, and its
-// parts beneath, a list of slots; its own values it draws, and what they
-// point at it opens as slots, faces unless a slot says otherwise. As a face:
-// its number, title and first paragraph, and how many briefs stand beneath
-// it, entered by a press. A brief's parts are numbered by where they stand;
-// a record's are kept in the order of time, and are not.
+// parts beneath, what it holds under parts, gathered; its own values it
+// draws, and what they point at it opens as slots, offering them a face, so
+// a brief in full never trickles its fullness into what it holds. As a
+// face: its number, title and first paragraph, and how many briefs stand
+// beneath it, entered by a press. A brief's parts are numbered by where
+// they stand, unless it keeps them by time, as a day's words are.
 
 export const declared = {
   title: "Brief",
   says: "A brief: in full, the way down to it, its title and prose, the parts its prose places and its parts beneath, each a slot; as a face, its number, title and first paragraph.",
-  takes: ["brief", "record"],
+  takes: ["brief"],
   kinds: ["full", "face"],
   settings: {
     number: {
@@ -25,7 +26,7 @@ export const declared = {
       optional: true,
     },
   },
-  reads: ["holders", "holon", "name"],
+  reads: ["holders", "holon", "gather"],
 } satisfies Declaration;
 
 export const style = `
@@ -118,15 +119,13 @@ interface Level {
 async function full(given: Drawn, space: Space) {
   const holon = given.holon!;
   const brief = holon.body;
-  const record = await space.read({ name: "record" });
-  const numbers = (whole: HolonOf<BriefBody>) => !record || !whole.instance.includes(record);
+  const numbers = (whole: HolonOf<BriefBody>) => whole.body.kept !== "time";
 
   const levels = await wayDown(holon, space, numbers);
   const number = levels.at(-1)?.number ?? "";
   const steps = levels
     .slice(0, -1)
     .map(({ id, title, number }) => ({ to: id, label: number ? `${number} ${title}` : title }));
-  const parts = (brief.parts ?? []).map(({ $ref }) => $ref);
 
   return (
     <article class="place reader" onClick={follow(space)}>
@@ -137,7 +136,11 @@ async function full(given: Drawn, space: Space) {
         {brief.status && <span class="status">{brief.status}</span>}
       </h1>
       <div class="prose">{proseOf(holon, space)}</div>
-      {parts.length > 0 && space.openList(parts, "full", { kind: "face", numbered: numbers(holon), number })}
+      {(brief.parts?.length ?? 0) > 0 &&
+        space.open(
+          { held: holon.id, under: "parts" },
+          { offer: { kind: "face" }, settings: { numbered: numbers(holon), number } },
+        )}
     </article>
   );
 }
@@ -162,12 +165,16 @@ function face(given: Drawn, space: Space) {
 }
 
 // The prose, block by block; a block that is nothing but a link into the
-// field is a slot, the holon it places mounted there, as a face, or whole
-// where the link says so.
+// field is a slot, the holon it places mounted there, offered a face, or
+// in full where the link itself says so.
 function proseOf(holon: HolonOf<BriefBody>, space: Space) {
   return markdown.lexer(holon.body.prose).map((token) => {
     const slot = slotOf(token);
-    if (slot) return space.open(slot.id, slot.kind);
+    if (slot)
+      return space.open(slot.id, {
+        offer: { kind: "face" },
+        ...(slot.kind === "full" ? { kind: "full" } : {}),
+      });
 
     const kind = isConfidence(token) ? "block confidence" : "block";
     return <div class={kind} html={markdown.parser([token]) as string} />;
