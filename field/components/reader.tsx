@@ -30,11 +30,11 @@ export const style = `
   margin-left: 0.6em;
 }
 
-.reader .prose > p:first-child {
+.reader .prose > .block:first-child > p {
   font-size: var(--lead);
 }
 
-.reader .confidence {
+.reader .confidence > p {
   color: var(--quiet);
   font-size: var(--aside);
 }
@@ -106,10 +106,8 @@ function proseOf(holon: HolonRead, space: Space) {
     const part = placed(token);
     if (part) return space.open(part, "face");
 
-    const block = document.createElement("template");
-    block.innerHTML = markdown.parser([token]) as string;
-    if (isConfidence(token)) block.content.firstElementChild?.classList.add("confidence");
-    return block.content;
+    const kind = isConfidence(token) ? "block confidence" : "block";
+    return <div class={kind} html={markdown.parser([token]) as string} />;
   });
 }
 

@@ -31,21 +31,34 @@ interface CardProps {
 export const Card = ({ to, space, class: kind, children }: CardProps) => (
   <div
     class={kind ? `card ${kind}` : "card"}
+    role="link"
     tabindex="0"
     data-to={to}
     onClick={follow(space)}
-    onKeydown={(event: KeyboardEvent) =>
-      event.key === "Enter" && (event.currentTarget as HTMLElement).click()
-    }
+    onKeydown={enterOnKey}
   >
     {children}
   </div>
 );
 
+// A press inside a component: a link to the web is followed as a link; a
+// link into the field, or anything that names where it leads, places the
+// reader there.
 export const follow = (space: Space) => (event: Event) => {
-  const link = (event.target as Element).closest<HTMLElement>("[data-to], a[data-ref]");
+  const pressed = event.target as Element;
+  const web = pressed.closest<HTMLAnchorElement>("a[href]");
+  if (web && !web.dataset.ref && !web.dataset.to) return event.stopPropagation();
+
+  const link = pressed.closest<HTMLElement>("[data-to], a[data-ref]");
   if (!link) return;
   event.preventDefault();
   event.stopPropagation();
   void space.place((link.dataset.to ?? link.dataset.ref) as Target);
 };
+
+// Enter or Space on a card itself enters it, as a press would.
+function enterOnKey(event: KeyboardEvent) {
+  if (event.target !== event.currentTarget || (event.key !== "Enter" && event.key !== " ")) return;
+  event.preventDefault();
+  (event.currentTarget as HTMLElement).click();
+}

@@ -45,7 +45,7 @@ export default async function draw(given: Given, space: Space) {
       <Card to={type.id} space={space}>
         <strong>{title}</strong>
         <span class="meta">
-          {String(type.body.says ?? "")} · {instances.length} instances
+          {[String(type.body.says ?? ""), counted(instances.length, "instance")].filter(Boolean).join(" · ")}
         </span>
       </Card>
     );
@@ -76,6 +76,8 @@ export default async function draw(given: Given, space: Space) {
     </article>
   );
 }
+
+const counted = (n: number, what: string) => `${n} ${what}${n === 1 ? "" : "s"}`;
 
 function shapeOf(shape: unknown): string {
   if (typeof shape === "string") return shape;

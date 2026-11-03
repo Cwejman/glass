@@ -4,9 +4,11 @@ import { Marked, type Token, type Tokens } from "marked";
 // `ref:<id>`. A paragraph that is nothing but one such link places a part
 // there; any other link only mentions. A link to the web stays a link; one
 // to somewhere the field cannot reach, as a git commit, is shown as text
-// with its address where the pointer rests. Raw HTML in prose is shown as text, never run.
+// with its address where the pointer rests. Raw HTML in prose is shown as
+// text, never run.
 
-export const refOf = (href: string) => /^ref:([0-9A-HJKMNP-TV-Z]{26})/.exec(href)?.[1];
+export const refOf = (href: string) =>
+  /^ref:([0-9A-HJKMNP-TV-Z]{26})(?:@sha256-[0-9a-f]{64})?$/.exec(href)?.[1];
 
 const escape = (text: string) =>
   text.replace(
@@ -47,10 +49,21 @@ export function isConfidence(token: Token) {
   return inner.length === 1 && inner[0]!.type === "em";
 }
 
-// The face: the first paragraph, as plain inline text.
+// The face: the first paragraph, its links shown as their words, since the
+// face as a whole is what is entered.
+const plain = new Marked({
+  renderer: {
+    html: ({ text }) => escape(text),
+    image: ({ text }) => escape(text || "an image"),
+    link({ tokens }) {
+      return this.parser.parseInline(tokens);
+    },
+  },
+});
+
 export function faceOf(prose: string): string {
   const first = markdown
     .lexer(prose)
     .find((token) => token.type === "paragraph" && !placed(token) && !isConfidence(token));
-  return first ? (markdown.parseInline((first as Tokens.Paragraph).text) as string) : "";
+  return first ? (plain.parseInline((first as Tokens.Paragraph).text) as string) : "";
 }
