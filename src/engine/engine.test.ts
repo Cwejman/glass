@@ -48,7 +48,9 @@ describe("the engine judges every commit", () => {
   test("a holon that fits its type is committed to the home", async () => {
     const engine = await glass();
     const id = newId();
-    expect(await engine.commit({ holons: [{ id, instance: [NOTE], body: { title: "A note" } }] })).toBeDefined();
+    expect(
+      await engine.commit({ holons: [{ id, instance: [NOTE], body: { title: "A note" } }] }),
+    ).toBeDefined();
     expect(((await engine.read({ holon: id })) as unknown as HolonRead).store).toBe("home");
   });
 
@@ -60,7 +62,9 @@ describe("the engine judges every commit", () => {
     ["a prose link out of the field", { title: "x", prose: `see [it](ref:${newId()})` }, "not in the field"],
   ])("refuses %s", async (_, body, message) => {
     const engine = await glass();
-    await expect(engine.commit({ holons: [{ id: newId(), instance: [NOTE], body }] })).rejects.toThrow(message);
+    await expect(engine.commit({ holons: [{ id: newId(), instance: [NOTE], body }] })).rejects.toThrow(
+      message,
+    );
   });
 
   test("refuses a type whose field says nothing in prose", async () => {
@@ -68,7 +72,11 @@ describe("the engine judges every commit", () => {
     await expect(
       engine.commit({
         holons: [
-          { id: newId(), instance: [TYPE], body: { title: "Silent", fields: { x: { says: "", shape: "string" } } } },
+          {
+            id: newId(),
+            instance: [TYPE],
+            body: { title: "Silent", fields: { x: { says: "", shape: "string" } } },
+          },
         ],
       }),
     ).rejects.toThrow("says nothing in prose");
@@ -107,7 +115,11 @@ describe("the engine reads the field as one", () => {
     await engine.commit({
       holons: [
         { id: a, instance: [NOTE], body: { title: "A" } },
-        { id: b, instance: [NOTE], body: { title: "B", about: { $ref: a }, prose: `As [A](ref:${a}) says.` } },
+        {
+          id: b,
+          instance: [NOTE],
+          body: { title: "B", about: { $ref: a }, prose: `As [A](ref:${a}) says.` },
+        },
       ],
     });
     expect(await engine.read({ holders: a })).toEqual([
@@ -136,7 +148,10 @@ test("references are found without knowing the type", () => {
   const a = newId();
   const pinned = `sha256-${"0".repeat(64)}`;
   expect(
-    references({ deep: { list: [{ $ref: a, "@": pinned }] }, prose: `[x](ref:${a}) and [y](https://example.com)` }),
+    references({
+      deep: { list: [{ $ref: a, "@": pinned }] },
+      prose: `[x](ref:${a}) and [y](https://example.com)`,
+    }),
   ).toEqual([
     { id: a, key: "deep", pinned },
     { id: a, key: "prose" },
@@ -189,7 +204,9 @@ describe("a store pulled over HTTP", async () => {
     await writeFile(file, honest.replace('"Note"', '"Forged"'));
     await writeFile(join(dir, "bundles", `${commit}.json`), "{}");
     const engine = await startEngine(openStore(memoryBackend()));
-    await expect(engine.attach("glass", await pull(base))).rejects.toThrow("does not hold what its name says");
+    await expect(engine.attach("glass", await pull(base))).rejects.toThrow(
+      "does not hold what its name says",
+    );
     await writeFile(file, honest);
   });
 });
@@ -201,7 +218,11 @@ describe("what the engine's fresh reading found", () => {
     const b = newId();
     await engine.commit({
       holons: [
-        { id: a, instance: [TYPE], body: { title: "A", fields: { x: { says: "A number.", shape: "number" } } } },
+        {
+          id: a,
+          instance: [TYPE],
+          body: { title: "A", fields: { x: { says: "A number.", shape: "number" } } },
+        },
         {
           id: b,
           instance: [TYPE],
@@ -209,9 +230,9 @@ describe("what the engine's fresh reading found", () => {
         },
       ],
     });
-    await expect(engine.commit({ holons: [{ id: newId(), instance: [a, b], body: { x: "s" } }] })).rejects.toThrow(
-      "x is not number",
-    );
+    await expect(
+      engine.commit({ holons: [{ id: newId(), instance: [a, b], body: { x: "s" } }] }),
+    ).rejects.toThrow("x is not number");
     await expect(engine.commit({ holons: [{ id: newId(), instance: [a, b], body: {} }] })).rejects.toThrow(
       "x is missing",
     );
@@ -235,7 +256,9 @@ describe("what the engine's fresh reading found", () => {
 
   test("a name must give a holon in the field", async () => {
     const engine = await glass();
-    await expect(engine.commit({ holons: [], names: { ghost: newId() } })).rejects.toThrow("not in the field");
+    await expect(engine.commit({ holons: [], names: { ghost: newId() } })).rejects.toThrow(
+      "not in the field",
+    );
   });
 
   test("a prose link with a title is a reference too", async () => {
@@ -266,7 +289,9 @@ describe("what the engine's fresh reading found", () => {
     const a = newId();
     const results = await Promise.all([
       engine.commit({ holons: [{ id: a, instance: [NOTE], body: { title: "A" } }] }),
-      engine.commit({ holons: [{ id: newId(), instance: [NOTE], body: { title: "B", about: { $ref: a } } }] }),
+      engine.commit({
+        holons: [{ id: newId(), instance: [NOTE], body: { title: "B", about: { $ref: a } } }],
+      }),
     ]);
     expect(results.every(Boolean)).toBe(true);
   });

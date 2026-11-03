@@ -1,17 +1,53 @@
-import type { Given, Space } from "../../src/interface/interface.ts";
-import { element, faceOf } from "./prose.ts";
+import type { Given, Space } from "../../src/interface/component.ts";
+import { element } from "./element.ts";
+import { faceOf } from "./prose.ts";
 
 // A brief seen from above: its number, its title and its first paragraph,
 // which is its face. Entering it places the reader there.
 
 export const style = `
-.face-card { display: block; padding: var(--gap) calc(var(--gap) * 1.15); border: var(--hairline) solid var(--line); border-radius: var(--radius);
-  background: var(--raised); cursor: pointer; transition: border-color 0.15s; }
-.face-card:hover, .face-card:focus-visible { border-color: var(--quiet); outline: none; }
-.face-card h2 { font-size: var(--heading); line-height: var(--leading-tight); margin: 0 0 0.35em; font-weight: 600; }
-.face-card h2 .number { color: var(--quiet); font-weight: 400; margin-right: 0.45em; }
-.face-card p { margin: 0; color: var(--quiet); font-size: var(--aside); line-height: var(--leading-close); }
-.face-card .beneath { display: block; margin-top: 0.5em; font: var(--smaller) / var(--leading-close) var(--sans); color: var(--quiet); opacity: 0.8; }
+.face-card {
+  display: block;
+  padding: var(--gap) calc(var(--gap) * 1.15);
+  border: var(--hairline) solid var(--line);
+  border-radius: var(--radius);
+  background: var(--raised);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.face-card:hover, .face-card:focus-visible {
+  border-color: var(--quiet);
+  outline: none;
+}
+
+.face-card h2 {
+  font-size: var(--heading);
+  line-height: var(--leading-tight);
+  margin: 0 0 0.35em;
+  font-weight: 600;
+}
+
+.face-card h2 .number {
+  color: var(--quiet);
+  font-weight: 400;
+  margin-right: 0.45em;
+}
+
+.face-card p {
+  margin: 0;
+  color: var(--quiet);
+  font-size: var(--aside);
+  line-height: var(--leading-close);
+}
+
+.face-card .beneath {
+  display: block;
+  margin-top: 0.5em;
+  font: var(--smaller) / var(--leading-close) var(--sans);
+  color: var(--quiet);
+  opacity: 0.8;
+}
 `;
 
 export default function draw({ holon, with: given }: Given, space: Space) {

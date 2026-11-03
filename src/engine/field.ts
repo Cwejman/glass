@@ -13,7 +13,14 @@ import { bodyProblem, connectorsOf, isType, typeProblem } from "./types.ts";
 // judging a change against it are functions of the field, and of the
 // stores' past, which never changes either and is asked for by its own name.
 
-export type Read = { holon: Id; at?: Name } | { name: string } | { holders: Id } | { instances: Id } | { head: string };
+// What may be read of a field: a holon, now or at a commit; what a name
+// gives; what points at a holon; a type's instances; a store's head.
+export type Read =
+  | { holon: Id; at?: Name }
+  | { name: string }
+  | { holders: Id }
+  | { instances: Id }
+  | { head: string };
 
 export interface HolonRead {
   id: Id;
@@ -87,7 +94,8 @@ export function pastOf(stores: readonly { key: string; store: Store }[]): Past {
         return found && { key, name: found[0], version: found[1] };
       }),
 
-    isVersion: async (id, version) => (await firstFound((store) => store.versionOf(id, version))) !== undefined,
+    isVersion: async (id, version) =>
+      (await firstFound((store) => store.versionOf(id, version))) !== undefined,
   };
 }
 
@@ -113,7 +121,9 @@ export async function read(field: Field, past: Past, read: Read): Promise<Json> 
   }
   if ("name" in read)
     return (
-      field.stores.map(({ names }) => names[read.name]).find((id) => id !== undefined && field.known.has(id)) ?? null
+      field.stores
+        .map(({ names }) => names[read.name])
+        .find((id) => id !== undefined && field.known.has(id)) ?? null
     );
   if ("head" in read) return field.stores.find(({ key }) => key === read.head)?.head ?? null;
   if ("holders" in read)
@@ -150,6 +160,7 @@ export function judge(field: Field, past: Past, change: Change): Promise<Problem
     .map(({ version }) => born.get(version.id) ?? version)
     .concat([...born.values()].filter(({ id }) => !field.known.has(id)))
     .filter(({ id }) => !gone.has(id));
+
   const pointsAtGone = (holon: Holon): Problem => {
     const lost = references(holon.body).find(({ id }) => gone.has(id));
     return lost && `${holon.id} still references ${lost.id}, which would be gone`;

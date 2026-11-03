@@ -37,6 +37,8 @@ test("a wiki becomes holons: files and headings as briefs, links as references",
 });
 
 test("a link that leads nowhere is refused", () => {
-  const files = new Map([["README.md", parseFile("README.md", "# Glass\n\n[Gone](gone.md) and [no](#nowhere).\n")]]);
+  const files = new Map([
+    ["README.md", parseFile("README.md", "# Glass\n\n[Gone](gone.md) and [no](#nowhere).\n")],
+  ]);
   expect(() => wiki(files, "README.md", idOf, typeOf)).toThrow("links that lead nowhere");
 });

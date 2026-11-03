@@ -1,12 +1,14 @@
 import type { Objects } from "./checked.ts";
 import type { Id } from "./id.ts";
 import type { Name } from "./name.ts";
-import { leafSize, type Branch, type Leaf } from "./objects.ts";
+import type { Branch, Leaf } from "./objects.ts";
 
 // The holons of an index, as a tree split by the characters of their ids
 // read from the end, where ids are random. A leaf holds at most `leafSize`;
 // past that it is a branch over the next character. The shape depends only
 // on which ids there are, so the same field is always the same tree.
+
+export const leafSize = 64;
 
 const charAt = (id: Id, depth: number) => id[id.length - 1 - depth]!;
 const suffix = (id: Id, length: number) => (length === 0 ? "" : id.slice(-length));
@@ -18,10 +20,12 @@ async function node(objects: Objects, name: Name, path: string): Promise<Leaf | 
   const found = await objects.get<Leaf | Branch>(name);
   if (found.kind !== "index-leaf" && found.kind !== "index-branch")
     throw new Error(`${name} is not a node of an index`);
-  if (found.depth !== path.length) throw new Error(`${name} stands at depth ${path.length}, not ${found.depth}`);
+  if (found.depth !== path.length)
+    throw new Error(`${name} stands at depth ${path.length}, not ${found.depth}`);
   if (found.kind === "index-leaf")
     for (const id of Object.keys(found.versions))
-      if (suffix(id, path.length) !== path) throw new Error(`${name} holds ${id}, which does not belong under it`);
+      if (suffix(id, path.length) !== path)
+        throw new Error(`${name} holds ${id}, which does not belong under it`);
   return found;
 }
 
@@ -47,7 +51,9 @@ export async function grow(
   updates: ReadonlyMap<Id, Name>,
   depth = 0,
 ): Promise<Name> {
-  const here: Leaf | Branch = at ? await objects.get<Leaf | Branch>(at) : { kind: "index-leaf", depth, versions: {} };
+  const here: Leaf | Branch = at
+    ? await objects.get<Leaf | Branch>(at)
+    : { kind: "index-leaf", depth, versions: {} };
   if (here.kind === "index-leaf") {
     const versions = { ...here.versions, ...Object.fromEntries(updates) };
     if (Object.keys(versions).length <= leafSize) return objects.put({ kind: "index-leaf", depth, versions });
@@ -79,7 +85,8 @@ async function branchesOf(
 ) {
   const grown = await Promise.all(
     [...Map.groupBy(entries, ([id]) => charAt(id, depth))].map(
-      async ([char, group]) => [char, await grow(objects, before?.[char], new Map(group), depth + 1)] as const,
+      async ([char, group]) =>
+        [char, await grow(objects, before?.[char], new Map(group), depth + 1)] as const,
     ),
   );
   return { ...before, ...Object.fromEntries(grown) };

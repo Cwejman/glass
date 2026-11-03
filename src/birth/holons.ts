@@ -23,6 +23,13 @@ export interface TypeFile {
   body: Body;
 }
 
+export interface MaterialFile {
+  from: string;
+  title: string;
+  says: string;
+  css: string;
+}
+
 export interface ComponentFile {
   from: string;
   title: string;
@@ -54,11 +61,7 @@ export function components(files: ComponentFile[], idOf: IdOf, typeOf: Record<st
 }
 
 // The materials everything drawn is made of, each a style sheet.
-export function materials(
-  files: { from: string; title: string; says: string; css: string }[],
-  idOf: IdOf,
-  typeOf: Record<string, Id>,
-): Born {
+export function materials(files: MaterialFile[], idOf: IdOf, typeOf: Record<string, Id>): Born {
   return {
     holons: files.map(({ from, title, says, css }) => ({
       id: idOf(from),
@@ -104,7 +107,9 @@ export function wiki(
     return { id: idOf(fromOf(file, section)), instance: [typeOf[file.kind]!], body };
   };
 
-  const holons = [...files.values()].flatMap((file) => flatten(file.root).map((section) => holonOf(file, section)));
+  const holons = [...files.values()].flatMap((file) =>
+    flatten(file.root).map((section) => holonOf(file, section)),
+  );
   if (nowhere.length) throw new Error(`links that lead nowhere:\n  ${nowhere.join("\n  ")}`);
 
   return { holons, names: { wiki: idAt(entry)! } };

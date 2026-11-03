@@ -13,7 +13,11 @@
       "shape": { "list": "string" }
     },
     "code": { "says": "The module the interface runs, as JavaScript.", "shape": "string" },
-    "source": { "says": "The code as it was written, before it was built.", "shape": "string", "optional": true },
+    "source": {
+      "says": "The code as it was written, before it was built.",
+      "shape": "string",
+      "optional": true
+    },
     "from": {
       "says": "Where the holon was born from, as a path in the files it arrived from.",
       "shape": "string",

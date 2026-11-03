@@ -14,7 +14,8 @@ export interface Mount {
 }
 
 export async function arrangement(engine: Connection): Promise<HolonRead> {
-  const id = ((await engine.read({ name: "arrangement" })) ?? (await engine.read({ name: "entry" }))) as Id | null;
+  const id = ((await engine.read({ name: "arrangement" })) ??
+    (await engine.read({ name: "entry" }))) as Id | null;
   const layout = id && (await engine.holon(id));
   if (!layout) throw new Error("the field has no entry to boot into");
   return layout;

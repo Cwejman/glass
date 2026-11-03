@@ -38,7 +38,10 @@ test("a file is a brief, its sections the briefs beneath, numbers left out of ti
   expect(parsed.status).toBe("proposed");
   expect(parsed.root.title).toBe("The store");
   expect(parsed.root.prose).toBe("A store is where a field is kept.\n\n[How holons relate](relations.md)");
-  expect(parsed.root.parts.map((part) => part.title)).toEqual(["Objects named by what they hold", "From the ref down"]);
+  expect(parsed.root.parts.map((part) => part.title)).toEqual([
+    "Objects named by what they hold",
+    "From the ref down",
+  ]);
   expect(parsed.root.parts[0]!.prose).toContain("# not a heading");
   expect(parsed.root.parts[0]!.parts[0]!.title).toBe("The prefix");
   expect(parsed.root.parts[1]!.parts[0]!.title).toBe("A holon's identity");
@@ -53,7 +56,9 @@ test("a file is a brief, its sections the briefs beneath, numbers left out of ti
 
 test("anchors are the ones GitHub gives", () => {
   expect(slug("5.a Ownership")).toBe("5a-ownership");
-  expect(slug("2.3 The index is the whole field at one commit")).toBe("23-the-index-is-the-whole-field-at-one-commit");
+  expect(slug("2.3 The index is the whole field at one commit")).toBe(
+    "23-the-index-is-the-whole-field-at-one-commit",
+  );
 });
 
 test("links outside code are found and rewritten; images and code are left", () => {

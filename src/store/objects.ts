@@ -21,10 +21,9 @@ export interface Index {
   holons: Name;
 }
 
-// The holons of an index are a tree split by the characters of their ids,
-// read from the end where ids are random. A leaf holds at most `leafSize`
-// entries; past that it becomes a branch over the next character. The shape
-// depends only on which ids there are, so the same field is the same tree.
+// The holons of an index are a tree, as `tree.ts` grows it: a leaf holds
+// versions by id, and a branch the nodes beneath it by the next character of
+// their ids.
 export interface Leaf {
   kind: "index-leaf";
   depth: number;
@@ -46,8 +45,6 @@ export interface Version {
 }
 
 export type StoreObject = Commit | Index | Leaf | Branch | Version;
-
-export const leafSize = 64;
 
 const isNameMap = (value: unknown) =>
   typeof value === "object" && value !== null && !Array.isArray(value) && Object.values(value).every(isName);
@@ -73,7 +70,11 @@ export function asObject(value: unknown): StoreObject {
   const ok = (() => {
     switch (value.kind) {
       case "commit":
-        return (value.parent === null || isName(value.parent)) && typeof value.at === "string" && isName(value.index);
+        return (
+          (value.parent === null || isName(value.parent)) &&
+          typeof value.at === "string" &&
+          isName(value.index)
+        );
       case "index":
         return isRecord(value.names) && Object.values(value.names).every(isId) && isName(value.holons);
       case "index-leaf":

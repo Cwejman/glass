@@ -9,6 +9,12 @@ How glass came to be what it is, told over its commits, newest first, each day b
 
 *Begun 2026-11-02, on the author's word that the effort be noted in the log as the work goes. Each story reasoned by the session that did the work, from the commits and the author's words.*
 
+## No classes, and structure before detail
+
+The author asked whether keeping classes was still the session's reasoning, and said not to hold to how things were coded before. Every class went: stores, backends, the engine, the connection and the interface are each made by a function, and the store was split by what it is, checked objects, the tree and the store, and the interface into the arrangement, the drawing, the materials and the mount. The session then began writing the core as dense expressions, and the author said it was thinking too bluntly at the top and the bottom: understanding comes from good structure, so one need not shadow code before it settles, and blank lines matter. The core was written again as plain steps with names and room, the whole kept in one form, and a fresh agent read it as a newcomer. It found the components' contract without a home, nested choices, a wall in the drawing, a comment no longer true, the tree's rule told twice, and helpers in the wrong files, and each was mended.
+
+*Reasoned on 2026-11-03 by the session.*
+
 ## The code read for its tone
 
 Asked whether classes and imperative code matter, the author answered that the material one builds in goes into everything: every component, the code and the styling. The engine's core became a pure field value, plain data with the stores' past asked for by its own name, and the engine a thin shell that keeps the field as it stands and takes acts in turn. The birth became functions of what its files hold, with the reading and writing kept at the edge. The material, the colours, type and measure everything is drawn with, became a holon in the field, laid by the interface, and the chassis page holds no style of its own. A fresh agent then read all of it for how it reads; it found the field still holding stores, a comment saying the interface holds nothing, one cast written ten times, two pairs of colliding names, and styles going around the material, and each was mended.

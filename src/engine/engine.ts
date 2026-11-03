@@ -37,7 +37,8 @@ export async function startEngine(home: Store): Promise<Engine> {
   return {
     attach: (key, store) =>
       inTurn(async () => {
-        if (stores.some((attached) => attached.key === key)) throw new Error(`a store is already attached as ${key}`);
+        if (stores.some((attached) => attached.key === key))
+          throw new Error(`a store is already attached as ${key}`);
         const next = fieldOf([...field.stores, await standing(key, store)]);
         stores.push({ key, store });
         become(next);

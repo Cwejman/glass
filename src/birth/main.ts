@@ -2,14 +2,25 @@ import { readdir, readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { fileBackend, writeBundle } from "../store/files.ts";
 import { newId, type Id } from "../store/id.ts";
+import type { Name } from "../store/name.ts";
 import type { Body } from "../store/objects.ts";
 import { openStore } from "../store/store.ts";
 import { startEngine } from "../engine/engine.ts";
-import { components, entry, materials, types, wiki, type Born, type ComponentFile, type TypeFile } from "./holons.ts";
+import {
+  components,
+  entry,
+  materials,
+  types,
+  wiki,
+  type Born,
+  type ComponentFile,
+  type TypeFile,
+} from "./holons.ts";
 import { flatten, linkTargets, parseFile, resolve, type WikiFile } from "./wiki.ts";
 
 // Births glass's field into its store as one commit: the types, the
-// components built from their code, the entry, and this wiki. A holon keeps
+// materials, the components built from their code, this wiki, and the entry
+// that reads it. A holon keeps
 // the id it was first born with, found by where it came from, its file and
 // its heading's anchor, so a birth after the files change is a change to the
 // same holons; a heading renamed is a new holon, and what the files no longer
@@ -103,10 +114,16 @@ if (now) {
     if (file !== `${now}.json`) await rm(join(storeDir, "bundles", file));
 }
 
-let changed = 0;
-if (commit)
-  for (const { id } of holons)
-    if ((await store.version(id, commit))?.[0] !== (head ? await store.version(id, head) : undefined)?.[0]) changed++;
+// How many holons the commit gave a version they did not have before.
+const versionAt = async (id: Id, at: Name | undefined) => at && (await store.version(id, at))?.[0];
+const changed = commit
+  ? (
+      await Promise.all(
+        holons.map(async ({ id }) => (await versionAt(id, commit)) !== (await versionAt(id, head))),
+      )
+    ).filter(Boolean).length
+  : 0;
+
 console.log(
   commit
     ? `born ${commit}: ${holons.length} holons from ${files.size} files, ${changed} new or changed, ${gone.length} gone`

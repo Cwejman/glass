@@ -11,7 +11,16 @@ export const firstOf = <T>(items: Iterable<T>, check: (item: T) => Problem): Pro
   [...items].reduce<Problem>((found, item) => found ?? check(item), undefined);
 
 export const firstAsync = (...checks: (() => Problem | Promise<Problem>)[]): Promise<Problem> =>
-  checks.reduce<Promise<Problem>>(async (found, check) => (await found) ?? check(), Promise.resolve(undefined));
+  checks.reduce<Promise<Problem>>(
+    async (found, check) => (await found) ?? check(),
+    Promise.resolve(undefined),
+  );
 
-export const firstOfAsync = <T>(items: Iterable<T>, check: (item: T) => Problem | Promise<Problem>): Promise<Problem> =>
-  [...items].reduce<Promise<Problem>>(async (found, item) => (await found) ?? check(item), Promise.resolve(undefined));
+export const firstOfAsync = <T>(
+  items: Iterable<T>,
+  check: (item: T) => Problem | Promise<Problem>,
+): Promise<Problem> =>
+  [...items].reduce<Promise<Problem>>(
+    async (found, item) => (await found) ?? check(item),
+    Promise.resolve(undefined),
+  );

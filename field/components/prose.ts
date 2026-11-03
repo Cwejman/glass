@@ -9,14 +9,18 @@ import { Marked, type Token, type Tokens } from "marked";
 export const refOf = (href: string) => /^ref:([0-9A-HJKMNP-TV-Z]{26})/.exec(href)?.[1];
 
 const escape = (text: string) =>
-  text.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!);
+  text.replace(
+    /[&<>"']/g,
+    (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!,
+  );
 
 export const markdown = new Marked({
   renderer: {
     html: ({ text }) => escape(text),
     // An image is not fetched: loading it would tell whoever serves it who
     // reads, and when. It is shown by what it says, its address beside.
-    image: ({ href, text }) => `<span class="unlinked" title="${escape(href)}">${escape(text || "an image")}</span>`,
+    image: ({ href, text }) =>
+      `<span class="unlinked" title="${escape(href)}">${escape(text || "an image")}</span>`,
     link({ href, title, tokens }) {
       const text = this.parser.parseInline(tokens);
       const ref = refOf(href);
@@ -49,11 +53,4 @@ export function faceOf(prose: string): string {
     .lexer(prose)
     .find((token) => token.type === "paragraph" && !placed(token) && !isConfidence(token));
   return first ? (markdown.parseInline((first as Tokens.Paragraph).text) as string) : "";
-}
-
-export function element<K extends keyof HTMLElementTagNameMap>(tag: K, className?: string, text?: string) {
-  const made = document.createElement(tag);
-  if (className) made.className = className;
-  if (text !== undefined) made.textContent = text;
-  return made;
 }

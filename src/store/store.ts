@@ -79,28 +79,35 @@ export function openStore(backend: Backend): Store {
 
     // A new version for each holon whose instance or body changed.
     const versioned = await Promise.all(
-      change.holons.map(async (holon) => [holon.id, await versionFor(holon, await before(holon.id))] as const),
+      change.holons.map(
+        async (holon) => [holon.id, await versionFor(holon, await before(holon.id))] as const,
+      ),
     );
     const updates = new Map(versioned.filter((entry): entry is [Id, Name] => entry[1] !== undefined));
 
     // The names as they were, with those the change gives or takes away.
     const given = Object.entries({ ...last?.names, ...change.names });
-    const names = Object.fromEntries(given.filter((entry): entry is [string, Id] => typeof entry[1] === "string"));
+    const names = Object.fromEntries(
+      given.filter((entry): entry is [string, Id] => typeof entry[1] === "string"),
+    );
 
     // What the change takes out, of what the field held.
-    const held = await Promise.all((change.gone ?? []).map(async (id) => ((await before(id)) ? id : undefined)));
+    const held = await Promise.all(
+      (change.gone ?? []).map(async (id) => ((await before(id)) ? id : undefined)),
+    );
     const gone = new Set(held.filter((id) => id !== undefined));
 
     const namesChanged = canonical(names) !== canonical(last?.names ?? {});
     if (updates.size === 0 && gone.size === 0 && !namesChanged) return undefined;
 
-    const holons = gone.size
-      ? await plant(objects, await keptAfter(last, gone, updates))
-      : last && updates.size === 0
-        ? last.holons
-        : await grow(objects, last?.holons, updates);
+    const holons = await treeAfter(last, gone, updates);
     const indexName = await objects.put({ kind: "index", names, holons });
-    const commit = await objects.put({ kind: "commit", parent: from ?? null, at: change.at, index: indexName });
+    const commit = await objects.put({
+      kind: "commit",
+      parent: from ?? null,
+      at: change.at,
+      index: indexName,
+    });
     if (!(await backend.moveRef(ref, commit, from))) throw new Error(`ref ${ref} moved while writing`);
     return commit;
   }
@@ -119,9 +126,16 @@ export function openStore(backend: Backend): Store {
     });
   }
 
-  async function keptAfter(last: Index | undefined, gone: Set<Id>, updates: Map<Id, Name>) {
-    const held = last ? await Array.fromAsync(entries(objects, last.holons)) : [];
-    return new Map([...held.filter(([id]) => !gone.has(id)), ...updates]);
+  // The tree of holons after a change: the one before, where only names
+  // changed; grown on the way to what changed; or planted anew from what is
+  // kept, where holons were taken out.
+  async function treeAfter(last: Index | undefined, gone: Set<Id>, updates: Map<Id, Name>): Promise<Name> {
+    if (gone.size) {
+      const held = last ? await Array.fromAsync(entries(objects, last.holons)) : [];
+      return plant(objects, new Map([...held.filter(([id]) => !gone.has(id)), ...updates]));
+    }
+    if (last && updates.size === 0) return last.holons;
+    return grow(objects, last?.holons, updates);
   }
 
   // Everything a commit reaches: the commit, its index, the tree and the

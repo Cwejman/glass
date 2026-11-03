@@ -122,7 +122,9 @@ describe("a store as files", () => {
       holons: [{ id: T, instance: [T], body: { title: "Note" } }],
     }))!;
     expect((await readFile(join(dir, "refs", "main"), "utf8")).trim()).toBe(commit);
-    expect(await readFile(join(dir, "objects", path(commit)), "utf8")).toBe(canonical(await store.object(commit)));
+    expect(await readFile(join(dir, "objects", path(commit)), "utf8")).toBe(
+      canonical(await store.object(commit)),
+    );
 
     await writeBundle(store, dir, commit);
     const bundle = JSON.parse(await readFile(join(dir, "bundles", `${commit}.json`), "utf8"));
@@ -185,7 +187,9 @@ describe("what a store refuses", () => {
     const backend = await field();
     const [aName] = (await openStore(backend).version(A))!;
     const leaf = await forge(backend, { kind: "index-leaf", depth: 7, versions: { [A]: aName } });
-    await expect(openStore(backend).version(A, await forgeCommit(backend, leaf))).rejects.toThrow("stands at depth");
+    await expect(openStore(backend).version(A, await forgeCommit(backend, leaf))).rejects.toThrow(
+      "stands at depth",
+    );
   });
 
   test("a leaf holding an id that does not belong under its branch", async () => {
@@ -217,9 +221,9 @@ describe("what a store refuses", () => {
     await expect(store.write({ at: "t", holons: [{ id: "x", instance: [], body: {} }] })).rejects.toThrow(
       "is not an id",
     );
-    await expect(store.write({ at: "t", holons: [{ id: A, instance: [], body: [] as never }] })).rejects.toThrow(
-      "not a JSON object",
-    );
+    await expect(
+      store.write({ at: "t", holons: [{ id: A, instance: [], body: [] as never }] }),
+    ).rejects.toThrow("not a JSON object");
     await expect(store.write({ at: "t", holons: [], names: { a: "x" } })).rejects.toThrow("must give an id");
     expect(backend.objects.size).toBe(0);
   });
@@ -239,9 +243,9 @@ describe("what a store refuses", () => {
     const change = JSON.parse(`{"at":"t","holons":[],"names":{"__proto__":"${T}"}}`);
     await store.write({ at: "t", holons: [{ id: T, instance: [T], body: {} }] });
     expect(await store.write(change)).toBeDefined();
-    expect(Object.getOwnPropertyDescriptor((await store.index((await store.head())!)).names, "__proto__")?.value).toBe(
-      T,
-    );
+    expect(
+      Object.getOwnPropertyDescriptor((await store.index((await store.head())!)).names, "__proto__")?.value,
+    ).toBe(T);
   });
 
   test("an array with a hole is not JSON", () => {

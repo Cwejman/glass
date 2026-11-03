@@ -122,7 +122,12 @@ function step(
   const namesChanged = canonical(nextNames) !== canonical(names);
   const taken = gone.filter((id) => versions.has(id));
   for (const id of taken) versions.delete(id);
-  const change = { at, holons, ...(givenNames ? { names: givenNames } : {}), ...(gone.length ? { gone } : {}) };
+  const change = {
+    at,
+    holons,
+    ...(givenNames ? { names: givenNames } : {}),
+    ...(gone.length ? { gone } : {}),
+  };
   if (made.length === 0 && !namesChanged && taken.length === 0) {
     steps.push({ about, change, ref: head, objects: {} });
     return;
@@ -165,9 +170,11 @@ step(
   "2026-11-03T09:02:00Z",
   Array.from({ length: 61 }, (_, i) => note(id("C", i, alphabet[i % 32]!), `Note ${i}`)),
 );
-step("one more makes 65, and the leaf becomes a branch over the last character of the ids", "2026-11-03T09:03:00Z", [
-  note(id("C", 61, "Q"), "Note 61"),
-]);
+step(
+  "one more makes 65, and the leaf becomes a branch over the last character of the ids",
+  "2026-11-03T09:03:00Z",
+  [note(id("C", 61, "Q"), "Note 61")],
+);
 step(
   "65 holons whose ids all end in Z: that leaf passes 64 and branches over the second character from the end",
   "2026-11-03T09:04:00Z",

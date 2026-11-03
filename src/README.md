@@ -5,7 +5,7 @@ kind: brief
 
 # The code
 
-Glass's code is laid out as its primitives stand: the store, the engine on it, the interface on the engine, and the birth that brings files into a store. Beside it stand the other kinds the repository holds, each in its own place: the knowledge, the field glass ships, the store's contract, and the site a host serves.
+Glass's code is laid out as its primitives stand: the store, the engine on it, the interface on the engine, and the birth that brings files into a store. It is data and functions over it: nothing is a class, the core is pure, and effects happen only at the edges, the page, the browser's storage, the network and the files. Beside it stand the other kinds the repository holds, each in its own place: the knowledge, the field glass ships, the store's contract, and the site a host serves.
 
 *The session's, 2026-11-03.*
 
@@ -13,9 +13,9 @@ Glass's code is laid out as its primitives stand: the store, the engine on it, t
 
 The code, in `src/`:
 
-- `src/store/`: canonical JSON, names, ids, the objects and the store over a backend: in memory, as files, or served over HTTP. The store's format is fixed by `vectors/`, made apart from this code.
+- `src/store/`: canonical JSON, names, ids and the objects; objects checked before they are trusted; the index tree; and the store over a backend, in memory, as files, or served over HTTP. The store's format is fixed by `vectors/`, made apart from this code.
 - `src/engine/`: the field as a value and what reads and judges it, the engine that keeps it, the references it finds in bodies, the types it judges by, pulling a served store, the home in the browser's storage, the protocol, and the worker it runs in.
-- `src/interface/`: the chassis, the interface's end of the protocol, and the interface that mounts what the layout names.
+- `src/interface/`: the contract every component draws against, the interface's end of the protocol, the materials laid on the page, where the reader stands, the drawing of holons into hosts, the mount that composes them, and the chassis that starts it all.
 - `src/birth/`: reading the wiki's files under the rule, what the field's holons are made from what the files hold, and committing them into `site/store/`.
 
 Beside it:

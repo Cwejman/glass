@@ -30,17 +30,14 @@ const proseLink = /\]\(ref:([0-9A-HJKMNP-TV-Z]{26})(?:@(sha256-[0-9a-f]{64}))?(?
 export const references = (body: Body): Reference[] =>
   Object.entries(body).flatMap(([key, value]) => within(value, key));
 
-const within = (value: Json, key: string): Reference[] =>
-  typeof value === "string"
-    ? [...value.matchAll(proseLink)].map((match) => ({
-        id: match[1]!,
-        key,
-        ...(match[2] ? { pinned: match[2] as Name } : {}),
-      }))
-    : Array.isArray(value)
-      ? value.flatMap((item) => within(item, key))
-      : value !== null && typeof value === "object"
-        ? isRef(value)
-          ? [{ id: value.$ref, key, ...(value["@"] ? { pinned: value["@"] } : {}) }]
-          : Object.values(value).flatMap((item) => within(item, key))
-        : [];
+// The references within a value, found wherever they stand.
+function within(value: Json, key: string): Reference[] {
+  if (typeof value === "string")
+    return [...value.matchAll(proseLink)].map((match) => found(match[1]!, key, match[2] as Name | undefined));
+  if (Array.isArray(value)) return value.flatMap((item) => within(item, key));
+  if (value === null || typeof value !== "object") return [];
+  if (isRef(value)) return [found(value.$ref, key, value["@"])];
+  return Object.values(value).flatMap((item) => within(item, key));
+}
+
+const found = (id: Id, key: string, pinned?: Name): Reference => ({ id, key, ...(pinned ? { pinned } : {}) });

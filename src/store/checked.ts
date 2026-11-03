@@ -23,7 +23,8 @@ export function checked(backend: Backend): Objects {
       if (known) return known as T;
       const text = await backend.get(name);
       if (text === undefined) throw new Error(`missing object ${name}`);
-      if ((await nameOfText(text)) !== name) throw new Error(`object ${name} does not hold what its name says`);
+      if ((await nameOfText(text)) !== name)
+        throw new Error(`object ${name} does not hold what its name says`);
       const object = asObject(JSON.parse(text));
       if (canonical(object) !== text) throw new Error(`object ${name} is not in canonical form`);
       trusted.set(name, freeze(object));
@@ -33,7 +34,8 @@ export function checked(backend: Backend): Objects {
     // Objects that arrived another way, as in a bundle, are checked the same.
     async seed(name, value) {
       const text = canonical(value);
-      if ((await nameOfText(text)) !== name) throw new Error(`object ${name} does not hold what its name says`);
+      if ((await nameOfText(text)) !== name)
+        throw new Error(`object ${name} does not hold what its name says`);
       trusted.set(name, freeze(asObject(JSON.parse(text))));
     },
 

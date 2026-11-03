@@ -19,7 +19,10 @@ export interface Connection {
   holon(id: Id, at?: Name): Promise<HolonRead | null>;
   commit(change: Change): Promise<Name | null>;
   subscribe(read: Read, listener: (value: Json) => void): Promise<Subscription<Json>>;
-  subscribeHolon(id: Id, listener: (holon: HolonRead | null) => void): Promise<Subscription<HolonRead | null>>;
+  subscribeHolon(
+    id: Id,
+    listener: (holon: HolonRead | null) => void,
+  ): Promise<Subscription<HolonRead | null>>;
 }
 
 export function connect(worker: Worker): Connection {
@@ -46,7 +49,10 @@ export function connect(worker: Worker): Connection {
   const subscribe = async (query: Read, listener: (value: Json) => void): Promise<Subscription<Json>> => {
     const id = next++;
     listeners.set(id, listener);
-    const { value } = (await send({ op: "subscribe", read: query }, id)) as { subscription: number; value: Json };
+    const { value } = (await send({ op: "subscribe", read: query }, id)) as {
+      subscription: number;
+      value: Json;
+    };
     return {
       value,
       close: () => {
@@ -59,11 +65,14 @@ export function connect(worker: Worker): Connection {
   return {
     attach: (key, url) => send({ op: "attach", key, url }),
     read,
-    holon: async (id, at) => (await read(at ? { holon: id, at } : { holon: id })) as unknown as HolonRead | null,
+    holon: async (id, at) =>
+      (await read(at ? { holon: id, at } : { holon: id })) as unknown as HolonRead | null,
     commit: async (change) => (await send({ op: "commit", change })) as Name | null,
     subscribe,
     subscribeHolon: async (id, listener) => {
-      const subscription = await subscribe({ holon: id }, (value) => listener(value as unknown as HolonRead | null));
+      const subscription = await subscribe({ holon: id }, (value) =>
+        listener(value as unknown as HolonRead | null),
+      );
       return { ...subscription, value: subscription.value as unknown as HolonRead | null };
     },
   };

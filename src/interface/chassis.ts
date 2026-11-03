@@ -1,4 +1,5 @@
 import { connect } from "./connection.ts";
+import { note } from "./drawing.ts";
 import { mount } from "./interface.ts";
 
 // The chassis is the page itself, and decides nothing. It starts the engine on
@@ -12,8 +13,6 @@ try {
   await engine.attach("glass", page.store ?? "./store/");
   await mount(engine, document.getElementById("glass")!);
 } catch (error) {
-  const failed = document.createElement("p");
-  failed.className = "glass-note";
-  failed.textContent = `Glass could not start: ${error instanceof Error ? error.message : String(error)}`;
-  document.getElementById("glass")!.replaceChildren(failed);
+  const said = error instanceof Error ? error.message : String(error);
+  document.getElementById("glass")!.replaceChildren(note(`Glass could not start: ${said}`));
 }

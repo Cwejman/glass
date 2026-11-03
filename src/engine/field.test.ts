@@ -2,14 +2,17 @@ import { expect, test } from "bun:test";
 import { newId } from "../store/id.ts";
 import type { Version } from "../store/objects.ts";
 import type { HolonRead } from "./engine.ts";
-import { match } from "../interface/interface.ts";
+import { match } from "../interface/drawing.ts";
 import { fieldOf, judge, read, type Known, type Past, type Standing } from "./field.ts";
 
 const nothingPast: Past = { versionAt: async () => undefined, isVersion: async () => false };
 const TYPE = newId();
 const typeType = {
   title: "Type",
-  fields: { title: { says: "What it is called.", shape: "string" }, fields: { says: "Its fields.", shape: "json" } },
+  fields: {
+    title: { says: "What it is called.", shape: "string" },
+    fields: { says: "Its fields.", shape: "json" },
+  },
 };
 
 function standing(key: string, holons: [string, Version["body"], string[]?][]): Standing {
@@ -44,9 +47,9 @@ test("judging a change leaves the field as it was", async () => {
   expect(
     await judge(field, nothingPast, { holons: [{ id: newId(), instance: [TYPE], body: { colour: "red" } }] }),
   ).toContain("colour");
-  expect(await judge(field, nothingPast, { holons: [{ id: TYPE, instance: [TYPE], body: typeType }] })).toContain(
-    "only read",
-  );
+  expect(
+    await judge(field, nothingPast, { holons: [{ id: TYPE, instance: [TYPE], body: typeType }] }),
+  ).toContain("only read");
   expect([...field.known.keys()]).toEqual(before);
 });
 
@@ -62,7 +65,13 @@ test("the component that matches a holon's type is chosen before one that takes 
     }) as unknown as HolonRead;
   const any = component("any", [], ["whole", "face"]);
   const reader = component("reader", [brief], ["whole"]);
-  const holon = { id: newId(), store: "glass", version: "", instance: [brief], body: {} } as unknown as HolonRead;
+  const holon = {
+    id: newId(),
+    store: "glass",
+    version: "",
+    instance: [brief],
+    body: {},
+  } as unknown as HolonRead;
   expect(match([any, reader], holon, "whole")?.id).toBe("reader");
   expect(match([any, reader], holon, "face")?.id).toBe("any");
   expect(match([reader], holon, "face")).toBeUndefined();

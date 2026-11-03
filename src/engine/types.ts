@@ -43,7 +43,9 @@ export function typeProblem(body: Body): Problem {
 // every key declared by some type, and each type held against the body on
 // its own, so a key two types declare must fit both.
 export function bodyProblem(body: Body, types: Connectors[]): Problem {
-  const undeclared = Object.keys(body).find((key) => !types.some((connectors) => Object.hasOwn(connectors, key)));
+  const undeclared = Object.keys(body).find(
+    (key) => !types.some((connectors) => Object.hasOwn(connectors, key)),
+  );
   if (undeclared) return `${undeclared} is not a field of its types`;
 
   return firstOf(types, (connectors) => valuesProblem(body, connectors, "", { closed: false }));
