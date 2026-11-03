@@ -259,10 +259,29 @@ pre {
   outline: none;
 }
 
-.search .part.here {
-  padding-right: 0.6em;
+.search .part-change {
+  display: inline-flex;
+  gap: 0.3em;
+  padding: 0;
+  border: 0;
   background: none;
-  font-weight: 600;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.search .part-change:disabled {
+  cursor: default;
+}
+
+.search .part-field {
+  color: var(--quiet);
+}
+
+.search .part-change:not(:disabled):hover .part-value,
+.search .part-change:focus-visible .part-value {
+  text-decoration: underline;
+  outline: none;
 }
 
 .search .part.pending {
@@ -355,6 +374,12 @@ pre {
   font: inherit;
   text-align: left;
   cursor: pointer;
+}
+
+.found-said {
+  display: block;
+  padding: 0.4rem 0.55rem;
+  color: var(--quiet);
 }
 
 .found-label {

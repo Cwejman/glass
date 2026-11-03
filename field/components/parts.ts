@@ -1,16 +1,30 @@
 import type { By, Expression } from "../../src/engine/expression.ts";
 
 // A way of looking, taken apart into what it means: the parts it narrows
-// by, each a meaning of its own, of this type, held by that, saying these
-// words, and the axis it is grouped by, if it is grouped. Put together
-// again, the parts stand side by side, as every part narrows the others.
+// by, each a field and a value, as Type: Brief, Held by: The plan,
+// Text: reader, and the axis it is grouped by, if it is grouped. Put
+// together again, the parts stand side by side, as every part narrows the
+// others. The words here are the ones the search speaks, so a part reads
+// the same wherever it is said.
 
-// A grouping's axis, as it is said.
+// Each form of a part, by the field it is said as.
+export const fields = {
+  instances: "Type",
+  from: "Held by",
+  pointing: "Holds",
+  match: "Text",
+  store: "Store",
+  named: "Has a name",
+  types: "Is a type",
+} as const;
+
+// A grouping's axis, as it is said: what it groups by, or, left to the
+// field, whichever splits it best.
 export const axisWords = {
-  type: "by what it is",
-  holder: "by what holds it",
-  store: "by where it is kept",
-  strongest: "by what splits it best",
+  type: "type",
+  holder: "holder",
+  store: "store",
+  strongest: "auto",
 } as const;
 
 export interface Parts {
@@ -32,27 +46,43 @@ export function together({ parts, by }: Parts): Expression {
   return by ? { group: whole, by } : whole;
 }
 
-// A part said by what it means, each holon it names by its title.
-export async function partWords(part: Expression, titleOf: (id: string) => Promise<string>): Promise<string> {
+export interface Said {
+  field: string;
+  value: string;
+}
+
+// A part said as its field and its value, each holon it names by its
+// title; an either, as one field where its parts share one.
+export async function partSaid(part: Expression, titleOf: (id: string) => Promise<string>): Promise<Said> {
   const idOf = (given: string | { $ref: string }) => (typeof given === "string" ? given : given.$ref);
   const named = (given: string | { $ref: string }) => titleOf(idOf(given)).catch(() => idOf(given));
-  if ("instances" in part) return named(part.instances);
-  if ("from" in part) return `held by ${await named(part.from)}`;
-  if ("pointing" in part) return `pointing at ${await named(part.pointing)}`;
-  if ("store" in part) return `kept in ${part.store}`;
-  if ("match" in part) return `saying “${part.match}”`;
-  if ("named" in part) return "named";
-  if ("types" in part) return "types";
-  if ("any" in part)
-    return (await Promise.all(part.any.map((inner) => partWords(inner, titleOf)))).join(" or ");
-  return "a way of looking";
+  if ("instances" in part) return { field: fields.instances, value: await named(part.instances) };
+  if ("from" in part) return { field: fields.from, value: await named(part.from) };
+  if ("pointing" in part) return { field: fields.pointing, value: await named(part.pointing) };
+  if ("match" in part) return { field: fields.match, value: part.match };
+  if ("store" in part) return { field: fields.store, value: part.store };
+  if ("named" in part) return { field: fields.named, value: "" };
+  if ("types" in part) return { field: fields.types, value: "" };
+  if ("any" in part) {
+    const each = await Promise.all(part.any.map((inner) => partSaid(inner, titleOf)));
+    const one = each.every(({ field }) => field === each[0]!.field);
+    return one
+      ? { field: each[0]!.field, value: each.map(({ value }) => value).join(" or ") }
+      : { field: "Either", value: each.map(inTitle).join(" or ") };
+  }
+  return { field: "Expression", value: "" };
 }
+
+// A part as it reads in a title: a type by its name, any other by its
+// field and value.
+const inTitle = ({ field, value }: Said) =>
+  field === fields.instances ? value : [field.toLocaleLowerCase(), value].filter(Boolean).join(" ");
 
 // A way of looking, said by its parts, as a title for it.
 export async function titleOf(gathers: Expression, titleOfHolon: (id: string) => Promise<string>) {
   const { parts, by } = partsOf(gathers);
-  const said = parts.length
-    ? (await Promise.all(parts.map((part) => partWords(part, titleOfHolon)))).join(", ")
-    : "Everything";
-  return by ? `${said}, ${axisWords[by]}` : said;
+  const each = await Promise.all(parts.map((part) => partSaid(part, titleOfHolon)));
+  const title = each.length ? each.map(inTitle).join(", ") : "Everything";
+  const grouped = by === "strongest" ? "grouped automatically" : by ? `grouped by ${axisWords[by]}` : "";
+  return [title, grouped].filter(Boolean).join(", ");
 }
