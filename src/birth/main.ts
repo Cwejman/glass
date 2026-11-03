@@ -12,19 +12,22 @@ import {
   entry,
   kinds,
   materials,
+  programFrom,
+  programs,
   types,
   wiki,
   type Born,
   type ComponentFile,
   type EntryFile,
   type KindFile,
+  type ProgramFile,
   type TypeFile,
 } from "./holons.ts";
 import { flatten, linkTargets, parseFile, resolve, type WikiFile } from "./wiki.ts";
 
 // Births glass's field into its store as one commit: the types, the
-// materials, the components built from their code or held as data, this
-// wiki, and the entry, the mount that reads it.
+// materials, the components built from their code or held as data, glass's
+// own programs, this wiki, and the entry, the mount that reads it.
 // A holon keeps
 // the id it was first born with, found by where it came from, its file and
 // its heading's anchor, so a birth after the files change is a change to the
@@ -110,11 +113,22 @@ const bornMaterials = materials(
 const files = await readWiki("README.md");
 const bornWiki = wiki(files, "README.md", idOf, bornTypes.names);
 const entryFile = JSON.parse(await readFile(join(repo, "field/entry.json"), "utf8")) as EntryFile;
+const programFiles = JSON.parse(await readFile(join(repo, "field/programs.json"), "utf8")) as ProgramFile[];
+const bornPrograms = programs(programFiles, idOf, bornTypes.names);
+const programOf = Object.fromEntries(programFiles.map(({ native }) => [native, idOf(programFrom(native))]));
 const fieldNames = Object.assign({}, bornTypes.names, bornKinds.names, bornWiki.names);
 const componentTitled = Object.fromEntries(componentFiles.map(({ from, title }) => [title, idOf(from)]));
-const bornEntry = entry(entryFile, idOf, bornTypes.names, fieldNames, componentTitled);
+const bornEntry = entry(entryFile, idOf, bornTypes.names, fieldNames, componentTitled, programOf);
 
-const field: Born[] = [bornTypes, bornKinds, bornMaterials, bornComponents, bornWiki, bornEntry];
+const field: Born[] = [
+  bornTypes,
+  bornKinds,
+  bornMaterials,
+  bornComponents,
+  bornPrograms,
+  bornWiki,
+  bornEntry,
+];
 const holons = field.flatMap(({ holons }) => holons);
 const given: Record<string, Id> = Object.assign({}, ...field.map(({ names }) => names));
 

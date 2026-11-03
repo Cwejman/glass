@@ -1,0 +1,29 @@
+[
+  { "native": "everything", "title": "Everything", "says": "Every holon in the field." },
+  { "native": "type", "title": "Type", "says": "The instances of the types given.", "takes": ["set"] },
+  {
+    "native": "children",
+    "title": "Children of",
+    "says": "What the holons given point to.",
+    "takes": ["set"]
+  },
+  {
+    "native": "parents",
+    "title": "Parents of",
+    "says": "What points to the holons given.",
+    "takes": ["set"]
+  },
+  { "native": "text", "title": "Text", "says": "What contains each of the words given.", "takes": ["words"] },
+  { "native": "store", "title": "Store", "says": "What the store given holds.", "takes": ["store"] },
+  { "native": "named", "title": "Has a name", "says": "What a store gives a name." },
+  { "native": "types", "title": "Is a type", "says": "Every type." },
+  { "native": "and", "title": "And", "says": "What every set given holds.", "takes": ["sets"] },
+  { "native": "or", "title": "Or", "says": "What any set given holds.", "takes": ["sets"] },
+  { "native": "not", "title": "Not", "says": "Everything but the set given.", "takes": ["set"] },
+  {
+    "native": "group",
+    "title": "Group by",
+    "says": "The set given, in collections along an axis: type, parent, store, or auto, whichever splits it best.",
+    "takes": ["set", "axis"]
+  }
+]

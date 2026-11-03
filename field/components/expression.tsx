@@ -1,6 +1,6 @@
 import type { Declaration, Given, Space } from "../../src/interface/component.ts";
 import { h } from "./jsx.ts";
-import { titleOf } from "./parts.ts";
+import { programsIn, titleOf, together } from "./parts.ts";
 
 // A way of looking, drawn as what it gathers: said by its parts, and how
 // many it gathers. A grouping is drawn as its collections, the larger
@@ -15,13 +15,20 @@ export const declared = {
   takes: [],
   kinds: ["full"],
   argument: "expression",
-  reads: ["holon", "groups"],
+  reads: ["holon", "groups", "name", "instances"],
 } satisfies Declaration;
 
 export default async function draw(given: Given, space: Space) {
   const gathers = given.gathers!;
   const gathered = given.list ?? [];
-  const said = await titleOf(gathers, async (id) => String((await space.holon(id))?.body.title ?? id));
+  const programs = await programsIn({
+    name: () => space.read({ name: "program" }),
+    instances: (type) => space.read({ instances: type }),
+    holon: (id) => space.holon(id),
+  });
+  const said = await titleOf(programs, gathers, async (id) =>
+    String((await space.holon(id))?.body.title ?? id),
+  );
   const counted = gathered.length === 1 ? "one holon" : `${gathered.length} holons`;
 
   const grouped = await space.read({ groups: gathers });
@@ -35,7 +42,7 @@ export default async function draw(given: Given, space: Space) {
           <div
             class="slot face collection"
             tabindex="0"
-            data-expression={JSON.stringify({ group: gathers, by: "strongest" })}
+            data-expression={JSON.stringify(together(programs, { parts: [gathers], by: "auto" }))}
           >
             <div class="card">
               <strong>{titled}</strong>

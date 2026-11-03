@@ -56,16 +56,6 @@ export interface ComponentBody {
   from?: string;
 }
 
-/** A way of looking at the field, held as a holon: an expression that gathers holons, so it can be given to a mount, shown by its words, or looked through to what it gathers. */
-export interface ExpressionBody {
-  /** What the way of looking is called. */
-  title: string;
-  /** The expression itself: what it gathers from the field. */
-  gathers: Expression;
-  /** Where the holon was born from, as a path in the files it arrived from. */
-  from?: string;
-}
-
 /** A kind of slot: how what stands in a slot is drawn, said between the one that holds it and the one held, so neither has to know the other. */
 export interface KindBody {
   /** What the kind is called. */
@@ -100,6 +90,22 @@ export interface MountBody {
   gathers?: Expression;
   /** What the mount offers everything it draws, nearer offers shadowing it: settings a component takes and its slot leaves unsaid, by their names, and what components look for, as the favorites, or the search a mount's menu is drawn by. */
   offer?: Json;
+  /** Where the holon was born from, as a path in the files it arrived from. */
+  from?: string;
+}
+
+/** Something that gathers from the field, given what it takes: glass's own, run by the engine, or one's own, an expression over what it is given. An expression calls a program, and is called by what it gives; a program kept as a favorite is a way of looking one can return to. */
+export interface ProgramBody {
+  /** What the program is called, as it is offered to be called. */
+  title: string;
+  /** What it gathers, in a sentence. */
+  says?: string;
+  /** What it is given, each in turn: a set, any number of sets, words, a store's key, or an axis to group by; nothing unless it says. */
+  takes?: string[];
+  /** For one of glass's own, the name the engine runs it by. */
+  native?: string;
+  /** For a program of one's own, the expression it gives, each argument it was given named as { arg: i }. */
+  gives?: Expression;
   /** Where the holon was born from, as a path in the files it arrived from. */
   from?: string;
 }

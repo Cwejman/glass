@@ -218,6 +218,26 @@ export function wiki(
   return { holons, names: { wiki: idAt(entry)! } };
 }
 
+export interface ProgramFile {
+  native: string;
+  title: string;
+  says: string;
+  takes?: string[];
+}
+
+// Glass's own programs, each a holon the engine runs by its native name.
+export const programFrom = (native: string) => `field/programs.json#${native}`;
+export function programs(files: ProgramFile[], idOf: IdOf, typeOf: Record<string, Id>): Born {
+  return {
+    holons: files.map(({ native, title, says, takes }) => ({
+      id: idOf(programFrom(native)),
+      instance: [typeOf.program!],
+      body: { title, says, ...(takes ? { takes } : {}), native, from: programFrom(native) },
+    })),
+    names: {},
+  };
+}
+
 export interface EntryFile {
   title: string;
   component?: string;
@@ -229,7 +249,7 @@ export interface EntryFile {
 // The entry: the mount a client boots into before the reader has one of
 // their own, its component given by its title, and what it gives: each
 // holon of its argument by the name the field gives it, or a way of
-// looking, as it is. What it offers everything it draws is kept as it is,
+// looking, each program it calls by its native name. What it offers everything it draws is kept as it is,
 // but for a component, given by its title.
 export function entry(
   file: EntryFile,
@@ -237,8 +257,18 @@ export function entry(
   typeOf: Record<string, Id>,
   named: Record<string, Id>,
   componentTitled: Record<string, Id>,
+  programOf: Record<string, Id> = {},
 ): Born {
   const from = "field/entry.json";
+  const called = (value: Json): Json => {
+    if (Array.isArray(value)) return value.map(called);
+    if (value === null || typeof value !== "object") return value;
+    return Object.fromEntries(
+      Object.entries(value).map(([key, inner]) =>
+        key === "call" && typeof inner === "string" ? [key, nameOf(inner, programOf)] : [key, called(inner)],
+      ),
+    );
+  };
   const nameOf = (name: string, among: Record<string, Id>) => {
     if (!Object.hasOwn(among, name)) throw new Error(`${from}: ${name}, which the field does not name`);
     return { $ref: among[name]! };
@@ -247,7 +277,7 @@ export function entry(
     title: file.title,
     ...(file.component ? { component: nameOf(file.component, componentTitled) } : {}),
     ...(file.argument ? { argument: file.argument.map((name) => nameOf(name, named)) } : {}),
-    ...(file.gathers !== undefined ? { gathers: file.gathers } : {}),
+    ...(file.gathers !== undefined ? { gathers: called(file.gathers) } : {}),
     ...(file.offer
       ? {
           offer: Object.fromEntries(

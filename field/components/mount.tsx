@@ -3,9 +3,10 @@ import { canonical } from "../../src/store/canonical.ts";
 import { newId, type Id } from "../../src/store/id.ts";
 import type { Declaration, Given, Made, Space } from "../../src/interface/component.ts";
 import type { Expression } from "../../src/engine/expression.ts";
-import type { ExpressionBody, MountBody, Ref } from "./bodies.ts";
+import type { MountBody, Ref } from "./bodies.ts";
 import { h } from "./jsx.ts";
 import { overlay } from "./menu.ts";
+import { call, native, programsIn } from "./parts.ts";
 
 // A mount: a component and what it gives it, holons or a way of looking
 // held in the mount itself, drawn in full, offered what the mount offers.
@@ -13,8 +14,7 @@ import { overlay } from "./menu.ts";
 // press anywhere inside it rises to it with where it leads, the innermost
 // place it passed, a holon or a way of looking, maybe drawn by a component
 // it names, or what the mount offers, and the mount takes it, a new version
-// of itself. A way of looking kept as a holon is looked through when it is
-// pressed, so the mount holds what it gathers. On the secondary press it
+// of itself. On the secondary press it
 // lays, where it was pressed, the search it is offered, given the place
 // pressed and the component that place is drawn by, so what can be done
 // there is found as anything is. A mount that may not be written lets a
@@ -25,7 +25,7 @@ export const declared = {
   says: "A mount: what it gives, holons or a way of looking, drawn by the component it calls, offered what it offers; where it may be written, a press inside it moves it to where the press leads, and its menu is the search, given the place pressed.",
   takes: ["mount"],
   kinds: ["full", "face"],
-  reads: ["name", "holon", "gather"],
+  reads: ["name", "holon", "gather", "instances"],
 } satisfies Declaration;
 
 export default async function draw(given: Given<MountBody>, space: Space) {
@@ -50,18 +50,10 @@ export default async function draw(given: Given<MountBody>, space: Space) {
   const offer = { ...offerOf(entered?.body), ...offerOf(mount.body) };
   const offering = { ...offer, kind: "full" as const };
 
-  // A way of looking kept as a holon, given to the mount plainly, is looked
-  // through, as a press on it would.
-  const expressionType = await space.read({ name: "expression" });
-  const plain = !component || component.$ref === (entered ?? mount).body.component?.$ref;
-  const kept = giving.length === 1 && plain ? await space.holon<ExpressionBody>(giving[0]!) : null;
   // What it gave and is no longer in the field gives way to what the entry
   // gives, so a root is never left with nothing to stand in.
-  const gone = !gathers && giving.length === 1 && plain && !kept;
-  const looking =
-    gathers ??
-    (kept && expressionType && kept.instance.includes(expressionType) ? kept.body.gathers : undefined) ??
-    (gone ? entered?.body.gathers : undefined);
+  const gone = !gathers && giving.length === 1 && !(await space.holon(giving[0]!));
+  const looking = gathers ?? (gone ? entered?.body.gathers : undefined);
   const where = looking ? { gather: looking } : giving.length === 1 ? giving[0]! : giving;
 
   const drawn = space.open(where, { offer: offering, ...(component ? { component: component.$ref } : {}) });
@@ -69,7 +61,12 @@ export default async function draw(given: Given<MountBody>, space: Space) {
 
   // A mount that may be written may move anywhere in the field, so it
   // reaches the whole of it.
-  const present = new Set(await space.read({ gather: { everything: true } }));
+  const programs = await programsIn({
+    name: () => space.read({ name: "program" }),
+    instances: (type) => space.read({ instances: type }),
+    holon: (id) => space.holon(id),
+  });
+  const present = new Set(await space.read({ gather: call(native(programs, "everything")) }));
   const element = (<div class="mount">{drawn}</div>) as HTMLElement;
   let closeMenu: (() => void) | undefined;
 
@@ -102,14 +99,6 @@ export default async function draw(given: Given<MountBody>, space: Space) {
   const look = (next: Expression, by?: Id) =>
     looking && !by && canonical(next) === canonical(looking) ? undefined : write({ gathers: next }, by);
 
-  // A holon pressed is gone to; a way of looking kept as a holon, looked
-  // through.
-  const goTo = async (ids: Id[], by?: Id) => {
-    const one = ids.length === 1 && !by ? await space.holon<ExpressionBody>(ids[0]!) : null;
-    if (one && expressionType && one.instance.includes(expressionType)) return look(one.body.gathers);
-    return give(ids, by);
-  };
-
   // What the mount offers, changed: each value said anew, or let go where
   // it is said as nothing.
   const offerAnew = (changed: Record<string, Json | null>, made: Made[] = []) => {
@@ -119,15 +108,14 @@ export default async function draw(given: Given<MountBody>, space: Space) {
     return space.write({ ...rest, ...(Object.keys(next).length ? { offer: next } : {}) } as never, made);
   };
 
-  // A way of looking kept, as a holon born in the home, and placed on the
-  // favorites.
-  const keep = (kept: Expression, title: string) => {
-    if (!expressionType) throw new Error("the field holds no type for ways of looking");
+  // A way of looking kept, as a program of one's own that takes nothing and
+  // gives it, born in the home and placed on the favorites.
+  const keep = async (gives: Expression, title: string) => {
+    const programType = await space.read({ name: "program" });
+    if (!programType) throw new Error("the field holds no type for programs");
     const id = newId();
     const favorites = [...((offer.favorites ?? []) as Ref[]), { $ref: id }];
-    return offerAnew({ favorites }, [
-      { id, instance: expressionType, body: { title, gathers: kept } as never },
-    ]);
+    return offerAnew({ favorites }, [{ id, instance: programType, body: { title, gives } as never }]);
   };
 
   // The innermost place a press passed, inside this mount; in the menu, only
@@ -144,7 +132,7 @@ export default async function draw(given: Given<MountBody>, space: Space) {
     if (offered) return offerAnew(JSON.parse(offered) as Record<string, Json | null>);
     if (kept) return keep(JSON.parse(kept) as Expression, title ?? "A way of looking");
     if (expression) return look(JSON.parse(expression) as Expression, calls);
-    return goTo(JSON.parse(location!) as Id[], calls);
+    return give(JSON.parse(location!) as Id[], calls);
   };
 
   const press = (event: Event) => {
