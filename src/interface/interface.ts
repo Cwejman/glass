@@ -5,6 +5,7 @@ import { arrangement, mountsOf, place, readingOf, restyle, walk } from "./arrang
 import type { Kind, Target } from "./component.ts";
 import type { Connection } from "./connection.ts";
 import { drawing, type Call } from "./drawing.ts";
+import { dismiss } from "./chrome.ts";
 import { lay } from "./materials.ts";
 
 // The interface draws the arrangement, the layout in the home, as the page's
@@ -42,6 +43,7 @@ export async function mount(engine: Connection, root: HTMLElement) {
       with: null,
       called: each.component?.$ref,
       place: own ? (to) => moveTo(index, to) : outer.place,
+      why: `this pane is part of ${String(layout.body.title ?? "a layout")}, which is only shown here; your own arrangement is where changes go`,
       ...(own
         ? {
             keep: (change) =>
@@ -73,12 +75,14 @@ export async function mount(engine: Connection, root: HTMLElement) {
   // The arrangement drawn whole, in the page's one root slot.
   const draw = async () => {
     arranged = await arrangement(engine);
-    drawn.close(root);
+    dismiss();
     const call: Call = {
       reads: { holon: arranged.id },
       kind: "full",
       with: null,
       place: (to) => moveTo(0, to),
+      root: true,
+      why: "the page always shows your arrangement whole",
     };
     await drawn.draw(root, call);
   };

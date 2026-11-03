@@ -215,8 +215,13 @@ pre {
   outline: none;
 }
 
-.chrome button:disabled {
+.chrome button[aria-disabled="true"] {
   color: var(--quiet);
   cursor: default;
-  background: none;
+}
+
+.chrome-why {
+  padding: 0 0.6rem 0.45rem;
+  color: var(--quiet);
+  font-size: var(--smaller);
 }

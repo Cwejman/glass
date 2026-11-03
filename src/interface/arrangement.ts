@@ -36,15 +36,22 @@ export async function arrangement(engine: Connection): Promise<HolonRead> {
 
 export const mountsOf = (layout: HolonRead) => layout.body.mounts as unknown as Mount[];
 
-// Placing a mount on a holon or at the field, if it does not already stand
-// there. The mount then calls whichever component is found for what it
-// reads. Whether the reader moved is the answer.
+// Placing a mount on a holon or at the field. A mount never stands on the
+// arrangement that holds it; one already there that shows a face opens it
+// in full; otherwise it moves, and calls whichever component is found for
+// what it now reads. Whether the reader moved is the answer.
 export async function place(engine: Connection, mount: number, to: Target): Promise<boolean> {
   const layout = await arrangement(engine);
+  if (to === layout.id) return false;
   const mounts = mountsOf(layout);
   const here = mounts[mount] && readingOf(mounts[mount]);
   const there = readingOf(mountOn(to));
-  if (JSON.stringify(here) === JSON.stringify(there)) return false;
+  if (JSON.stringify(here) === JSON.stringify(there)) {
+    if (!mounts[mount]?.kind) return false;
+    const { kind: _, ...full } = mounts[mount]!;
+    await arrange(engine, layout, { ...layout.body, mounts: mounts.map((each, i) => (i === mount ? full : each)) as never });
+    return true;
+  }
 
   const moved = mounts.map((each, i) => (i === mount ? mountOn(to) : each));
   await arrange(engine, layout, { ...layout.body, mounts: moved as never });
@@ -62,13 +69,13 @@ export async function restyle(
   const mounts = await Promise.all(
     mountsOf(layout).map(async (each, i) => {
       if (i !== mount) return each;
-      const { component: before, kind: _, ...rest } = each;
+      const { component: named, kind: was, ...rest } = each;
 
-      // A component the slot named that is no longer in the field is let go.
-      const kept = before && (await engine.holon(before.$ref)) ? before : undefined;
+      // What the slot named that is no longer in the field is let go.
+      const stays = async (ref?: { $ref: Id }) => (ref && (await engine.holon(ref.$ref)) ? ref : undefined);
       const component =
-        change.component === undefined ? kept : change.component ? { $ref: change.component } : undefined;
-      const kind = change.kind ? { $ref: change.kind } : each.kind;
+        change.component === undefined ? await stays(named) : change.component ? { $ref: change.component } : undefined;
+      const kind = change.kind ? { $ref: change.kind } : await stays(was);
       return { ...rest, ...(component ? { component } : {}), ...(kind ? { kind } : {}) };
     }),
   );

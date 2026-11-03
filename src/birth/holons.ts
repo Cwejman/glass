@@ -58,7 +58,7 @@ export interface KindFile {
 
 // The kinds of slot, the words a holder and the held share.
 export function kinds(files: KindFile[], idOf: IdOf, typeOf: Record<string, Id>): Born {
-  const fromOf = (name: string) => `field/kinds/${name}`;
+  const fromOf = (name: string) => `field/kinds.json#${name}`;
   return {
     holons: files.map(({ name, title, says }) => ({
       id: idOf(fromOf(name)),

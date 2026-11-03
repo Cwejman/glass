@@ -24,6 +24,11 @@ export interface Call {
   place: Space["place"];
   called?: Id;
   keep?: (change: { kind?: Kind; component?: Id | null }) => Promise<void>;
+  // Why a change to this slot cannot be kept, where it cannot.
+  why?: string;
+  // Whether the slot holds the page itself, the arrangement, which is never
+  // placed anywhere.
+  root?: boolean;
 }
 
 export interface Options {
@@ -153,6 +158,14 @@ export function drawing(engine: Connection, options: Options): Drawing {
       return subscription.value;
     };
 
+    // A slot a component opens is part of the holon it draws, so a change to
+    // it would be a change to that holon.
+    const owner = String(holon?.body.title ?? "what holds it");
+    const why =
+      holon && holon.store !== "home"
+        ? `this slot is part of ${owner}, kept in ${holon.store}, which is only read here`
+        : `this slot is part of ${owner}, and where a change to it would be kept is not settled yet`;
+
     const slot = (inner: Call) => {
       const host = document.createElement("div");
       host.className = `slot ${inner.kind}`;
@@ -165,9 +178,9 @@ export function drawing(engine: Connection, options: Options): Drawing {
 
     const space: Space = {
       open: (id, kind, passed = null) =>
-        slot({ reads: { holon: id }, kind, with: passed, place: call.place }),
+        slot({ reads: { holon: id }, kind, with: passed, place: call.place, why }),
       openList: (ids, kind, passed = null) =>
-        slot({ reads: { list: ids }, kind, with: passed, place: call.place }),
+        slot({ reads: { list: ids }, kind, with: passed, place: call.place, why }),
       openMount: (index) => slot(options.paneOf(holon!, index, call)),
       read,
       holon: async (id) => (await read({ holon: id })) as unknown as HolonRead | null,
@@ -181,9 +194,9 @@ export function drawing(engine: Connection, options: Options): Drawing {
   // kept where the slot's own data is writable, and said not to be where
   // it is not.
   function chromeOf(call: Call, holon: HolonRead | null, drawnBy: HolonRead): Action[] {
-    const notKept = "this slot is part of what holds it, which is only read here";
+    const notKept = call.why ?? "where a change to this slot would be kept is not settled yet";
     const actions: Action[] = [];
-    if (holon) actions.push({ label: "Open as the place", run: () => void call.place(holon.id) });
+    if (holon && !call.root) actions.push({ label: "Open as the place", run: () => void call.place(holon.id) });
 
     const other: Kind = call.kind === "full" ? "face" : "full";
     if (candidates(options.components(), call.reads, holon, options.kinds[other]).length)
@@ -208,11 +221,14 @@ export function drawing(engine: Connection, options: Options): Drawing {
     let read: HolonRead | FieldPlace | null = null;
     let chrome: (() => Action[]) | undefined;
 
+    // The secondary press offers the slot's chrome; with Shift held, or where
+    // the slot has nothing to offer, the browser's own menu stays.
     host.oncontextmenu = (event) => {
-      if (!chrome) return;
+      const actions = chrome?.() ?? [];
+      if (event.shiftKey || actions.length === 0) return;
       event.preventDefault();
       event.stopPropagation();
-      offer(event.clientX, event.clientY, describe(call.reads, read), chrome());
+      offer(event.clientX, event.clientY, describe(call.reads, read), actions, host);
     };
 
     const render = async () => {
@@ -220,6 +236,9 @@ export function drawing(engine: Connection, options: Options): Drawing {
       const turn = ++held.drawing;
       const current = () => !held.closed && held.drawing === turn;
       release(held);
+      chrome = undefined;
+      delete host.dataset.holon;
+      delete host.dataset.component;
 
       const holon = "holon" in call.reads ? (read as HolonRead | null) : null;
       if ("holon" in call.reads && !holon)

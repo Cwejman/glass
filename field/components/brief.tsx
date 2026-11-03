@@ -58,11 +58,11 @@ export const style = `
   cursor: help;
 }
 
-.reader .space.face {
+.reader .slot.face {
   margin: calc(var(--gap) * 1.25) 0;
 }
 
-.reader > .space.whole {
+.reader > .slot.full {
   margin-top: calc(var(--gap) * 2.5);
 }
 
