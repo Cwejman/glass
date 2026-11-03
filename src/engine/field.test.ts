@@ -72,7 +72,32 @@ test("the component that matches a holon's type is chosen before one that takes 
     instance: [brief],
     body: {},
   } as unknown as HolonRead;
-  expect(match([any, reader], holon, "whole")?.id).toBe("reader");
-  expect(match([any, reader], holon, "face")?.id).toBe("any");
-  expect(match([reader], holon, "face")).toBeUndefined();
+  expect(match([any, reader], { holon: holon.id }, holon, "whole")?.id).toBe("reader");
+  expect(match([any, reader], { holon: holon.id }, holon, "face")?.id).toBe("any");
+  expect(match([reader], { holon: holon.id }, holon, "face")).toBeUndefined();
+});
+
+test("the field as a place: its stores and names, and every type with its instances", async () => {
+  const note = newId();
+  const field = fieldOf([
+    standing("home", []),
+    {
+      ...standing("glass", [
+        [TYPE, typeType],
+        [note, { title: "A", fields: {} }],
+        [newId(), { title: "x" }, [note]],
+      ]),
+      names: { type: TYPE },
+    },
+  ]);
+  expect(await read(field, nothingPast, { field: true })).toEqual({
+    stores: [
+      { key: "home", head: null, names: {} },
+      { key: "glass", head: null, names: { type: TYPE } },
+    ],
+    types: [
+      { id: TYPE, instances: 2 },
+      { id: note, instances: 1 },
+    ],
+  });
 });

@@ -1,9 +1,9 @@
 import type { Json } from "../store/canonical.ts";
 import type { Id } from "../store/id.ts";
 import type { Name } from "../store/name.ts";
-import type { HolonRead } from "../engine/engine.ts";
+import type { FieldPlace, HolonRead } from "../engine/engine.ts";
 import type { Connection } from "./connection.ts";
-import type { Component, Given, Space } from "./component.ts";
+import type { Component, Given, Reading, Space } from "./component.ts";
 
 // Drawing a holon into a host: the component that matches it draws what it
 // is given, opening spaces where what it holds is drawn in turn, and draws
@@ -11,14 +11,14 @@ import type { Component, Given, Space } from "./component.ts";
 // newer one or a close has overtaken changes nothing, and lets go of what it
 // held.
 
-// What a host is asked to draw: a holon, in a way, with what its whole
-// passed along, by the component the layout calls or else the one that
-// matches, and where a move from inside it places the reader.
+// What a host is asked to draw: what its mount reads, in a way, with what
+// its whole passed along, by the component the layout calls or else the one
+// found for it, and where a move from inside it places the reader.
 export interface Call {
-  id: Id;
+  reads: Reading;
   draws: string;
   given: Json;
-  place: (id: Id) => Promise<void>;
+  place: Space["place"];
   called?: Id;
 }
 
@@ -32,18 +32,26 @@ interface Hosted {
   reads: (() => void)[];
 }
 
-// The component that draws a holon in the way asked: one that takes one of
-// its types, or else one that takes any holon.
+// The component found for what a mount reads, in the way asked. A list or
+// the field is drawn by a component given that; a holon by one that takes
+// one of its types, or else by the wildcard, which takes any holon. Finding
+// lives here alone, so how a component is found can change in one place.
 export function match(
   components: readonly HolonRead[],
-  holon: HolonRead,
+  reads: Reading,
+  holon: HolonRead | null,
   draws: string,
-): HolonRead | undefined {
-  const able = components.filter((component) => (component.body.draws as string[]).includes(draws));
-  const takes = (component: HolonRead) => (component.body.takes as { $ref: Id }[]).map((ref) => ref.$ref);
+) {
+  const argument = "holon" in reads ? "holon" : "list" in reads ? "list" : "field";
+  const able = components.filter(
+    (component) =>
+      (component.body.draws as string[]).includes(draws) && (component.body.argument ?? "holon") === argument,
+  );
+  if (argument !== "holon") return able[0];
 
+  const takes = (component: HolonRead) => (component.body.takes as { $ref: Id }[]).map((ref) => ref.$ref);
   return (
-    able.find((component) => takes(component).some((type) => holon.instance.includes(type))) ??
+    able.find((component) => takes(component).some((type) => holon?.instance.includes(type))) ??
     able.find((component) => takes(component).length === 0)
   );
 }
@@ -102,16 +110,19 @@ export function drawing(engine: Connection, components: () => readonly HolonRead
       return subscription.value;
     };
 
+    const opened = (reads: Reading, draws: string, given: Json) => {
+      const host = document.createElement("div");
+      host.className = `space ${draws}`;
+      if (current()) {
+        held.children.push(host);
+        void draw(host, { reads, draws, given, place });
+      }
+      return host;
+    };
+
     return {
-      open(id, draws, given = null) {
-        const host = document.createElement("div");
-        host.className = `space ${draws}`;
-        if (current()) {
-          held.children.push(host);
-          void draw(host, { id, draws, given, place });
-        }
-        return host;
-      },
+      open: (id, draws, given = null) => opened({ holon: id }, draws, given),
+      openList: (ids, draws, given = null) => opened({ list: ids }, draws, given),
       read,
       holon: async (id) => (await read({ holon: id })) as unknown as HolonRead | null,
       place,
@@ -122,22 +133,32 @@ export function drawing(engine: Connection, components: () => readonly HolonRead
     close(host);
     const held: Hosted = { closed: false, drawing: 0, children: [], reads: [] };
     hosted.set(host, held);
-    let holon: HolonRead | null = null;
+    let read: HolonRead | FieldPlace | null = null;
 
     const render = async () => {
       const turn = ++held.drawing;
       const current = () => !held.closed && held.drawing === turn;
       release(held);
 
-      if (!holon) return host.replaceChildren(note(`${call.id} is not in the field`));
+      const holon = "holon" in call.reads ? (read as HolonRead | null) : null;
+      if ("holon" in call.reads && !holon)
+        return host.replaceChildren(note(`${call.reads.holon} is not in the field`));
+
       const known = components();
       const component = call.called
         ? known.find(({ id }) => id === call.called)
-        : match(known, holon, call.draws);
-      if (!component) return host.replaceChildren(note(`nothing draws ${holon.id} as ${call.draws}`));
+        : match(known, call.reads, holon, call.draws);
+      if (!component)
+        return host.replaceChildren(note(`nothing draws ${describe(call.reads)} as ${call.draws}`));
 
       const space = spaceFor(held, current, () => void render(), call.place);
-      const given: Given = { holon, draws: call.draws, with: call.given };
+      const given: Given = {
+        ...(holon ? { holon } : {}),
+        ...("list" in call.reads ? { list: call.reads.list } : {}),
+        ...("field" in call.reads ? { field: read as FieldPlace } : {}),
+        draws: call.draws,
+        with: call.given,
+      };
 
       try {
         const module = await load(component);
@@ -145,30 +166,37 @@ export function drawing(engine: Connection, components: () => readonly HolonRead
         const drawn = await module.default(given, space);
         if (!current()) return;
 
-        host.dataset.holon = holon.id;
+        if (holon) host.dataset.holon = holon.id;
         host.dataset.component = component.id;
         host.replaceChildren(drawn);
       } catch (error) {
         if (!current()) return;
         host.replaceChildren(
-          note(`${component.body.title as string} could not draw ${holon.id}: ${String(error)}`),
+          note(`${component.body.title as string} could not draw ${describe(call.reads)}: ${String(error)}`),
         );
       }
     };
 
-    const subscription = await engine.subscribeHolon(call.id, (value) => {
-      holon = value;
+    // A holon and the field are read, and drawn again when they change; a
+    // list is what it is, and its items each read their own.
+    if ("list" in call.reads) return render();
+    const query = "holon" in call.reads ? { holon: call.reads.holon } : { field: true as const };
+    const subscription = await engine.subscribe(query, (value) => {
+      read = value as unknown as HolonRead | FieldPlace | null;
       void render();
     });
     if (held.closed) return subscription.close();
 
     held.unsubscribe = subscription.close;
-    holon = subscription.value;
+    read = subscription.value as unknown as HolonRead | FieldPlace | null;
     await render();
   }
 
   return { draw, close };
 }
+
+const describe = (reads: Reading) =>
+  "holon" in reads ? reads.holon : "list" in reads ? "a list" : "the field";
 
 export function note(text: string) {
   const element = document.createElement("p");

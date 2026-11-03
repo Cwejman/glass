@@ -1,26 +1,13 @@
 import type { Given, Space } from "../../src/interface/component.ts";
 import { element } from "./element.ts";
 import { faceOf } from "./prose.ts";
+import { card, follow } from "./way.ts";
 
 // A brief seen from above: its number, its title and its first paragraph,
-// which is its face. Entering it places the reader there.
+// which is its face, and how many briefs stand beneath it. Pressing it
+// places the reader there.
 
 export const style = `
-.face-card {
-  display: block;
-  padding: var(--gap) calc(var(--gap) * 1.15);
-  border: var(--hairline) solid var(--line);
-  border-radius: var(--radius);
-  background: var(--raised);
-  cursor: pointer;
-  transition: border-color 0.15s;
-}
-
-.face-card:hover, .face-card:focus-visible {
-  border-color: var(--quiet);
-  outline: none;
-}
-
 .face-card h2 {
   font-size: var(--heading);
   line-height: var(--leading-tight);
@@ -40,43 +27,29 @@ export const style = `
   font-size: var(--aside);
   line-height: var(--leading-close);
 }
-
-.face-card .beneath {
-  display: block;
-  margin-top: 0.5em;
-  font: var(--smaller) / var(--leading-close) var(--sans);
-  color: var(--quiet);
-  opacity: 0.8;
-}
 `;
 
-export default function draw({ holon, with: given }: Given, space: Space) {
-  const card = element("div", "face-card");
-  card.tabIndex = 0;
+export default function draw(given: Given, space: Space) {
+  const holon = given.holon!;
+  const number = (given.with as { number?: string } | null)?.number;
+  const face = card(holon.id);
+  face.classList.add("face-card");
+
   const title = element("h2");
-  const number = (given as { number?: string } | null)?.number;
   if (number) title.append(element("span", "number", number));
   title.append(String(holon.body.title ?? ""));
-  card.append(title);
+  face.append(title);
 
-  const face = faceOf(String(holon.body.prose ?? ""));
-  if (face) {
+  const first = faceOf(String(holon.body.prose ?? ""));
+  if (first) {
     const paragraph = element("p");
-    paragraph.innerHTML = face;
-    card.append(paragraph);
+    paragraph.innerHTML = first;
+    face.append(paragraph);
   }
-  const beneath = ((holon.body.parts ?? []) as unknown[]).length;
-  if (beneath) card.append(element("span", "beneath", `${beneath} beneath`));
 
-  const enter = (event: Event) => {
-    const link = (event.target as Element).closest<HTMLElement>("a[data-ref]");
-    event.preventDefault();
-    event.stopPropagation();
-    void space.place(link?.dataset.ref ?? holon.id);
-  };
-  card.addEventListener("click", enter);
-  card.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") enter(event);
-  });
-  return card;
+  const beneath = ((holon.body.parts ?? []) as unknown[]).length;
+  if (beneath) face.append(element("span", "meta", `${beneath} beneath`));
+
+  follow(face, space);
+  return face;
 }

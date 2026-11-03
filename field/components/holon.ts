@@ -1,60 +1,115 @@
+import type { Json } from "../../src/store/canonical.ts";
 import type { Id } from "../../src/store/id.ts";
 import type { Given, Space } from "../../src/interface/component.ts";
 import { element } from "./element.ts";
+import { card, follow, way } from "./way.ts";
 
-// Any holon, when nothing closer draws it: what it is an instance of, and its
-// body as the JSON it is, code shown as code.
+// Any holon, when nothing closer draws it: the wildcard. Whole, it is what
+// the holon is an instance of, and every value in its body, a reference
+// drawn as the face of what it points at, so everything in the field can be
+// reached from anywhere; long text and code shown as they are. Seen from
+// above, its title and its types.
 
 export const style = `
-.holon-whole h1 {
-  font-size: var(--title);
-  line-height: var(--leading-tight);
-  margin: 0 0 0.25em;
+.values {
+  margin: 0;
+  display: grid;
+  gap: var(--gap);
 }
 
-.holon-whole .instance, .holon-face .instance {
-  font: var(--small) / var(--leading-close) var(--sans);
+.values dt {
+  font: var(--small) / var(--leading-close) var(--mono);
   color: var(--quiet);
 }
 
-.holon-whole pre {
+.values dd {
+  margin: 0.25em 0 0;
+}
+
+.values ol {
+  margin: 0;
+  padding-left: 1.2em;
+  display: grid;
+  gap: calc(var(--gap) * 0.5);
+}
+
+.values pre {
   background: var(--raised);
   border: var(--hairline) solid var(--line);
   border-radius: var(--radius);
   padding: var(--inset);
-  overflow-x: auto;
+  overflow: auto;
+  max-height: 24rem;
   font-size: var(--code);
   line-height: var(--leading-close);
-}
-
-.holon-face {
-  padding: var(--gap);
-  border: var(--hairline) solid var(--line);
-  border-radius: var(--radius);
-  background: var(--raised);
-  cursor: pointer;
+  margin: 0;
 }
 `;
 
-export default async function draw({ holon, draws }: Given, space: Space) {
+export default async function draw(given: Given, space: Space) {
+  const holon = given.holon!;
   const types = await Promise.all(
     holon.instance.map(async (id: Id) => (await space.holon(id))?.body.title ?? id),
   );
   const title = String(holon.body.title ?? holon.id);
-  const instance = element("div", "instance", `${types.join(", ")} · ${holon.store}`);
+  const what = `${types.join(", ")} · in ${holon.store}`;
 
-  if (draws === "face") {
-    const card = element("div", "holon-face");
-    card.append(element("strong", undefined, title), instance);
-    card.addEventListener("click", () => void space.place(holon.id));
-    return card;
+  if (given.draws === "face") {
+    const face = card(holon.id);
+    face.append(element("strong", undefined, title), element("span", "meta", what));
+    follow(face, space);
+    return face;
   }
 
-  const whole = element("article", "holon-whole");
-  whole.append(element("h1", undefined, title), instance);
-  const { code, source, ...rest } = holon.body;
-  whole.append(element("pre", undefined, JSON.stringify(rest, null, 2)));
-  if (typeof source === "string") whole.append(element("pre", undefined, source));
-  else if (typeof code === "string") whole.append(element("pre", undefined, code));
-  return whole;
+  const article = element("article", "place holon");
+  article.append(way([]), element("h1", undefined, title), element("p", "meta", what));
+
+  article.append(element("h2", undefined, "Is an instance of"));
+  article.append(space.openList(holon.instance, "whole", { draws: "face" }));
+
+  article.append(element("h2", undefined, "Holds"));
+  const values = element("dl", "values");
+  for (const [key, value] of Object.entries(holon.body))
+    values.append(element("dt", undefined, key), valueOf(value, space));
+  article.append(values);
+
+  follow(article, space);
+  return article;
 }
+
+// A value as it is: a reference mounted as a face of what it points at, a
+// list item by item, a set of fields key by key, and text and numbers as
+// text, long text kept in its own box.
+function valueOf(value: Json, space: Space): HTMLElement {
+  const held = element("dd");
+  held.append(...contentOf(value, space));
+  return held;
+}
+
+function contentOf(value: Json, space: Space): Node[] {
+  if (isRef(value)) return [space.open(value.$ref, "face")];
+
+  if (Array.isArray(value)) {
+    const items = element("ol");
+    for (const item of value) {
+      const listed = element("li");
+      listed.append(...contentOf(item, space));
+      items.append(listed);
+    }
+    return [items];
+  }
+
+  if (value !== null && typeof value === "object") {
+    const fields = element("dl", "values");
+    for (const [key, inner] of Object.entries(value))
+      fields.append(element("dt", undefined, key), valueOf(inner, space));
+    return [fields];
+  }
+
+  if (typeof value === "string" && (value.length > 160 || value.includes("\n")))
+    return [element("pre", undefined, value)];
+  return [document.createTextNode(String(value))];
+}
+
+const isRef = (value: Json): value is { $ref: Id } =>
+  typeof value === "object" && value !== null && !Array.isArray(value) && typeof value.$ref === "string";

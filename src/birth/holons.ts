@@ -36,6 +36,7 @@ export interface ComponentFile {
   says: string;
   takes: string[];
   draws: string[];
+  argument?: string;
   code: string;
   source: string;
 }
@@ -51,10 +52,19 @@ export function types(files: TypeFile[], idOf: IdOf, typeOfTypes: string): Born 
 
 export function components(files: ComponentFile[], idOf: IdOf, typeOf: Record<string, Id>): Born {
   return {
-    holons: files.map(({ from, title, says, takes, draws, code, source }) => ({
+    holons: files.map(({ from, title, says, takes, draws, argument, code, source }) => ({
       id: idOf(from),
       instance: [typeOf.component!],
-      body: { title, says, takes: takes.map((type) => ({ $ref: typeOf[type]! })), draws, code, source, from },
+      body: {
+        title,
+        says,
+        takes: takes.map((type) => ({ $ref: typeOf[type]! })),
+        draws,
+        ...(argument ? { argument } : {}),
+        code,
+        source,
+        from,
+      },
     })),
     names: {},
   };
@@ -115,22 +125,10 @@ export function wiki(
   return { holons, names: { wiki: idAt(entry)! } };
 }
 
-// The entry: the layout a client boots into, one mount of a component
-// reading a holon.
-export function entry(idOf: IdOf, typeOf: Record<string, Id>, component: Id, reads: Id): Born {
+// The entry: the layout a client boots into, one mount standing at the
+// field itself, drawn by whatever is found for it.
+export function entry(idOf: IdOf, typeOf: Record<string, Id>): Born {
   const id = idOf("field/entry");
-  return {
-    holons: [
-      {
-        id,
-        instance: [typeOf.layout!],
-        body: {
-          title: "Entry",
-          mounts: [{ component: { $ref: component }, reads: { $ref: reads } }] as unknown as Json,
-          from: "field/entry",
-        },
-      },
-    ],
-    names: { entry: id },
-  };
+  const body = { title: "Entry", mounts: [{ projects: "field" }] as unknown as Json, from: "field/entry" };
+  return { holons: [{ id, instance: [typeOf.layout!], body }], names: { entry: id } };
 }

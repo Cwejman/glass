@@ -1,15 +1,31 @@
 {
   "title": "Layout",
-  "says": "Mounts held as data: which component is called with what it reads. The layout a client boots into is the store's entry, and the reader's own arrangement is a layout in their home.",
+  "says": "Mounts held as data: each a component called with what it reads, a holon or the field itself. The layout a client boots into is the store's entry, and the reader's own arrangement is a layout in their home.",
   "fields": {
-    "title": { "says": "What the layout is called.", "shape": "string" },
+    "title": {
+      "says": "What the layout is called.",
+      "shape": "string"
+    },
     "mounts": {
-      "says": "Each mount, a component called with the holon it reads, drawn in order.",
+      "says": "Each mount, drawn in order: what it reads, and the component it calls, if it names one; otherwise one is found for what it reads.",
       "shape": {
         "list": {
           "fields": {
-            "component": { "says": "The component the mount calls.", "shape": "ref" },
-            "reads": { "says": "The holon the component is given.", "shape": "ref" }
+            "component": {
+              "says": "The component the mount calls, when it names one.",
+              "shape": "ref",
+              "optional": true
+            },
+            "reads": {
+              "says": "The holon the mount reads.",
+              "shape": "ref",
+              "optional": true
+            },
+            "projects": {
+              "says": "A place the engine shows instead of a holon, as the field itself.",
+              "shape": "string",
+              "optional": true
+            }
           }
         }
       }

@@ -3,7 +3,7 @@ import type { Name } from "../store/name.ts";
 import type { Store } from "../store/store.ts";
 import { fieldOf, judge, pastOf, read, standing, type Change, type Field, type Read } from "./field.ts";
 
-export type { Change, HolonRead, Read } from "./field.ts";
+export type { Change, FieldPlace, HolonRead, Read } from "./field.ts";
 
 // The engine holds the stores it attaches and is the only way into them. Its
 // home is the one store it writes; every store it pulls is read, never

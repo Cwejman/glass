@@ -2,7 +2,7 @@
   {
     "file": "reader.ts",
     "title": "Reader",
-    "says": "A brief whole, read along the gradient: the way down to it, its prose with the parts it places, and the briefs beneath it by their faces.",
+    "says": "A brief whole: the way down to it, its title and prose, the parts its prose places, and its parts beneath as a list of mounts.",
     "takes": ["brief", "record"],
     "draws": ["whole"]
   },
@@ -16,8 +16,31 @@
   {
     "file": "holon.ts",
     "title": "Holon",
-    "says": "Any holon nothing closer draws: what it is an instance of, and its body as the JSON it is.",
+    "says": "Any holon nothing closer draws, the wildcard: what it is an instance of, and every value it holds, each reference the face of what it points at.",
     "takes": [],
     "draws": ["whole", "face"]
+  },
+  {
+    "file": "list.ts",
+    "title": "List",
+    "says": "A list of holons, each item a mount of its own, numbered where the whole that opened it numbers its parts.",
+    "takes": [],
+    "draws": ["whole", "face"],
+    "argument": "list"
+  },
+  {
+    "file": "type.ts",
+    "title": "Type",
+    "says": "A type: what its instances are, each field it declares with what it means and its shape, and its instances.",
+    "takes": ["type"],
+    "draws": ["whole", "face"]
+  },
+  {
+    "file": "field.ts",
+    "title": "Field",
+    "says": "The field itself, the root: its stores, the names each gives, and every type it holds.",
+    "takes": [],
+    "draws": ["whole"],
+    "argument": "field"
   }
 ]

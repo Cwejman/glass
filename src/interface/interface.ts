@@ -1,7 +1,8 @@
 import type { Id } from "../store/id.ts";
 import type { Name } from "../store/name.ts";
 import type { HolonRead } from "../engine/engine.ts";
-import { arrangement, mountsOf, place, walk } from "./arrangement.ts";
+import { arrangement, mountsOf, place, readingOf, walk } from "./arrangement.ts";
+import type { Target } from "./component.ts";
 import type { Connection } from "./connection.ts";
 import { drawing } from "./drawing.ts";
 import { lay } from "./materials.ts";
@@ -38,11 +39,11 @@ export async function mount(engine: Connection, root: HTMLElement) {
         const host = document.createElement("div");
         host.className = "mount";
         const call = {
-          id: each.reads.$ref,
+          reads: readingOf(each),
           draws: "whole",
           given: null,
-          place: (to: Id) => moveTo(index, to),
-          called: each.component.$ref,
+          place: (to: Target) => moveTo(index, to),
+          called: each.component?.$ref,
         };
         void drawn.draw(host, call);
         return host;
@@ -52,9 +53,9 @@ export async function mount(engine: Connection, root: HTMLElement) {
 
   // A move commits the arrangement, and the browser's history holds the
   // home's commit after it.
-  const moveTo = (index: number, id: Id) =>
+  const moveTo = (index: number, to: Target) =>
     inTurn(async () => {
-      if (!(await place(engine, index, id))) return;
+      if (!(await place(engine, index, to))) return;
       history.pushState({ commit: await engine.read({ head: "home" }) }, "");
       scrollTo(0, 0);
       await draw();

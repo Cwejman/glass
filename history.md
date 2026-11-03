@@ -9,6 +9,12 @@ How glass came to be what it is, told over its commits, newest first, each day b
 
 *Begun 2026-11-02, on the author's word that the effort be noted in the log as the work goes. Each story reasoned by the session that did the work, from the commits and the author's words.*
 
+## The interface as a mirror of the field
+
+Seeing the field laid out, the author found the entry went straight into the wiki, which is not the root, and asked how the hierarchy truly exists in the field. It does not, as a hierarchy: every holon stands flat in the store, and nesting lives only in bodies. He then laid out the interface as he sees it: a place, a mount on it, and what renders there depending on what it is, one brief at a brief's place, a list only where something truly is a list, and a wildcard for whatever nothing closer draws, which a layout can always override. The session read OpenLight's view again and found one point glass departs from, how a component is found, which the author left open. The interface was then built so: the entry stands at the field, a type shows its fields and instances, a brief's parts are a list of mounts, and the wildcard draws any holon by its values.
+
+*Reasoned on 2026-11-03 by the session.*
+
 ## No classes, and structure before detail
 
 The author asked whether keeping classes was still the session's reasoning, and said not to hold to how things were coded before. Every class went: stores, backends, the engine, the connection and the interface are each made by a function, and the store was split by what it is, checked objects, the tree and the store, and the interface into the arrangement, the drawing, the materials and the mount. The session then began writing the core as dense expressions, and the author said it was thinking too bluntly at the top and the bottom: understanding comes from good structure, so one need not shadow code before it settles, and blank lines matter. The core was written again as plain steps with names and room, the whole kept in one form, and a fresh agent read it as a newcomer. It found the components' contract without a home, nested choices, a wall in the drawing, a comment no longer true, the tree's rule told twice, and helpers in the wrong files, and each was mended.

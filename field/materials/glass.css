@@ -76,3 +76,78 @@ pre {
   color: var(--quiet);
   font: var(--small) / var(--leading-close) var(--sans);
 }
+
+/* A place: what a mount draws whole. The way down to it stands above its
+   title, quiet, in the sans. */
+
+.place > nav {
+  font: var(--small) / var(--leading-close) var(--sans);
+  color: var(--quiet);
+  margin-bottom: calc(var(--gap) * 2.5);
+}
+
+.place > nav a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.place > nav a:hover {
+  color: var(--ink);
+}
+
+.place > nav a + a::before {
+  content: "›";
+  margin: 0 0.5em;
+  opacity: 0.6;
+}
+
+.place > h1 {
+  font-size: var(--title);
+  line-height: var(--leading-tight);
+  font-weight: 600;
+  margin: 0 0 calc(var(--gap) * 1.25);
+  letter-spacing: -0.01em;
+}
+
+.place > h2 {
+  font: var(--small) / var(--leading-close) var(--sans);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--quiet);
+  margin: calc(var(--gap) * 2.5) 0 calc(var(--gap) * 0.75);
+}
+
+/* A card: what a mount draws as a face, entered by a press. */
+
+.card {
+  display: block;
+  padding: var(--gap) calc(var(--gap) * 1.15);
+  border: var(--hairline) solid var(--line);
+  border-radius: var(--radius);
+  background: var(--raised);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.card:hover,
+.card:focus-visible {
+  border-color: var(--quiet);
+  outline: none;
+}
+
+.card .meta {
+  display: block;
+  margin-top: 0.5em;
+  font: var(--smaller) / var(--leading-close) var(--sans);
+  color: var(--quiet);
+}
+
+/* A list: its items one under another. */
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: calc(var(--gap) * 0.75);
+}

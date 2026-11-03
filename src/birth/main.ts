@@ -95,7 +95,7 @@ const bornMaterials = materials(
 
 const files = await readWiki("README.md");
 const bornWiki = wiki(files, "README.md", idOf, bornTypes.names);
-const bornEntry = entry(idOf, bornTypes.names, idOf("field/components/reader.ts"), bornWiki.names.wiki!);
+const bornEntry = entry(idOf, bornTypes.names);
 
 const field: Born[] = [bornTypes, bornMaterials, bornComponents, bornWiki, bornEntry];
 const holons = field.flatMap(({ holons }) => holons);

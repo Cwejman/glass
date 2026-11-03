@@ -2,16 +2,25 @@ import { newId, type Id } from "../store/id.ts";
 import type { Name } from "../store/name.ts";
 import type { Body } from "../store/objects.ts";
 import type { HolonRead } from "../engine/engine.ts";
+import type { Reading, Target } from "./component.ts";
 import type { Connection } from "./connection.ts";
 
 // Where the reader stands, kept in the field: the arrangement is a layout in
 // the home, the reader's own copy of the entry once they first move, and
 // every move is a commit to it, so its commits are the reader's history.
 
+// A mount as a layout holds it: the holon it reads, or the field it
+// projects, and the component it calls, if it names one.
 export interface Mount {
-  component: { $ref: Id };
-  reads: { $ref: Id };
+  component?: { $ref: Id };
+  reads?: { $ref: Id };
+  projects?: "field";
 }
+
+export const readingOf = (mount: Mount): Reading =>
+  mount.reads ? { holon: mount.reads.$ref } : { field: true };
+
+const mountOn = (to: Target): Mount => (to === "field" ? { projects: "field" } : { reads: { $ref: to } });
 
 export async function arrangement(engine: Connection): Promise<HolonRead> {
   const id = ((await engine.read({ name: "arrangement" })) ??
@@ -23,16 +32,18 @@ export async function arrangement(engine: Connection): Promise<HolonRead> {
 
 export const mountsOf = (layout: HolonRead) => layout.body.mounts as unknown as Mount[];
 
-// Placing a mount on another holon, if it does not already read it. Whether
-// the reader moved is the answer.
-export async function place(engine: Connection, mount: number, id: Id): Promise<boolean> {
+// Placing a mount on a holon or at the field, if it does not already stand
+// there. The mount then calls whichever component is found for what it
+// reads. Whether the reader moved is the answer.
+export async function place(engine: Connection, mount: number, to: Target): Promise<boolean> {
   const layout = await arrangement(engine);
   const mounts = mountsOf(layout);
-  if (mounts[mount]?.reads.$ref === id) return false;
-  await arrange(engine, layout, {
-    ...layout.body,
-    mounts: mounts.map((each, i) => (i === mount ? { ...each, reads: { $ref: id } } : each)) as never,
-  });
+  const here = mounts[mount] && readingOf(mounts[mount]);
+  const there = readingOf(mountOn(to));
+  if (JSON.stringify(here) === JSON.stringify(there)) return false;
+
+  const moved = mounts.map((each, i) => (i === mount ? mountOn(to) : each));
+  await arrange(engine, layout, { ...layout.body, mounts: moved as never });
   return true;
 }
 
