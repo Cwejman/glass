@@ -18,6 +18,7 @@ export type Shape =
   | "boolean"
   | "ref"
   | "expression"
+  | "connectors"
   | "json"
   | { list: Shape }
   | { fields: Connectors };
@@ -55,7 +56,7 @@ export function bodyProblem(body: Body, types: Connectors[]): Problem {
 
 // A type's own connectors: each said in prose, and each of a shape there is.
 
-const shapes = ["string", "markdown", "number", "boolean", "ref", "expression", "json"];
+const shapes = ["string", "markdown", "number", "boolean", "ref", "expression", "connectors", "json"];
 
 function connectorsProblem(connectors: Json, at: string): Problem {
   if (!isMap(connectors)) return `${at} are not a map of fields`;
@@ -114,11 +115,13 @@ const fits: Record<string, (value: Json) => boolean> = {
   boolean: (value) => typeof value === "boolean",
   ref: isRef,
   expression: (value) => expressionProblem(value) === undefined,
+  connectors: (value) => connectorsProblem(value, "fields") === undefined,
   json: () => true,
 };
 
 function valueProblem(value: Json, shape: Shape, at: string): Problem {
-  if (typeof shape === "string") return fits[shape]!(value) ? undefined : `${at} is not ${shape}`;
+  if (typeof shape === "string")
+    return Object.hasOwn(fits, shape) && fits[shape]!(value) ? undefined : `${at} is not ${shape}`;
 
   if ("list" in shape) {
     if (!Array.isArray(value)) return `${at} is not a list`;

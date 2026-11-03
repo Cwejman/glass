@@ -6,6 +6,7 @@ import type { Name } from "../store/name.ts";
 import type { Body } from "../store/objects.ts";
 import { openStore } from "../store/store.ts";
 import { startEngine } from "../engine/engine.ts";
+import type { Declaration } from "../interface/component.ts";
 import {
   components,
   entry,
@@ -58,19 +59,15 @@ const typeFiles: TypeFile[] = await Promise.all(
 );
 const bornTypes = types(typeFiles, idOf, "field/types/type.json");
 
-const declared = JSON.parse(await readFile(join(repo, "field/components.json"), "utf8")) as (Omit<
-  ComponentFile,
-  "from" | "code" | "source"
-> & {
-  file: string;
-})[];
+// Every module among the components that declares itself is a component:
+// its declaration read from the module, its code built from it.
 const componentFiles: ComponentFile[] = await Promise.all(
-  declared.map(async ({ file, ...component }) => {
+  (await declaringModules()).map(async ({ file, declared }) => {
     const from = `field/components/${file}`;
     const built = await Bun.build({ entrypoints: [join(repo, from)], format: "esm", target: "browser" });
     if (!built.success) throw new AggregateError(built.logs, `building ${from}`);
     return {
-      ...component,
+      ...declared,
       from,
       code: await built.outputs[0]!.text(),
       source: await readFile(join(repo, from), "utf8"),
@@ -153,4 +150,18 @@ async function readWiki(entryPath: string) {
     waiting.push(...linked.filter((to): to is string => !!to?.endsWith(".md") && !files.has(to)));
   }
   return files;
+}
+
+// The modules among the components that declare themselves, each with its
+// declaration.
+async function declaringModules() {
+  const files = (await readdir(join(repo, "field/components")))
+    .filter((file) => file.endsWith(".tsx"))
+    .sort();
+  const modules = await Promise.all(
+    files.map(async (file) => ({ file, module: await import(join(repo, "field/components", file)) })),
+  );
+  return modules
+    .filter(({ module }) => module.declared)
+    .map(({ file, module }) => ({ file, declared: module.declared as Declaration }));
 }

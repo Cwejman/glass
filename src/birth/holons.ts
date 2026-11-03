@@ -2,6 +2,8 @@ import type { Json } from "../store/canonical.ts";
 import type { Id } from "../store/id.ts";
 import type { Body } from "../store/objects.ts";
 import type { Holon } from "../store/store.ts";
+import { typeProblem } from "../engine/types.ts";
+import { readForms, type Declaration } from "../interface/component.ts";
 import { flatten, resolve, rewriteLinks, type Section, type WikiFile } from "./wiki.ts";
 
 // What glass's field is, as holons, made from what its files hold. Each
@@ -30,15 +32,10 @@ export interface MaterialFile {
   css: string;
 }
 
-export interface ComponentFile {
+// A component as its module declares it, with its code built and its
+// source as written.
+export interface ComponentFile extends Declaration {
   from: string;
-  title: string;
-  says: string;
-  takes: string[];
-  kinds: string[];
-  argument?: string;
-  settings?: Json;
-  reads?: string[];
   code: string;
   source: string;
 }
@@ -77,6 +74,10 @@ export function components(
   typeOf: Record<string, Id>,
   kindOf: Record<string, Id>,
 ): Born {
+  const wrong = files.flatMap((file) =>
+    declarationProblems(file, typeOf, kindOf).map((problem) => `${file.from}: ${problem}`),
+  );
+  if (wrong.length) throw new Error(`components that declare what is not so:\n  ${wrong.join("\n  ")}`);
   return {
     holons: files.map(({ from, title, says, takes, kinds, argument, settings, reads, code, source }) => ({
       id: idOf(from),
@@ -87,7 +88,7 @@ export function components(
         takes: takes.map((type) => ({ $ref: typeOf[type]! })),
         kinds: kinds.map((kind) => ({ $ref: kindOf[kind]! })),
         ...(argument ? { argument } : {}),
-        ...(settings ? { settings } : {}),
+        ...(settings ? { settings: settings as unknown as Json } : {}),
         ...(reads ? { reads } : {}),
         code,
         source,
@@ -96,6 +97,29 @@ export function components(
     })),
     names: {},
   };
+}
+
+// What a component declares that is not so: a type or a kind the field
+// does not name, a read form there is not, or settings not said as fields.
+function declarationProblems(
+  { takes, kinds, reads, settings }: ComponentFile,
+  typeOf: Record<string, Id>,
+  kindOf: Record<string, Id>,
+): string[] {
+  return [
+    ...takes
+      .filter((type) => !Object.hasOwn(typeOf, type))
+      .map((type) => `it takes ${type}, which is no type`),
+    ...kinds
+      .filter((kind) => !Object.hasOwn(kindOf, kind))
+      .map((kind) => `it draws in ${kind}, which is no kind`),
+    ...(reads ?? [])
+      .filter((form) => !(readForms as readonly string[]).includes(form))
+      .map((form) => `it reads ${form}, which is no read`),
+    ...[settings === undefined ? undefined : typeProblem({ fields: settings as unknown as Json })].filter(
+      (problem) => problem !== undefined,
+    ),
+  ] as string[];
 }
 
 // The materials everything drawn is made of, each a style sheet.

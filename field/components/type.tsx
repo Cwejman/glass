@@ -1,12 +1,20 @@
 import type { Id } from "../../src/store/id.ts";
-import type { Given, Space } from "../../src/interface/component.ts";
-import { bodyOf, type Type } from "./bodies.ts";
+import type { Declaration, Given, Space } from "../../src/interface/component.ts";
+import type { Type } from "./bodies.ts";
 import { h } from "./jsx.ts";
 import { Card, follow, Way } from "./way.tsx";
 
 // A type: what an instance of it is, each field it declares with what the
 // field means and its shape, and its instances, a list of mounts. Seen from
 // above, its title, what it says and how many instances it has.
+
+export const declared = {
+  title: "Type",
+  says: "A type: what its instances are, each field it declares with what it means and its shape, and its instances.",
+  takes: ["type"],
+  kinds: ["full", "face"],
+  reads: ["instances"],
+} satisfies Declaration;
 
 export const style = `
 .type-fields {
@@ -36,10 +44,10 @@ interface Connector {
   optional?: boolean;
 }
 
-export default async function draw(given: Given, space: Space) {
+export default async function draw(given: Given<Type>, space: Space) {
   const type = given.holon!;
-  const { title, says, fields: declared } = bodyOf<Type>(type);
-  const instances = (await space.read({ instances: type.id })) as Id[];
+  const { title, says, fields: declared } = type.body;
+  const instances = await space.read({ instances: type.id });
 
   if (given.kind === "face")
     return (

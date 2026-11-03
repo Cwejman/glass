@@ -18,10 +18,13 @@ export async function declarations(): Promise<string> {
   const types = await Promise.all(
     files.map(async (file) => JSON.parse(await readFile(join(repo, "field/types", file), "utf8"))),
   );
-  const components = JSON.parse(await readFile(join(repo, "field/components.json"), "utf8")) as {
-    title: string;
-    settings?: Connectors;
-  }[];
+  const files_ = (await readdir(join(repo, "field/components")))
+    .filter((file) => file.endsWith(".tsx"))
+    .sort();
+  const modules = await Promise.all(files_.map((file) => import(join(repo, "field/components", file))));
+  const components = modules
+    .filter((module) => module.declared)
+    .map((module) => module.declared as { title: string; settings?: Connectors });
 
   return [
     "// The bodies of the field's types, made from the types by `bun run declare`.",
@@ -38,14 +41,14 @@ export async function declarations(): Promise<string> {
     ...types.flatMap(({ title, says, fields }) => [
       "",
       comment(says, ""),
-      `export interface ${title} ${block(fields, "")}`,
+      `export interface ${identifier(title)} ${block(fields, "")}`,
     ]),
     ...components
       .filter(({ settings }) => settings)
       .flatMap(({ title, settings }) => [
         "",
         comment(`The settings the ${title} component takes from the slot that opens it.`, ""),
-        `export interface ${title}Settings ${block(settings!, "")}`,
+        `export interface ${identifier(title)}Settings ${block(settings!, "")}`,
       ]),
     "",
   ].join("\n");
@@ -54,7 +57,7 @@ export async function declarations(): Promise<string> {
 function block(connectors: Connectors, indent: string): string {
   const lines = Object.entries(connectors).flatMap(([key, connector]) => [
     comment(connector.says, `${indent}  `),
-    `${indent}  ${key}${connector.optional ? "?" : ""}: ${typeOf(connector, `${indent}  `)};`,
+    `${indent}  ${property(key)}${connector.optional ? "?" : ""}: ${typeOf(connector, `${indent}  `)};`,
   ]);
   return `{\n${lines.join("\n")}\n${indent}}`;
 }
@@ -63,17 +66,30 @@ function typeOf({ shape }: Connector, indent: string): string {
   return shapeType(shape, indent);
 }
 
+// A type's title as a name TypeScript can hold, its words run together; a
+// key as a property, quoted where it is not a plain name.
+const identifier = (title: string) =>
+  title
+    .replace(/[^A-Za-z0-9]+(.)?/g, (_, next: string | undefined) => next?.toUpperCase() ?? "")
+    .replace(/^[^A-Za-z_]/, "_$&");
+const property = (key: string) => (/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(key) ? key : JSON.stringify(key));
+
+const shapeTypes: Record<string, string> = {
+  string: "string",
+  markdown: "string",
+  number: "number",
+  boolean: "boolean",
+  ref: "Ref",
+  expression: "Expression",
+  connectors: "Json",
+  json: "Json",
+};
+
 function shapeType(shape: Shape, indent: string): string {
-  if (typeof shape === "string")
-    return {
-      string: "string",
-      markdown: "string",
-      number: "number",
-      boolean: "boolean",
-      ref: "Ref",
-      expression: "Expression",
-      json: "Json",
-    }[shape];
+  if (typeof shape === "string") {
+    if (!Object.hasOwn(shapeTypes, shape)) throw new Error(`no type is declared for the shape ${shape}`);
+    return shapeTypes[shape]!;
+  }
   if ("list" in shape) return `${shapeType(shape.list, indent)}[]`;
   return block(shape.fields, indent);
 }

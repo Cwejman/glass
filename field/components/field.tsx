@@ -1,10 +1,18 @@
 import type { Id } from "../../src/store/id.ts";
-import type { Given, Space } from "../../src/interface/component.ts";
+import type { Declaration, Given, Space } from "../../src/interface/component.ts";
 import { h } from "./jsx.ts";
 import { follow } from "./way.tsx";
 
 // The field itself, the root: the stores it holds, each with the names it
 // gives, and every type in the field, the way into everything it holds.
+
+export const declared = {
+  title: "Field",
+  says: "The field itself, the root: its stores, the names each gives, and every type it holds.",
+  takes: [],
+  kinds: ["full"],
+  argument: "field",
+} satisfies Declaration;
 
 export const style = `
 .field .store {

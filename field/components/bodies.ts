@@ -121,6 +121,12 @@ export interface BriefSettings {
   number?: string;
 }
 
+/** The settings the Layout component takes from the slot that opens it. */
+export interface LayoutSettings {
+  /** Whether the layout is the page itself, which stands nowhere and so has no way down to it. */
+  alone?: boolean;
+}
+
 /** The settings the List component takes from the slot that opens it. */
 export interface ListSettings {
   /** The kind of slot each item is, face unless it says full. */

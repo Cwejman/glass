@@ -11,6 +11,8 @@ How glass came to be what it is, told over its commits, newest first, each day b
 
 ## Many angles, and components held to what they may do
 
+Three fresh readings followed, from correctness, from OpenLight's design and from writing a component. They found reach to be a convention a component could open its way past, declarations kept apart from the code that depended on them and checked late, no way to gather what a holon holds, and failures that left blank panes. Each was mended: reach became a ceiling over what was handed and read, a component declares itself in its own module and is typed by it, an expression can look outward, and every failure is said in its slot. One thing was left for the author: where the data of a slot opened in code would live.
+
 The author asked that the power to look upon the field from many angles be opened, the reader to grow from it, and that every way glass's components went against OpenLight be resolved. Expressions came in as data, gathered by the engine and readable by any mount or component; a layout ships that looks at the field two ways side by side. Components now declare their settings and their reads, checked and refused by name, and draw with bodies typed from the field's own types. Panes scroll within themselves, so a redraw keeps one's place.
 
 *Reasoned on 2026-11-03 by the session.*

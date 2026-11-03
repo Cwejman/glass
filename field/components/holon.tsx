@@ -1,6 +1,6 @@
 import type { Json } from "../../src/store/canonical.ts";
 import type { Id } from "../../src/store/id.ts";
-import type { Given, Space } from "../../src/interface/component.ts";
+import type { Declaration, Given, Space } from "../../src/interface/component.ts";
 import { h, type Child } from "./jsx.ts";
 import { markdown } from "./prose.ts";
 import { Card, follow, Way } from "./way.tsx";
@@ -10,6 +10,14 @@ import { Card, follow, Way } from "./way.tsx";
 // drawn as the face of what it points at, so everything in the field can be
 // reached from anywhere; long text and code shown as they are. Seen from
 // above, its title and its types.
+
+export const declared = {
+  title: "Holon",
+  says: "Any holon nothing closer draws, the wildcard: what it is an instance of, and every value it holds, each reference a slot of what it points at.",
+  takes: [],
+  kinds: ["full", "face"],
+  reads: ["holon"],
+} satisfies Declaration;
 
 export const style = `
 .values {

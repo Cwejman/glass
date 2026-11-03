@@ -65,8 +65,23 @@ export async function mount(engine: Connection, root: HTMLElement) {
     return taken;
   };
 
-  const know = async (ids: Id[]) => {
-    const read = await Promise.all(ids.map((id) => engine.holon(id)));
+  // The components in the field, each watched, so a new version of one is
+  // drawn with from the next drawing on, without a reload.
+  let watching: (() => void)[] = [];
+  let ids: Id[] = [];
+  const know = async (next: Id[]) => {
+    ids = next;
+    for (const stop of watching.splice(0)) stop();
+    const read = await Promise.all(
+      ids.map(async (id) => {
+        const watched = await engine.subscribeHolon(
+          id,
+          () => void inTurn(async () => (await know(ids), await draw())),
+        );
+        watching.push(watched.close);
+        return watched.value;
+      }),
+    );
     components = read.filter(
       (component) => component !== null && trusted.has(component.store),
     ) as HolonRead[];
@@ -79,7 +94,7 @@ export async function mount(engine: Connection, root: HTMLElement) {
     const call: Call = {
       reads: { holon: arranged.id },
       kind: "full",
-      settings: {},
+      settings: { alone: true },
       place: (to) => moveTo(0, to),
       root: true,
       why: "the page always shows your arrangement whole",

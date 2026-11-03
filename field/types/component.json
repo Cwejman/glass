@@ -29,7 +29,7 @@
     },
     "settings": {
       "says": "The settings it takes from the slot that opens it, each said in prose with its shape, as a type declares its fields; none unless it says.",
-      "shape": "json",
+      "shape": "connectors",
       "optional": true
     },
     "reads": {
