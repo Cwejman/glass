@@ -128,6 +128,12 @@ export interface BriefSettings {
   number?: string;
 }
 
+/** The settings the Collection component takes from the slot that opens it. */
+export interface CollectionSettings {
+  /** Whether it stands open, its name and the holons it holds named beneath it, rather than closed as a card with how many it holds. */
+  open?: boolean;
+}
+
 /** The settings the List component takes from the slot that opens it. */
 export interface ListSettings {
   /** Whether each item is numbered by its place. */
@@ -140,8 +146,8 @@ export interface ListSettings {
 
 /** The settings the Search component takes from the slot that opens it. */
 export interface SearchSettings {
-  /** The component the place is drawn by where it was pressed, whose settings it offers to set. */
-  drawn?: Ref;
+  /** The components the place is drawn by where it was pressed, its own first, then what holds it, whose settings it offers to set. */
+  drawn?: Ref[];
   /** The settings the place's slot gave already, which no offer reaches, so are not offered to set. */
   said?: string[];
   /** Whether it was laid where something was pressed: it takes the focus, and offers first what can be done there. */

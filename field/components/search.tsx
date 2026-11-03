@@ -52,8 +52,8 @@ export const declared = {
   argument: "selection",
   settings: {
     drawn: {
-      says: "The component the place is drawn by where it was pressed, whose settings it offers to set.",
-      shape: "ref",
+      says: "The components the place is drawn by where it was pressed, its own first, then what holds it, whose settings it offers to set.",
+      shape: { list: "ref" },
       optional: true,
     },
     said: {
@@ -445,7 +445,9 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
   // it off.
   const doable = async (): Promise<Found[]> => {
     const found: Found[] = [];
-    const drawn = settings.drawn ? await space.holon<ComponentBody>(settings.drawn.$ref) : null;
+    const [drawn, ...holders] = await Promise.all(
+      (settings.drawn ?? []).map(({ $ref }) => space.holon<ComponentBody>($ref)),
+    );
     const searching = (given.offered.search as Ref | undefined)?.$ref;
     const here = (component?: Id): Lead =>
       given.gathers ? { expression: given.gathers, component } : { location: ids, component };
@@ -453,17 +455,30 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     for (const other of await drawers())
       if (other.id !== drawn?.id && other.id !== searching)
         found.push({ label: `Look here with ${other.body.title}`, meta: "component", lead: here(other.id) });
-    const declaredSettings = (drawn?.body.settings ?? {}) as Record<string, { says: string; shape: unknown }>;
-    if (drawn && drawn.id !== searching)
+    // Each component's settings that are true or false, but those its slot
+    // gave, said with whose they are.
+    const offering = new Set<string>();
+    for (const [i, component] of [drawn, ...holders].entries()) {
+      if (!component || component.id === searching) continue;
+      const declaredSettings = (component.body.settings ?? {}) as Record<
+        string,
+        { says: string; shape: unknown }
+      >;
       for (const [key, setting] of Object.entries(declaredSettings))
-        if (setting.shape === "boolean" && !(settings.said ?? []).includes(key)) {
+        if (
+          setting.shape === "boolean" &&
+          !(i === 0 && (settings.said ?? []).includes(key)) &&
+          !offering.has(key)
+        ) {
+          offering.add(key);
           const now = given.offered[key] === true;
           found.push({
             label: `${capital(key)}: ${now ? "on" : "off"}`,
-            meta: `turn ${now ? "off" : "on"}: ${setting.says}`,
+            meta: `${component.body.title}, turn ${now ? "off" : "on"}: ${setting.says}`,
             lead: { offer: { [key]: !now } },
           });
         }
+    }
     if (given.gathers)
       found.push({
         label: "Keep on the favorites",
@@ -507,9 +522,9 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     );
   };
 
-  // What the words find, with nothing taken: the bricks they name, those
-  // they begin first; the values in view they name; what near they name;
-  // and, always, the words themselves as Text.
+  // What the words find, with nothing taken: the holons they name, the
+  // bricks they name, those they begin first; the values in view they name;
+  // what near they name; and, always, the words themselves as Text.
   const search = async (text: string): Promise<Found[]> => {
     const said = text.trim();
     const values = async (axis: "type" | "parent", program: Called) =>
@@ -519,12 +534,26 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
         .map((row) => ({ ...row, label: `${program.title}: ${row.label}` }));
     const types = await values("type", is("type"));
     const parents = await values("parent", is("children"));
+    // The holons whose title says the words, each a place to go: those it
+    // begins first of all, so a holon is found by its name.
+    const titled = await Promise.all(
+      (await holonsSaying(said))
+        .filter((holon) => fits(said, String(holon.body.title ?? "")))
+        .map(async (holon) => ({
+          label: String(holon.body.title),
+          meta: await kinds(holon),
+          lead: { location: [holon.id] } as Lead,
+          first: begins(said, String(holon.body.title)),
+        })),
+    );
     return [
+      ...titled.filter(({ first }) => first).slice(0, 4),
       ...bricks()
         .filter(({ label }) => fits(said, label))
         .sort((a, b) => Number(begins(said, b.label)) - Number(begins(said, a.label))),
       ...types,
       ...parents,
+      ...titled.filter(({ first }) => !first).slice(0, 3),
       ...(await near()).filter(({ label }) => fits(said, label)),
       {
         label: `${is("text").title}: ${said}`,
@@ -564,12 +593,13 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     </div>
   ) as HTMLElement;
 
-  // What is being built, said before what is typed, and what it asks for.
+  // What is being built, said before what is typed, and, in a word, what
+  // it asks for; nothing being built, nothing is asked.
   const asks: Record<string, string> = {
-    holon: "type the title of the holon",
-    words: "type the words",
-    store: "choose a store",
-    axis: "choose what to group by",
+    holon: "a title",
+    words: "words",
+    store: "a store",
+    axis: "an axis",
   };
   const said = () => {
     pending.textContent = frames.map(({ program }) => program.title).join(" ▸ ");
@@ -577,15 +607,13 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     const frame = frames.at(-1);
     const kind = needs();
     input.placeholder = !frame
-      ? settings.pressed && standing
-        ? "Look from here: Type, Children of, Text, Not…"
-        : "Add a part: Type, Children of, Text, Not, Group by… or Open a holon"
+      ? ""
       : kind === "set"
         ? frame.program.native === "type"
-          ? "choose a type, or build it of a brick"
+          ? "a type"
           : frame.program.native === "children"
-            ? "choose a parent, or build it of a brick"
-            : "type a title, or build it of a brick"
+            ? "a parent"
+            : "a title"
         : (asks[kind!] ?? "");
   };
 

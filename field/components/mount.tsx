@@ -217,11 +217,17 @@ export default async function draw(given: Given<MountBody>, space: Space) {
     if (!search) return;
     const place = at ?? (drawn as HTMLElement);
     const { location, expression } = place.dataset;
-    // A face stands in what holds it, as an item in a list, so its settings
-    // to set are its holder's, as the holder's slot left them; any other
-    // place is its own component's.
-    const holder = place.classList.contains("face") ? place.parentElement : place;
-    const { component: drawnBy, said } = holder?.closest<HTMLElement>("[data-component]")?.dataset ?? {};
+    // The components the place is drawn by, whose settings it offers: its
+    // own, as its slot left them, and, for a face, which stands in what
+    // holds it as an item in a list, its holder's too.
+    const own = place.closest<HTMLElement>("[data-component]");
+    const holder = place.classList.contains("face")
+      ? place.parentElement?.closest<HTMLElement>("[data-component]")
+      : undefined;
+    const drawnBy = [own, holder].flatMap((host) =>
+      host?.dataset.component ? [host.dataset.component] : [],
+    );
+    const said = own?.dataset.said;
     const ids = JSON.parse(location ?? "[]") as Id[];
     const pressed = expression
       ? { gather: JSON.parse(expression) as Expression }
@@ -233,7 +239,7 @@ export default async function draw(given: Given<MountBody>, space: Space) {
       offer: offering,
       settings: {
         pressed: true,
-        ...(drawnBy ? { drawn: { $ref: drawnBy } } : {}),
+        ...(drawnBy.length ? { drawn: drawnBy.map(($ref) => ({ $ref })) } : {}),
         ...(said ? { said: said.split(" ") } : {}),
       },
     });

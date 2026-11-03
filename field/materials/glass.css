@@ -197,6 +197,43 @@ pre {
   grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
 }
 
+/* A collection standing open: its name, and the holons it holds named
+   beneath it, set apart by spacing alone. */
+
+.collection-open {
+  padding: 0.4rem 0;
+  cursor: pointer;
+}
+
+.collection-open > .meta {
+  display: inline;
+  margin-left: 0.6em;
+}
+
+.collection-open .members {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.15rem 0.9rem;
+  margin-top: 0.35rem;
+  font: var(--small) / var(--leading-close) var(--sans);
+}
+
+.collection-open .member {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.collection-open .member:hover,
+.collection-open .member:focus-visible {
+  text-decoration: underline;
+  outline: none;
+}
+
 /* A list's items as cards, side by side where there is room. */
 
 .list.cards {
