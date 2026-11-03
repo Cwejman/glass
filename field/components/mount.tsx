@@ -1,25 +1,28 @@
+import { canonical } from "../../src/store/canonical.ts";
 import { newId, type Id } from "../../src/store/id.ts";
 import type { Declaration, Given, Made, Space } from "../../src/interface/component.ts";
-import type { ComponentBody, MountBody } from "./bodies.ts";
+import type { By, Expression } from "../../src/engine/expression.ts";
+import type { ComponentBody, ExpressionBody, MountBody } from "./bodies.ts";
 import { h } from "./jsx.ts";
 import { ask, offer, type Action } from "./menu.ts";
-import { expressionProblem } from "../../src/engine/expression.ts";
-import { words } from "./words.ts";
+import { axisWords } from "./words.ts";
 
-// A mount: where it is, its location said in words above, and what it
+// A mount: where it is, said above as the way walked to it, and what it
 // gives, drawn in full by the component it calls. A mount that may be
 // written is where what one looks at can change: a press anywhere inside it
 // rises to it with the place it landed on, the innermost location it
-// passed, and the mount gives that instead, a new version of itself. Its
-// location can be changed where it is said: to a way of looking the field
-// holds, to one written there and kept in the home, or to a holon by its
-// name. On the secondary press it offers what can be done there: to look
-// there, to look there with each component that takes it, or to change what
-// it gives by hand. A mount that may not be written lets a press rise on.
+// passed, a holon or a way of looking, and the mount gives that instead, a
+// new version of itself. The way above is made of such places too: each
+// step a way of looking to go back to, and the axes the last is grouped by,
+// each a way of looking beside it. A way of looking the field does not yet
+// hold is born in the home as the mount moves to it. On the secondary press
+// it offers what can be done there: to look there, to look there with each
+// component that takes it, or to change what it gives by hand. A mount
+// that may not be written lets a press rise on.
 
 export const declared = {
   title: "Mount",
-  says: "A mount: its location in words, and what it gives, drawn by the component it calls; where it may be written, its location can be changed where it is said, a press inside it moves it to the place pressed, and its menu offers what takes that place.",
+  says: "A mount: the way walked to where it is, and what it gives, drawn by the component it calls; where it may be written, a press inside it, on the way or on what it gives, moves it to the place pressed, and its menu offers what takes that place.",
   takes: ["mount"],
   kinds: ["full", "face"],
   reads: ["name", "instances", "holon"],
@@ -42,11 +45,11 @@ export default async function draw(given: Given<MountBody>, space: Space) {
     offer: { kind: "full" },
     ...(component ? { component: component.$ref } : {}),
   });
-  const said = await Promise.all(giving.map((id) => saidOf(id, space)));
+  const way = await wayTo(giving, space);
   if (!given.may.write)
     return (
       <div class="mount">
-        <p class="location">{said.join("; ")}</p>
+        {way}
         {drawn}
       </div>
     );
@@ -71,10 +74,28 @@ export default async function draw(given: Given<MountBody>, space: Space) {
   };
   const same = (ids: Id[]) => JSON.stringify(ids) === JSON.stringify(giving);
 
-  // The innermost location a press passed, inside this mount.
+  // A way of looking, as a place to go: the one the field holds that
+  // gathers so, or else one born in the home as the mount moves to it.
+  const look = async (gathers: Expression, title: string) => {
+    const held = await heldWay(gathers, space);
+    if (held) return same([held]) ? undefined : give([held]);
+    const expression = await space.read({ name: "expression" });
+    if (!expression) throw new Error("the field holds no type for ways of looking");
+    const id = newId();
+    return give([id], undefined, [{ id, instance: expression, body: { title, gathers } as never }]);
+  };
+
+  // The innermost place a press passed, inside this mount: a holon, or a
+  // way of looking.
   const pressedAt = (event: Event) => {
-    const at = (event.target as Element).closest<HTMLElement>("[data-location]");
+    const at = (event.target as Element).closest<HTMLElement>("[data-location], [data-expression]");
     return at && element.contains(at) ? at : null;
+  };
+  const go = (at: HTMLElement) => {
+    if (at.dataset.expression)
+      return look(JSON.parse(at.dataset.expression) as Expression, at.dataset.title ?? "A way of looking");
+    const ids = JSON.parse(at.dataset.location!) as Id[];
+    return same(ids) ? undefined : give(ids);
   };
 
   const press = (event: Event) => {
@@ -84,14 +105,14 @@ export default async function draw(given: Given<MountBody>, space: Space) {
     if (!at) return;
     event.preventDefault();
     event.stopPropagation();
-    const ids = JSON.parse(at.dataset.location!) as Id[];
-    if (!same(ids)) give(ids).catch((error: unknown) => console.error(error));
+    Promise.resolve(go(at)).catch((error: unknown) => console.error(error));
   };
 
   element.addEventListener("click", press);
   element.addEventListener("keydown", (event) => {
     if (event.key !== "Enter" && event.key !== " ") return;
-    if (!(event.target as HTMLElement).dataset.location) return;
+    const target = event.target as HTMLElement;
+    if (!target.dataset.location && !target.dataset.expression) return;
     press(event);
   });
   element.addEventListener("contextmenu", (event) => {
@@ -104,6 +125,14 @@ export default async function draw(given: Given<MountBody>, space: Space) {
   // What can be done where the press landed: look there, look there with
   // each component that takes it, or change what the mount gives by hand.
   async function menu(event: MouseEvent, at: HTMLElement | null) {
+    if (at?.dataset.expression)
+      return offer(
+        event.clientX,
+        event.clientY,
+        at.dataset.title ?? "A way of looking",
+        [{ label: "Look here", run: async () => void (await go(at)) }],
+        element,
+      );
     const ids = at ? (JSON.parse(at.dataset.location!) as Id[]) : giving;
     const types = (at?.dataset.instance ?? "").split(" ").filter(Boolean);
     const actions: Action[] = [];
@@ -132,143 +161,115 @@ export default async function draw(given: Given<MountBody>, space: Space) {
     offer(event.clientX, event.clientY, title ?? "This mount", actions, element);
   }
 
-  // Where the mount is, said; pressed, it opens to be changed.
-  const location = (
-    <button type="button" class="location" title="Change where you are looking">
-      {said.join("; ")}
-    </button>
-  ) as HTMLElement;
-  location.addEventListener("click", (event) => {
-    event.stopPropagation();
-    void change(location, space, same, (ids, made) => give(ids, undefined, made));
-  });
-
-  element.append(location, drawn);
+  element.append(way, drawn);
   return element;
 }
 
-// A holon said as where one is: a way of looking by what it gathers, and
-// anything else by its title and what it is.
-async function saidOf(id: Id, space: Space): Promise<string> {
-  const holon = await space.holon(id);
-  if (!holon) return id;
-  const titleOf = async (of: Id) => String((await space.holon(of))?.body.title ?? of);
-  const expression = await space.read({ name: "expression" });
-  if (expression && holon.instance.includes(expression)) {
-    const title = String(holon.body.title);
-    const said = await words(holon.body.gathers as never, titleOf);
-    return said.toLowerCase() === title.toLowerCase() ? title : `${title}: ${said}`;
-  }
-  const types = await Promise.all(holon.instance.map(titleOf));
-  return `${String(holon.body.title ?? holon.id)} · ${types.join(", ")}`;
-}
-
-// Changing where one looks, in the place where it is said: each way of
-// looking the field holds, to choose; or words to give, a name the field
-// gives, or an expression written as data, its holons by their names, as
-// `{ "instances": "brief" }`, kept in the home as a way of looking of its
-// own. Escape leaves it as it was.
-async function change(
-  location: HTMLElement,
-  space: Space,
-  same: (ids: Id[]) => boolean,
-  give: (ids: Id[], made?: Made[]) => Promise<void>,
-) {
-  const expression = await space.read({ name: "expression" });
-  const ways = expression ? await space.read({ instances: expression }) : [];
-  const titled = await Promise.all(
-    ways.map(async (id) => {
-      const way = await space.holon(id);
-      return { id, title: String(way?.body.title ?? id), gathers: JSON.stringify(way?.body.gathers) };
-    }),
+// The way walked to where one looks, said as places: everything first,
+// then each step a way of looking was narrowed by, then the axes the last
+// is grouped by, the one it is grouped by marked. A holon is reached from
+// what it is. Each step and axis is a way of looking, pressed to go there.
+async function wayTo(giving: Id[], space: Space) {
+  const titleOf = async (id: Id) => String((await space.holon(id))?.body.title ?? id);
+  // A step, said by its label, and titled by the whole of where it leads.
+  const step = (gathers: Expression, label: string, here = false, title = label) => (
+    <button
+      type="button"
+      class={here ? "step here" : "step"}
+      data-expression={JSON.stringify(gathers)}
+      data-title={title}
+    >
+      {label}
+    </button>
   );
+  const everything = step(grouped([]), "Everything");
 
-  const input = (
-    <input class="location-input" placeholder='a name, or an expression, as { "instances": "brief" }' />
-  ) as HTMLInputElement;
-  const said = (<p class="location-said" role="status" />) as HTMLElement;
-  const editor = (
-    <div class="location-edit">
-      <div class="location-ways">
-        {titled.map(({ id, title }) => (
-          <button type="button" onClick={() => void kept(() => go([id]))}>
-            {title}
-          </button>
-        ))}
-      </div>
-      {input}
-      {said}
-    </div>
-  ) as HTMLElement;
-
-  const back = () => editor.replaceWith(location);
-  // Where one already is, one stays, with no step in the history.
-  const go = (ids: Id[], made?: Made[]) => (same(ids) ? Promise.resolve(back()) : give(ids, made));
-  async function kept(move: () => Promise<void>) {
-    try {
-      await move();
-    } catch (error) {
-      said.textContent = error instanceof Error ? error.message : String(error);
-    }
+  const one = giving.length === 1 ? await space.holon(giving[0]!) : null;
+  const expression = await space.read({ name: "expression" });
+  if (!one || !expression || !one.instance.includes(expression)) {
+    const kinds = one
+      ? await Promise.all(
+          one.instance.map(async (type) =>
+            step(grouped([{ instances: { $ref: type } }]), await titleOf(type)),
+          ),
+        )
+      : [];
+    return (
+      <nav class="location">
+        {everything}
+        {kinds}
+        <span class="step here">
+          {one
+            ? String(one.body.title ?? one.id)
+            : giving.length === 1
+              ? "what stood here is no longer in the field"
+              : `${giving.length} holons`}
+        </span>
+      </nav>
+    );
   }
-  editor.addEventListener("click", (event) => event.stopPropagation());
-  editor.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") return back();
-    if (event.key === "Enter" && event.target === input)
-      void kept(async () => {
-        const where = await whereOf(input.value.trim(), space, expression, titled);
-        await go([where.id], where.made);
-      });
-  });
 
-  location.replaceWith(editor);
-  input.focus();
-}
-
-// Where words lead: an expression written as data, the way of looking the
-// field holds that gathers so, or else brought into being as one in the
-// home; or a holon by the name the field gives it.
-async function whereOf(
-  written: string,
-  space: Space,
-  expression: Id | null,
-  ways: { id: Id; gathers: string }[],
-): Promise<{ id: Id; made?: Made[] }> {
-  if (!written.startsWith("{")) {
-    const named = await space.read({ name: written });
-    if (named) return { id: named };
-    throw new Error(`nothing in the field is named ${written}`);
-  }
-  if (!expression) throw new Error("the field holds no type for expressions");
-  const gathers = await byName(JSON.parse(written) as unknown, space);
-  const wrong = expressionProblem(gathers as never);
-  if (wrong) throw new Error(`that is not a way of looking: ${wrong}`);
-  // A way of looking the field already holds is looked through again.
-  const held = ways.find((way) => way.gathers === JSON.stringify(gathers));
-  if (held) return { id: held.id };
-  const titleOf = async (of: Id) => String((await space.holon(of))?.body.title ?? of);
-  const title = await words(gathers as never, titleOf);
-  const id = newId();
-  const body = { title: title[0]!.toUpperCase() + title.slice(1), gathers: gathers as never };
-  return { id, made: [{ id, instance: expression, body }] };
-}
-
-// An expression whose holons are given by name, each made a reference to
-// the holon it names, so it points into the field as any value does.
-async function byName(value: unknown, space: Space): Promise<unknown> {
-  if (Array.isArray(value)) return Promise.all(value.map((inner) => byName(inner, space)));
-  if (value === null || typeof value !== "object") return value;
-  const entries = await Promise.all(
-    Object.entries(value).map(async ([key, inner]) => {
-      if ((key === "instances" || key === "pointing") && typeof inner === "string") {
-        const named = await space.read({ name: inner });
-        if (!named) throw new Error(`nothing in the field is named ${inner}`);
-        return [key, { $ref: named }];
-      }
-      return [key, await byName(inner, space)];
-    }),
+  const { parts, by } = stepsOf((one.body as unknown as ExpressionBody).gathers);
+  const said = await Promise.all(parts.map((part) => partTitle(part, titleOf)));
+  const steps = parts.map((_, i) =>
+    step(grouped(parts.slice(0, i + 1)), said[i]!, !by && i === parts.length - 1),
   );
-  return Object.fromEntries(entries);
+  const axes = by
+    ? (Object.keys(axisWords) as By[]).map((axis) =>
+        step(
+          { group: whole(parts), by: axis },
+          axisWords[axis],
+          axis === by,
+          `${said.at(-1) ?? "Everything"}, ${axisWords[axis]}`,
+        ),
+      )
+    : [];
+  return (
+    <nav class="location">
+      {step(grouped([]), "Everything", parts.length === 0 && !by)}
+      {steps}
+      {axes.length > 0 && <span class="axes">{axes}</span>}
+    </nav>
+  );
+}
+
+// A way of looking taken apart into the steps it narrows by, and the axis
+// it is grouped by, if it is grouped.
+function stepsOf(gathers: Expression): { parts: Expression[]; by?: By } {
+  const by = "group" in gathers ? gathers.by : undefined;
+  const inner = "group" in gathers ? gathers.group : gathers;
+  const flat = (e: Expression): Expression[] =>
+    "all" in e ? e.all.flatMap(flat) : "everything" in e ? [] : [e];
+  return { parts: flat(inner), ...(by ? { by } : {}) };
+}
+
+// The steps put together again, and grouped by what splits them best.
+const whole = (parts: Expression[]): Expression =>
+  parts.length === 0 ? { everything: true } : parts.length === 1 ? parts[0]! : { all: parts };
+const grouped = (parts: Expression[]): Expression => ({ group: whole(parts), by: "strongest" });
+
+// A step said by what it narrows to.
+async function partTitle(part: Expression, titleOf: (id: Id) => Promise<string>) {
+  const idOf = (given: Id | { $ref: Id }) => (typeof given === "string" ? given : given.$ref);
+  if ("instances" in part) return titleOf(idOf(part.instances));
+  if ("from" in part) return titleOf(idOf(part.from));
+  if ("pointing" in part) return `pointing at ${await titleOf(idOf(part.pointing))}`;
+  if ("store" in part) return part.store;
+  if ("named" in part) return "Named";
+  if ("types" in part) return "Types";
+  return "A way of looking";
+}
+
+// The way of looking the field holds that gathers so, if it holds one,
+// each told by its canonical form, as the store keeps it.
+async function heldWay(gathers: Expression, space: Space): Promise<Id | undefined> {
+  const expression = await space.read({ name: "expression" });
+  if (!expression) return undefined;
+  for (const id of await space.read({ instances: expression })) {
+    const way = await space.holon<ExpressionBody>(id);
+    if (way && canonical(way.body.gathers) === canonical(gathers)) return id;
+  }
+  return undefined;
 }
 
 // The components that draw in full, read once for a drawing however often

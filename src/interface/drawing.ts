@@ -474,6 +474,7 @@ function askedIds(query: Read): Id[] {
   if ("holders" in query) return [query.holders];
   if ("instances" in query) return [query.instances];
   if ("gather" in query) return idsIn(query.gather);
+  if ("groups" in query) return idsIn(query.groups);
   return [];
 }
 

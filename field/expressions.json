@@ -1,5 +1,7 @@
 [
-  { "name": "named", "title": "Everything named", "gathers": { "named": true } },
-  { "name": "types", "title": "Every type", "gathers": { "types": true } },
-  { "name": "briefs", "title": "Every brief", "gathers": { "instances": "brief" } }
+  {
+    "name": "everything",
+    "title": "Everything",
+    "gathers": { "group": { "everything": true }, "by": "strongest" }
+  }
 ]

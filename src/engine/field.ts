@@ -3,7 +3,7 @@ import { isId, type Id } from "../store/id.ts";
 import { isName, type Name } from "../store/name.ts";
 import type { Body, Version } from "../store/objects.ts";
 import type { Change as StoreChange, Holon, Store } from "../store/store.ts";
-import { expressionProblem, gather, type Expression } from "./expression.ts";
+import { expressionProblem, gather, groups, type Expression } from "./expression.ts";
 import { references, type Reference } from "./references.ts";
 import { firstAsync, firstOf, firstOfAsync, type Problem } from "./problem.ts";
 import { bodyProblem, connectorsOf, isType, typeProblem } from "./types.ts";
@@ -16,14 +16,16 @@ import { bodyProblem, connectorsOf, isType, typeProblem } from "./types.ts";
 
 // What may be read of a field: a holon, now or at a commit; what a name
 // gives; what points at a holon, and under which key; a type's instances;
-// a store's head; and whatever an expression gathers.
+// a store's head; whatever an expression gathers; and the collections a
+// grouping gives.
 export type Read =
   | { holon: Id; at?: Name }
   | { name: string }
   | { holders: Id }
   | { instances: Id }
   | { head: string }
-  | { gather: Expression };
+  | { gather: Expression }
+  | { groups: Expression };
 
 export interface HolonRead {
   id: Id;
@@ -139,6 +141,7 @@ export function readProblem(value: unknown): string | undefined {
     case "head":
       return typeof given === "string" ? undefined : `${form} is a name`;
     case "gather":
+    case "groups":
       return expressionProblem(given as Json);
     default:
       return `there is no read ${form}`;
@@ -160,6 +163,7 @@ export async function read(field: Field, past: Past, read: Read): Promise<Json> 
     );
   if ("head" in read) return field.stores.find(({ key }) => key === read.head)?.head ?? null;
   if ("gather" in read) return gather(field, read.gather);
+  if ("groups" in read) return groups(field, read.groups) as unknown as Json;
   if ("holders" in read)
     return (field.holders.get(read.holders) ?? []).map(({ from, key, pinned }) => ({
       id: from,

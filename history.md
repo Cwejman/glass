@@ -19,6 +19,8 @@ Two fresh readings followed. The first found the entry could be written twice, c
 
 Then the author asked to see where he is: a face of what is looked at says too little. The mount now says its own location above what it gives, in words, and opens it to be changed where it stands, to a way of looking the field holds, a holon by its name, or an expression written there and born in the home. Writing one brought the first holon a component makes, so a write became one act with what it brings into being, in one commit.
 
+The author found that line rudimentary, presets and raw text, and asked what is needed at the core. Reasoned together: a holon has a few axes everywhere, what it is, how it connects, where it enters; a gathered set is flat; expressions are grouping, in layers, each collection a way of looking opened in turn; and with nothing chosen, everything grouped by what splits it best. Built as play: new forms for everything, what a holon points at and a store, a grouping whose collections are expressions, and a measure of strength that favours a few groups over many and over two; the root gives Everything, grouped so. The top bar became the way walked, each step and each axis a place to press, and the presets and the raw box were let go. Each layer visited is born in the home as a way of looking, which is a cost still to weigh.
+
 *Reasoned on 2026-11-03 by the session.*
 
 ## The kind as an offer

@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { newId } from "../store/id.ts";
 import type { Version } from "../store/objects.ts";
-import { expressionProblem, gather } from "./expression.ts";
+import { expressionProblem, gather, groups } from "./expression.ts";
 import { fieldOf, type Known, type Standing } from "./field.ts";
 
 const TYPE = newId();
@@ -65,8 +65,112 @@ test("there is no looking into what a holon holds by key: a holon's parts are it
   expect(expressionProblem({ held: a })).toContain("no expression held");
 });
 
+test("an expression looks along the field's own axes: everything, what a holon points at, a store", () => {
+  expect(gather(field, { everything: true })).toEqual([b, TYPE, NOTE, a]);
+  expect(gather(field, { from: b })).toEqual([a]);
+  expect(gather(field, { from: a })).toEqual([]);
+  expect(gather(field, { store: "glass" })).toEqual([TYPE, NOTE, a]);
+  expect(expressionProblem({ store: 1 } as never)).toContain("names a store");
+});
+
+test("a grouping gathers what it groups, and gives its collections, each a way of looking of its own", () => {
+  const everything = { everything: true } as const;
+  expect(gather(field, { group: everything, by: "type" })).toEqual([b, TYPE, NOTE, a]);
+
+  expect(groups(field, { group: everything, by: "type" })).toEqual({
+    by: "type",
+    groups: [
+      { value: NOTE, count: 2, gathers: { instances: { $ref: NOTE } } },
+      { value: TYPE, count: 2, gathers: { instances: { $ref: TYPE } } },
+    ],
+    rest: [],
+  });
+  expect(groups(field, { group: everything, by: "store" })!.groups).toEqual([
+    { value: "glass", count: 3, gathers: { store: "glass" } },
+    { value: "home", count: 1, gathers: { store: "home" } },
+  ]);
+  expect(groups(field, { group: { instances: NOTE }, by: "holder" })).toEqual({
+    by: "holder",
+    groups: [{ value: b, count: 1, gathers: { all: [{ instances: NOTE }, { from: { $ref: b } }] } }],
+    rest: [b],
+  });
+  expect(groups(field, { everything: true })).toBeNull();
+});
+
+test("grouped by the strongest, a set is split along the axis that gives a few groups, evenly filled", () => {
+  expect(groups(field, { group: { everything: true }, by: "strongest" })!.by).toBe("type");
+  expect(expressionProblem({ group: { everything: true }, by: "colour" } as never)).toContain("groups by");
+});
+
 test("an expression nested past its depth is refused", () => {
   let deep: unknown = { types: true };
   for (let i = 0; i < 40; i++) deep = { any: [deep] };
   expect(expressionProblem(deep as never)).toContain("nests at most");
+});
+
+test("by the strongest, a dozen groups or fewer outweigh many, however evenly filled", () => {
+  const kinds = [newId(), newId()];
+  const holders = Array.from({ length: 40 }, () => newId());
+  const items = holders.map(() => newId());
+  const many = fieldOf([
+    standing("glass", [
+      ...kinds.map((id) => [id, typeBody, [TYPE]] as [string, Version["body"], string[]]),
+      [TYPE, typeBody, [TYPE]],
+      ...items.map(
+        (id, i) => [id, { title: "x" }, [kinds[i % 4 === 0 ? 0 : 1]!]] as [string, Version["body"], string[]],
+      ),
+      ...holders.map(
+        (id, i) => [id, { part: { $ref: items[i]! } }, [TYPE]] as [string, Version["body"], string[]],
+      ),
+    ]),
+  ]);
+  expect(
+    groups(many, { group: { any: [{ instances: kinds[0]! }, { instances: kinds[1]! }] }, by: "strongest" })!
+      .by,
+  ).toBe("type");
+});
+
+test("a value every holon shares says nothing, and where nothing splits a set it is given as it is", () => {
+  expect(groups(field, { group: { instances: NOTE }, by: "type" })!.groups).toEqual([]);
+  expect(groups(field, { group: { instances: NOTE }, by: "strongest" })).toEqual({
+    by: "store",
+    groups: [
+      { value: "home", count: 1, gathers: { all: [{ instances: NOTE }, { store: "home" }] } },
+      { value: "glass", count: 1, gathers: { all: [{ instances: NOTE }, { store: "glass" }] } },
+    ],
+    rest: [],
+  });
+  expect(groups(field, { group: { from: b }, by: "strongest" })).toEqual({
+    by: "type",
+    groups: [],
+    rest: [a],
+  });
+});
+
+test("by the strongest, a few kinds outweigh two stores, however unevenly the kinds are filled", () => {
+  const kinds = [newId(), newId(), newId(), newId()];
+  const holons: [string, Version["body"], string[]][] = Array.from({ length: 40 }, (_, i) => [
+    newId(),
+    { title: "x" },
+    [kinds[i < 34 ? 0 : (i % 3) + 1]!],
+  ]);
+  const uneven = fieldOf([
+    standing("home", holons.slice(0, 3)),
+    standing("glass", [
+      ...kinds.map((id) => [id, typeBody, [TYPE]] as (typeof holons)[number]),
+      ...holons.slice(3),
+    ]),
+  ]);
+  expect(
+    groups(uneven, { group: { any: kinds.map((id) => ({ instances: id })) }, by: "strongest" })!.by,
+  ).toBe("type");
+});
+
+test("a collection deep down is narrowed by its steps side by side", () => {
+  const deep = { group: { all: [{ instances: NOTE }, { store: "glass" }] }, by: "holder" } as const;
+  expect(groups(field, deep as never)!.groups.map(({ gathers }) => gathers)).toEqual([]);
+  const two = { group: { all: [{ everything: true }, { instances: NOTE }] }, by: "store" } as const;
+  expect(groups(field, two as never)!.groups[0]!.gathers).toEqual({
+    all: [{ everything: true }, { instances: NOTE }, { store: "home" }],
+  });
 });

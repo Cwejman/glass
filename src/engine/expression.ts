@@ -8,26 +8,47 @@ import { isType } from "./types.ts";
 // An expression is data: a value that says what to gather from the field,
 // held in a body like any other value, so a holon can gather as easily as
 // it can point. Evaluated against the field, it gives the holons it gathers,
-// in the order the field holds them. Each form names one way of looking:
+// in the order the field holds them. Each form names one way of looking,
+// along the few axes every holon has: what it is, how it connects, and
+// where it enters.
 //
-//   { "instances": T }    the instances of the type T
-//   { "types": true }     every type
-//   { "pointing": H }     what points at the holon H
-//   { "named": true }     every holon a store gives a name
-//   { "all": [ … ] }      what every expression in the list gathers
-//   { "any": [ … ] }      what any expression in the list gathers
+//   { "everything": true }  every holon in the field
+//   { "instances": T }      the instances of the type T
+//   { "types": true }       every type
+//   { "pointing": H }       what points at the holon H
+//   { "from": H }           what the holon H points at
+//   { "store": key }        what the store holds
+//   { "named": true }       every holon a store gives a name
+//   { "all": [ … ] }        what every expression in the list gathers
+//   { "any": [ … ] }        what any expression in the list gathers
+//   { "group": E, "by": axis }   what E gathers, in collections
+//
+// A grouping gathers what its expression gathers, and gives it in
+// collections besides, one for each value along its axis: by type, by the
+// holon that points at it, or by store, each collection itself a way of
+// looking, so it can be opened and grouped again. By the strongest, the
+// axis is the one that splits what is gathered into a few groups, evenly
+// filled, covering most of it.
 //
 // A holon is given by its id or by a reference to it, `{ "$ref": id }`, so
 // an expression in a body points into the field as plainly as any value.
 // Expressions nest at most `depth` deep.
 
 export type Expression =
+  | { everything: true }
   | { instances: Given }
   | { types: true }
   | { pointing: Given }
+  | { from: Given }
+  | { store: string }
   | { named: true }
   | { all: Expression[] }
-  | { any: Expression[] };
+  | { any: Expression[] }
+  | { group: Expression; by: By };
+
+export const axes = ["type", "holder", "store"] as const;
+export type Axis = (typeof axes)[number];
+export type By = Axis | "strongest";
 
 type Given = Id | { $ref: Id };
 
@@ -38,6 +59,17 @@ export const depth = 32;
 export function gather(field: Field, expression: Expression): Id[] {
   const held = [...field.known.values()].map(({ version }) => version);
 
+  if ("everything" in expression) return held.map(({ id }) => id);
+  if ("group" in expression) return gather(field, expression.group);
+  if ("from" in expression) {
+    const holder = field.known.get(idOf(expression.from))?.version;
+    if (!holder) return [];
+    return [...new Set(references(holder.body).map(({ id }) => id))].filter((id) => field.known.has(id));
+  }
+  if ("store" in expression)
+    return [...field.known.values()]
+      .filter(({ key }) => key === expression.store)
+      .map(({ version }) => version.id);
   if ("instances" in expression) {
     const type = idOf(expression.instances);
     return held.filter(({ instance }) => instance.includes(type)).map(({ id }) => id);
@@ -60,9 +92,106 @@ export function gather(field: Field, expression: Expression): Id[] {
   return held.map(({ id }) => id).filter(kept);
 }
 
+// A grouping's collections: the axis it groups by, each collection with
+// the value it shares, how many it holds and the way of looking that
+// gathers it, the larger first; and what has no value on the axis. What is
+// not a grouping has none.
+export interface Grouped {
+  by: Axis;
+  groups: { value: string; count: number; gathers: Expression }[];
+  rest: Id[];
+}
+
+export function groups(field: Field, expression: Expression): Grouped | null {
+  if (!("group" in expression)) return null;
+  const gathered = gather(field, expression.group);
+  const splits = new Map(
+    (expression.by === "strongest" ? axes : [expression.by]).map((axis) => [
+      axis,
+      splitBy(field, gathered, axis),
+    ]),
+  );
+  const strong = (axis: Axis) => strength(splits.get(axis)!, gathered.length);
+  const by =
+    expression.by === "strongest"
+      ? axes.reduce((best, axis) => (strong(axis) > strong(best) ? axis : best))
+      : expression.by;
+
+  const { values, rest } = splits.get(by)!;
+  // Where nothing splits it, what is gathered is given as it is.
+  if (expression.by === "strongest" && values.size < 2) return { by, groups: [], rest: gathered };
+  const narrowed = (value: string): Expression => {
+    const narrow: Expression =
+      by === "type"
+        ? { instances: { $ref: value } }
+        : by === "holder"
+          ? { from: { $ref: value } }
+          : { store: value };
+    // The steps a collection is narrowed by stand side by side, however deep.
+    const inner = expression.group;
+    return "everything" in inner ? narrow : { all: [...("all" in inner ? inner.all : [inner]), narrow] };
+  };
+  return {
+    by,
+    groups: [...values]
+      .sort(([, a], [, b]) => b.length - a.length)
+      .map(([value, ids]) => ({ value, count: ids.length, gathers: narrowed(value) })),
+    rest,
+  };
+}
+
+// The values a set has along an axis, each with the holons that have it, in
+// the order they first appear; and the holons that have none that tells
+// them apart.
+function splitBy(field: Field, gathered: Id[], axis: Axis) {
+  const values = new Map<string, Id[]>();
+  const rest: Id[] = [];
+  for (const id of gathered) {
+    const known = field.known.get(id)!;
+    const along =
+      axis === "type"
+        ? known.version.instance
+        : axis === "holder"
+          ? [...new Set((field.holders.get(id) ?? []).map(({ from }) => from))]
+          : [known.key];
+    for (const value of along) {
+      if (!values.has(value)) values.set(value, []);
+      values.get(value)!.push(id);
+    }
+  }
+  // A value every holon here shares says nothing here, as the one a
+  // collection was opened by.
+  for (const [value, ids] of values) if (ids.length === gathered.length) values.delete(value);
+  const valued = new Set([...values.values()].flat());
+  return { values, rest: gathered.filter((id) => !valued.has(id)) };
+}
+
+// How well an axis splits a set: into a few groups, three to a dozen,
+// covering most of it, the more evenly the better. One group, or none,
+// says nothing; two say little; past a dozen, the groups grow too many to
+// take in at once, and fast. Evenness counts for half, since a field is
+// rarely even: most of glass's holons are briefs.
+function strength({ values, rest }: ReturnType<typeof splitBy>, total: number) {
+  const counts = [...values.values()].map((ids) => ids.length);
+  if (counts.length < 2 || total === 0) return 0;
+  const sum = counts.reduce((a, b) => a + b, 0);
+  const entropy = -counts.reduce((h, count) => h + (count / sum) * Math.log2(count / sum), 0);
+  const evenness = entropy / Math.log2(counts.length);
+  const coverage = (total - rest.length) / total;
+  const few = counts.length === 2 ? 0.6 : Math.min(1, (12 / counts.length) ** 2);
+  return coverage * few * (0.5 + 0.5 * evenness);
+}
+
 // What is wrong with a value meant as an expression, if anything.
 export function expressionProblem(value: Json | undefined, nested = 0): string | undefined {
   if (nested >= depth) return `an expression nests at most ${depth} deep`;
+  if (isRecord(value) && "group" in value) {
+    if (Object.keys(value).some((key) => key !== "group" && key !== "by"))
+      return "a grouping holds only what it groups and what it groups by";
+    if (!(axes as readonly unknown[]).includes(value.by) && value.by !== "strongest")
+      return `a grouping groups by ${[...axes, "strongest"].join(", ")}`;
+    return expressionProblem(value.group, nested + 1);
+  }
   if (!isRecord(value) || Object.keys(value).length !== 1)
     return "an expression is one form, as { instances: … }";
   const [form, given] = Object.entries(value)[0]!;
@@ -70,7 +199,11 @@ export function expressionProblem(value: Json | undefined, nested = 0): string |
   switch (form) {
     case "instances":
     case "pointing":
+    case "from":
       return isGiven(given) ? undefined : `${form} names a holon, by its id or a reference to it`;
+    case "store":
+      return typeof given === "string" ? undefined : "store names a store, as glass";
+    case "everything":
     case "types":
     case "named":
       return given === true ? undefined : `${form} is written ${form}: true`;

@@ -3,6 +3,7 @@ import type { Id } from "../store/id.ts";
 import type { Name } from "../store/name.ts";
 import type { Body } from "../store/objects.ts";
 import type { Expression, HolonRead, Read } from "../engine/engine.ts";
+import type { Grouped } from "../engine/expression.ts";
 import type { Shape } from "../engine/types.ts";
 
 // What a component is: a module that declares what it is, whose default
@@ -23,7 +24,7 @@ export const kinds = ["full", "face"] as const;
 export type Kind = (typeof kinds)[number];
 
 // The forms a component may read the field by, beyond what it is handed.
-export const readForms = ["holon", "name", "holders", "instances", "head", "gather"] as const;
+export const readForms = ["holon", "name", "holders", "instances", "head", "gather", "groups"] as const;
 export type ReadForm = (typeof readForms)[number];
 
 // What a component declares of itself, beside its code: what it is, the
@@ -96,7 +97,9 @@ export type Answer<R extends Read> = R extends { holon: Id }
         ? Id[]
         : R extends { head: string }
           ? Name | null
-          : never;
+          : R extends { groups: Expression }
+            ? Grouped | null
+            : never;
 
 // What a component works with: slots to open where what it holds stands;
 // reads of the field, answered as their form says and drawing it again when
