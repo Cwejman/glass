@@ -36,10 +36,20 @@ export const markdown = new Marked({
 
 // The part a paragraph places, if it is nothing but a link into the field.
 export function placed(token: Token): string | undefined {
+  return slotOf(token)?.id;
+}
+
+// The slot a paragraph makes, if it is nothing but a link into the field:
+// the holon it places, and how it is drawn there, as the link's title says,
+// a face unless it says `whole`.
+export function slotOf(token: Token): { id: string; draws: string } | undefined {
   if (token.type !== "paragraph") return undefined;
   const inner = (token as Tokens.Paragraph).tokens.filter((t) => !(t.type === "text" && t.raw.trim() === ""));
   if (inner.length !== 1 || inner[0]!.type !== "link") return undefined;
-  return refOf((inner[0] as Tokens.Link).href);
+
+  const link = inner[0] as Tokens.Link;
+  const id = refOf(link.href);
+  return id ? { id, draws: link.title === "whole" ? "whole" : "face" } : undefined;
 }
 
 // A paragraph that is all emphasis, as the rule's confidence line is.

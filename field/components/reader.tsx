@@ -2,7 +2,7 @@ import type { Id } from "../../src/store/id.ts";
 import type { HolonRead } from "../../src/engine/engine.ts";
 import type { Given, Space } from "../../src/interface/component.ts";
 import { h } from "./jsx.ts";
-import { isConfidence, markdown, placed } from "./prose.ts";
+import { isConfidence, markdown, placed, slotOf } from "./prose.ts";
 import { follow, Way } from "./way.tsx";
 
 // A brief whole, read along the gradient: the way down to it, its title and
@@ -100,11 +100,12 @@ export default async function draw(given: Given, space: Space) {
 }
 
 // The prose, block by block; a block that is nothing but a link into the
-// field places that part there, mounted as its face.
+// field is a slot, the holon it places mounted there, as a face, or whole
+// where the link says so.
 function proseOf(holon: HolonRead, space: Space) {
   return markdown.lexer(String(holon.body.prose ?? "")).map((token) => {
-    const part = placed(token);
-    if (part) return space.open(part, "face");
+    const slot = slotOf(token);
+    if (slot) return space.open(slot.id, slot.draws);
 
     const kind = isConfidence(token) ? "block confidence" : "block";
     return <div class={kind} html={markdown.parser([token]) as string} />;
