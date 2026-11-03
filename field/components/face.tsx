@@ -1,7 +1,7 @@
 import type { Given, Space } from "../../src/interface/component.ts";
-import { element } from "./element.ts";
+import { h } from "./jsx.ts";
 import { faceOf } from "./prose.ts";
-import { card, follow } from "./way.ts";
+import { Card } from "./way.tsx";
 
 // A brief seen from above: its number, its title and its first paragraph,
 // which is its face, and how many briefs stand beneath it. Pressing it
@@ -32,24 +32,17 @@ export const style = `
 export default function draw(given: Given, space: Space) {
   const holon = given.holon!;
   const number = (given.with as { number?: string } | null)?.number;
-  const face = card(holon.id);
-  face.classList.add("face-card");
-
-  const title = element("h2");
-  if (number) title.append(element("span", "number", number));
-  title.append(String(holon.body.title ?? ""));
-  face.append(title);
-
   const first = faceOf(String(holon.body.prose ?? ""));
-  if (first) {
-    const paragraph = element("p");
-    paragraph.innerHTML = first;
-    face.append(paragraph);
-  }
-
   const beneath = ((holon.body.parts ?? []) as unknown[]).length;
-  if (beneath) face.append(element("span", "meta", `${beneath} beneath`));
 
-  follow(face, space);
-  return face;
+  return (
+    <Card to={holon.id} space={space} class="face-card">
+      <h2>
+        {number && <span class="number">{number}</span>}
+        {String(holon.body.title ?? "")}
+      </h2>
+      {first && <p html={first} />}
+      {beneath > 0 && <span class="meta">{beneath} beneath</span>}
+    </Card>
+  );
 }

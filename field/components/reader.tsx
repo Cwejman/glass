@@ -1,9 +1,9 @@
 import type { Id } from "../../src/store/id.ts";
 import type { HolonRead } from "../../src/engine/engine.ts";
 import type { Given, Space } from "../../src/interface/component.ts";
-import { element } from "./element.ts";
+import { h } from "./jsx.ts";
 import { isConfidence, markdown, placed } from "./prose.ts";
-import { follow, way } from "./way.ts";
+import { follow, Way } from "./way.tsx";
 
 // A brief whole, read along the gradient: the way down to it, its title and
 // prose, each part its prose places by a lone link mounted where it stands,
@@ -74,55 +74,43 @@ interface Level {
 
 export default async function draw(given: Given, space: Space) {
   const holon = given.holon!;
-  const article = element("article", "place reader");
-
   const record = (await space.read({ name: "record" })) as Id | null;
   const numbers = (whole: HolonRead) => !record || !whole.instance.includes(record);
-  const steps = await wayDown(holon, space, numbers);
-  const number = steps.at(-1)?.number ?? "";
 
-  article.append(
-    way(
-      steps
-        .slice(0, -1)
-        .map(({ id, title, number }) => ({ to: id, label: number ? `${number} ${title}` : title })),
-    ),
-  );
-  article.append(titleOf(holon, number));
-  article.append(proseOf(holon, space));
-
+  const levels = await wayDown(holon, space, numbers);
+  const number = levels.at(-1)?.number ?? "";
+  const steps = levels
+    .slice(0, -1)
+    .map(({ id, title, number }) => ({ to: id, label: number ? `${number} ${title}` : title }));
   const parts = ((holon.body.parts ?? []) as { $ref: Id }[]).map(({ $ref }) => $ref);
-  if (parts.length)
-    article.append(space.openList(parts, "whole", { draws: "face", numbered: numbers(holon), number }));
 
-  follow(article, space);
-  return article;
-}
-
-function titleOf(holon: HolonRead, number: string) {
-  const title = element("h1");
-  if (number) title.append(element("span", "number", number));
-  title.append(String(holon.body.title ?? ""));
-  if (holon.body.status) title.append(element("span", "status", String(holon.body.status)));
-  return title;
+  return (
+    <article class="place reader" onClick={follow(space)}>
+      <Way steps={steps} />
+      <h1>
+        {number && <span class="number">{number}</span>}
+        {String(holon.body.title ?? "")}
+        {holon.body.status && <span class="status">{String(holon.body.status)}</span>}
+      </h1>
+      <div class="prose">{proseOf(holon, space)}</div>
+      {parts.length > 0 &&
+        space.openList(parts, "whole", { draws: "face", numbered: numbers(holon), number })}
+    </article>
+  );
 }
 
 // The prose, block by block; a block that is nothing but a link into the
 // field places that part there, mounted as its face.
 function proseOf(holon: HolonRead, space: Space) {
-  const prose = element("div", "prose");
-  for (const token of markdown.lexer(String(holon.body.prose ?? ""))) {
+  return markdown.lexer(String(holon.body.prose ?? "")).map((token) => {
     const part = placed(token);
-    if (part) {
-      prose.append(space.open(part, "face"));
-      continue;
-    }
+    if (part) return space.open(part, "face");
+
     const block = document.createElement("template");
     block.innerHTML = markdown.parser([token]) as string;
     if (isConfidence(token)) block.content.firstElementChild?.classList.add("confidence");
-    prose.append(block.content);
-  }
-  return prose;
+    return block.content;
+  });
 }
 
 // What holds a brief, and where: the whole that lists it among its parts, at

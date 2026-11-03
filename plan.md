@@ -56,6 +56,10 @@ The engine and the interface are written in TypeScript first. The store asks alm
 
 *The session's recommendation, which the author saw no reason against, 2026-11-02.*
 
+The components are written in TSX, so a component reads as the shape of what it draws. A small factory of glass's own turns the markup into the page's own elements, with no framework between: a component stays a function from what it is given to what it draws, drawn again whole when what it read changes, which asks for nothing a framework's reactivity would add.
+
+*The session's, agreed by the author, 2026-11-03; OpenLight chose Solid.*
+
 ## 2. After the first mark
 
 What waits, roughly in the order it stands on what comes before it. None of it is begun, and the order is a claim to be agreed or refused.

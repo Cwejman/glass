@@ -1,6 +1,6 @@
 import type { Id } from "../../src/store/id.ts";
 import type { Given, Space } from "../../src/interface/component.ts";
-import { element } from "./element.ts";
+import { h } from "./jsx.ts";
 
 // A list of holons, each item a mount of its own, drawn by whatever is found
 // for it, as a face unless the whole that opened the list asks otherwise.
@@ -15,14 +15,13 @@ interface Asked {
 
 export default function draw({ list, with: passed }: Given, space: Space) {
   const asked = (passed ?? {}) as Asked;
-  const items = element("ol", "list");
+  const numberAt = (i: number) => (asked.number ? `${asked.number}.${i + 1}` : `${i + 1}`);
 
-  (list ?? []).forEach((id: Id, i) => {
-    const number = asked.numbered ? (asked.number ? `${asked.number}.${i + 1}` : `${i + 1}`) : undefined;
-    const item = element("li");
-    item.append(space.open(id, asked.draws ?? "face", number ? { number } : null));
-    items.append(item);
-  });
-
-  return items;
+  return (
+    <ol class="list">
+      {(list ?? []).map((id: Id, i) => (
+        <li>{space.open(id, asked.draws ?? "face", asked.numbered ? { number: numberAt(i) } : null)}</li>
+      ))}
+    </ol>
+  );
 }

@@ -1,27 +1,27 @@
 [
   {
-    "file": "reader.ts",
+    "file": "reader.tsx",
     "title": "Reader",
     "says": "A brief whole: the way down to it, its title and prose, the parts its prose places, and its parts beneath as a list of mounts.",
     "takes": ["brief", "record"],
     "draws": ["whole"]
   },
   {
-    "file": "face.ts",
+    "file": "face.tsx",
     "title": "Face",
     "says": "A brief seen from above: its number, its title and its first paragraph.",
     "takes": ["brief", "record"],
     "draws": ["face"]
   },
   {
-    "file": "holon.ts",
+    "file": "holon.tsx",
     "title": "Holon",
     "says": "Any holon nothing closer draws, the wildcard: what it is an instance of, and every value it holds, each reference the face of what it points at.",
     "takes": [],
     "draws": ["whole", "face"]
   },
   {
-    "file": "list.ts",
+    "file": "list.tsx",
     "title": "List",
     "says": "A list of holons, each item a mount of its own, numbered where the whole that opened it numbers its parts.",
     "takes": [],
@@ -29,14 +29,14 @@
     "argument": "list"
   },
   {
-    "file": "type.ts",
+    "file": "type.tsx",
     "title": "Type",
     "says": "A type: what its instances are, each field it declares with what it means and its shape, and its instances.",
     "takes": ["type"],
     "draws": ["whole", "face"]
   },
   {
-    "file": "field.ts",
+    "file": "field.tsx",
     "title": "Field",
     "says": "The field itself, the root: its stores, the names each gives, and every type it holds.",
     "takes": [],
