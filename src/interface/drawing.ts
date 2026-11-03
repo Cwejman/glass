@@ -104,7 +104,9 @@ export function drawing(engine: Connection, options: Options): Drawing {
     const kind = options.kinds[call.kind];
     const known = options.components();
     const named = call.called ? known.find(({ id }) => id === call.called) : undefined;
-    return named && candidates([named], call.reads, holon, kind).length ? named : match(known, call.reads, holon, kind);
+    return named && candidates([named], call.reads, holon, kind).length
+      ? named
+      : match(known, call.reads, holon, kind);
   };
 
   // A component's code, run once for each of its versions, its style laid
@@ -196,7 +198,8 @@ export function drawing(engine: Connection, options: Options): Drawing {
   function chromeOf(call: Call, holon: HolonRead | null, drawnBy: HolonRead): Action[] {
     const notKept = call.why ?? "where a change to this slot would be kept is not settled yet";
     const actions: Action[] = [];
-    if (holon && !call.root) actions.push({ label: "Open as the place", run: () => void call.place(holon.id) });
+    if (holon && !call.root)
+      actions.push({ label: "Open as the place", run: () => void call.place(holon.id) });
 
     const other: Kind = call.kind === "full" ? "face" : "full";
     if (candidates(options.components(), call.reads, holon, options.kinds[other]).length)

@@ -49,7 +49,10 @@ export async function place(engine: Connection, mount: number, to: Target): Prom
   if (JSON.stringify(here) === JSON.stringify(there)) {
     if (!mounts[mount]?.kind) return false;
     const { kind: _, ...full } = mounts[mount]!;
-    await arrange(engine, layout, { ...layout.body, mounts: mounts.map((each, i) => (i === mount ? full : each)) as never });
+    await arrange(engine, layout, {
+      ...layout.body,
+      mounts: mounts.map((each, i) => (i === mount ? full : each)) as never,
+    });
     return true;
   }
 
@@ -74,7 +77,11 @@ export async function restyle(
       // What the slot named that is no longer in the field is let go.
       const stays = async (ref?: { $ref: Id }) => (ref && (await engine.holon(ref.$ref)) ? ref : undefined);
       const component =
-        change.component === undefined ? await stays(named) : change.component ? { $ref: change.component } : undefined;
+        change.component === undefined
+          ? await stays(named)
+          : change.component
+            ? { $ref: change.component }
+            : undefined;
       const kind = change.kind ? { $ref: change.kind } : await stays(was);
       return { ...rest, ...(component ? { component } : {}), ...(kind ? { kind } : {}) };
     }),
