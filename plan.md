@@ -84,6 +84,8 @@ What waits, roughly in the order it stands on what comes before it. None of it i
 
 Questions the first mark meets, and those beyond it, each to be settled when the work reaches it.
 
+- **How a component is found for a mount**: matched by type each time it draws, as now, or picked from a table of defaults and recorded in the mount, as OpenLight ruled, in [the interface](architecture/interface.md#4-which-component-draws-a-mount). The author does not know yet; whatever is built on it is built knowing it may change.
+
 - **The material.** How things look is held in the field as a holon of its own, a style sheet of named colours, type and spacing that every component draws with, so the chassis holds no style. It was built on 2026-11-03, named from the author's word for what one builds in; whether this decoupling serves, and whether the word should mean that or something wider, he does not know yet.
 
 - **A holon's identity.** The session leans to a sortable random id, so an id also carries when the holon was born.

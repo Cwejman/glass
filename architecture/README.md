@@ -19,6 +19,10 @@ The engine in the client has a field of its own, its home, where everything the 
 
 [The home](home.md)
 
+What the client draws is the field itself, from its root, each place a holon called by a mount, so the interface is a mirror of the field.
+
+[The interface as a mirror of the field](interface.md)
+
 Holding the client and its home, publishing is simple: a store is put on a static host as files, and a site is such a store with a client that comes pointed at it.
 
 [Remotes and publishing](remotes.md)
