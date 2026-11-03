@@ -31,8 +31,8 @@ const takes: Record<string, string[]> = {
   store: ["store"],
   named: [],
   types: [],
-  and: ["sets"],
-  or: ["sets"],
+  and: ["set", "sets"],
+  or: ["set", "sets"],
   not: ["set"],
   group: ["set", "axis"],
 };
@@ -88,7 +88,7 @@ test("and, or and not are programs too, and nest as deep as one likes", () => {
   expect(gather(field, call("and", call("type", ref(NOTE)), call("not", call("store", "home"))))).toEqual([
     a,
   ]);
-  expect(gather(field, call("not", call("or", call("everything"))))).toEqual([]);
+  expect(gather(field, call("not", call("or", call("everything"), ref(a))))).toEqual([]);
 });
 
 test("a match gathers what says each of its words, in any case, but not by the ids it points by", () => {
@@ -119,7 +119,7 @@ test("a program of one's own gives an expression over what it is given, and is c
 test("what a program is given is held against what it takes", () => {
   expect(() => gather(field, call("type", "Note"))).toThrow("takes a set");
   expect(() => gather(field, call("text", ref(a)))).toThrow("takes a words");
-  expect(() => gather(field, call("and"))).toThrow("takes sets");
+  expect(() => gather(field, call("and", ref(a)))).toThrow("takes set, sets, and was given 1");
   expect(() => gather(field, call("group", call("everything"), "colour"))).toThrow("groups by");
   expect(() => gather(field, { call: { $ref: a } })).toThrow("is not a program");
   expect(() => gather(field, { arg: 0 })).toThrow("within a program");

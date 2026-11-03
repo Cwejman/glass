@@ -29,8 +29,9 @@ import {
 // holds, or among the holons whose title says what is typed, or built of
 // another brick taken within it, so Not: Children of: Type: Brief is built
 // as it reads; words as they are typed; an axis to group by. Once all it
-// takes is given, it stands as one more part beside the others; Or joins it
-// to the last part as either. Open goes to one holon. Typed with no brick
+// takes is given, it stands as one more part beside the others; a part
+// given holons is given another by pressing it and choosing a second, as
+// Type: Brief or Component, and Or builds an either of any parts. Open goes to one holon. Typed with no brick
 // taken, the words find the values in view as well, as Type: Brief.
 //
 // Before anything is typed it offers what is near: what can be done here,
@@ -111,10 +112,9 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
   const standing: Parts | undefined = given.gathers ? partsOf(programs, given.gathers) : undefined;
   const [componentType, full] = await Promise.all(["component", "full"].map((name) => space.read({ name })));
 
-  // What is being built: the programs taken and what each is given so far;
-  // whether it joins the last part as either; or which part it changes.
+  // What is being built: the programs taken and what each is given so far,
+  // and which part it changes, if it changes one.
   let frames: Frame[] = [];
-  let joining = false;
   let changing: number | undefined;
 
   const toward = (parts: Parts): Lead => ({ expression: together(programs, parts) });
@@ -152,26 +152,18 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     if ("call" in part && part.call.$ref === is("group").id)
       return toward({ parts: standing?.parts ?? [], by: part.with![1] as By });
     if (!standing) return toward({ parts: [part], by: "auto" });
-    const last = standing.parts.at(-1);
     const parts =
       changing !== undefined
         ? standing.parts.flatMap((each, i) => (i === changing ? changed(each, part) : [each]))
-        : joining && last
-          ? [...standing.parts.slice(0, -1), call(is("or"), ...eitherOf(last), part)]
-          : [...standing.parts, part];
+        : [...standing.parts, part];
     return toward({ ...standing, parts });
   };
 
-  // What a part joined as either already gives as either, so Or stays one.
-  const eitherOf = (part: Expression): Argument[] =>
-    "call" in part && part.call.$ref === is("or").id ? (part.with ?? []) : [part];
-
   // What the part being chosen narrows: where one stands, but the part it
-  // joins or takes the place of; from a holon, everything.
+  // takes the place of; from a holon, everything.
   const base = (): Expression => {
     if (!standing) return call(is("everything"));
-    const leaving = changing ?? (joining ? standing.parts.length - 1 : undefined);
-    return together(programs, { parts: standing.parts.filter((_, i) => i !== leaving) });
+    return together(programs, { parts: standing.parts.filter((_, i) => i !== changing) });
   };
 
   // The kind of argument the program being built takes next.
@@ -288,10 +280,11 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
 
   // The bricks: every program the field holds, glass's own first, as the
   // field orders them. At the top, the parts stand side by side, which is
-  // And, no part at all is Everything, Or joins the next part to the last,
-  // Group by groups what is in view, and Open goes to a holon; within a
-  // brick, And, Or and Everything are programs like any other.
-  const unoffered = new Set(["everything", "and", "or"]);
+  // And, and no part at all is Everything; Or is built as any brick is, of
+  // the sets it is given; Group by groups what is in view, and Open goes to
+  // a holon. Within a brick, And and Everything are programs like any
+  // other.
+  const unoffered = new Set(["everything", "and"]);
   const brick = (program: Called): Found => {
     const says = String(program.title);
     if (program.takes.length === 0) return offered(call(program), says, "a set of its own");
@@ -304,15 +297,6 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     );
     return [
       ...own.map(brick),
-      ...(!within && standing?.parts.length
-        ? [
-            {
-              label: "Or",
-              meta: "the next part, or the last one",
-              step: () => ((joining = true), said(), again()),
-            },
-          ]
-        : []),
       ...(!within
         ? [
             {
@@ -369,10 +353,10 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     const named = bricks()
       .filter(({ label }) => fits(text, label))
       .sort((a, b) => Number(begins(text, b.label)) - Number(begins(text, a.label)));
-    return [
-      ...(enough ? [settledRow()] : []),
-      ...(text.trim() ? [...named, ...values] : [...values, ...named]),
-    ];
+    // Done, where enough sets are given, first while nothing is typed, else
+    // after what the words find.
+    const done = enough ? [settledRow()] : [];
+    return text.trim() ? [...named, ...values, ...done] : [...done, ...values, ...named];
   };
   // Enough sets given: the program as it stands.
   const settledRow = (): Found => {
@@ -390,6 +374,12 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
   // Where one stands: each part a chip, its field and value, pressed to
   // change it or let go; a holon, by its types, each a way to its kind, and
   // its title, let go for everything; a list, by how many.
+  // Laid where something was pressed, the search changes nothing of the
+  // place it was given, for the place is drawn, not held: its parts are
+  // said, not changed or let go, and what is built from them is looked at
+  // instead, from here.
+  const letGo = (lead: Lead) => (settings.pressed ? undefined : lead);
+  const changeBy = (change: (() => void) | undefined) => (settings.pressed ? undefined : change);
   const chips = standing
     ? [
         ...(await Promise.all(
@@ -399,13 +389,13 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
             return chip(
               field,
               value,
-              toward({ ...standing, parts: standing.parts.filter((_, j) => j !== i) }),
-              program?.takes.length ? () => take(program, sets(program, part), i) : undefined,
+              letGo(toward({ ...standing, parts: standing.parts.filter((_, j) => j !== i) })),
+              changeBy(program?.takes.length ? () => take(program, sets(program, part), i) : undefined),
             );
           }),
         )),
         ...(standing.by
-          ? [chip("Group by", standing.by, toward({ parts: standing.parts }), regroup, "by")]
+          ? [chip("Group by", standing.by, letGo(toward({ parts: standing.parts })), changeBy(regroup), "by")]
           : []),
       ]
     : one
@@ -415,9 +405,15 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
               place(await titled(type), toward({ parts: [call(is("type"), { $ref: type })], by: "auto" })),
             ),
           )),
-          chip("", String(one.body.title ?? one.id), toward({ parts: [], by: "auto" })),
+          chip("", String(one.body.title ?? one.id), letGo(toward({ parts: [], by: "auto" }))),
         ]
-      : [chip("", ids.length === 1 ? "1 holon" : `${ids.length} holons`, toward({ parts: [], by: "auto" }))];
+      : [
+          chip(
+            "",
+            ids.length === 1 ? "1 holon" : `${ids.length} holons`,
+            letGo(toward({ parts: [], by: "auto" })),
+          ),
+        ];
 
   const favorites = ((given.offered.favorites ?? []) as Ref[]).map(({ $ref }) => $ref);
 
@@ -546,6 +542,7 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
   const element = (
     <div class={settings.pressed ? "search pressed" : "search"}>
       <div class="search-field">
+        {settings.pressed && standing && <span class="part-field">From here</span>}
         {chips}
         {pending}
         {input}
@@ -562,14 +559,14 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     axis: "choose what to group by",
   };
   const said = () => {
-    pending.textContent = [joining ? "Or" : "", ...frames.map(({ program }) => program.title)]
-      .filter(Boolean)
-      .join(" ▸ ");
+    pending.textContent = frames.map(({ program }) => program.title).join(" ▸ ");
     pending.hidden = !pending.textContent;
     const frame = frames.at(-1);
     const kind = needs();
     input.placeholder = !frame
-      ? "Add a part: Type, Children of, Text, Not, Group by… or Open a holon"
+      ? settings.pressed && standing
+        ? "Look from here: Type, Children of, Text, Not…"
+        : "Add a part: Type, Children of, Text, Not, Group by… or Open a holon"
       : kind === "set"
         ? frame.program.native === "type"
           ? "choose a type, or build it of a brick"
@@ -637,7 +634,6 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     input.value = "";
     if (change !== undefined) {
       frames = [];
-      joining = false;
       changing = change;
     }
     frames = [...frames, { program, given }];
@@ -648,19 +644,30 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
   // Grouping what is in view anew, whatever was being built let go.
   function regroup() {
     frames = [];
-    joining = false;
     changing = undefined;
     take(is("group"), [base()]);
   }
-  // Letting go of the program taken last, else of Or, else of the change.
+  // Letting go of the program taken last, and of the change with the last.
   const back = () => {
-    if (frames.length) frames = frames.slice(0, -1);
-    else joining = false;
+    frames = frames.slice(0, -1);
     if (!frames.length) changing = undefined;
     said();
     again();
   };
 
+  // A press that leads somewhere ends what was being built, whether or not
+  // the place it leads to is new.
+  element.addEventListener("click", (event) => {
+    const at = (event.target as Element).closest(
+      "[data-expression], [data-location], [data-offer], [data-keep]",
+    );
+    if (!at || !element.contains(at)) return;
+    frames = [];
+    changing = undefined;
+    input.value = "";
+    said();
+    again();
+  });
   input.addEventListener("input", again);
   input.addEventListener("keydown", (event) => {
     if (event.key === "ArrowDown") return (event.preventDefault(), mark(active + 1));
@@ -673,7 +680,7 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     // Backspace lets go of what was taken, as a word is let go, else of the
     // last part; the grouping is let go of by its own chip.
     if (event.key === "Backspace" && input.value === "") {
-      if (frames.length || joining) return (event.preventDefault(), back());
+      if (frames.length) return (event.preventDefault(), back());
       [...element.querySelectorAll<HTMLElement>(".part:not(.by) > .let-go")].at(-1)?.click();
     }
     // Escape lets go of what was typed, then of what was taken, then of the
@@ -681,7 +688,7 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     if (event.key === "Escape") {
       event.preventDefault();
       if (input.value) return ((input.value = ""), again());
-      if (frames.length || joining) return back();
+      if (frames.length) return back();
       input.blur();
     }
   });
@@ -702,8 +709,8 @@ function press(lead: Lead, ...children: unknown[]) {
 }
 
 // A part of where one stands: its field and value, pressed to change it
-// where it can be, and let go with its ×.
-function chip(field: string, value: string, without: Lead, change?: () => void, kind = "") {
+// where it can be, and let go with its × where it can be.
+function chip(field: string, value: string, without?: Lead, change?: () => void, kind = "") {
   const label = [field, value].filter(Boolean).join(": ");
   return (
     <span class={kind ? `part ${kind}` : "part"}>
@@ -711,9 +718,11 @@ function chip(field: string, value: string, without: Lead, change?: () => void, 
         {field && <span class="part-field">{value ? `${field}:` : field}</span>}
         {value && <span class="part-value">{value}</span>}
       </button>
-      <button type="button" class="let-go" aria-label={`Let go of ${label}`} {...attributes(without)}>
-        ×
-      </button>
+      {without && (
+        <button type="button" class="let-go" aria-label={`Let go of ${label}`} {...attributes(without)}>
+          ×
+        </button>
+      )}
     </span>
   );
 }

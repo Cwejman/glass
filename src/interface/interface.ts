@@ -121,9 +121,11 @@ export async function mount(engine: Connection, root: HTMLElement) {
       }),
   );
 
-  // The browser's back and forward walk the root's versions: the root as it
-  // stood at a commit of the home is written again, so history only ever
-  // grows. Before the reader's first move it stood as the entry.
+  // The browser's back and forward walk the root's versions: where the root
+  // looked as it stood at a commit of the home is written again, so history
+  // only ever grows. Before the reader's first move it stood as the entry.
+  // What it offers is the reader's now, not as it was, so walking back
+  // never takes back a favorite or a setting.
   addEventListener(
     "popstate",
     (event: PopStateEvent) =>
@@ -133,7 +135,15 @@ export async function mount(engine: Connection, root: HTMLElement) {
         const now = await engine.holon(id);
         const then = (commit && (await engine.holon(id, commit))) || (await engine.holon(entry));
         if (!now || !then || now.store !== "home") return;
-        const { from: _, ...body } = then.body;
+        const { argument, gathers } = then.body;
+        const component = then.body.component ?? now.body.component;
+        const { from: _, argument: __, gathers: ___, component: ____, ...kept } = now.body;
+        const body = {
+          ...kept,
+          ...(argument ? { argument } : {}),
+          ...(gathers ? { gathers } : {}),
+          ...(component ? { component } : {}),
+        };
         await engine.commit({ holons: [{ id, instance: now.instance, body }] });
       }),
   );

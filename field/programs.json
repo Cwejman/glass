@@ -17,8 +17,8 @@
   { "native": "store", "title": "Store", "says": "What the store given holds.", "takes": ["store"] },
   { "native": "named", "title": "Has a name", "says": "What a store gives a name." },
   { "native": "types", "title": "Is a type", "says": "Every type." },
-  { "native": "and", "title": "And", "says": "What every set given holds.", "takes": ["sets"] },
-  { "native": "or", "title": "Or", "says": "What any set given holds.", "takes": ["sets"] },
+  { "native": "and", "title": "And", "says": "What every set given holds.", "takes": ["set", "sets"] },
+  { "native": "or", "title": "Or", "says": "What any set given holds.", "takes": ["set", "sets"] },
   { "native": "not", "title": "Not", "says": "Everything but the set given.", "takes": ["set"] },
   {
     "native": "group",

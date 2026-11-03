@@ -6,10 +6,12 @@ import type { Expression } from "../../src/engine/expression.ts";
 import type { MountBody, Ref } from "./bodies.ts";
 import { h } from "./jsx.ts";
 import { overlay } from "./menu.ts";
-import { call, native, programsIn } from "./parts.ts";
+import { call, native, programsIn, titleOf } from "./parts.ts";
 
 // A mount: a component and what it gives it, holons or a way of looking
 // held in the mount itself, drawn in full, offered what the mount offers.
+// A mount found within what another draws is shown, not run, so a view
+// never opens a second view inside itself.
 // A mount that may be written is where what one looks at can change: a
 // press anywhere inside it rises to it with where it leads, the innermost
 // place it passed, a holon or a way of looking, maybe drawn by a component
@@ -42,21 +44,66 @@ export default async function draw(given: Given<MountBody>, space: Space) {
       </div>
     );
 
+  // A mount within a view is shown, not run: what it is called, the
+  // component it calls, and what it gives, a way of looking pressed to look
+  // through it, or the holons it gives, each a face.
+  if (given.offered.within) {
+    const programs = await programsIn({
+      name: () => space.read({ name: "program" }),
+      instances: (type) => space.read({ instances: type }),
+      holon: (id) => space.holon(id),
+    });
+    const titled = async (id: Id) => String((await space.holon(id))?.body.title ?? id);
+    const calls = component ? await titled(component.$ref) : "the component found for what it gives";
+    return (
+      <article class="place mount-shown">
+        <h1>{title ?? "A mount"}</h1>
+        <p class="meta">A mount, drawn by {calls}</p>
+        {gathers ? (
+          <button
+            type="button"
+            class="lead"
+            data-expression={JSON.stringify(gathers)}
+            {...(component ? { "data-calls": component.$ref } : {})}
+          >
+            {await titleOf(programs, gathers, titled)}
+          </button>
+        ) : (
+          space.open(giving, { offer: { kind: "face" } })
+        )}
+      </article>
+    );
+  }
+
   // What it offers, over what the entry offers, so a root made before the
   // entry offered something is offered it too.
   const entry = await space.read({ name: "entry" });
   const entered = entry && entry !== mount.id ? await space.holon<MountBody>(entry) : null;
   const offerOf = (body?: MountBody) => (body?.offer ?? {}) as Record<string, Json>;
   const offer = { ...offerOf(entered?.body), ...offerOf(mount.body) };
-  const offering = { ...offer, kind: "full" as const };
+  // What it draws stands within it, so a mount found there is shown.
+  const offering = { ...offer, kind: "full" as const, within: true };
 
-  // What it gave and is no longer in the field gives way to what the entry
-  // gives, so a root is never left with nothing to stand in.
-  const gone = !gathers && giving.length === 1 && !(await space.holon(giving[0]!));
-  const looking = gathers ?? (gone ? entered?.body.gathers : undefined);
-  const where = looking ? { gather: looking } : giving.length === 1 ? giving[0]! : giving;
+  // What it gave and is no longer in the field, or the mount itself, gives
+  // way to what the entry gives, so a root is never left with nothing to
+  // stand in, nor stands in itself.
+  const gone =
+    !gathers && giving.length === 1 && (giving[0] === mount.id || !(await space.holon(giving[0]!)));
+  // An expression that cannot be read gives way too, so a root is never
+  // left with nothing but what is wrong with it.
+  const broken =
+    !!gathers &&
+    (await space.read({ gather: gathers }).then(
+      () => false,
+      () => true,
+    ));
+  const fallback = gone || broken ? entered?.body : undefined;
+  const looking = fallback ? fallback.gathers : gathers;
+  const ids = fallback?.argument?.map(({ $ref }) => $ref) ?? giving;
+  const where = looking ? { gather: looking } : ids.length === 1 ? ids[0]! : ids;
+  const calling = fallback ? fallback.component : component;
 
-  const drawn = space.open(where, { offer: offering, ...(component ? { component: component.$ref } : {}) });
+  const drawn = space.open(where, { offer: offering, ...(calling ? { component: calling.$ref } : {}) });
   if (!given.may.write) return <div class="mount">{drawn}</div>;
 
   // A mount that may be written may move anywhere in the field, so it
@@ -94,8 +141,11 @@ export default async function draw(given: Given<MountBody>, space: Space) {
     } as never);
   };
   const here = (ids: Id[]) => !looking && JSON.stringify(ids) === JSON.stringify(giving);
+  // A mount does not move to itself: it is already there.
   const give = (ids: Id[], by?: Id) =>
-    here(ids) && !by ? undefined : write({ argument: ids.map(($ref) => ({ $ref })) }, by);
+    (here(ids) && !by) || (ids.length === 1 && ids[0] === mount.id)
+      ? undefined
+      : write({ argument: ids.map(($ref) => ({ $ref })) }, by);
   const look = (next: Expression, by?: Id) =>
     looking && !by && canonical(next) === canonical(looking) ? undefined : write({ gathers: next }, by);
 
