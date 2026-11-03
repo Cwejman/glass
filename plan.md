@@ -84,6 +84,8 @@ What waits, roughly in the order it stands on what comes before it. None of it i
 
 Questions the first mark meets, and those beyond it, each to be settled when the work reaches it.
 
+- **The material.** How things look is held in the field as a holon of its own, a style sheet of named colours, type and spacing that every component draws with, so the chassis holds no style. It was built on 2026-11-03, named from the author's word for what one builds in; whether this decoupling serves, and whether the word should mean that or something wider, he does not know yet.
+
 - **A holon's identity.** The session leans to a sortable random id, so an id also carries when the holon was born.
 
 - **How a type's contract is written**, and how the engine checks a body against it at commit; that a holon's types are stored as its instance, and that each field is said in prose beside its shape, is settled.
