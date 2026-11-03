@@ -16,7 +16,8 @@ const suffix = (id: Id, length: number) => (length === 0 ? "" : id.slice(-length
 // pass one holon off as another.
 async function node(objects: Objects, name: Name, path: string): Promise<Leaf | Branch> {
   const found = await objects.get<Leaf | Branch>(name);
-  if (found.kind !== "index-leaf" && found.kind !== "index-branch") throw new Error(`${name} is not a node of an index`);
+  if (found.kind !== "index-leaf" && found.kind !== "index-branch")
+    throw new Error(`${name} is not a node of an index`);
   if (found.depth !== path.length) throw new Error(`${name} stands at depth ${path.length}, not ${found.depth}`);
   if (found.kind === "index-leaf")
     for (const id of Object.keys(found.versions))
@@ -24,17 +25,12 @@ async function node(objects: Objects, name: Name, path: string): Promise<Leaf | 
   return found;
 }
 
-export async function lookup(objects: Objects, root: Name, id: Id): Promise<Name | undefined> {
-  let path = "";
-  let at = await node(objects, root, path);
-  while (at.kind === "index-branch") {
-    const char = charAt(id, at.depth);
-    const next = at.branches[char];
-    if (!next) return undefined;
-    path = char + path;
-    at = await node(objects, next, path);
-  }
-  return at.versions[id];
+export async function lookup(objects: Objects, at: Name, id: Id, path = ""): Promise<Name | undefined> {
+  const here = await node(objects, at, path);
+  if (here.kind === "index-leaf") return here.versions[id];
+  const char = charAt(id, here.depth);
+  const next = here.branches[char];
+  return next && lookup(objects, next, id, char + path);
 }
 
 export async function* entries(objects: Objects, root: Name, path = ""): AsyncGenerator<[Id, Name]> {
@@ -45,14 +41,27 @@ export async function* entries(objects: Objects, root: Name, path = ""): AsyncGe
 
 // Sets entries in the tree under `at`, writing only the nodes on their way
 // and sharing every other with the tree before.
-export async function grow(objects: Objects, at: Name | undefined, updates: ReadonlyMap<Id, Name>, depth = 0): Promise<Name> {
+export async function grow(
+  objects: Objects,
+  at: Name | undefined,
+  updates: ReadonlyMap<Id, Name>,
+  depth = 0,
+): Promise<Name> {
   const here: Leaf | Branch = at ? await objects.get<Leaf | Branch>(at) : { kind: "index-leaf", depth, versions: {} };
   if (here.kind === "index-leaf") {
     const versions = { ...here.versions, ...Object.fromEntries(updates) };
     if (Object.keys(versions).length <= leafSize) return objects.put({ kind: "index-leaf", depth, versions });
-    return objects.put({ kind: "index-branch", depth, branches: await branchesOf(objects, undefined, Object.entries(versions) as [Id, Name][], depth) });
+    return objects.put({
+      kind: "index-branch",
+      depth,
+      branches: await branchesOf(objects, undefined, Object.entries(versions) as [Id, Name][], depth),
+    });
   }
-  return objects.put({ kind: "index-branch", depth, branches: await branchesOf(objects, here.branches, [...updates], depth) });
+  return objects.put({
+    kind: "index-branch",
+    depth,
+    branches: await branchesOf(objects, here.branches, [...updates], depth),
+  });
 }
 
 // A tree grown anew from all it holds. Taking entries out is this, which
@@ -60,10 +69,18 @@ export async function grow(objects: Objects, at: Name | undefined, updates: Read
 // would have been had they never been there.
 export const plant = (objects: Objects, all: ReadonlyMap<Id, Name>) => grow(objects, undefined, all);
 
-async function branchesOf(objects: Objects, before: Branch["branches"] | undefined, entries: [Id, Name][], depth: number) {
-  const groups = new Map<string, Map<Id, Name>>();
-  for (const [id, name] of entries) groups.set(charAt(id, depth), (groups.get(charAt(id, depth)) ?? new Map()).set(id, name));
-  const branches = { ...before };
-  for (const [char, group] of groups) branches[char] = await grow(objects, branches[char], group, depth + 1);
-  return branches;
+// The branches of a node, each grown from the entries whose next character
+// leads into it, the others kept as they were.
+async function branchesOf(
+  objects: Objects,
+  before: Branch["branches"] | undefined,
+  entries: [Id, Name][],
+  depth: number,
+) {
+  const grown = await Promise.all(
+    [...Map.groupBy(entries, ([id]) => charAt(id, depth))].map(
+      async ([char, group]) => [char, await grow(objects, before?.[char], new Map(group), depth + 1)] as const,
+    ),
+  );
+  return { ...before, ...Object.fromEntries(grown) };
 }

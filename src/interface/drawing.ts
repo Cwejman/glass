@@ -38,7 +38,14 @@ export function match(components: readonly HolonRead[], holon: HolonRead, draws:
 }
 
 export interface Drawing {
-  draw(host: HTMLElement, id: Id, draws: string, given: Json, place: (id: Id) => Promise<void>, called?: Id): Promise<void>;
+  draw(
+    host: HTMLElement,
+    id: Id,
+    draws: string,
+    given: Json,
+    place: (id: Id) => Promise<void>,
+    called?: Id,
+  ): Promise<void>;
   close(host: HTMLElement): void;
 }
 
@@ -81,7 +88,14 @@ export function drawing(engine: Connection, components: () => readonly HolonRead
     release(held);
   }
 
-  async function draw(host: HTMLElement, id: Id, draws: string, given: Json, place: (id: Id) => Promise<void>, called?: Id) {
+  async function draw(
+    host: HTMLElement,
+    id: Id,
+    draws: string,
+    given: Json,
+    place: (id: Id) => Promise<void>,
+    called?: Id,
+  ) {
     close(host);
     const held: Hosted = { closed: false, drawing: 0, children: [], reads: [] };
     hosted.set(host, held);
@@ -126,7 +140,8 @@ export function drawing(engine: Connection, components: () => readonly HolonRead
         host.dataset.component = component.id;
         host.replaceChildren(drawn);
       } catch (error) {
-        if (current()) host.replaceChildren(note(`${component.body.title as string} could not draw ${holon.id}: ${String(error)}`));
+        if (current())
+          host.replaceChildren(note(`${component.body.title as string} could not draw ${holon.id}: ${String(error)}`));
       }
     };
 

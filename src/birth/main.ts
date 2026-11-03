@@ -6,7 +6,7 @@ import type { Body } from "../store/objects.ts";
 import { openStore } from "../store/store.ts";
 import { startEngine } from "../engine/engine.ts";
 import { components, entry, materials, types, wiki, type Born, type ComponentFile, type TypeFile } from "./holons.ts";
-import { linkTargets, parseFile, resolve, walk, type WikiFile } from "./wiki.ts";
+import { flatten, linkTargets, parseFile, resolve, type WikiFile } from "./wiki.ts";
 
 // Births glass's field into its store as one commit: the types, the
 // components built from their code, the entry, and this wiki. A holon keeps
@@ -43,7 +43,10 @@ const typeFiles: TypeFile[] = await Promise.all(
 );
 const bornTypes = types(typeFiles, idOf, "field/types/type.json");
 
-const declared = JSON.parse(await readFile(join(repo, "field/components.json"), "utf8")) as (Omit<ComponentFile, "from" | "code" | "source"> & {
+const declared = JSON.parse(await readFile(join(repo, "field/components.json"), "utf8")) as (Omit<
+  ComponentFile,
+  "from" | "code" | "source"
+> & {
   file: string;
 })[];
 const componentFiles: ComponentFile[] = await Promise.all(
@@ -51,12 +54,21 @@ const componentFiles: ComponentFile[] = await Promise.all(
     const from = `field/components/${file}`;
     const built = await Bun.build({ entrypoints: [join(repo, from)], format: "esm", target: "browser" });
     if (!built.success) throw new AggregateError(built.logs, `building ${from}`);
-    return { ...component, from, code: await built.outputs[0]!.text(), source: await readFile(join(repo, from), "utf8") };
+    return {
+      ...component,
+      from,
+      code: await built.outputs[0]!.text(),
+      source: await readFile(join(repo, from), "utf8"),
+    };
   }),
 );
 const bornComponents = components(componentFiles, idOf, bornTypes.names);
 
-const declaredMaterials = JSON.parse(await readFile(join(repo, "field/materials.json"), "utf8")) as { file: string; title: string; says: string }[];
+const declaredMaterials = JSON.parse(await readFile(join(repo, "field/materials.json"), "utf8")) as {
+  file: string;
+  title: string;
+  says: string;
+}[];
 const bornMaterials = materials(
   await Promise.all(
     declaredMaterials.map(async ({ file, title, says }) => ({
@@ -87,12 +99,14 @@ const commit = await engine.commit({ holons, names, gone });
 const now = commit ?? head;
 if (now) {
   await writeBundle(store, storeDir, now);
-  for (const file of await readdir(join(storeDir, "bundles"))) if (file !== `${now}.json`) await rm(join(storeDir, "bundles", file));
+  for (const file of await readdir(join(storeDir, "bundles")))
+    if (file !== `${now}.json`) await rm(join(storeDir, "bundles", file));
 }
 
 let changed = 0;
 if (commit)
-  for (const { id } of holons) if ((await store.version(id, commit))?.[0] !== (head ? await store.version(id, head) : undefined)?.[0]) changed++;
+  for (const { id } of holons)
+    if ((await store.version(id, commit))?.[0] !== (head ? await store.version(id, head) : undefined)?.[0]) changed++;
 console.log(
   commit
     ? `born ${commit}: ${holons.length} holons from ${files.size} files, ${changed} new or changed, ${gone.length} gone`
@@ -108,12 +122,10 @@ async function readWiki(entryPath: string) {
     if (files.has(path)) continue;
     const file = parseFile(path, await readFile(join(repo, path), "utf8"));
     files.set(path, file);
-    walk(file.root, (section) => {
-      for (const target of linkTargets(section.prose)) {
-        const to = resolve(path, target);
-        if (to?.path.endsWith(".md") && !files.has(to.path)) waiting.push(to.path);
-      }
-    });
+    const linked = flatten(file.root).flatMap((section) =>
+      linkTargets(section.prose).map((target) => resolve(path, target)?.path),
+    );
+    waiting.push(...linked.filter((to): to is string => !!to?.endsWith(".md") && !files.has(to)));
   }
   return files;
 }

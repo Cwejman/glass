@@ -14,9 +14,7 @@ export const style = `
 `;
 
 export default async function draw({ holon, draws }: Given, space: Space) {
-  const types = await Promise.all(
-    holon.instance.map(async (id: Id) => (await space.holon(id))?.body.title ?? id),
-  );
+  const types = await Promise.all(holon.instance.map(async (id: Id) => (await space.holon(id))?.body.title ?? id));
   const title = String(holon.body.title ?? holon.id);
   const instance = element("div", "instance", `${types.join(", ")} · ${holon.store}`);
 

@@ -18,7 +18,7 @@ export function canonical(value: unknown): string {
       return JSON.stringify(value);
     case "object": {
       if (Array.isArray(value)) {
-        for (let i = 0; i < value.length; i++) if (!(i in value)) throw new Error("an array with a hole");
+        if (Array.from(value.keys()).some((i) => !(i in value))) throw new Error("an array with a hole");
         return `[${value.map(canonical).join(",")}]`;
       }
       const proto = Object.getPrototypeOf(value);

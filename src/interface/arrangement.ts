@@ -28,7 +28,10 @@ export async function place(engine: Connection, mount: number, id: Id): Promise<
   const layout = await arrangement(engine);
   const mounts = mountsOf(layout);
   if (mounts[mount]?.reads.$ref === id) return false;
-  await arrange(engine, layout, { ...layout.body, mounts: mounts.map((each, i) => (i === mount ? { ...each, reads: { $ref: id } } : each)) as never });
+  await arrange(engine, layout, {
+    ...layout.body,
+    mounts: mounts.map((each, i) => (i === mount ? { ...each, reads: { $ref: id } } : each)) as never,
+  });
   return true;
 }
 
@@ -49,5 +52,8 @@ async function arrange(engine: Connection, layout: HolonRead, body: Body) {
     return;
   }
   const id = newId();
-  await engine.commit({ holons: [{ id, instance: layout.instance, body: { ...arranged, title: "Arrangement" } }], names: { arrangement: id } });
+  await engine.commit({
+    holons: [{ id, instance: layout.instance, body: { ...arranged, title: "Arrangement" } }],
+    names: { arrangement: id },
+  });
 }

@@ -72,20 +72,24 @@ export async function mount(engine: Connection, root: HTMLElement) {
 
   const componentType = (await engine.read({ name: "component" })) as Id | null;
   if (!componentType) throw new Error("the field holds no component type");
-  const known = await engine.subscribe({ instances: componentType }, (ids) =>
-    void inTurn(async () => {
-      await know(ids as Id[]);
-      await draw();
-    }),
+  const known = await engine.subscribe(
+    { instances: componentType },
+    (ids) =>
+      void inTurn(async () => {
+        await know(ids as Id[]);
+        await draw();
+      }),
   );
   await know(known.value as Id[]);
   await lay(engine);
 
-  addEventListener("popstate", (event: PopStateEvent) =>
-    void inTurn(async () => {
-      await walk(engine, (event.state as { commit?: Name | null } | null)?.commit ?? null);
-      await draw();
-    }),
+  addEventListener(
+    "popstate",
+    (event: PopStateEvent) =>
+      void inTurn(async () => {
+        await walk(engine, (event.state as { commit?: Name | null } | null)?.commit ?? null);
+        await draw();
+      }),
   );
   if (!history.state) history.replaceState({ commit: await engine.read({ head: "home" }) }, "");
   await inTurn(draw);

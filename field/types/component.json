@@ -4,10 +4,20 @@
   "fields": {
     "title": { "says": "What the component is called.", "shape": "string" },
     "says": { "says": "What it draws, in a sentence.", "shape": "string" },
-    "takes": { "says": "The types whose instances it draws; none means it draws any holon, when nothing closer matches.", "shape": { "list": "ref" } },
-    "draws": { "says": "The ways it draws them: whole, as a place to read, or face, as the first understanding seen from above.", "shape": { "list": "string" } },
+    "takes": {
+      "says": "The types whose instances it draws; none means it draws any holon, when nothing closer matches.",
+      "shape": { "list": "ref" }
+    },
+    "draws": {
+      "says": "The ways it draws them: whole, as a place to read, or face, as the first understanding seen from above.",
+      "shape": { "list": "string" }
+    },
     "code": { "says": "The module the interface runs, as JavaScript.", "shape": "string" },
     "source": { "says": "The code as it was written, before it was built.", "shape": "string", "optional": true },
-    "from": { "says": "Where the holon was born from, as a path in the files it arrived from.", "shape": "string", "optional": true }
+    "from": {
+      "says": "Where the holon was born from, as a path in the files it arrived from.",
+      "shape": "string",
+      "optional": true
+    }
   }
 }

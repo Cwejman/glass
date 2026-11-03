@@ -3,9 +3,24 @@
   "says": "One piece of prose giving one understanding, under the rule: its face is its title and first paragraph, and what stands beneath it, its parts, are briefs in the order each stands on those before.",
   "fields": {
     "title": { "says": "The heading: the understanding in a few words.", "shape": "string" },
-    "prose": { "says": "The understanding itself, in markdown. A link standing alone in a paragraph places a part there; a link in a sentence only mentions.", "shape": "markdown" },
-    "parts": { "says": "The briefs beneath, in order, each standing on those before it.", "shape": { "list": "ref" }, "optional": true },
-    "status": { "says": "Where the brief stands, when it is not yet in force, as proposed.", "shape": "string", "optional": true },
-    "from": { "says": "Where the holon was born from, as a path in the files it arrived from.", "shape": "string", "optional": true }
+    "prose": {
+      "says": "The understanding itself, in markdown. A link standing alone in a paragraph places a part there; a link in a sentence only mentions.",
+      "shape": "markdown"
+    },
+    "parts": {
+      "says": "The briefs beneath, in order, each standing on those before it.",
+      "shape": { "list": "ref" },
+      "optional": true
+    },
+    "status": {
+      "says": "Where the brief stands, when it is not yet in force, as proposed.",
+      "shape": "string",
+      "optional": true
+    },
+    "from": {
+      "says": "Where the holon was born from, as a path in the files it arrived from.",
+      "shape": "string",
+      "optional": true
+    }
   }
 }

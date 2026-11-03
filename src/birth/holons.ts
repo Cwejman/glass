@@ -2,7 +2,7 @@ import type { Json } from "../store/canonical.ts";
 import type { Id } from "../store/id.ts";
 import type { Body } from "../store/objects.ts";
 import type { Holon } from "../store/store.ts";
-import { resolve, rewriteLinks, walk, type WikiFile } from "./wiki.ts";
+import { flatten, resolve, rewriteLinks, type Section, type WikiFile } from "./wiki.ts";
 
 // What glass's field is, as holons, made from what its files hold. Each
 // function takes what was read and gives holons and the names they are
@@ -54,40 +54,60 @@ export function components(files: ComponentFile[], idOf: IdOf, typeOf: Record<st
 }
 
 // The materials everything drawn is made of, each a style sheet.
-export function materials(files: { from: string; title: string; says: string; css: string }[], idOf: IdOf, typeOf: Record<string, Id>): Born {
+export function materials(
+  files: { from: string; title: string; says: string; css: string }[],
+  idOf: IdOf,
+  typeOf: Record<string, Id>,
+): Born {
   return {
-    holons: files.map(({ from, title, says, css }) => ({ id: idOf(from), instance: [typeOf.material!], body: { title, says, css, from } })),
+    holons: files.map(({ from, title, says, css }) => ({
+      id: idOf(from),
+      instance: [typeOf.material!],
+      body: { title, says, css, from },
+    })),
     names: {},
   };
 }
 
 // The wiki: each file a brief or a record, each heading a brief beneath it,
 // every link to a file or heading in the wiki made a reference to its holon.
-export function wiki(files: ReadonlyMap<string, WikiFile>, entry: string, idOf: IdOf, typeOf: Record<string, Id>): Born {
-  const idAt = (file: WikiFile, slug?: string) => {
-    const section = slug ? file.slugs.get(slug) : file.root;
-    return section && idOf(section === file.root ? file.path : `${file.path}#${section.slug}`);
+export function wiki(
+  files: ReadonlyMap<string, WikiFile>,
+  entry: string,
+  idOf: IdOf,
+  typeOf: Record<string, Id>,
+): Born {
+  const fromOf = (file: WikiFile, section: Section) =>
+    section === file.root ? file.path : `${file.path}#${section.slug}`;
+
+  const idAt = (path: string, anchor?: string) => {
+    const file = files.get(path);
+    const section = file && (anchor ? file.slugs.get(anchor) : file.root);
+    return file && section && idOf(fromOf(file, section));
   };
-  const holons: Holon[] = [];
+
   const nowhere: string[] = [];
-  for (const file of files.values())
-    walk(file.root, (section) => {
-      const prose = rewriteLinks(section.prose, (target) => {
-        const to = resolve(file.path, target);
-        if (!to || !to.path.endsWith(".md")) return undefined;
-        const into = files.get(to.path);
-        const id = into && idAt(into, to.anchor);
-        if (!id) nowhere.push(`${file.path}: ${target}`);
-        return id ? `ref:${id}` : undefined;
-      });
-      const body: Body = { title: section.title, prose };
-      if (section.parts.length) body.parts = section.parts.map((part) => ({ $ref: idAt(file, part.slug)! }));
-      if (section === file.root && file.status) body.status = file.status;
-      body.from = section === file.root ? file.path : `${file.path}#${section.slug}`;
-      holons.push({ id: idAt(file, section === file.root ? undefined : section.slug)!, instance: [typeOf[file.kind]!], body });
+  const holonOf = (file: WikiFile, section: Section): Holon => {
+    const prose = rewriteLinks(section.prose, (target) => {
+      const to = resolve(file.path, target);
+      if (!to || !to.path.endsWith(".md")) return undefined;
+      const id = idAt(to.path, to.anchor);
+      if (!id) nowhere.push(`${file.path}: ${target}`);
+      return id && `ref:${id}`;
     });
+
+    const body: Body = { title: section.title, prose };
+    if (section.parts.length) body.parts = section.parts.map((part) => ({ $ref: idOf(fromOf(file, part)) }));
+    if (section === file.root && file.status) body.status = file.status;
+    body.from = fromOf(file, section);
+
+    return { id: idOf(fromOf(file, section)), instance: [typeOf[file.kind]!], body };
+  };
+
+  const holons = [...files.values()].flatMap((file) => flatten(file.root).map((section) => holonOf(file, section)));
   if (nowhere.length) throw new Error(`links that lead nowhere:\n  ${nowhere.join("\n  ")}`);
-  return { holons, names: { wiki: idAt(files.get(entry)!)! } };
+
+  return { holons, names: { wiki: idAt(entry)! } };
 }
 
 // The entry: the layout a client boots into, one mount of a component
@@ -99,7 +119,11 @@ export function entry(idOf: IdOf, typeOf: Record<string, Id>, component: Id, rea
       {
         id,
         instance: [typeOf.layout!],
-        body: { title: "Entry", mounts: [{ component: { $ref: component }, reads: { $ref: reads } }] as unknown as Json, from: "field/entry" },
+        body: {
+          title: "Entry",
+          mounts: [{ component: { $ref: component }, reads: { $ref: reads } }] as unknown as Json,
+          from: "field/entry",
+        },
       },
     ],
     names: { entry: id },

@@ -57,15 +57,18 @@ test("anchors are the ones GitHub gives", () => {
 });
 
 test("links outside code are found and rewritten; images and code are left", () => {
-  const prose = "See [a](a.md#x) and `[b](b.md)` and ![c](c.png) and [d [e]](d.md \"t\").\n```\n[f](f.md)\n```";
+  const prose = 'See [a](a.md#x) and `[b](b.md)` and ![c](c.png) and [d [e]](d.md "t").\n```\n[f](f.md)\n```';
   expect(linkTargets(prose)).toEqual(["a.md#x", "d.md"]);
   expect(rewriteLinks(prose, (target) => `ref:${target.length}`)).toBe(
-    "See [a](ref:6) and `[b](b.md)` and ![c](c.png) and [d [e]](ref:4 \"t\").\n```\n[f](f.md)\n```",
+    'See [a](ref:6) and `[b](b.md)` and ![c](c.png) and [d [e]](ref:4 "t").\n```\n[f](f.md)\n```',
   );
 });
 
 test("targets resolve against the file they stand in", () => {
-  expect(resolve("architecture/store.md", "../plan.md#3-what-is-open")).toEqual({ path: "plan.md", anchor: "3-what-is-open" });
+  expect(resolve("architecture/store.md", "../plan.md#3-what-is-open")).toEqual({
+    path: "plan.md",
+    anchor: "3-what-is-open",
+  });
   expect(resolve("said/README.md", "#x")).toEqual({ path: "said/README.md", anchor: "x" });
   expect(resolve("README.md", "https://example.com")).toBeUndefined();
   expect(resolve("history.md", "git:6ab1043")).toBeUndefined();

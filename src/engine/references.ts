@@ -27,19 +27,20 @@ export function isRef(value: unknown): value is { $ref: Id; "@"?: Name } {
 
 const proseLink = /\]\(ref:([0-9A-HJKMNP-TV-Z]{26})(?:@(sha256-[0-9a-f]{64}))?(?:\s+"[^"]*")?\)/g;
 
-export function references(body: Body): Reference[] {
-  const found: Reference[] = [];
-  const walk = (value: Json, key: string) => {
-    if (typeof value === "string") {
-      for (const match of value.matchAll(proseLink))
-        found.push({ id: match[1]!, key, ...(match[2] ? { pinned: match[2] as Name } : {}) });
-    } else if (Array.isArray(value)) {
-      for (const item of value) walk(item, key);
-    } else if (value !== null && typeof value === "object") {
-      if (isRef(value)) found.push({ id: value.$ref, key, ...(value["@"] ? { pinned: value["@"] } : {}) });
-      else for (const item of Object.values(value)) walk(item, key);
-    }
-  };
-  for (const [key, value] of Object.entries(body)) walk(value, key);
-  return found;
-}
+export const references = (body: Body): Reference[] =>
+  Object.entries(body).flatMap(([key, value]) => within(value, key));
+
+const within = (value: Json, key: string): Reference[] =>
+  typeof value === "string"
+    ? [...value.matchAll(proseLink)].map((match) => ({
+        id: match[1]!,
+        key,
+        ...(match[2] ? { pinned: match[2] as Name } : {}),
+      }))
+    : Array.isArray(value)
+      ? value.flatMap((item) => within(item, key))
+      : value !== null && typeof value === "object"
+        ? isRef(value)
+          ? [{ id: value.$ref, key, ...(value["@"] ? { pinned: value["@"] } : {}) }]
+          : Object.values(value).flatMap((item) => within(item, key))
+        : [];

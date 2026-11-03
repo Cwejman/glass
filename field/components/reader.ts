@@ -104,8 +104,10 @@ async function holderOf(holon: HolonRead, space: Space): Promise<Holder | undefi
   for (const { id, key } of (await space.read({ holders: holon.id })) as { id: Id; key: string }[]) {
     const whole = await space.holon(id);
     if (!whole) continue;
-    if (key === "parts") return { whole, place: ((whole.body.parts ?? []) as { $ref: Id }[]).findIndex((part) => part.$ref === holon.id) };
-    if (key === "prose" && markdown.lexer(String(whole.body.prose ?? "")).some((token) => placed(token) === holon.id)) return { whole };
+    if (key === "parts")
+      return { whole, place: ((whole.body.parts ?? []) as { $ref: Id }[]).findIndex((part) => part.$ref === holon.id) };
+    if (key === "prose" && markdown.lexer(String(whole.body.prose ?? "")).some((token) => placed(token) === holon.id))
+      return { whole };
   }
   return undefined;
 }
@@ -119,7 +121,10 @@ async function wayDown(holon: HolonRead, space: Space, numbers: (whole: HolonRea
   for (let at: Holder | undefined = { whole: holon }; at && !seen.has(at.whole.id); ) {
     seen.add(at.whole.id);
     const holder = await holderOf(at.whole, space);
-    up.push({ holon: at.whole, place: holder && holder.place !== undefined && numbers(holder.whole) ? holder.place : undefined });
+    up.push({
+      holon: at.whole,
+      place: holder && holder.place !== undefined && numbers(holder.whole) ? holder.place : undefined,
+    });
     at = holder;
   }
   return up.reverse().reduce<Step[]>((way, { holon, place }) => {

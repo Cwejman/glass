@@ -38,7 +38,8 @@ describe("the store vectors", () => {
       expect(await store.head()).toBe(step.ref as Name);
       const added = [...backend.objects.keys()].filter((name) => !before.has(name));
       expect(added.sort()).toEqual(Object.keys(step.objects).sort() as Name[]);
-      for (const [name, object] of Object.entries(step.objects)) expect(backend.objects.get(name as Name)).toBe(canonical(object));
+      for (const [name, object] of Object.entries(step.objects))
+        expect(backend.objects.get(name as Name)).toBe(canonical(object));
       before = new Set(backend.objects.keys());
     }
   });
@@ -81,7 +82,8 @@ describe("a store", () => {
     const once = openStore(memoryBackend());
     await once.write({ at: "t", holons: ids.map((id) => note(id, id)) });
     const inSteps = openStore(memoryBackend());
-    for (let i = 0; i < ids.length; i += 37) await inSteps.write({ at: "t", holons: ids.slice(i, i + 37).map((id) => note(id, id)) });
+    for (let i = 0; i < ids.length; i += 37)
+      await inSteps.write({ at: "t", holons: ids.slice(i, i + 37).map((id) => note(id, id)) });
     const holons = async (store: Store) => (await store.index((await store.head())!)).holons;
     expect(await holons(inSteps)).toBe(await holons(once));
   });
@@ -91,7 +93,10 @@ describe("a store", () => {
     const store = openStore(backend);
     const commit = (await store.write({ at: "t", holons: [note(T, "Note")] }))!;
     const [name] = (await store.version(T))!;
-    backend.objects.set(name, canonical({ kind: "version", id: T, prev: null, instance: [T], body: { title: "forged" } }));
+    backend.objects.set(
+      name,
+      canonical({ kind: "version", id: T, prev: null, instance: [T], body: { title: "forged" } }),
+    );
     await expect(openStore(backend).version(T, commit)).rejects.toThrow("does not hold what its name says");
   });
 
@@ -111,7 +116,11 @@ describe("a store as files", () => {
     const dir = await mkdtemp(join(tmpdir(), "glass-"));
     const store = openStore(fileBackend(dir));
     const T = newId();
-    const commit = (await store.write({ at: "t", names: { note: T }, holons: [{ id: T, instance: [T], body: { title: "Note" } }] }))!;
+    const commit = (await store.write({
+      at: "t",
+      names: { note: T },
+      holons: [{ id: T, instance: [T], body: { title: "Note" } }],
+    }))!;
     expect((await readFile(join(dir, "refs", "main"), "utf8")).trim()).toBe(commit);
     expect(await readFile(join(dir, "objects", path(commit)), "utf8")).toBe(canonical(await store.object(commit)));
 
@@ -155,14 +164,21 @@ describe("what a store refuses", () => {
     return name;
   };
   const forgeCommit = async (backend: MemoryBackend, holons: Name) =>
-    forge(backend, { kind: "commit", parent: null, at: "t", index: await forge(backend, { kind: "index", names: {}, holons }) });
+    forge(backend, {
+      kind: "commit",
+      parent: null,
+      at: "t",
+      index: await forge(backend, { kind: "index", names: {}, holons }),
+    });
 
   test("a leaf that passes one holon's version off as another's", async () => {
     const backend = await field();
     const honest = openStore(backend);
     const [bName] = (await honest.version(B))!;
     const leaf = await forge(backend, { kind: "index-leaf", depth: 0, versions: { [A]: bName } });
-    await expect(openStore(backend).version(A, await forgeCommit(backend, leaf))).rejects.toThrow(`is not a version of ${A}`);
+    await expect(openStore(backend).version(A, await forgeCommit(backend, leaf))).rejects.toThrow(
+      `is not a version of ${A}`,
+    );
   });
 
   test("a node that says it stands deeper than it does", async () => {
@@ -185,15 +201,25 @@ describe("what a store refuses", () => {
 
   test("an object with a key its kind does not have", async () => {
     const backend = await field();
-    const name = await forge(backend, { kind: "commit", parent: null, at: "t", index: (await openStore(backend).head())!, extra: 1 });
+    const name = await forge(backend, {
+      kind: "commit",
+      parent: null,
+      at: "t",
+      index: (await openStore(backend).head())!,
+      extra: 1,
+    });
     await expect(openStore(backend).object(name)).rejects.toThrow("not a well-formed commit");
   });
 
   test("a change that is not well formed is never written", async () => {
     const backend = memoryBackend();
     const store = openStore(backend);
-    await expect(store.write({ at: "t", holons: [{ id: "x", instance: [], body: {} }] })).rejects.toThrow("is not an id");
-    await expect(store.write({ at: "t", holons: [{ id: A, instance: [], body: [] as never }] })).rejects.toThrow("not a JSON object");
+    await expect(store.write({ at: "t", holons: [{ id: "x", instance: [], body: {} }] })).rejects.toThrow(
+      "is not an id",
+    );
+    await expect(store.write({ at: "t", holons: [{ id: A, instance: [], body: [] as never }] })).rejects.toThrow(
+      "not a JSON object",
+    );
     await expect(store.write({ at: "t", holons: [], names: { a: "x" } })).rejects.toThrow("must give an id");
     expect(backend.objects.size).toBe(0);
   });
@@ -213,7 +239,9 @@ describe("what a store refuses", () => {
     const change = JSON.parse(`{"at":"t","holons":[],"names":{"__proto__":"${T}"}}`);
     await store.write({ at: "t", holons: [{ id: T, instance: [T], body: {} }] });
     expect(await store.write(change)).toBeDefined();
-    expect(Object.getOwnPropertyDescriptor((await store.index((await store.head())!)).names, "__proto__")?.value).toBe(T);
+    expect(Object.getOwnPropertyDescriptor((await store.index((await store.head())!)).names, "__proto__")?.value).toBe(
+      T,
+    );
   });
 
   test("an array with a hole is not JSON", () => {

@@ -17,7 +17,10 @@ export async function idbBackend(name: string): Promise<Backend> {
     // An object is written once its transaction completes, so a ref never
     // names an object that might yet be lost.
     put: (object, text) =>
-      settled(db.transaction("objects", "readwrite"), (transaction) => void transaction.objectStore("objects").put(text, object)),
+      settled(
+        db.transaction("objects", "readwrite"),
+        (transaction) => void transaction.objectStore("objects").put(text, object),
+      ),
     ref: (ref) => done<Name | undefined>(db.transaction("refs").objectStore("refs").get(ref)),
     // The compare and the move happen in one transaction, so nothing moves the
     // ref between them.
@@ -40,7 +43,8 @@ function settled(transaction: IDBTransaction, work: (transaction: IDBTransaction
   return new Promise<void>((resolve, reject) => {
     work(transaction);
     transaction.oncomplete = () => resolve();
-    transaction.onerror = transaction.onabort = () => reject(transaction.error ?? new Error("the transaction was aborted"));
+    transaction.onerror = transaction.onabort = () =>
+      reject(transaction.error ?? new Error("the transaction was aborted"));
   });
 }
 

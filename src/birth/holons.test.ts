@@ -13,14 +13,22 @@ const idOf = (from: string) => {
 test("a wiki becomes holons: files and headings as briefs, links as references", () => {
   const files = new Map([
     ["README.md", parseFile("README.md", "# Glass\n\nThe face.\n\n[The store](architecture/store.md)\n")],
-    ["architecture/store.md", parseFile("architecture/store.md", "# The store\n\nSee [its index](#2-the-index).\n\n## 1. Objects\n\nNamed.\n\n## 2. The index\n\nWhole.\n")],
+    [
+      "architecture/store.md",
+      parseFile(
+        "architecture/store.md",
+        "# The store\n\nSee [its index](#2-the-index).\n\n## 1. Objects\n\nNamed.\n\n## 2. The index\n\nWhole.\n",
+      ),
+    ],
   ]);
   const born = wiki(files, "README.md", idOf, typeOf);
   const by = (from: string) => born.holons.find((holon) => holon.body.from === from)!;
 
   expect(born.names.wiki).toBe(idOf("README.md"));
   expect(by("README.md").body.prose).toBe(`The face.\n\n[The store](ref:${idOf("architecture/store.md")})`);
-  expect(by("architecture/store.md").body.prose).toBe(`See [its index](ref:${idOf("architecture/store.md#2-the-index")}).`);
+  expect(by("architecture/store.md").body.prose).toBe(
+    `See [its index](ref:${idOf("architecture/store.md#2-the-index")}).`,
+  );
   expect(by("architecture/store.md").body.parts).toEqual([
     { $ref: idOf("architecture/store.md#1-objects") },
     { $ref: idOf("architecture/store.md#2-the-index") },

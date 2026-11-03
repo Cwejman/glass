@@ -3,7 +3,16 @@ import { canonical, type Json } from "./canonical.ts";
 import { checked } from "./checked.ts";
 import { isId, type Id } from "./id.ts";
 import type { Name } from "./name.ts";
-import { isRecord, type Body, type Branch, type Commit, type Index, type Leaf, type StoreObject, type Version } from "./objects.ts";
+import {
+  isRecord,
+  type Body,
+  type Branch,
+  type Commit,
+  type Index,
+  type Leaf,
+  type StoreObject,
+  type Version,
+} from "./objects.ts";
 import { entries, grow, lookup, plant } from "./tree.ts";
 
 // A store over a backend: what it holds read through its checked objects,
@@ -66,30 +75,24 @@ export function openStore(backend: Backend): Store {
     if (problem) throw new Error(problem);
     const from = await head(ref);
     const last = from ? await index(from) : undefined;
+    const before = (id: Id) => (last ? lookup(objects, last.holons, id) : Promise.resolve(undefined));
 
-    const updates = new Map<Id, Name>();
-    for (const holon of change.holons) {
-      if (updates.has(holon.id)) throw new Error(`holon ${holon.id} changed twice in one commit`);
-      const prevName = last ? await lookup(objects, last.holons, holon.id) : undefined;
-      if (prevName) {
-        const prev = await versionOf(holon.id, prevName);
-        if (canonical([prev.instance, prev.body]) === canonical([holon.instance, holon.body])) continue;
-      }
-      updates.set(holon.id, await objects.put({ kind: "version", id: holon.id, prev: prevName ?? null, instance: holon.instance, body: holon.body }));
-    }
+    // A new version for each holon whose instance or body changed.
+    const versioned = await Promise.all(
+      change.holons.map(async (holon) => [holon.id, await versionFor(holon, await before(holon.id))] as const),
+    );
+    const updates = new Map(versioned.filter((entry): entry is [Id, Name] => entry[1] !== undefined));
 
-    const given = new Map(Object.entries(last?.names ?? {}));
-    for (const [name, id] of Object.entries(change.names ?? {})) {
-      if (id === null) given.delete(name);
-      else given.set(name, id);
-    }
-    const names = Object.fromEntries(given);
-    const gone = new Set<Id>();
-    for (const id of change.gone ?? []) {
-      if (updates.has(id)) throw new Error(`holon ${id} written and taken out in one commit`);
-      if (last && (await lookup(objects, last.holons, id))) gone.add(id);
-    }
-    if (updates.size === 0 && gone.size === 0 && canonical(names) === canonical(last?.names ?? {})) return undefined;
+    // The names as they were, with those the change gives or takes away.
+    const given = Object.entries({ ...last?.names, ...change.names });
+    const names = Object.fromEntries(given.filter((entry): entry is [string, Id] => typeof entry[1] === "string"));
+
+    // What the change takes out, of what the field held.
+    const held = await Promise.all((change.gone ?? []).map(async (id) => ((await before(id)) ? id : undefined)));
+    const gone = new Set(held.filter((id) => id !== undefined));
+
+    const namesChanged = canonical(names) !== canonical(last?.names ?? {});
+    if (updates.size === 0 && gone.size === 0 && !namesChanged) return undefined;
 
     const holons = gone.size
       ? await plant(objects, await keptAfter(last, gone, updates))
@@ -102,11 +105,23 @@ export function openStore(backend: Backend): Store {
     return commit;
   }
 
+  async function versionFor(holon: Holon, prev: Name | undefined): Promise<Name | undefined> {
+    if (prev) {
+      const { instance, body } = await versionOf(holon.id, prev);
+      if (canonical([instance, body]) === canonical([holon.instance, holon.body])) return undefined;
+    }
+    return objects.put({
+      kind: "version",
+      id: holon.id,
+      prev: prev ?? null,
+      instance: holon.instance,
+      body: holon.body,
+    });
+  }
+
   async function keptAfter(last: Index | undefined, gone: Set<Id>, updates: Map<Id, Name>) {
-    const kept = new Map<Id, Name>();
-    if (last) for await (const [id, name] of entries(objects, last.holons)) if (!gone.has(id)) kept.set(id, name);
-    for (const [id, name] of updates) kept.set(id, name);
-    return kept;
+    const held = last ? await Array.fromAsync(entries(objects, last.holons)) : [];
+    return new Map([...held.filter(([id]) => !gone.has(id)), ...updates]);
   }
 
   // Everything a commit reaches: the commit, its index, the tree and the
@@ -142,15 +157,29 @@ export function openStore(backend: Backend): Store {
   };
 }
 
+// What is wrong with a change before anything of it is written: each holon
+// an id, a list of ids it is an instance of, and a body; each name an id;
+// nothing written twice, or written and taken out at once.
 function changeProblem(change: Change): string | undefined {
   if (typeof change.at !== "string") return "a change must say when it was made";
-  for (const holon of change.holons) {
-    if (!isId(holon.id)) return `${holon.id} is not an id`;
-    if (!Array.isArray(holon.instance) || !holon.instance.every(isId)) return `${holon.id}'s instance is not a list of ids`;
-    if (!isRecord(holon.body)) return `${holon.id}'s body is not a JSON object`;
+
+  for (const { id, instance, body } of change.holons) {
+    if (!isId(id)) return `${id} is not an id`;
+    if (!Array.isArray(instance) || !instance.every(isId)) return `${id}'s instance is not a list of ids`;
+    if (!isRecord(body)) return `${id}'s body is not a JSON object`;
   }
-  for (const [name, id] of Object.entries(change.names ?? {}))
-    if (id !== null && !isId(id)) return `the name ${name} must give an id`;
-  if (change.gone !== undefined && (!Array.isArray(change.gone) || !change.gone.every(isId))) return "what is gone must be a list of ids";
+
+  const badName = Object.entries(change.names ?? {}).find(([, id]) => id !== null && !isId(id));
+  if (badName) return `the name ${badName[0]} must give an id`;
+
+  const gone = change.gone ?? [];
+  if (!Array.isArray(gone) || !gone.every(isId)) return "what is gone must be a list of ids";
+
+  const ids = change.holons.map(({ id }) => id);
+  const twice = ids.find((id, i) => ids.indexOf(id) !== i);
+  if (twice) return `holon ${twice} changed twice in one commit`;
+  const both = gone.find((id) => ids.includes(id));
+  if (both) return `holon ${both} written and taken out in one commit`;
+
   return undefined;
 }

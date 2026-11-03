@@ -1,0 +1,5 @@
+site/store/
+site/*.js
+vectors/*.json
+node_modules/
+*.md

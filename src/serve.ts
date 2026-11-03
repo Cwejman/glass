@@ -12,7 +12,8 @@ Bun.serve({
   async fetch(request) {
     const path = normalize(decodeURIComponent(new URL(request.url).pathname));
     const file = Bun.file(join(site, path.endsWith("/") ? `${path}index.html` : path));
-    if (!path.startsWith("/") || path.includes("..") || !(await file.exists())) return new Response("not here", { status: 404 });
+    if (!path.startsWith("/") || path.includes("..") || !(await file.exists()))
+      return new Response("not here", { status: 404 });
     return new Response(file, { headers: { "access-control-allow-origin": "*" } });
   },
 });

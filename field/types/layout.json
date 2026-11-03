@@ -14,6 +14,10 @@
         }
       }
     },
-    "from": { "says": "Where the holon was born from, as a path in the files it arrived from.", "shape": "string", "optional": true }
+    "from": {
+      "says": "Where the holon was born from, as a path in the files it arrived from.",
+      "shape": "string",
+      "optional": true
+    }
   }
 }

@@ -21,7 +21,8 @@ export const markdown = new Marked({
       const text = this.parser.parseInline(tokens);
       const ref = refOf(href);
       if (ref) return `<a href="#" data-ref="${ref}"${title ? ` title="${escape(title)}"` : ""}>${text}</a>`;
-      if (/^(https?|mailto):/i.test(href)) return `<a href="${escape(href)}"${title ? ` title="${escape(title)}"` : ""}>${text}</a>`;
+      if (/^(https?|mailto):/i.test(href))
+        return `<a href="${escape(href)}"${title ? ` title="${escape(title)}"` : ""}>${text}</a>`;
       return `<span class="unlinked" title="${escape(href)}">${text}</span>`;
     },
   },
@@ -44,8 +45,10 @@ export function isConfidence(token: Token) {
 
 // The face: the first paragraph, as plain inline text.
 export function faceOf(prose: string): string {
-  const first = markdown.lexer(prose).find((token) => token.type === "paragraph" && !placed(token) && !isConfidence(token));
-  return first ? markdown.parseInline((first as Tokens.Paragraph).text) as string : "";
+  const first = markdown
+    .lexer(prose)
+    .find((token) => token.type === "paragraph" && !placed(token) && !isConfidence(token));
+  return first ? (markdown.parseInline((first as Tokens.Paragraph).text) as string) : "";
 }
 
 export function element<K extends keyof HTMLElementTagNameMap>(tag: K, className?: string, text?: string) {

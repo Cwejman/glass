@@ -1,10 +1,14 @@
 import type { Json } from "../store/canonical.ts";
 import type { Body } from "../store/objects.ts";
+import { first, firstOf, type Problem } from "./problem.ts";
 import { isRef } from "./references.ts";
 
 // A type is a holon whose body declares fields. Each field is said in prose,
 // what the key means, beside the shape the engine checks: the fields are where
 // holons connect, the field's connectors, so each carries both.
+//
+// This file says what a connector is, what is wrong with a type's own
+// connectors, and what is wrong with a body held against its types.
 
 export type Shape =
   | "string"
@@ -24,86 +28,103 @@ export interface Connector {
 
 export type Connectors = { [key: string]: Connector };
 
-export function connectorsOf(body: Body): Connectors | undefined {
-  const fields = body.fields;
-  if (fields === undefined) return undefined;
-  const problem = fieldsProblem(fields, "fields");
-  if (problem) throw new Error(`a type's ${problem}`);
-  return fields as unknown as Connectors;
+// A body is a type's when it declares fields.
+export const isType = (body: Body) => body.fields !== undefined;
+
+export const connectorsOf = (body: Body) => body.fields as unknown as Connectors;
+
+export function typeProblem(body: Body): Problem {
+  if (!isType(body)) return undefined;
+  const problem = connectorsProblem(body.fields!, "fields");
+  return problem && `a type's ${problem}`;
 }
 
-function fieldsProblem(fields: Json, at: string): string | undefined {
-  if (typeof fields !== "object" || fields === null || Array.isArray(fields)) return `${at} are not a map of fields`;
-  for (const [key, field] of Object.entries(fields)) {
-    if (typeof field !== "object" || field === null || Array.isArray(field)) return `${at}.${key} is not a field`;
-    if (typeof field.says !== "string" || field.says.trim() === "") return `${at}.${key} says nothing in prose`;
-    if (field.optional !== undefined && typeof field.optional !== "boolean") return `${at}.${key}.optional is not a boolean`;
-    const problem = shapeProblem(field.shape, `${at}.${key}`);
-    if (problem) return problem;
-  }
-  return undefined;
+// What is wrong with a body held against the connectors of all its types:
+// every key declared by some type, and each type held against the body on
+// its own, so a key two types declare must fit both.
+export function bodyProblem(body: Body, types: Connectors[]): Problem {
+  const undeclared = Object.keys(body).find((key) => !types.some((connectors) => Object.hasOwn(connectors, key)));
+  if (undeclared) return `${undeclared} is not a field of its types`;
+
+  return firstOf(types, (connectors) => valuesProblem(body, connectors, "", { closed: false }));
 }
 
-function shapeProblem(shape: Json | undefined, at: string): string | undefined {
-  if (typeof shape === "string")
-    return ["string", "markdown", "number", "boolean", "ref", "json"].includes(shape) ? undefined : `${at} has no shape ${shape}`;
-  if (typeof shape === "object" && shape !== null && !Array.isArray(shape)) {
-    if ("list" in shape && Object.keys(shape).length === 1) return shapeProblem(shape.list, `${at}[]`);
-    if ("fields" in shape && Object.keys(shape).length === 1) return fieldsProblem(shape.fields!, at);
+// A type's own connectors: each said in prose, and each of a shape there is.
+
+const shapes = ["string", "markdown", "number", "boolean", "ref", "json"];
+
+function connectorsProblem(connectors: Json, at: string): Problem {
+  if (!isMap(connectors)) return `${at} are not a map of fields`;
+
+  return firstOf(Object.entries(connectors), ([key, connector]) => {
+    const here = `${at}.${key}`;
+    if (!isMap(connector)) return `${here} is not a field`;
+
+    return first(
+      () => (isSaid(connector.says) ? undefined : `${here} says nothing in prose`),
+      () =>
+        connector.optional === undefined || typeof connector.optional === "boolean"
+          ? undefined
+          : `${here}.optional is not a boolean`,
+      () => shapeProblem(connector.shape, here),
+    );
+  });
+}
+
+function shapeProblem(shape: Json | undefined, at: string): Problem {
+  if (typeof shape === "string") return shapes.includes(shape) ? undefined : `${at} has no shape ${shape}`;
+  if (isMap(shape) && Object.keys(shape).length === 1) {
+    if ("list" in shape) return shapeProblem(shape.list, `${at}[]`);
+    if ("fields" in shape) return connectorsProblem(shape.fields!, at);
   }
   return `${at} has no shape`;
 }
 
-// What is wrong with a body held against the fields of all its types, if
-// anything: every key declared by some type, and each type held against the
-// body on its own, so a key two types declare must fit both.
-export function bodyProblem(body: Body, types: Connectors[]): string | undefined {
-  for (const key of Object.keys(body))
-    if (!types.some((fields) => Object.hasOwn(fields, key))) return `${key} is not a field of its types`;
-  for (const fields of types) {
-    const problem = valuesProblem(body, fields, "", false);
-    if (problem) return problem;
-  }
-  return undefined;
+// Values held against connectors: each value of its shape, every connector
+// that is not optional present, and, where the connectors are all there is,
+// no key they do not declare.
+
+function valuesProblem(
+  values: { [key: string]: Json },
+  connectors: Connectors,
+  at: string,
+  { closed = true } = {},
+): Problem {
+  const valueAt = ([key, value]: [string, Json]): Problem => {
+    if (Object.hasOwn(connectors, key)) return valueProblem(value, connectors[key]!.shape, `${at}${key}`);
+    return closed ? `${at}${key} is not a field of its types` : undefined;
+  };
+  const presentAt = ([key, connector]: [string, Connector]): Problem =>
+    connector.optional || Object.hasOwn(values, key) ? undefined : `${at}${key} is missing`;
+
+  return first(
+    () => firstOf(Object.entries(values), valueAt),
+    () => firstOf(Object.entries(connectors), presentAt),
+  );
 }
 
-function valuesProblem(values: { [key: string]: Json }, fields: Connectors, at: string, closed = true): string | undefined {
-  for (const [key, value] of Object.entries(values)) {
-    if (!Object.hasOwn(fields, key)) {
-      if (closed) return `${at}${key} is not a field of its types`;
-      continue;
-    }
-    const problem = valueProblem(value, fields[key]!.shape, `${at}${key}`);
-    if (problem) return problem;
-  }
-  for (const [key, field] of Object.entries(fields))
-    if (!field.optional && !Object.hasOwn(values, key)) return `${at}${key} is missing`;
-  return undefined;
-}
+const fits: Record<string, (value: Json) => boolean> = {
+  string: (value) => typeof value === "string",
+  markdown: (value) => typeof value === "string",
+  number: (value) => typeof value === "number",
+  boolean: (value) => typeof value === "boolean",
+  ref: isRef,
+  json: () => true,
+};
 
-function valueProblem(value: Json, shape: Shape, at: string): string | undefined {
-  const wrong = `${at} is not ${typeof shape === "string" ? shape : "list" in shape ? "a list" : "a set of fields"}`;
-  switch (shape) {
-    case "string":
-    case "markdown":
-      return typeof value === "string" ? undefined : wrong;
-    case "number":
-      return typeof value === "number" ? undefined : wrong;
-    case "boolean":
-      return typeof value === "boolean" ? undefined : wrong;
-    case "ref":
-      return isRef(value) ? undefined : wrong;
-    case "json":
-      return undefined;
-  }
+function valueProblem(value: Json, shape: Shape, at: string): Problem {
+  if (typeof shape === "string") return fits[shape]!(value) ? undefined : `${at} is not ${shape}`;
+
   if ("list" in shape) {
-    if (!Array.isArray(value)) return wrong;
-    for (const [i, item] of value.entries()) {
-      const problem = valueProblem(item, shape.list, `${at}[${i}]`);
-      if (problem) return problem;
-    }
-    return undefined;
+    if (!Array.isArray(value)) return `${at} is not a list`;
+    return firstOf(value.entries(), ([i, item]) => valueProblem(item, shape.list, `${at}[${i}]`));
   }
-  if (typeof value !== "object" || value === null || Array.isArray(value)) return wrong;
+
+  if (!isMap(value)) return `${at} is not a set of fields`;
   return valuesProblem(value, shape.fields, `${at}.`);
 }
+
+const isMap = (value: Json | undefined): value is { [key: string]: Json } =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const isSaid = (says: Json | undefined) => typeof says === "string" && says.trim() !== "";

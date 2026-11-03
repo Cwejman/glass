@@ -77,7 +77,11 @@ export function asObject(value: unknown): StoreObject {
       case "index":
         return isRecord(value.names) && Object.values(value.names).every(isId) && isName(value.holons);
       case "index-leaf":
-        return Number.isInteger(value.depth) && isNameMap(value.versions) && Object.keys(value.versions as object).every(isId);
+        return (
+          Number.isInteger(value.depth) &&
+          isNameMap(value.versions) &&
+          Object.keys(value.versions as object).every(isId)
+        );
       case "index-branch":
         return (
           Number.isInteger(value.depth) &&
