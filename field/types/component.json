@@ -16,10 +16,10 @@
         "list": "ref"
       }
     },
-    "draws": {
-      "says": "The ways it draws them: whole, as a place to read, or face, as the first understanding seen from above.",
+    "kinds": {
+      "says": "The kinds of slot it draws in, as full or face.",
       "shape": {
-        "list": "string"
+        "list": "ref"
       }
     },
     "argument": {

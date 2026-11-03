@@ -35,7 +35,7 @@ export interface ComponentFile {
   title: string;
   says: string;
   takes: string[];
-  draws: string[];
+  kinds: string[];
   argument?: string;
   code: string;
   source: string;
@@ -50,16 +50,40 @@ export function types(files: TypeFile[], idOf: IdOf, typeOfTypes: string): Born 
   };
 }
 
-export function components(files: ComponentFile[], idOf: IdOf, typeOf: Record<string, Id>): Born {
+export interface KindFile {
+  name: string;
+  title: string;
+  says: string;
+}
+
+// The kinds of slot, the words a holder and the held share.
+export function kinds(files: KindFile[], idOf: IdOf, typeOf: Record<string, Id>): Born {
+  const fromOf = (name: string) => `field/kinds/${name}`;
   return {
-    holons: files.map(({ from, title, says, takes, draws, argument, code, source }) => ({
+    holons: files.map(({ name, title, says }) => ({
+      id: idOf(fromOf(name)),
+      instance: [typeOf.kind!],
+      body: { title, says, from: fromOf(name) },
+    })),
+    names: Object.fromEntries(files.map(({ name }) => [name, idOf(fromOf(name))])),
+  };
+}
+
+export function components(
+  files: ComponentFile[],
+  idOf: IdOf,
+  typeOf: Record<string, Id>,
+  kindOf: Record<string, Id>,
+): Born {
+  return {
+    holons: files.map(({ from, title, says, takes, kinds, argument, code, source }) => ({
       id: idOf(from),
       instance: [typeOf.component!],
       body: {
         title,
         says,
         takes: takes.map((type) => ({ $ref: typeOf[type]! })),
-        draws,
+        kinds: kinds.map((kind) => ({ $ref: kindOf[kind]! })),
         ...(argument ? { argument } : {}),
         code,
         source,

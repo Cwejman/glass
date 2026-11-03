@@ -1,31 +1,24 @@
 [
   {
-    "file": "reader.tsx",
-    "title": "Reader",
-    "says": "A brief whole: the way down to it, its title and prose, the parts its prose places, and its parts beneath as a list of mounts.",
+    "file": "brief.tsx",
+    "title": "Brief",
+    "says": "A brief: in full, the way down to it, its title and prose, the parts its prose places and its parts beneath, each a slot; as a face, its number, title and first paragraph.",
     "takes": ["brief", "record"],
-    "draws": ["whole"]
+    "kinds": ["full", "face"]
   },
   {
-    "file": "face.tsx",
-    "title": "Face",
-    "says": "A brief seen from above: its number, its title and its first paragraph.",
-    "takes": ["brief", "record"],
-    "draws": ["face"]
-  },
-  {
-    "file": "holon.tsx",
-    "title": "Holon",
-    "says": "Any holon nothing closer draws, the wildcard: what it is an instance of, and every value it holds, each reference the face of what it points at.",
-    "takes": [],
-    "draws": ["whole", "face"]
+    "file": "layout.tsx",
+    "title": "Layout",
+    "says": "A layout: its mounts as panes side by side, each a full slot.",
+    "takes": ["layout"],
+    "kinds": ["full"]
   },
   {
     "file": "list.tsx",
     "title": "List",
-    "says": "A list of holons, each item a mount of its own, numbered where the whole that opened it numbers its parts.",
+    "says": "A list of holons, each item a slot, a face unless the whole that opened it asks otherwise, numbered where the whole numbers its parts.",
     "takes": [],
-    "draws": ["whole"],
+    "kinds": ["full", "face"],
     "argument": "list"
   },
   {
@@ -33,14 +26,21 @@
     "title": "Type",
     "says": "A type: what its instances are, each field it declares with what it means and its shape, and its instances.",
     "takes": ["type"],
-    "draws": ["whole", "face"]
+    "kinds": ["full", "face"]
   },
   {
     "file": "field.tsx",
     "title": "Field",
     "says": "The field itself, the root: its stores, the names each gives, and every type it holds.",
     "takes": [],
-    "draws": ["whole"],
+    "kinds": ["full"],
     "argument": "field"
+  },
+  {
+    "file": "holon.tsx",
+    "title": "Holon",
+    "says": "Any holon nothing closer draws, the wildcard: what it is an instance of, and every value it holds, each reference a slot of what it points at.",
+    "takes": [],
+    "kinds": ["full", "face"]
   }
 ]

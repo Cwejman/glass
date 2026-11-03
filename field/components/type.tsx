@@ -40,7 +40,7 @@ export default async function draw(given: Given, space: Space) {
   const title = String(type.body.title ?? type.id);
   const instances = (await space.read({ instances: type.id })) as Id[];
 
-  if (given.draws === "face")
+  if (given.kind === "face")
     return (
       <Card to={type.id} space={space}>
         <strong>{title}</strong>
@@ -72,7 +72,7 @@ export default async function draw(given: Given, space: Space) {
       </dl>
 
       <h2>Its instances, {instances.length}</h2>
-      {space.openList(instances, "whole", { draws: "face" })}
+      {space.openList(instances, "full", { kind: "face" })}
     </article>
   );
 }

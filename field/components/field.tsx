@@ -59,8 +59,8 @@ export default function draw(given: Given, space: Space) {
       <h2>Its types</h2>
       {space.openList(
         field.types.map(({ id }): Id => id),
-        "whole",
-        { draws: "face" },
+        "full",
+        { kind: "face" },
       )}
     </article>
   );

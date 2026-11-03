@@ -53,18 +53,19 @@ test("judging a change leaves the field as it was", async () => {
   expect([...field.known.keys()]).toEqual(before);
 });
 
-test("the component that matches a holon's type is chosen before one that takes any", () => {
+test("the component that matches a holon's type is chosen before one that takes any, in the kind of slot", () => {
   const brief = newId();
-  const component = (id: string, takes: string[], draws: string[]) =>
+  const [full, face] = [newId(), newId()];
+  const component = (id: string, takes: string[], kinds: string[]) =>
     ({
       id,
       store: "glass",
       version: "",
       instance: [],
-      body: { takes: takes.map(($ref) => ({ $ref })), draws },
+      body: { takes: takes.map(($ref) => ({ $ref })), kinds: kinds.map(($ref) => ({ $ref })) },
     }) as unknown as HolonRead;
-  const any = component("any", [], ["whole", "face"]);
-  const reader = component("reader", [brief], ["whole"]);
+  const any = component("any", [], [full, face]);
+  const reader = component("reader", [brief], [full]);
   const holon = {
     id: newId(),
     store: "glass",
@@ -72,9 +73,10 @@ test("the component that matches a holon's type is chosen before one that takes 
     instance: [brief],
     body: {},
   } as unknown as HolonRead;
-  expect(match([any, reader], { holon: holon.id }, holon, "whole")?.id).toBe("reader");
-  expect(match([any, reader], { holon: holon.id }, holon, "face")?.id).toBe("any");
-  expect(match([reader], { holon: holon.id }, holon, "face")).toBeUndefined();
+
+  expect(match([any, reader], { holon: holon.id }, holon, full)?.id).toBe("reader");
+  expect(match([any, reader], { holon: holon.id }, holon, face)?.id).toBe("any");
+  expect(match([reader], { holon: holon.id }, holon, face)).toBeUndefined();
 });
 
 test("the field as a place: its stores and names, and every type with its instances", async () => {
@@ -102,21 +104,23 @@ test("the field as a place: its stores and names, and every type with its instan
   });
 });
 
-test("a component the mount names is used only where it can draw what the mount reads", async () => {
-  const { match: _, fits } = await import("../interface/drawing.ts");
+test("a component can draw a slot only where it is given that kind of thing, in that kind of slot", async () => {
+  const { able } = await import("../interface/drawing.ts");
+  const full = newId();
   const reader = {
     id: "r",
     store: "glass",
     version: "",
     instance: [],
-    body: { takes: [], draws: ["whole"] },
+    body: { takes: [], kinds: [{ $ref: full }] },
   } as unknown as HolonRead;
   const field = {
     ...reader,
     id: "f",
-    body: { takes: [], draws: ["whole"], argument: "field" },
+    body: { takes: [], kinds: [{ $ref: full }], argument: "field" },
   } as unknown as HolonRead;
-  expect(fits(reader, { field: true }, "whole")).toBe(false);
-  expect(fits(field, { field: true }, "whole")).toBe(true);
-  expect(fits(reader, { holon: newId() }, "face")).toBe(false);
+
+  expect(able([reader], { field: true }, full)).toEqual([]);
+  expect(able([field], { field: true }, full)).toEqual([field]);
+  expect(able([reader], { holon: newId() }, newId())).toEqual([]);
 });

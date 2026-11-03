@@ -167,3 +167,56 @@ pre {
   display: grid;
   gap: calc(var(--gap) * 0.75);
 }
+
+/* Panes, side by side, set off from each other by space. */
+
+:root {
+  --pane-gap: calc(var(--gap) * 3);
+}
+
+/* A slot's chrome: what can be done with what stands in it. */
+
+.chrome {
+  position: fixed;
+  z-index: 10;
+  min-width: 14rem;
+  padding: 0.35rem;
+  background: var(--raised);
+  border: var(--hairline) solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 0.18);
+  font: var(--small) / var(--leading-close) var(--sans);
+}
+
+.chrome-title {
+  padding: 0.4rem 0.6rem 0.3rem;
+  color: var(--quiet);
+  font-size: var(--smaller);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.chrome button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.45rem 0.6rem;
+  border: 0;
+  border-radius: calc(var(--radius) - 2px);
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.chrome button:hover,
+.chrome button:focus-visible {
+  background: var(--line);
+  outline: none;
+}
+
+.chrome button:disabled {
+  color: var(--quiet);
+  cursor: default;
+  background: none;
+}

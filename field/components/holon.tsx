@@ -44,7 +44,7 @@ export default async function draw(given: Given, space: Space) {
   const title = String(holon.body.title ?? holon.id);
   const what = `${types.join(", ")} · in ${holon.store}`;
 
-  if (given.draws === "face")
+  if (given.kind === "face")
     return (
       <Card to={holon.id} space={space}>
         <strong>{title}</strong>
@@ -59,7 +59,7 @@ export default async function draw(given: Given, space: Space) {
       <p class="meta">{what}</p>
 
       <h2>Is an instance of</h2>
-      {space.openList(holon.instance, "whole", { draws: "face" })}
+      {space.openList(holon.instance, "full", { kind: "face" })}
 
       <h2>Holds</h2>
       <Values of={holon.body} space={space} />
@@ -85,8 +85,8 @@ function valueOf(value: Json, space: Space): Child {
     if (value.length > 0 && value.every((item) => isRef(item) && !item["@"]))
       return space.openList(
         value.map((item) => (item as { $ref: Id }).$ref),
-        "whole",
-        { draws: "face" },
+        "full",
+        { kind: "face" },
       );
     return (
       <ol>

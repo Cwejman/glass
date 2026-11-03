@@ -1,0 +1,19 @@
+{
+  "title": "Kind",
+  "says": "A kind of slot: how what stands in a slot is drawn, said between the one that holds it and the one held, so neither has to know the other.",
+  "fields": {
+    "title": {
+      "says": "What the kind is called.",
+      "shape": "string"
+    },
+    "says": {
+      "says": "How what stands in a slot of this kind is drawn, in a sentence.",
+      "shape": "string"
+    },
+    "from": {
+      "says": "Where the holon was born from, as a path in the files it arrived from.",
+      "shape": "string",
+      "optional": true
+    }
+  }
+}

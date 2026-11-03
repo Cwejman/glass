@@ -10,9 +10,11 @@ import type { Connection } from "./connection.ts";
 // every move is a commit to it, so its commits are the reader's history.
 
 // A mount as a layout holds it: the holon it reads, or the field it
-// projects, and the component it calls, if it names one.
+// projects, and, where it says so, the kind of slot it is and the component
+// it calls.
 export interface Mount {
   component?: { $ref: Id };
+  kind?: { $ref: Id };
   reads?: { $ref: Id };
   projects?: "field";
 }
@@ -47,6 +49,30 @@ export async function place(engine: Connection, mount: number, to: Target): Prom
   const moved = mounts.map((each, i) => (i === mount ? mountOn(to) : each));
   await arrange(engine, layout, { ...layout.body, mounts: moved as never });
   return true;
+}
+
+// A slot of the arrangement given another kind or another component, from
+// its chrome; a change like any move, kept in the arrangement.
+export async function restyle(
+  engine: Connection,
+  mount: number,
+  change: { kind?: Id; component?: Id | null },
+) {
+  const layout = await arrangement(engine);
+  const mounts = await Promise.all(
+    mountsOf(layout).map(async (each, i) => {
+      if (i !== mount) return each;
+      const { component: before, kind: _, ...rest } = each;
+
+      // A component the slot named that is no longer in the field is let go.
+      const kept = before && (await engine.holon(before.$ref)) ? before : undefined;
+      const component =
+        change.component === undefined ? kept : change.component ? { $ref: change.component } : undefined;
+      const kind = change.kind ? { $ref: change.kind } : each.kind;
+      return { ...rest, ...(component ? { component } : {}), ...(kind ? { kind } : {}) };
+    }),
+  );
+  await arrange(engine, layout, { ...layout.body, mounts: mounts as never });
 }
 
 // Walking back or forward to a commit of the home: the arrangement as it

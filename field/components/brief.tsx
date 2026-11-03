@@ -2,14 +2,16 @@ import type { Id } from "../../src/store/id.ts";
 import type { HolonRead } from "../../src/engine/engine.ts";
 import type { Given, Space } from "../../src/interface/component.ts";
 import { h } from "./jsx.ts";
-import { isConfidence, markdown, placed, slotOf } from "./prose.ts";
-import { follow, Way } from "./way.tsx";
+import { faceOf, isConfidence, markdown, placed, slotOf } from "./prose.ts";
+import { Card, follow, Way } from "./way.tsx";
 
-// A brief whole, read along the gradient: the way down to it, its title and
-// prose, each part its prose places by a lone link mounted where it stands,
-// and its parts beneath as a list of mounts. Its own values it draws; what
-// they point at, it mounts. A brief's parts are numbered by where they
-// stand; a record's are kept in the order of time, and are not.
+// A brief, in either kind of slot. In full: the way down to it, its title
+// and prose, each part its prose places a slot where it stands, and its
+// parts beneath, a list of slots; its own values it draws, and what they
+// point at it opens as slots, faces unless a slot says otherwise. As a face:
+// its number, title and first paragraph, and how many briefs stand beneath
+// it, entered by a press. A brief's parts are numbered by where they stand;
+// a record's are kept in the order of time, and are not.
 
 export const style = `
 .reader h1 .number {
@@ -63,7 +65,31 @@ export const style = `
 .reader > .space.whole {
   margin-top: calc(var(--gap) * 2.5);
 }
+
+.face-card h2 {
+  font-size: var(--heading);
+  line-height: var(--leading-tight);
+  margin: 0 0 0.35em;
+  font-weight: 600;
+}
+
+.face-card h2 .number {
+  color: var(--quiet);
+  font-weight: 400;
+  margin-right: 0.45em;
+}
+
+.face-card p {
+  margin: 0;
+  color: var(--quiet);
+  font-size: var(--aside);
+  line-height: var(--leading-close);
+}
 `;
+
+export default function draw(given: Given, space: Space) {
+  return given.kind === "face" ? face(given, space) : full(given, space);
+}
 
 // A level on the way down: a brief, its title, and its number where it has one.
 interface Level {
@@ -72,7 +98,7 @@ interface Level {
   number: string;
 }
 
-export default async function draw(given: Given, space: Space) {
+async function full(given: Given, space: Space) {
   const holon = given.holon!;
   const record = (await space.read({ name: "record" })) as Id | null;
   const numbers = (whole: HolonRead) => !record || !whole.instance.includes(record);
@@ -93,9 +119,26 @@ export default async function draw(given: Given, space: Space) {
         {holon.body.status && <span class="status">{String(holon.body.status)}</span>}
       </h1>
       <div class="prose">{proseOf(holon, space)}</div>
-      {parts.length > 0 &&
-        space.openList(parts, "whole", { draws: "face", numbered: numbers(holon), number })}
+      {parts.length > 0 && space.openList(parts, "full", { kind: "face", numbered: numbers(holon), number })}
     </article>
+  );
+}
+
+function face(given: Given, space: Space) {
+  const holon = given.holon!;
+  const number = (given.with as { number?: string } | null)?.number;
+  const first = faceOf(String(holon.body.prose ?? ""));
+  const beneath = ((holon.body.parts ?? []) as unknown[]).length;
+
+  return (
+    <Card to={holon.id} space={space} class="face-card">
+      <h2>
+        {number && <span class="number">{number}</span>}
+        {String(holon.body.title ?? "")}
+      </h2>
+      {first && <p html={first} />}
+      {beneath > 0 && <span class="meta">{beneath} beneath</span>}
+    </Card>
   );
 }
 
@@ -105,7 +148,7 @@ export default async function draw(given: Given, space: Space) {
 function proseOf(holon: HolonRead, space: Space) {
   return markdown.lexer(String(holon.body.prose ?? "")).map((token) => {
     const slot = slotOf(token);
-    if (slot) return space.open(slot.id, slot.draws);
+    if (slot) return space.open(slot.id, slot.kind);
 
     const kind = isConfidence(token) ? "block confidence" : "block";
     return <div class={kind} html={markdown.parser([token]) as string} />;

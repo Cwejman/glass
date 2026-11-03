@@ -14,26 +14,33 @@ export interface Component {
 // What a mount reads: one holon, a list of holons, or the field itself.
 export type Reading = { holon: Id } | { list: Id[] } | { field: true };
 
-// What a component is given: what its mount reads, the holon, the list or
-// the field, the way it is asked to draw it, and whatever the whole that
+// The kinds of slot, the words a holder and the held share, so neither has
+// to know the other: full, drawn whole, as the place one stands in; face,
+// seen from outside, entered to go in.
+export type Kind = "full" | "face";
+
+// What a component is given: what its slot reads, the holon, the list or
+// the field, the kind of slot it stands in, and whatever the whole that
 // opened it passed along.
 export interface Given {
   holon?: HolonRead;
   list?: Id[];
   field?: FieldPlace;
-  draws: string;
+  kind: Kind;
   with: Json;
 }
 
 // Where a move places the reader: on a holon, or at the field itself.
 export type Target = Id | "field";
 
-// What a component works with: spaces to open for what it holds, one holon
-// or a list of them; reads of the field, which draw it again when what they
-// read changes; and a way to place the reader.
+// What a component works with: slots to open for what it holds, one holon
+// or a list of them, each of the kind it says; a layout's own mounts, each
+// opened as the slot the mount says it is; reads of the field, which draw
+// it again when what they read changes; and a way to place the reader.
 export interface Space {
-  open(id: Id, draws: string, passed?: Json): HTMLElement;
-  openList(ids: Id[], draws: string, passed?: Json): HTMLElement;
+  open(id: Id, kind: Kind, passed?: Json): HTMLElement;
+  openList(ids: Id[], kind: Kind, passed?: Json): HTMLElement;
+  openMount(index: number): HTMLElement;
   read(read: Read): Promise<Json>;
   holon(id: Id): Promise<HolonRead | null>;
   place(to: Target): Promise<void>;

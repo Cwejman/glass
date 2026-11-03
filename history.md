@@ -9,6 +9,12 @@ How glass came to be what it is, told over its commits, newest first, each day b
 
 *Begun 2026-11-02, on the author's word that the effort be noted in the log as the work goes. Each story reasoned by the session that did the work, from the commits and the author's words.*
 
+## What informs a slot
+
+The author asked how a brief in a slot knows to be drawn as a face or in full, and the session circled a long while: a flag the opener asked for, real estate, crossings set apart from slots, a table of defaults. The author kept the problem open until the answer was a contract: the one that holds and the one held share only a small vocabulary, the kinds of slot, full and face, so neither must know the other, and a slot's own data comes first, so a change made from its chrome is kept. He took it provisionally, the second decision whose rightness is not known, and asked that whatever depends on it be named before it is built. It was then built: kinds as holons, components that list the kinds they draw, one brief component drawing itself both ways, a layout component setting the arrangement's mounts side by side as panes, and chrome on every slot.
+
+*Reasoned on 2026-11-03 by the session.*
+
 ## The interface as a mirror of the field
 
 Seeing the field laid out, the author found the entry went straight into the wiki, which is not the root, and asked how the hierarchy truly exists in the field. It does not, as a hierarchy: every holon stands flat in the store, and nesting lives only in bodies. He then laid out the interface as he sees it: a place, a mount on it, and what renders there depending on what it is, one brief at a brief's place, a list only where something truly is a list, and a wildcard for whatever nothing closer draws, which a layout can always override. The session read OpenLight's view again and found one point glass departs from, how a component is found, which the author left open. The interface was then built so: the entry stands at the field, a type shows its fields and instances, a brief's parts are a list of mounts, and the wildcard draws any holon by its values.

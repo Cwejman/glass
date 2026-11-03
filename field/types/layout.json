@@ -25,6 +25,11 @@
               "says": "A place the engine shows instead of a holon, as the field itself.",
               "shape": "string",
               "optional": true
+            },
+            "kind": {
+              "says": "The kind of slot the mount is, where it says so; full unless it does.",
+              "shape": "ref",
+              "optional": true
             }
           }
         }

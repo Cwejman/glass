@@ -9,11 +9,13 @@ import { startEngine } from "../engine/engine.ts";
 import {
   components,
   entry,
+  kinds,
   materials,
   types,
   wiki,
   type Born,
   type ComponentFile,
+  type KindFile,
   type TypeFile,
 } from "./holons.ts";
 import { flatten, linkTargets, parseFile, resolve, type WikiFile } from "./wiki.ts";
@@ -73,7 +75,9 @@ const componentFiles: ComponentFile[] = await Promise.all(
     };
   }),
 );
-const bornComponents = components(componentFiles, idOf, bornTypes.names);
+const kindFiles = JSON.parse(await readFile(join(repo, "field/kinds.json"), "utf8")) as KindFile[];
+const bornKinds = kinds(kindFiles, idOf, bornTypes.names);
+const bornComponents = components(componentFiles, idOf, bornTypes.names, bornKinds.names);
 
 const declaredMaterials = JSON.parse(await readFile(join(repo, "field/materials.json"), "utf8")) as {
   file: string;
@@ -97,7 +101,7 @@ const files = await readWiki("README.md");
 const bornWiki = wiki(files, "README.md", idOf, bornTypes.names);
 const bornEntry = entry(idOf, bornTypes.names);
 
-const field: Born[] = [bornTypes, bornMaterials, bornComponents, bornWiki, bornEntry];
+const field: Born[] = [bornTypes, bornKinds, bornMaterials, bornComponents, bornWiki, bornEntry];
 const holons = field.flatMap(({ holons }) => holons);
 const names = Object.assign({}, ...field.map(({ names }) => names));
 const gone = [...before].filter((id) => !holons.some((holon) => holon.id === id));
