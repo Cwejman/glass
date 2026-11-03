@@ -230,10 +230,14 @@ pre {
   cursor: default;
 }
 
-.menu-why {
+.menu-said {
   padding: 0 0.6rem 0.45rem;
   color: var(--quiet);
   font-size: var(--smaller);
+}
+
+.menu-said:empty {
+  display: none;
 }
 
 .menu-value {

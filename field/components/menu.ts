@@ -1,14 +1,13 @@
 // A menu: what can be done where something was pressed with the secondary
-// button, offered by whatever took the press. Each action either does what
-// it says, or says, in words beside it, why it cannot be done here. One
-// menu stands at a time; it closes on an outside press, on Escape or Tab,
-// and gives the focus back to where it was. An action may ask for words
-// before it is done, as a value to change, in the menu's place.
+// button, offered by whatever took the press. An action closes the menu
+// once it is done; one that could not be done says why beneath, and the
+// menu stays. One menu stands at a time; it closes on an outside press, on
+// Escape or Tab, and gives the focus back to where it was. A menu may hold
+// something to fill in before its actions, as a value to change.
 
 export interface Action {
   label: string;
-  run?: () => void;
-  why?: string;
+  run: () => void | Promise<void>;
 }
 
 let standing: (() => void) | undefined;
@@ -18,7 +17,14 @@ export function dismiss() {
   standing?.();
 }
 
-export function offer(x: number, y: number, title: string, actions: Action[], from: HTMLElement) {
+export function offer(
+  x: number,
+  y: number,
+  title: string,
+  actions: Action[],
+  from: HTMLElement,
+  before?: HTMLElement,
+) {
   dismiss();
   const returnTo = (document.activeElement as HTMLElement | null) ?? from;
 
@@ -31,25 +37,26 @@ export function offer(x: number, y: number, title: string, actions: Action[], fr
   heading.className = "menu-title";
   heading.textContent = title;
   menu.append(heading);
+  if (before) menu.append(before);
 
-  for (const [i, action] of actions.entries()) {
+  const said = document.createElement("div");
+  said.className = "menu-said";
+  said.setAttribute("role", "status");
+  for (const action of actions) {
     const item = document.createElement("button");
     item.type = "button";
     item.setAttribute("role", "menuitem");
     item.textContent = action.label;
-    if (action.run) item.addEventListener("click", () => (close(), action.run!()));
-    else item.setAttribute("aria-disabled", "true");
+    item.addEventListener("click", () =>
+      Promise.resolve()
+        .then(action.run)
+        .then(close, (error: unknown) => {
+          said.textContent = error instanceof Error ? error.message : String(error);
+        }),
+    );
     menu.append(item);
-
-    if (!action.run && action.why) {
-      const why = document.createElement("div");
-      why.className = "menu-why";
-      why.id = `menu-why-${i}`;
-      why.textContent = action.why;
-      item.setAttribute("aria-describedby", why.id);
-      menu.append(why);
-    }
   }
+  menu.append(said);
 
   const items = () => [...menu.querySelectorAll<HTMLElement>('[role="menuitem"]')];
   const step = (by: number) => {
@@ -65,7 +72,10 @@ export function offer(x: number, y: number, title: string, actions: Action[], fr
   };
   const outside = (event: Event) => !menu.contains(event.target as Node) && close();
 
+  // An action that opened another menu in this one's place has closed it
+  // already.
   function close() {
+    if (!menu.isConnected) return;
     menu.remove();
     removeEventListener("pointerdown", outside, true);
     removeEventListener("keydown", keys, true);
@@ -82,11 +92,10 @@ export function offer(x: number, y: number, title: string, actions: Action[], fr
   const { width, height } = menu.getBoundingClientRect();
   menu.style.left = `${Math.max(8, Math.min(x, innerWidth - width - 8))}px`;
   menu.style.top = `${Math.max(8, Math.min(y, innerHeight - height - 8))}px`;
-  items()[0]?.focus();
+  (before ?? items()[0])?.focus();
 }
 
-// Words asked for in a menu's place: a value to change, kept when Keep is
-// pressed, and what was wrong with it said beneath if it could not be.
+// Words asked for in a menu: a value to change, kept when Keep is pressed.
 export function ask(
   x: number,
   y: number,
@@ -99,20 +108,5 @@ export function ask(
   area.className = "menu-value";
   area.value = value;
   area.rows = Math.min(12, value.split("\n").length + 1);
-  const said = document.createElement("div");
-  said.className = "menu-why";
-
-  offer(x, y, title, [{ label: "Keep", run: () => undefined }], from);
-  const menu = document.querySelector<HTMLElement>(".menu")!;
-  const button = menu.querySelector<HTMLElement>('[role="menuitem"]')!;
-  menu.insertBefore(area, button);
-  menu.append(said);
-  const kept = button.cloneNode(true) as HTMLElement;
-  button.replaceWith(kept);
-  kept.addEventListener("click", () => {
-    keep(area.value).then(dismiss, (error: unknown) => {
-      said.textContent = error instanceof Error ? error.message : String(error);
-    });
-  });
-  area.focus();
+  offer(x, y, title, [{ label: "Keep", run: () => keep(area.value) }], from, area);
 }

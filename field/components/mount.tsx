@@ -39,18 +39,26 @@ export default function draw(given: Given<MountBody>, space: Space) {
   });
   if (!given.may.write) return <div class="mount">{drawn}</div>;
 
-  const give = (ids: Id[], by = component?.$ref) =>
-    space
-      .write({
-        ...mount.body,
-        argument: ids.map(($ref) => ({ $ref })),
-        ...(by ? { component: { $ref: by } } : {}),
-      })
-      .catch((error: unknown) => console.error(error));
-  const same = (ids: Id[]) => JSON.stringify(ids) === JSON.stringify(giving);
-
   const element = (<div class="mount" />) as HTMLElement;
   let full: ReturnType<typeof drawingFull> | undefined;
+
+  // A component chosen from the menu is for that one look: a plain move
+  // calls again what the entry calls, the reader.
+  const plainly = async () => {
+    const entry = await space.read({ name: "entry" });
+    return entry ? (await space.holon<MountBody>(entry))?.body.component?.$ref : undefined;
+  };
+
+  const give = async (ids: Id[], by?: Id) => {
+    const calls = by ?? (await plainly());
+    const { component: _, ...rest } = mount.body;
+    await space.write({
+      ...rest,
+      argument: ids.map(($ref) => ({ $ref })),
+      ...(calls ? { component: { $ref: calls } } : {}),
+    });
+  };
+  const same = (ids: Id[]) => JSON.stringify(ids) === JSON.stringify(giving);
 
   // The innermost location a press passed, inside this mount.
   const pressedAt = (event: Event) => {
@@ -66,7 +74,7 @@ export default function draw(given: Given<MountBody>, space: Space) {
     event.preventDefault();
     event.stopPropagation();
     const ids = JSON.parse(at.dataset.location!) as Id[];
-    if (!same(ids)) void give(ids);
+    if (!same(ids)) give(ids).catch((error: unknown) => console.error(error));
   };
 
   element.addEventListener("click", press);
@@ -88,11 +96,11 @@ export default function draw(given: Given<MountBody>, space: Space) {
     const ids = at ? (JSON.parse(at.dataset.location!) as Id[]) : giving;
     const types = (at?.dataset.instance ?? "").split(" ").filter(Boolean);
     const actions: Action[] = [];
-    if (!same(ids)) actions.push({ label: "Look here", run: () => void give(ids) });
+    if (!same(ids)) actions.push({ label: "Look here", run: () => give(ids) });
 
     for (const other of taking(await (full ??= drawingFull(space)), ids, types))
       if (!same(ids) || other.id !== component?.$ref)
-        actions.push({ label: `Look here with ${other.body.title}`, run: () => void give(ids, other.id) });
+        actions.push({ label: `Look here with ${other.body.title}`, run: () => give(ids, other.id) });
 
     actions.push({
       label: "Change what it gives",

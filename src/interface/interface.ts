@@ -24,6 +24,14 @@ const trusted = new Set(["home", "glass"]);
 export async function mount(engine: Connection, root: HTMLElement) {
   let components: HolonRead[] = [];
   let moves: Promise<unknown> = Promise.resolve();
+  let drawnRoot: Id | undefined;
+
+  // Moves are taken one at a time, each from where the one before left.
+  const inTurn = (move: () => Promise<void>) => {
+    const taken = moves.then(move);
+    moves = taken.catch((error) => console.error(error));
+    return taken;
+  };
 
   const kinds = await kindsOf(engine);
   const entry = (await engine.read({ name: "entry" })) as Id | null;
@@ -37,6 +45,9 @@ export async function mount(engine: Connection, root: HTMLElement) {
   const write = (holon: HolonRead, body: Body) =>
     inTurn(async () => {
       const { from: _, ...written } = body;
+      // A write that waited behind the first move finds the entry no longer
+      // the reader's to write.
+      if (holon.store !== "home" && (await engine.read({ name: "root" }))) return;
       if (holon.store === "home")
         await engine.commit({ holons: [{ id: holon.id, instance: holon.instance, body: written }] });
       else {
@@ -54,13 +65,6 @@ export async function mount(engine: Connection, root: HTMLElement) {
     });
 
   const drawn = drawing(engine, { components: () => components, kinds, may, write });
-
-  // Moves are taken one at a time, each from where the one before left.
-  const inTurn = (move: () => Promise<void>) => {
-    const taken = moves.then(move);
-    moves = taken.catch((error) => console.error(error));
-    return taken;
-  };
 
   // The components in the field, each watched, so a new version of one is
   // drawn with from the next drawing on, without a reload.
@@ -86,7 +90,6 @@ export async function mount(engine: Connection, root: HTMLElement) {
 
   // The root drawn whole, in the page's one slot, which offers it, and what
   // lies beneath, a full view.
-  let drawnRoot: Id | undefined;
   const draw = async () => {
     drawnRoot = await rootOf();
     await drawn.draw(root, { reads: { holon: drawnRoot }, offered: { kind: "full" }, settings: {} });
