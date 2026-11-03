@@ -23,7 +23,7 @@ export interface BriefBody {
   from?: string;
 }
 
-/** A holon that declares the types it takes and draws what it is given, opening space in it where what it holds is drawn in turn by the components that match. */
+/** A holon that declares the types it takes and draws what it is given, opening space in it where what it holds is drawn in turn by the components that match. It is made of code, or of data: mounts held as its template. */
 export interface ComponentBody {
   /** What the component is called. */
   title: string;
@@ -33,16 +33,33 @@ export interface ComponentBody {
   takes: Ref[];
   /** The kinds of slot it draws in, as full or face. */
   kinds: Ref[];
-  /** What a mount of it is given: one holon, a list of holons, or the field itself; one holon unless it says otherwise. */
+  /** What a mount of it is given: one holon, a list of holons, or a selection, either; one holon unless it says otherwise. */
   argument?: string;
   /** The settings it takes from the slot that opens it, each said in prose with its shape, as a type declares its fields; none unless it says. */
   settings?: Json;
   /** The reads it makes of the field beyond what it is handed, by their forms, as holders or instances: what it may look at, said where it can be seen. None unless it says. */
   reads?: string[];
-  /** The module the interface runs, as JavaScript. */
-  code: string;
+  /** The module the interface runs, as JavaScript, for a component made of code. */
+  code?: string;
+  /** For a component made of data instead of code: the mounts it is drawn as, in order, each giving `$`, what the component itself is given, and, where it says so, the kind of slot it is. */
+  template?: {
+    /** The kind of slot the mount is, where it says so. */
+    kind?: Ref;
+    /** What the mount gives: `$`, what the component itself was given. */
+    argument: Json;
+  }[];
   /** The code as it was written, before it was built. */
   source?: string;
+  /** Where the holon was born from, as a path in the files it arrived from. */
+  from?: string;
+}
+
+/** A way of looking at the field, held as a holon: an expression that gathers holons, so it can be given to a mount, shown by its words, or looked through to what it gathers. */
+export interface ExpressionBody {
+  /** What the way of looking is called. */
+  title: string;
+  /** The expression itself: what it gathers from the field. */
+  gathers: Expression;
   /** Where the holon was born from, as a path in the files it arrived from. */
   from?: string;
 }
@@ -57,29 +74,6 @@ export interface KindBody {
   from?: string;
 }
 
-/** Mounts held as data: each a component called with what it reads, a holon or the field itself. The layout a client boots into is the store's entry, and the reader's own arrangement is a layout in their home. */
-export interface LayoutBody {
-  /** What the layout is called. */
-  title: string;
-  /** Each mount, drawn in order: what it reads, a holon, what an expression gathers, or the field itself, and, where it says so, the kind of slot it is and the component it calls. */
-  mounts: {
-    /** The component the mount calls, when it names one. */
-    component?: Ref;
-    /** The holon the mount reads. */
-    reads?: Ref;
-    /** A place the engine shows instead of a holon, as the field itself. */
-    projects?: string;
-    /** The kind of slot the mount is, where it says so; full unless it does. */
-    kind?: Ref;
-    /** What the mount gathers instead of one holon, as an expression: the holons it gives are drawn as a list. */
-    gathers?: Expression;
-    /** The settings the mount gives the component drawn in it, as that component declares them. */
-    settings?: Json;
-  }[];
-  /** Where the holon was born from, as a path in the files it arrived from. */
-  from?: string;
-}
-
 /** What everything drawn is made of: the colours, the type, the measure and the spacing, named once so every component draws with the same material. */
 export interface MaterialBody {
   /** What the material is called. */
@@ -88,6 +82,18 @@ export interface MaterialBody {
   says: string;
   /** The style sheet it lays: the names every component draws with, and the page's own ground and type. */
   css: string;
+  /** Where the holon was born from, as a path in the files it arrived from. */
+  from?: string;
+}
+
+/** A call: a component and its argument, what it is given to draw. The argument is a selection, holons in order: one is drawn as itself, several as a list. A mount is the one thing that stands still to be changed, so the root of what one looks at is a mount, and every move is a new version of it. */
+export interface MountBody {
+  /** What the mount is called. */
+  title?: string;
+  /** The component the mount calls, when it names one; otherwise one is found for what it is given. */
+  component?: Ref;
+  /** What the component is given: holons in order, among them expressions, which are holons too. */
+  argument: Ref[];
   /** Where the holon was born from, as a path in the files it arrived from. */
   from?: string;
 }
@@ -108,12 +114,6 @@ export interface TypeBody {
 export interface BriefSettings {
   /** Its number where it stands among its whole's parts, as 2.3, drawn before its title as a face. */
   number?: string;
-}
-
-/** The settings the Layout component takes from the slot that opens it. */
-export interface LayoutSettings {
-  /** Whether the layout is the page itself, which stands nowhere and so has no way down to it. */
-  alone?: boolean;
 }
 
 /** The settings the List component takes from the slot that opens it. */

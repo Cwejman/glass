@@ -61,25 +61,8 @@ test("a value that is not an expression says what is wrong with it", () => {
   expect(expressionProblem({ types: true, named: true })).toContain("one form");
 });
 
-test("an expression can look outward: what a holon holds, in the order it holds them", () => {
-  const whole = newId();
-  const first = newId();
-  const second = newId();
-  const looking = fieldOf([
-    standing("home", [
-      [whole, { title: "W", parts: [{ $ref: second }, { $ref: first }], about: { $ref: TYPE } }, [NOTE]],
-      [first, { title: "1" }, [NOTE]],
-      [second, { title: "2" }, [NOTE]],
-    ]),
-    standing("glass", [
-      [TYPE, typeBody, [TYPE]],
-      [NOTE, typeBody, [TYPE]],
-    ]),
-  ]);
-  expect(gather(looking, { held: whole })).toEqual([second, first, TYPE]);
-  expect(gather(looking, { held: whole, under: "parts" })).toEqual([second, first]);
-  expect(expressionProblem({ held: whole, under: "parts" })).toBeUndefined();
-  expect(expressionProblem({ held: whole, by: "parts" })).toContain("held takes only");
+test("there is no looking into what a holon holds by key: a holon's parts are its own to open", () => {
+  expect(expressionProblem({ held: a })).toContain("no expression held");
 });
 
 test("an expression nested past its depth is refused", () => {

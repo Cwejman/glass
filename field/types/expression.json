@@ -1,0 +1,19 @@
+{
+  "title": "Expression",
+  "says": "A way of looking at the field, held as a holon: an expression that gathers holons, so it can be given to a mount, shown by its words, or looked through to what it gathers.",
+  "fields": {
+    "title": {
+      "says": "What the way of looking is called.",
+      "shape": "string"
+    },
+    "gathers": {
+      "says": "The expression itself: what it gathers from the field.",
+      "shape": "expression"
+    },
+    "from": {
+      "says": "Where the holon was born from, as a path in the files it arrived from.",
+      "shape": "string",
+      "optional": true
+    }
+  }
+}

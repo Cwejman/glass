@@ -15,13 +15,13 @@ What a URL may carry is what a chassis can be started with: a store to attach wh
 
 *The bare domain the author's, 2026-11-01; the flags carried from OpenLight's chassis: `--at`, `--entry`, `--mount`.*
 
-## 2. A layout reads what it reads
+## 2. A mount reads what it reads
 
-A layout says what each mount reads, so what is on screen follows from the layout, and the reader is not at an address within a store.
+The root mount says what it gives, so what is on screen follows from it, and the reader is not at an address within a store.
 
-Acting on what is drawn may change what a mount is given or how it presents, and that is a commit to the arrangement, kept and walkable. Whether glass will want anything like pages, with a whole other layout behind a press, is left until there is a site to want it; the author knows of nothing like it in OpenLight.
+Acting on what is drawn may change what the root gives or what draws it, and that is a new version of the root, kept and walkable. Whether glass will want anything like pages, with a whole other layout behind a press, is left until there is a site to want it; the author knows of nothing like it in OpenLight.
 
-*The author's, 2026-11-01: your layout is what it is, and it reads what it reads; on 2026-10-31 he had thought of one central address for where you are, and on 2026-11-01 found a holon's address in the URL strange. The arrangement's commits the session's, from [the home](home.md#6-the-history-stack-is-the-arrangements-commits).*
+*The author's, 2026-11-01: your layout is what it is, and it reads what it reads; on 2026-10-31 he had thought of one central address for where you are, and on 2026-11-01 found a holon's address in the URL strange. The root's versions the session's, from [the home](home.md#6-the-history-stack-is-the-roots-versions).*
 
 ## 3. Sharing is an act
 

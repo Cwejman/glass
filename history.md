@@ -9,6 +9,14 @@ How glass came to be what it is, told over its commits, newest first, each day b
 
 *Begun 2026-11-02, on the author's word that the effort be noted in the log as the work goes. Each story reasoned by the session that did the work, from the commits and the author's words.*
 
+## The root as a mount
+
+The author saw that the root was still a custom component, and that nothing in glass could move: the primitives hold no state, take no press and go nowhere, so looking around had to be built on them. The session proposed a Reading holon, then actions as holons, then a layout whose mounts follow presses, and the author found each made up or convoluted, and asked that it look wide, at glass and at OpenLight, and say what is pure and what is not. It read OpenLight's view and components itself, after stopping an agent the author did not trust to carry it, and named what was convoluted, most of it its own: components that navigated, a location with four shapes, the field's own component, chrome wired into the interface, and a form of expression no one could read.
+
+What was left is small. The root is one mount in the home, a component and its argument, and every move is a new version of it, so its versions are the history. The reader is a component made of data, a template of two mounts giving `$`. Expressions given in an argument are holons. A press rises from where it landed, past the locations slots carry, to the mount that may be written, and its menu offers what takes the place pressed, found by type. Let go with it: the layout and the arrangement, the Field component, `held` and `under`, the slot's chrome, and every way a component placed the reader.
+
+*Reasoned on 2026-11-03 by the session.*
+
 ## The kind as an offer
 
 Asked to show plainly how a brief is drawn, the session laid it out, and the author saw the kind of a slot as a holon passed down as an offer: face unless a parent offers full. The interface was aligned to it: the page offers full to the arrangement, a layout to its panes, a brief and a list offer face to what they hold, and a slot's own word comes first. Slots are now opened at a single `where`, an id, several, or an expression, and a brief opens its parts as what it holds under parts. The record type, a bad name for knowledge kept by time, gave way to a brief that says its parts are kept by time; such knowledge is likely to become typed holons in time.

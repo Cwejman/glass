@@ -1,7 +1,0 @@
-[
-  {
-    "name": "angles",
-    "title": "Two angles on the field",
-    "mounts": [{ "gathers": { "types": true } }, { "gathers": { "instances": "brief" } }]
-  }
-]

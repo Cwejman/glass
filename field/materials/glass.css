@@ -59,7 +59,7 @@ body {
 
 #glass {
   max-width: var(--measure);
-  height: 100dvh;
+  min-height: 100dvh;
   margin: 0 auto;
   padding: 0 var(--gap);
 }
@@ -137,7 +137,8 @@ pre {
   color: var(--quiet);
 }
 
-/* A card: what a mount draws as a face, entered by a press. */
+/* A card: what a face slot draws, entered by a press. The slot is what is
+   pressed and focused, so it is the slot that marks the card. */
 
 .card {
   display: block;
@@ -149,9 +150,12 @@ pre {
   transition: border-color 0.15s;
 }
 
-.card:hover,
-.card:focus-visible {
+.slot.face:hover > .card,
+.slot.face:focus-visible > .card {
   border-color: var(--quiet);
+}
+
+.slot.face:focus-visible {
   outline: none;
 }
 
@@ -169,32 +173,20 @@ pre {
   gap: calc(var(--gap) * 0.75);
 }
 
-/* Panes, side by side, set off from each other by space. A pane scrolls
-   within itself; its text starts at the top, and once it is scrolled the
-   top fades, so what passes out of sight goes softly. */
+/* A component made of data: its mounts one under another, set off by
+   space. */
 
-:root {
-  --pane-gap: calc(var(--gap) * 3);
-  --fade: 3rem;
-}
-
-.panes {
-  height: 100%;
-}
-
-.panes > .slot {
-  overflow-y: auto;
+.template {
   padding: calc(var(--gap) * 3) 0 calc(var(--gap) * 6);
-  scrollbar-width: thin;
 }
 
-.panes > .slot[data-scrolled] {
-  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade));
+.template > .slot + .slot {
+  margin-top: calc(var(--gap) * 2);
 }
 
-/* A slot's chrome: what can be done with what stands in it. */
+/* A mount's menu: what can be done where it was pressed. */
 
-.chrome {
+.menu {
   position: fixed;
   z-index: 10;
   min-width: 14rem;
@@ -206,7 +198,7 @@ pre {
   font: var(--small) / var(--leading-close) var(--sans);
 }
 
-.chrome-title {
+.menu-title {
   padding: 0.4rem 0.6rem 0.3rem;
   color: var(--quiet);
   font-size: var(--smaller);
@@ -214,7 +206,7 @@ pre {
   letter-spacing: 0.06em;
 }
 
-.chrome button {
+.menu button {
   display: block;
   width: 100%;
   text-align: left;
@@ -227,19 +219,33 @@ pre {
   cursor: pointer;
 }
 
-.chrome button:hover,
-.chrome button:focus-visible {
+.menu button:hover,
+.menu button:focus-visible {
   background: var(--line);
   outline: none;
 }
 
-.chrome button[aria-disabled="true"] {
+.menu button[aria-disabled="true"] {
   color: var(--quiet);
   cursor: default;
 }
 
-.chrome-why {
+.menu-why {
   padding: 0 0.6rem 0.45rem;
   color: var(--quiet);
   font-size: var(--smaller);
+}
+
+.menu-value {
+  display: block;
+  box-sizing: border-box;
+  width: min(28rem, 80vw);
+  margin: 0.2rem 0 0.35rem;
+  padding: 0.5rem 0.6rem;
+  font: var(--smaller) / var(--leading-close) var(--mono);
+  color: var(--ink);
+  background: transparent;
+  border: var(--hairline) solid var(--line);
+  border-radius: calc(var(--radius) * 0.6);
+  resize: vertical;
 }

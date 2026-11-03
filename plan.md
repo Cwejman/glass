@@ -40,8 +40,8 @@ Each step is built, tested, read by a fresh agent and mended:
 
 - **The store**: its vectors, made apart from its code; a store as files, in memory and in the browser's storage; every object checked by its name, its form and where it stands in the tree.
 - **The engine**: stores attached and read as one, every commit judged against its types and taken in turn, references indexed, the home the one store written, on its own thread in the browser.
-- **The interface**: the chassis, components born as holons from their code, mounts held by a layout, type-matched spaces, and the arrangement kept in the home, so moving through the wiki, back and forward, and a reload all stand on its commits.
-- **The reader**, then [the interface as a mirror of the field](architecture/interface.md): the entry stands at the field itself, its stores, names and types; a type shows its fields and its instances; a brief is drawn by its own values, its parts a list of mounts each drawn as a face; and the wildcard draws any other holon by its values, every reference in them entered from there.
+- **The interface**: the chassis, components born as holons from their code or held as data, type-matched spaces, and the root mount kept in the home, so moving through the wiki, back and forward, and a reload all stand on its versions.
+- **The reader**, then [the interface as a mirror of the field](architecture/interface.md): the entry is a mount giving everything the field names to the reader, a component made of data; a press anywhere moves the root, and its menu offers what takes the place pressed; a type shows its fields and its instances; a brief is drawn by its own values, its parts a list of mounts each drawn as a face; and the wildcard draws any other holon by its values, every reference in them entered from there.
 - **The wiki in the store**: born from these files with glass's types and components, each brief a holon judged by the engine, keeping its id across births by its file and heading; a heading renamed is born as a new holon, and what the files no longer hold is taken out of the field, its history kept.
 
 Not yet built, though the briefs describe them: what is attached is named by the page, not kept in the home; run, await and cancel wait for programs; components run in the page itself, not apart, which is safe only while the one store attached is glass's own; and a brief's prose is one piece of markdown.
@@ -66,7 +66,7 @@ What waits, roughly in the order it stands on what comes before it. None of it i
 
 - **The fully immersive interface.** Editing in place, with the reader's own branch of a pulled store; what drew each holon, and why that component matched it, shown and edited where it stands; a context menu of actions; and the code and the JSON of anything readable where it is drawn, nothing locked away in a panel.
 
-- **The home**, kept in the browser: what is attached, the entry, the arrangement, and reset and clear as programs.
+- **The home**, kept in the browser: what is attached, the entry, the root, and reset and clear as programs.
 
 - **Runs, visible.** Runs kept in the home and drawn as they go, like an agent session; actions a component declares, such as adding a holon, that run a program; and the harness with its completion model and tools.
 

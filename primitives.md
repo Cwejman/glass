@@ -11,7 +11,7 @@ Data, types, programs, AI and interfaces are one field of whole pieces, and ever
 
 ## 1. Holon
 
-A holon is a small piece that is whole in itself, and part of the field and of any whole that holds it. A note is a holon, and so is a program, a type, a component and a layout: the same kind of piece throughout.
+A holon is a small piece that is whole in itself, and part of the field and of any whole that holds it. A note is a holon, and so is a program, a type, a component and a mount: the same kind of piece throughout.
 
 A holon is its identity, what it is an instance of, and its body: what it holds. The identity is given when it is born and never changes; every state it has had is kept as a version, each pointing back at the one before, so how it came to be stays readable.
 
@@ -67,6 +67,10 @@ A completion model is a program, and each tool is a program of its own, separate
 
 ## 9. Interface
 
-An interface is holons drawn by holons. A component is a holon that declares the type it takes and draws what it is given; a mount is a call to one, a component given what it reads; and a layout is mounts, held as data. A component encloses what it is given and opens a space in it, where what it holds is drawn in turn by the components whose types match, so an interface assembles itself level by level.
+An interface is holons drawn by holons. A component is a holon that declares the type it takes and draws what it is given, made of code or of data; and a mount is a call to one, a component given what it reads, its argument. A component encloses what it is given and opens a space in it, where what it holds is drawn in turn by the components whose types match, so an interface assembles itself level by level.
 
 *The author's, 2026-10-31: each component encloses and opens space for new holarchy and new type-matched components therein. The mount is OpenLight's.*
+
+The primitives are still: they hold no state, take no press and move nowhere. Looking around the field is built on them, as one mount the reader keeps in their home and gives a new version each time they look elsewhere.
+
+*The author's, [2026-11-03](said/2026-11-03.md#17-the-root-as-a-mount): there is no state, no interaction, no navigation; it is something to birth upon the primitives, so it is editable. The one root mount the session's, from OpenLight's.*

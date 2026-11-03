@@ -2,7 +2,6 @@ import type { Id } from "../../src/store/id.ts";
 import type { Declaration, Given, Space } from "../../src/interface/component.ts";
 import type { TypeBody } from "./bodies.ts";
 import { h } from "./jsx.ts";
-import { Card, follow, Way } from "./way.tsx";
 
 // A type: what an instance of it is, each field it declares with what the
 // field means and its shape, and its instances, a list of mounts. Seen from
@@ -51,16 +50,15 @@ export default async function draw(given: Given<TypeBody>, space: Space) {
 
   if (given.kind === "face")
     return (
-      <Card to={type.id} space={space}>
+      <div class="card">
         <strong>{title}</strong>
         <span class="meta">{[says, counted(instances.length, "instance")].filter(Boolean).join(" · ")}</span>
-      </Card>
+      </div>
     );
 
   const fields = Object.entries(declared as unknown as Record<string, Connector>);
   return (
-    <article class="place type" onClick={follow(space)}>
-      <Way steps={[]} />
+    <article class="place type">
       <h1>{title}</h1>
       {says && <p>{says}</p>}
 
@@ -79,7 +77,7 @@ export default async function draw(given: Given<TypeBody>, space: Space) {
       </dl>
 
       <h2>Its instances, {instances.length}</h2>
-      {space.open({ instances: type.id }, { offer: { kind: "face" } })}
+      {space.open(instances, { offer: { kind: "face" } })}
     </article>
   );
 }

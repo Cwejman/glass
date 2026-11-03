@@ -16,24 +16,14 @@ import { bodyProblem, connectorsOf, isType, typeProblem } from "./types.ts";
 
 // What may be read of a field: a holon, now or at a commit; what a name
 // gives; what points at a holon, and under which key; a type's instances;
-// a store's head; the field itself, as a place; and whatever an expression
-// gathers.
+// a store's head; and whatever an expression gathers.
 export type Read =
   | { holon: Id; at?: Name }
   | { name: string }
   | { holders: Id }
   | { instances: Id }
   | { head: string }
-  | { field: true }
   | { gather: Expression };
-
-// The field as a place: no holon holds it, so the engine shows it from what
-// the field holds. Each store with its head and the names it gives, and
-// every type with how many holons are its instances.
-export interface FieldPlace {
-  stores: { key: string; head: Name | null; names: Record<string, Id> }[];
-  types: { id: Id; instances: number }[];
-}
 
 export interface HolonRead {
   id: Id;
@@ -148,8 +138,6 @@ export function readProblem(value: unknown): string | undefined {
     case "name":
     case "head":
       return typeof given === "string" ? undefined : `${form} is a name`;
-    case "field":
-      return given === true ? undefined : "field is written field: true";
     case "gather":
       return expressionProblem(given as Json);
     default:
@@ -171,7 +159,6 @@ export async function read(field: Field, past: Past, read: Read): Promise<Json> 
         .find((id) => id !== undefined && field.known.has(id)) ?? null
     );
   if ("head" in read) return field.stores.find(({ key }) => key === read.head)?.head ?? null;
-  if ("field" in read) return placeOf(field) as unknown as Json;
   if ("gather" in read) return gather(field, read.gather);
   if ("holders" in read)
     return (field.holders.get(read.holders) ?? []).map(({ from, key, pinned }) => ({
@@ -257,18 +244,6 @@ function holonProblem(field: Field, past: Past, holon: Holon, born: Map<Id, Holo
       ),
     () => firstOfAsync(references(holon.body), outOfField),
   );
-}
-
-function placeOf(field: Field): FieldPlace {
-  const versions = [...field.known.values()].map(({ version }) => version);
-  const types = versions.filter(({ body }) => isType(body));
-  return {
-    stores: field.stores.map(({ key, head, names }) => ({ key, head: head ?? null, names: { ...names } })),
-    types: types.map(({ id }) => ({
-      id,
-      instances: versions.filter(({ instance }) => instance.includes(id)).length,
-    })),
-  };
 }
 
 function view({ key, name, version }: Known): Json {

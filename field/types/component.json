@@ -1,6 +1,6 @@
 {
   "title": "Component",
-  "says": "A holon that declares the types it takes and draws what it is given, opening space in it where what it holds is drawn in turn by the components that match.",
+  "says": "A holon that declares the types it takes and draws what it is given, opening space in it where what it holds is drawn in turn by the components that match. It is made of code, or of data: mounts held as its template.",
   "fields": {
     "title": {
       "says": "What the component is called.",
@@ -23,7 +23,7 @@
       }
     },
     "argument": {
-      "says": "What a mount of it is given: one holon, a list of holons, or the field itself; one holon unless it says otherwise.",
+      "says": "What a mount of it is given: one holon, a list of holons, or a selection, either; one holon unless it says otherwise.",
       "shape": "string",
       "optional": true
     },
@@ -40,8 +40,28 @@
       "optional": true
     },
     "code": {
-      "says": "The module the interface runs, as JavaScript.",
-      "shape": "string"
+      "says": "The module the interface runs, as JavaScript, for a component made of code.",
+      "shape": "string",
+      "optional": true
+    },
+    "template": {
+      "says": "For a component made of data instead of code: the mounts it is drawn as, in order, each giving `$`, what the component itself is given, and, where it says so, the kind of slot it is.",
+      "shape": {
+        "list": {
+          "fields": {
+            "kind": {
+              "says": "The kind of slot the mount is, where it says so.",
+              "shape": "ref",
+              "optional": true
+            },
+            "argument": {
+              "says": "What the mount gives: `$`, what the component itself was given.",
+              "shape": "json"
+            }
+          }
+        }
+      },
+      "optional": true
     },
     "source": {
       "says": "The code as it was written, before it was built.",

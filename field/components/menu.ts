@@ -1,9 +1,9 @@
-// A slot's chrome: what can be done with what stands in it, offered where
-// the slot is pressed with the secondary button. Each action either does
-// what it says, or says, in words beside it, why it cannot be done here.
-// One menu stands at a time; it closes on an outside press, on Escape or
-// Tab, when the page is drawn again, and gives the focus back to where it
-// was.
+// A menu: what can be done where something was pressed with the secondary
+// button, offered by whatever took the press. Each action either does what
+// it says, or says, in words beside it, why it cannot be done here. One
+// menu stands at a time; it closes on an outside press, on Escape or Tab,
+// and gives the focus back to where it was. An action may ask for words
+// before it is done, as a value to change, in the menu's place.
 
 export interface Action {
   label: string;
@@ -23,12 +23,12 @@ export function offer(x: number, y: number, title: string, actions: Action[], fr
   const returnTo = (document.activeElement as HTMLElement | null) ?? from;
 
   const menu = document.createElement("div");
-  menu.className = "chrome";
+  menu.className = "menu";
   menu.setAttribute("role", "menu");
   menu.setAttribute("aria-label", title);
 
   const heading = document.createElement("div");
-  heading.className = "chrome-title";
+  heading.className = "menu-title";
   heading.textContent = title;
   menu.append(heading);
 
@@ -43,8 +43,8 @@ export function offer(x: number, y: number, title: string, actions: Action[], fr
 
     if (!action.run && action.why) {
       const why = document.createElement("div");
-      why.className = "chrome-why";
-      why.id = `chrome-why-${i}`;
+      why.className = "menu-why";
+      why.id = `menu-why-${i}`;
       why.textContent = action.why;
       item.setAttribute("aria-describedby", why.id);
       menu.append(why);
@@ -83,4 +83,36 @@ export function offer(x: number, y: number, title: string, actions: Action[], fr
   menu.style.left = `${Math.max(8, Math.min(x, innerWidth - width - 8))}px`;
   menu.style.top = `${Math.max(8, Math.min(y, innerHeight - height - 8))}px`;
   items()[0]?.focus();
+}
+
+// Words asked for in a menu's place: a value to change, kept when Keep is
+// pressed, and what was wrong with it said beneath if it could not be.
+export function ask(
+  x: number,
+  y: number,
+  title: string,
+  value: string,
+  keep: (value: string) => Promise<void>,
+  from: HTMLElement,
+) {
+  const area = document.createElement("textarea");
+  area.className = "menu-value";
+  area.value = value;
+  area.rows = Math.min(12, value.split("\n").length + 1);
+  const said = document.createElement("div");
+  said.className = "menu-why";
+
+  offer(x, y, title, [{ label: "Keep", run: () => undefined }], from);
+  const menu = document.querySelector<HTMLElement>(".menu")!;
+  const button = menu.querySelector<HTMLElement>('[role="menuitem"]')!;
+  menu.insertBefore(area, button);
+  menu.append(said);
+  const kept = button.cloneNode(true) as HTMLElement;
+  button.replaceWith(kept);
+  kept.addEventListener("click", () => {
+    keep(area.value).then(dismiss, (error: unknown) => {
+      said.textContent = error instanceof Error ? error.message : String(error);
+    });
+  });
+  area.focus();
 }

@@ -47,7 +47,7 @@ A commit does not say who made it. A change is made by a program's run, and the 
 An index maps every holon's id to the version it has at that commit, and every name given in the store to the holon it names. It holds no content itself, only which state of each holon is current, so one index is the whole field at one moment.
 
 ```json
-{ "kind": "index", "names": { "entry": "01JB…layout" }, "holons": "sha256-4c…" }
+{ "kind": "index", "names": { "entry": "01JB…mount" }, "holons": "sha256-4c…" }
 ```
 
 The holons are a tree split by the characters of their ids, read from the end, where ids are random. A leaf holds at most 64 holons; past that it becomes a branch over the next character, with a leaf or a branch beneath each. A change writes new nodes only on the way to the holons it touched, and shares every other node with the commit before, so the index stays light however large the field grows. The tree's shape depends only on which ids there are, so the same field always gives the same index, and two copies are compared by one name.
@@ -62,7 +62,7 @@ An id is a ULID: ten characters of the moment the holon was born and sixteen of 
 
 #### 2.3.2 Names
 
-A name is unique within its store and resolves to an identity, so references never break when a name changes. The store says only what its names are; `entry`, the layout a client boots into, is the first.
+A name is unique within its store and resolves to an identity, so references never break when a name changes. The store says only what its names are; `entry`, the mount a client boots into, is the first.
 
 *The store as the namespace the author's, 2026-11-02; names held in the index the session's, 2026-11-03.*
 

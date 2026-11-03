@@ -19,7 +19,7 @@ The engine in the client has a field of its own, its home, where everything the 
 
 [The home](home.md)
 
-What the client draws is the field itself, from its root, each place a holon called by a mount, so the interface is a mirror of the field.
+What the client draws is the field, from a root mount, each place a holon called by a mount, so the interface is a mirror of the field.
 
 [The interface as a mirror of the field](interface.md)
 

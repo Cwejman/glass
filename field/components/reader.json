@@ -1,0 +1,8 @@
+{
+  "title": "Reader",
+  "says": "What you are looking at, made of data: what it is given, shown as its face, and then that same thing drawn in full.",
+  "takes": [],
+  "kinds": ["full"],
+  "argument": "selection",
+  "template": [{ "argument": "$", "kind": "face" }, { "argument": "$" }]
+}

@@ -3,7 +3,6 @@ import type { Id } from "../../src/store/id.ts";
 import type { Declaration, Given, Space } from "../../src/interface/component.ts";
 import { h, type Child } from "./jsx.ts";
 import { markdown } from "./prose.ts";
-import { Card, follow, Way } from "./way.tsx";
 
 // Any holon, when nothing closer draws it: the wildcard. Whole, it is what
 // the holon is an instance of, and every value in its body, a reference
@@ -54,15 +53,14 @@ export default async function draw(given: Given, space: Space) {
 
   if (given.kind === "face")
     return (
-      <Card to={holon.id} space={space}>
+      <div class="card">
         <strong>{title}</strong>
         <span class="meta">{what}</span>
-      </Card>
+      </div>
     );
 
   return (
-    <article class="place holon" onClick={follow(space)}>
-      <Way steps={[]} />
+    <article class="place holon">
       <h1>{title}</h1>
       <p class="meta">{what}</p>
 

@@ -2,7 +2,8 @@ import { Marked, type Token, type Tokens } from "marked";
 
 // Prose under the rule, drawn: markdown whose links into the field are
 // `ref:<id>`. A paragraph that is nothing but one such link places a part
-// there; any other link only mentions. A link to the web stays a link; one
+// there; any other link only mentions, and says where it leads, as a
+// location, so a press on it rises with it. A link to the web stays a link; one
 // to somewhere the field cannot reach, as a git commit, is shown as text
 // with its address where the pointer rests. Raw HTML in prose is shown as
 // text, never run.
@@ -26,7 +27,8 @@ export const markdown = new Marked({
     link({ href, title, tokens }) {
       const text = this.parser.parseInline(tokens);
       const ref = refOf(href);
-      if (ref) return `<a href="#" data-ref="${ref}"${title ? ` title="${escape(title)}"` : ""}>${text}</a>`;
+      if (ref)
+        return `<a href="#" data-location="${escape(JSON.stringify([ref]))}"${title ? ` title="${escape(title)}"` : ""}>${text}</a>`;
       if (/^(https?|mailto):/i.test(href))
         return `<a href="${escape(href)}"${title ? ` title="${escape(title)}"` : ""}>${text}</a>`;
       return `<span class="unlinked" title="${escape(href)}">${text}</span>`;

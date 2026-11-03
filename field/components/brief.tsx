@@ -3,16 +3,16 @@ import type { Declaration, Given, HolonOf, Space } from "../../src/interface/com
 import type { BriefBody, BriefSettings } from "./bodies.ts";
 import { h } from "./jsx.ts";
 import { faceOf, isConfidence, markdown, placed, slotOf } from "./prose.ts";
-import { Card, follow, Way } from "./way.tsx";
+import { Way } from "./way.tsx";
 
 // A brief, in either kind of slot. In full: the way down to it, its title
 // and prose, each part its prose places a slot where it stands, and its
-// parts beneath, what it holds under parts, gathered; its own values it
-// draws, and what they point at it opens as slots, offering them a face, so
-// a brief in full never trickles its fullness into what it holds. As a
-// face: its number, title and first paragraph, and how many briefs stand
-// beneath it, entered by a press. A brief's parts are numbered by where
-// they stand, unless it keeps them by time, as a day's words are.
+// parts beneath, a slot of them all; its own values it draws, and what they
+// point at it opens as slots, offering them a face, so a brief in full
+// never trickles its fullness into what it holds. As a face: its number,
+// title and first paragraph, and how many briefs stand beneath it. A
+// brief's parts are numbered by where they stand, unless it keeps them by
+// time, as a day's words are.
 
 export const declared = {
   title: "Brief",
@@ -26,7 +26,7 @@ export const declared = {
       optional: true,
     },
   },
-  reads: ["holders", "holon", "gather"],
+  reads: ["holders", "holon"],
 } satisfies Declaration;
 
 export const style = `
@@ -106,7 +106,7 @@ export const style = `
 type Drawn = Given<BriefBody, BriefSettings>;
 
 export default function draw(given: Drawn, space: Space) {
-  return given.kind === "face" ? face(given, space) : full(given, space);
+  return given.kind === "face" ? face(given) : full(given, space);
 }
 
 // A level on the way down: a brief, its title, and its number where it has one.
@@ -128,7 +128,7 @@ async function full(given: Drawn, space: Space) {
     .map(({ id, title, number }) => ({ to: id, label: number ? `${number} ${title}` : title }));
 
   return (
-    <article class="place reader" onClick={follow(space)}>
+    <article class="place reader">
       <Way steps={steps} />
       <h1>
         {number && <span class="number">{number}</span>}
@@ -138,14 +138,14 @@ async function full(given: Drawn, space: Space) {
       <div class="prose">{proseOf(holon, space)}</div>
       {(brief.parts?.length ?? 0) > 0 &&
         space.open(
-          { held: holon.id, under: "parts" },
+          brief.parts!.map(({ $ref }) => $ref),
           { offer: { kind: "face" }, settings: { numbered: numbers(holon), number } },
         )}
     </article>
   );
 }
 
-function face(given: Drawn, space: Space) {
+function face(given: Drawn) {
   const holon = given.holon!;
   const brief = holon.body;
   const { number } = given.settings;
@@ -153,14 +153,14 @@ function face(given: Drawn, space: Space) {
   const beneath = brief.parts?.length ?? 0;
 
   return (
-    <Card to={holon.id} space={space} class="face-card">
+    <div class="card face-card">
       <h2>
         {number && <span class="number">{number}</span>}
         {brief.title}
       </h2>
       {first && <p html={first} />}
       {beneath > 0 && <span class="meta">{beneath} beneath</span>}
-    </Card>
+    </div>
   );
 }
 

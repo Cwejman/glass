@@ -32,12 +32,14 @@ export interface MaterialFile {
   css: string;
 }
 
-// A component as its module declares it, with its code built and its
-// source as written.
+// A component as it declares itself: a module, with its code built and its
+// source as written, or data, with the mounts of its template, each kind
+// given by its name.
 export interface ComponentFile extends Declaration {
   from: string;
-  code: string;
-  source: string;
+  code?: string;
+  source?: string;
+  template?: { argument: Json; kind?: string }[];
 }
 
 // The types, each an instance of the type of types, which is one of itself.
@@ -79,30 +81,42 @@ export function components(
   );
   if (wrong.length) throw new Error(`components that declare what is not so:\n  ${wrong.join("\n  ")}`);
   return {
-    holons: files.map(({ from, title, says, takes, kinds, argument, settings, reads, code, source }) => ({
-      id: idOf(from),
-      instance: [typeOf.component!],
-      body: {
-        title,
-        says,
-        takes: takes.map((type) => ({ $ref: typeOf[type]! })),
-        kinds: kinds.map((kind) => ({ $ref: kindOf[kind]! })),
-        ...(argument ? { argument } : {}),
-        ...(settings ? { settings: settings as unknown as Json } : {}),
-        ...(reads ? { reads } : {}),
-        code,
-        source,
-        from,
-      },
-    })),
+    holons: files.map(
+      ({ from, title, says, takes, kinds, argument, settings, reads, code, source, template }) => ({
+        id: idOf(from),
+        instance: [typeOf.component!],
+        body: {
+          title,
+          says,
+          takes: takes.map((type) => ({ $ref: typeOf[type]! })),
+          kinds: kinds.map((kind) => ({ $ref: kindOf[kind]! })),
+          ...(argument ? { argument } : {}),
+          ...(settings ? { settings: settings as unknown as Json } : {}),
+          ...(reads ? { reads } : {}),
+          ...(code !== undefined ? { code } : {}),
+          ...(source !== undefined ? { source } : {}),
+          ...(template
+            ? {
+                template: template.map(({ argument, kind }) => ({
+                  argument,
+                  ...(kind ? { kind: { $ref: kindOf[kind]! } } : {}),
+                })),
+              }
+            : {}),
+          from,
+        },
+      }),
+    ),
     names: {},
   };
 }
 
 // What a component declares that is not so: a type or a kind the field
-// does not name, a read form there is not, or settings not said as fields.
+// does not name, a read form there is not, settings not said as fields, or
+// neither code nor a template to be drawn by, or a template that gives
+// anything but `$`.
 function declarationProblems(
-  { takes, kinds, reads, settings, argument }: ComponentFile,
+  { takes, kinds, reads, settings, argument, code, template }: ComponentFile,
   typeOf: Record<string, Id>,
   kindOf: Record<string, Id>,
 ): string[] {
@@ -111,9 +125,18 @@ function declarationProblems(
     .map(([key]) => `${key} is not a list`);
   if (notLists.length) return notLists;
   return [
-    ...(argument !== undefined && !["holon", "list", "field"].includes(argument)
-      ? [`it is given ${argument}, which is not a holon, a list or the field`]
+    ...(argument !== undefined && !["holon", "list", "selection"].includes(argument)
+      ? [`it is given ${argument}, which is not a holon, a list or a selection`]
       : []),
+    ...((code === undefined) === (template === undefined)
+      ? ["it is made of code or of a template, one of them"]
+      : []),
+    ...(template ?? []).flatMap(({ argument, kind }, i) => [
+      ...(argument !== "$" ? [`its template's mount ${i} gives ${JSON.stringify(argument)}, not $`] : []),
+      ...(kind !== undefined && !Object.hasOwn(kindOf, kind)
+        ? [`its template's mount ${i} is a ${kind} slot, which is no kind`]
+        : []),
+    ]),
     ...takes
       .filter((type) => !Object.hasOwn(typeOf, type))
       .map((type) => `it takes ${type}, which is no type`),
@@ -187,52 +210,66 @@ export function wiki(
   return { holons, names: { wiki: idAt(entry)! } };
 }
 
-export interface LayoutFile {
+export interface ExpressionFile {
   name: string;
   title: string;
-  mounts: Json[];
+  gathers: Json;
 }
 
-// Layouts the field ships beside its entry. In a layout's file a holon may
-// be given by the name the field gives it, as `{ "instances": "brief" }` or
-// `{ "held": "wiki", "under": "parts" }`, and a component by its title, as
-// `{ "component": "List" }`; each is made a reference to what it names.
-export function layouts(
-  files: LayoutFile[],
-  idOf: IdOf,
-  typeOf: Record<string, Id>,
-  named: Record<string, Id>,
-  componentTitled: Record<string, Id>,
-): Born {
-  const holonKeys = new Set(["instances", "pointing", "held", "reads"]);
+// The ways of looking the field ships, each an expression held as a holon
+// and named. In the files a holon is given by the name the field gives it,
+// as `{ "instances": "brief" }`, and made a reference to what it names.
+export function expressions(files: ExpressionFile[], idOf: IdOf, typeOf: Record<string, Id>): Born {
+  const fromOf = (name: string) => `field/expressions.json#${name}`;
+  const holonKeys = new Set(["instances", "pointing"]);
   const resolved = (value: Json, at: string): Json => {
     if (Array.isArray(value)) return value.map((inner) => resolved(inner, at));
     if (value === null || typeof value !== "object") return value;
     return Object.fromEntries(
       Object.entries(value).map(([key, inner]) => {
-        if (typeof inner !== "string" || !(holonKeys.has(key) || key === "component"))
-          return [key, resolved(inner, at)];
-        const id = key === "component" ? componentTitled[inner] : named[inner];
-        if (!id) throw new Error(`${at}: ${key} names ${inner}, which the field does not name`);
-        return [key, { $ref: id }];
+        if (typeof inner !== "string" || !holonKeys.has(key)) return [key, resolved(inner, at)];
+        if (!Object.hasOwn(typeOf, inner)) throw new Error(`${at}: ${key} names ${inner}, which is no type`);
+        return [key, { $ref: typeOf[inner]! }];
       }),
     );
   };
-  const fromOf = (name: string) => `field/layouts.json#${name}`;
   return {
-    holons: files.map(({ name, title, mounts }) => ({
+    holons: files.map(({ name, title, gathers }) => ({
       id: idOf(fromOf(name)),
-      instance: [typeOf.layout!],
-      body: { title, mounts: resolved(mounts, fromOf(name)), from: fromOf(name) },
+      instance: [typeOf.expression!],
+      body: { title, gathers: resolved(gathers, fromOf(name)), from: fromOf(name) },
     })),
     names: Object.fromEntries(files.map(({ name }) => [name, idOf(fromOf(name))])),
   };
 }
 
-// The entry: the layout a client boots into, one mount standing at the
-// field itself, drawn by whatever is found for it.
-export function entry(idOf: IdOf, typeOf: Record<string, Id>): Born {
-  const id = idOf("field/entry");
-  const body = { title: "Entry", mounts: [{ projects: "field" }] as unknown as Json, from: "field/entry" };
-  return { holons: [{ id, instance: [typeOf.layout!], body }], names: { entry: id } };
+export interface EntryFile {
+  title: string;
+  component?: string;
+  argument: string[];
+}
+
+// The entry: the mount a client boots into before the reader has one of
+// their own, its component given by its title and each holon of its
+// argument by the name the field gives it.
+export function entry(
+  file: EntryFile,
+  idOf: IdOf,
+  typeOf: Record<string, Id>,
+  named: Record<string, Id>,
+  componentTitled: Record<string, Id>,
+): Born {
+  const from = "field/entry.json";
+  const nameOf = (name: string, among: Record<string, Id>) => {
+    if (!Object.hasOwn(among, name)) throw new Error(`${from}: ${name}, which the field does not name`);
+    return { $ref: among[name]! };
+  };
+  const body = {
+    title: file.title,
+    ...(file.component ? { component: nameOf(file.component, componentTitled) } : {}),
+    argument: file.argument.map((name) => nameOf(name, named)),
+    from,
+  };
+  const id = idOf(from);
+  return { holons: [{ id, instance: [typeOf.mount!], body }], names: { entry: id } };
 }

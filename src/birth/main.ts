@@ -10,22 +10,24 @@ import type { Declaration } from "../interface/component.ts";
 import {
   components,
   entry,
+  expressions,
   kinds,
-  layouts,
   materials,
   types,
   wiki,
   type Born,
   type ComponentFile,
+  type EntryFile,
+  type ExpressionFile,
   type KindFile,
-  type LayoutFile,
   type TypeFile,
 } from "./holons.ts";
 import { flatten, linkTargets, parseFile, resolve, type WikiFile } from "./wiki.ts";
 
 // Births glass's field into its store as one commit: the types, the
-// materials, the components built from their code, this wiki, and the entry
-// that reads it. A holon keeps
+// materials, the components built from their code or held as data, this
+// wiki, the ways of looking at it, and the entry, the mount that reads it.
+// A holon keeps
 // the id it was first born with, found by where it came from, its file and
 // its heading's anchor, so a birth after the files change is a change to the
 // same holons; a heading renamed is a new holon, and what the files no longer
@@ -60,9 +62,10 @@ const typeFiles: TypeFile[] = await Promise.all(
 const bornTypes = types(typeFiles, idOf, "field/types/type.json");
 
 // Every module among the components that declares itself is a component:
-// its declaration read from the module, its code built from it.
-const componentFiles: ComponentFile[] = await Promise.all(
-  (await declaringModules()).map(async ({ file, declared }) => {
+// its declaration read from the module, its code built from it. A component
+// made of data is its file as it stands.
+const componentFiles: ComponentFile[] = await Promise.all([
+  ...(await declaringModules()).map(async ({ file, declared }) => {
     const from = `field/components/${file}`;
     const built = await Bun.build({ entrypoints: [join(repo, from)], format: "esm", target: "browser" });
     if (!built.success) throw new AggregateError(built.logs, `building ${from}`);
@@ -73,7 +76,17 @@ const componentFiles: ComponentFile[] = await Promise.all(
       source: await readFile(join(repo, from), "utf8"),
     };
   }),
-);
+  ...(await readdir(join(repo, "field/components")))
+    .filter((file) => file.endsWith(".json"))
+    .sort()
+    .map(async (file) => ({
+      ...(JSON.parse(await readFile(join(repo, "field/components", file), "utf8")) as Omit<
+        ComponentFile,
+        "from"
+      >),
+      from: `field/components/${file}`,
+    })),
+]);
 const kindFiles = JSON.parse(await readFile(join(repo, "field/kinds.json"), "utf8")) as KindFile[];
 const bornKinds = kinds(kindFiles, idOf, bornTypes.names);
 const bornComponents = components(componentFiles, idOf, bornTypes.names, bornKinds.names);
@@ -98,20 +111,33 @@ const bornMaterials = materials(
 
 const files = await readWiki("README.md");
 const bornWiki = wiki(files, "README.md", idOf, bornTypes.names);
-const bornEntry = entry(idOf, bornTypes.names);
-const layoutFiles = JSON.parse(await readFile(join(repo, "field/layouts.json"), "utf8")) as LayoutFile[];
-const fieldNames = Object.assign({}, bornTypes.names, bornKinds.names, bornWiki.names, bornEntry.names);
+const expressionFiles = JSON.parse(
+  await readFile(join(repo, "field/expressions.json"), "utf8"),
+) as ExpressionFile[];
+const bornExpressions = expressions(expressionFiles, idOf, bornTypes.names);
+const entryFile = JSON.parse(await readFile(join(repo, "field/entry.json"), "utf8")) as EntryFile;
+const fieldNames = Object.assign({}, bornTypes.names, bornKinds.names, bornWiki.names, bornExpressions.names);
 const componentTitled = Object.fromEntries(componentFiles.map(({ from, title }) => [title, idOf(from)]));
-const bornLayouts = layouts(layoutFiles, idOf, bornTypes.names, fieldNames, componentTitled);
+const bornEntry = entry(entryFile, idOf, bornTypes.names, fieldNames, componentTitled);
 
-const field: Born[] = [bornTypes, bornKinds, bornMaterials, bornComponents, bornWiki, bornEntry, bornLayouts];
+const field: Born[] = [
+  bornTypes,
+  bornKinds,
+  bornMaterials,
+  bornComponents,
+  bornWiki,
+  bornExpressions,
+  bornEntry,
+];
 const holons = field.flatMap(({ holons }) => holons);
 const given: Record<string, Id> = Object.assign({}, ...field.map(({ names }) => names));
 
 // A name the store gave before and the files no longer give is taken back.
 const namedBefore = head ? Object.keys((await store.index(head)).names) : [];
 const names: Record<string, Id | null> = {
-  ...Object.fromEntries(namedBefore.filter((name) => !Object.hasOwn(given, name)).map((name) => [name, null])),
+  ...Object.fromEntries(
+    namedBefore.filter((name) => !Object.hasOwn(given, name)).map((name) => [name, null]),
+  ),
   ...given,
 };
 const gone = [...before].filter((id) => !holons.some((holon) => holon.id === id));

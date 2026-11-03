@@ -1,0 +1,27 @@
+{
+  "title": "Mount",
+  "says": "A call: a component and its argument, what it is given to draw. The argument is a selection, holons in order: one is drawn as itself, several as a list. A mount is the one thing that stands still to be changed, so the root of what one looks at is a mount, and every move is a new version of it.",
+  "fields": {
+    "title": {
+      "says": "What the mount is called.",
+      "shape": "string",
+      "optional": true
+    },
+    "component": {
+      "says": "The component the mount calls, when it names one; otherwise one is found for what it is given.",
+      "shape": "ref",
+      "optional": true
+    },
+    "argument": {
+      "says": "What the component is given: holons in order, among them expressions, which are holons too.",
+      "shape": {
+        "list": "ref"
+      }
+    },
+    "from": {
+      "says": "Where the holon was born from, as a path in the files it arrived from.",
+      "shape": "string",
+      "optional": true
+    }
+  }
+}

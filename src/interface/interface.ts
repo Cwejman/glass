@@ -1,20 +1,19 @@
-import type { Id } from "../store/id.ts";
+import { newId, type Id } from "../store/id.ts";
 import type { Name } from "../store/name.ts";
+import type { Body } from "../store/objects.ts";
 import type { HolonRead } from "../engine/engine.ts";
-import { arrangement, mountsOf, place, readingOf, restyle, walk } from "./arrangement.ts";
-import type { Kind, Settings, Target } from "./component.ts";
+import type { Kind } from "./component.ts";
 import type { Connection } from "./connection.ts";
-import { drawing, type Call } from "./drawing.ts";
-import { dismiss } from "./chrome.ts";
+import { drawing } from "./drawing.ts";
 import { lay } from "./materials.ts";
 
-// The interface draws the arrangement, the layout in the home, as the page's
-// one full slot; the layout's component opens its mounts as panes, each a
-// slot drawn by the component found for it, which opens slots for what it
-// holds, drawn in turn. Nothing it holds lasts: it keeps the
-// components it knows and what it is drawing now, and takes the reader's
-// moves one at a time. What lasts, even where the reader stands, is in the
-// field.
+// The interface draws one mount, the root, as the page's one full slot, and
+// what the mount gives is drawn by the component it calls, which opens
+// slots for what it holds, drawn in turn. Nothing it holds lasts: it keeps
+// the components it knows and what it is drawing now. What lasts, even what
+// the reader looks at, is in the field: the root is a holon in the home,
+// the reader's own once they first move, and every move a new version of
+// it, so its versions are the reader's history.
 //
 // A component is code, and code runs in the page with all it can reach, so
 // only the components of the home and of glass's own store are run. Another
@@ -24,40 +23,37 @@ const trusted = new Set(["home", "glass"]);
 
 export async function mount(engine: Connection, root: HTMLElement) {
   let components: HolonRead[] = [];
-  let arranged: HolonRead | undefined;
   let moves: Promise<unknown> = Promise.resolve();
 
   const kinds = await kindsOf(engine);
-  const kindNamed = (id: Id): Kind | undefined =>
-    id === kinds.face ? "face" : id === kinds.full ? "full" : undefined;
+  const entry = (await engine.read({ name: "entry" })) as Id | null;
+  if (!entry) throw new Error("the field has no entry to boot into");
+  const rootOf = async () => ((await engine.read({ name: "root" })) as Id | null) ?? entry;
 
-  // A layout's mount as a slot. The arrangement's mounts are where the
-  // reader stands, so a move inside one moves that mount, and a change from
-  // its chrome is kept in it; any other layout is only shown, and a move
-  // inside it moves the slot that shows it.
-  const paneOf = (layout: HolonRead, index: number, outer: Call): Omit<Call, "offered"> => {
-    const each = mountsOf(layout)[index]!;
-    const own = layout.id === arranged?.id;
-    return {
-      reads: readingOf(each),
-      ...(each.kind && kindNamed(each.kind.$ref) ? { own: kindNamed(each.kind.$ref)! } : {}),
-      settings: (each.settings ?? {}) as Settings,
-      called: each.component?.$ref,
-      place: own ? (to) => moveTo(index, to) : outer.place,
-      why: `this pane is part of ${String(layout.body.title ?? "a layout")}, which is only shown here; your own arrangement is where changes go`,
-      ...(own
-        ? {
-            keep: (change) =>
-              inTurn(async () => {
-                await restyle(engine, index, { ...change, kind: change.kind && kinds[change.kind] });
-                await draw();
-              }),
-          }
-        : {}),
-    };
-  };
+  // A holon may be written where it is the reader's: in the home, or the
+  // entry while it is still the root, which the reader's first move makes
+  // their own. Once they have one, the entry is only shown.
+  const may = (holon: HolonRead) => holon.store === "home" || (holon.id === entry && drawnRoot === entry);
+  const write = (holon: HolonRead, body: Body) =>
+    inTurn(async () => {
+      const { from: _, ...written } = body;
+      if (holon.store === "home")
+        await engine.commit({ holons: [{ id: holon.id, instance: holon.instance, body: written }] });
+      else {
+        const id = newId();
+        await engine.commit({
+          holons: [{ id, instance: holon.instance, body: written }],
+          names: { root: id },
+        });
+      }
+      // A move of the root is a step in the reader's history, and a new place
+      // to look at, seen from its top.
+      if (holon.id !== drawnRoot) return;
+      history.pushState({ commit: await engine.read({ head: "home" }) }, "");
+      scrollTo(0, 0);
+    });
 
-  const drawn = drawing(engine, { components: () => components, kinds, paneOf });
+  const drawn = drawing(engine, { components: () => components, kinds, may, write });
 
   // Moves are taken one at a time, each from where the one before left.
   const inTurn = (move: () => Promise<void>) => {
@@ -88,30 +84,13 @@ export async function mount(engine: Connection, root: HTMLElement) {
     ) as HolonRead[];
   };
 
-  // The arrangement drawn whole, in the page's one root slot.
+  // The root drawn whole, in the page's one slot, which offers it, and what
+  // lies beneath, a full view.
+  let drawnRoot: Id | undefined;
   const draw = async () => {
-    arranged = await arrangement(engine);
-    dismiss();
-    // The page offers its one slot, and what lies beneath, a full view.
-    const call: Call = {
-      reads: { holon: arranged.id },
-      offered: { kind: "full" },
-      settings: { alone: true },
-      place: (to) => moveTo(0, to),
-      root: true,
-      why: "the page always shows your arrangement whole",
-    };
-    await drawn.draw(root, call);
+    drawnRoot = await rootOf();
+    await drawn.draw(root, { reads: { holon: drawnRoot }, offered: { kind: "full" }, settings: {} });
   };
-
-  // A move commits the arrangement, and the browser's history holds the
-  // home's commit after it.
-  const moveTo = (index: number, to: Target) =>
-    inTurn(async () => {
-      if (!(await place(engine, index, to))) return;
-      history.pushState({ commit: await engine.read({ head: "home" }) }, "");
-      await draw();
-    });
 
   const componentType = (await engine.read({ name: "component" })) as Id | null;
   if (!componentType) throw new Error("the field holds no component type");
@@ -126,12 +105,29 @@ export async function mount(engine: Connection, root: HTMLElement) {
   await inTurn(() => know(known.value as Id[]));
   await lay(engine);
 
+  // The first move names the reader's own root, which is then the one drawn.
+  await engine.subscribe(
+    { name: "root" },
+    () =>
+      void inTurn(async () => {
+        if ((await rootOf()) !== drawnRoot) await draw();
+      }),
+  );
+
+  // The browser's back and forward walk the root's versions: the root as it
+  // stood at a commit of the home is written again, so history only ever
+  // grows. Before the reader's first move it stood as the entry.
   addEventListener(
     "popstate",
     (event: PopStateEvent) =>
       void inTurn(async () => {
-        await walk(engine, (event.state as { commit?: Name | null } | null)?.commit ?? null);
-        await draw();
+        const commit = (event.state as { commit?: Name | null } | null)?.commit ?? null;
+        const id = await rootOf();
+        const now = await engine.holon(id);
+        const then = (commit && (await engine.holon(id, commit))) || (await engine.holon(entry));
+        if (!now || !then || now.store !== "home") return;
+        const { from: _, ...body } = then.body;
+        await engine.commit({ holons: [{ id, instance: now.instance, body }] });
       }),
   );
   if (!history.state) history.replaceState({ commit: await engine.read({ head: "home" }) }, "");

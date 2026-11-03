@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { newId } from "../store/id.ts";
-import { wiki } from "./holons.ts";
+import { components, entry, expressions, wiki } from "./holons.ts";
 import { parseFile } from "./wiki.ts";
 
 const typeOf = { brief: newId() };
@@ -41,4 +41,57 @@ test("a link that leads nowhere is refused", () => {
     ["README.md", parseFile("README.md", "# Glass\n\n[Gone](gone.md) and [no](#nowhere).\n")],
   ]);
   expect(() => wiki(files, "README.md", idOf, typeOf)).toThrow("links that lead nowhere");
+});
+
+test("the entry is a mount: a component and its argument, each named in the files resolved to a holon", () => {
+  const typeOf = { mount: newId(), expression: newId(), component: newId(), brief: newId() };
+  const looks = expressions(
+    [{ name: "briefs", title: "Every brief", gathers: { instances: "brief" } }],
+    idOf,
+    typeOf,
+  );
+  const briefs = looks.names.briefs!;
+  expect(looks.holons[0]!.body.gathers).toEqual({ instances: { $ref: typeOf.brief } });
+  expect(looks.holons[0]!.instance).toEqual([typeOf.expression]);
+
+  const reader = newId();
+  const born = entry(
+    { title: "The root", component: "Reader", argument: ["briefs"] },
+    idOf,
+    typeOf,
+    {
+      ...looks.names,
+    },
+    { Reader: reader },
+  );
+  const root = born.holons[0]!;
+  expect(born.names.entry).toBe(root.id);
+  expect(root.instance).toEqual([typeOf.mount]);
+  expect(root.body.component).toEqual({ $ref: reader });
+  expect(root.body.argument).toEqual([{ $ref: briefs }]);
+  expect(() => entry({ title: "x", argument: ["nothing"] }, idOf, typeOf, {}, {})).toThrow("does not name");
+});
+
+test("a component as data: its template's mounts kept as they are, `$` the argument it is given", () => {
+  const typeOf = { component: newId(), brief: newId() };
+  const kindOf = { full: newId(), face: newId() };
+  const born = components(
+    [
+      {
+        from: "field/components/reader.json",
+        title: "Reader",
+        says: "What you look at.",
+        takes: [],
+        kinds: ["full"],
+        argument: "selection",
+        template: [{ argument: "$", kind: "face" }, { argument: "$" }],
+      },
+    ],
+    idOf,
+    typeOf,
+    kindOf,
+  );
+  const reader = born.holons[0]!.body;
+  expect(reader.code).toBeUndefined();
+  expect(reader.template).toEqual([{ argument: "$", kind: { $ref: kindOf.face } }, { argument: "$" }]);
 });

@@ -43,7 +43,7 @@ The engine holds the field and is the only way into it. It reads, commits and ru
 
 ### 2.3 The interface draws and holds nothing
 
-The interface is the components and what mounts them. It mounts what the layout names, reads for each mount what it is given, and draws it again when a commit touches what it read. What a component does, it does as an ordinary commit or run, judged by the engine. What lasts is in the field, never in the interface.
+The interface is the components and what mounts them. It mounts the root, reads for each mount what it is given, and draws it again when a commit touches what it read. What a component does, it does as an ordinary commit or run, judged by the engine. What lasts is in the field, never in the interface.
 
 *Carried from OpenLight's view.*
 
@@ -65,6 +65,6 @@ Running glass on one's own machine is the same store and the same interface with
 
 ## 5. A full client, preloaded
 
-Since the engine is headless, nothing ties the client to one store. It is a full client that comes preloaded with a default, one store attached and one entry, the layout it boots into, and it can attach any other store as well. A store that brings its own components brings code with it, so attaching one is a deliberate act, asked for and seen, and what it draws runs apart from the rest.
+Since the engine is headless, nothing ties the client to one store. It is a full client that comes preloaded with a default, one store attached and one entry, the mount it boots into, and it can attach any other store as well. A store that brings its own components brings code with it, so attaching one is a deliberate act, asked for and seen, and what it draws runs apart from the rest.
 
 *The author's, 2026-11-01: we are virtually creating a full capable client, it just comes preloaded with its default settings and connection. The consent and isolation are OpenLight's.*

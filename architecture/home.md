@@ -15,9 +15,9 @@ The home is a store like any other, written by the engine and kept in the browse
 
 - **What is attached**: each store, where it is fetched from, which ref, whether pinned to one commit, and whether it may be written.
 
-- **The entry**: the root mounts the client boots into, at first the one the attached store ships.
+- **The entry**: the mount the client boots into, at first the one the attached store ships.
 
-- **The arrangement**: the layout as the reader has it now.
+- **The root**: the mount the reader looks through, as they have it now.
 
 - **The runs**: every program the reader's engine has run.
 
@@ -47,9 +47,9 @@ Editing the layout and editing the data are different acts, so they land in diff
 
 ### 4.1 Layout belongs to whoever is looking
 
-How things are drawn, which component draws a holon and how places are arranged, is how the reader looks at the field, so changing it never touches the store. The arrangement starts as the one the store ships, and the reader follows the author's changes to it until they change it themselves; from then on they hold their own copy in the home.
+How things are drawn, which component draws a holon and what the reader looks at, is how the reader looks at the field, so changing it never touches the store. The root starts as the entry the store ships, and the reader follows the author's changes to it until they move themselves; from then on they hold their own root in the home.
 
-*The partition the author's, 2026-11-01; following the store's arrangement until the first change is the session's proposal, from OpenLight's desktop, where the session is the writable home of the arrangement.*
+*The partition the author's, 2026-11-01; following the store's entry until the first move is the session's proposal, from OpenLight's desktop, where the session is the writable home of the arrangement. What was the arrangement, a layout of panes, became the root mount on 2026-11-03.*
 
 ### 4.2 Data belongs to its source
 
@@ -59,15 +59,15 @@ A holon's title, prose and data are what the store says, so changing them change
 
 ## 5. Everything is programs and places
 
-Governing the home is done by programs, judged by the engine like any act: resetting the arrangement, clearing what is local, attaching another store, pulling the latest. What the reader stands on, which store, which commit, whether behind, is a place, drawn by a component like anything else. Nothing is managed from outside the field.
+Governing the home is done by programs, judged by the engine like any act: resetting the root, clearing what is local, attaching another store, pulling the latest. What the reader stands on, which store, which commit, whether behind, is a place, drawn by a component like anything else. Nothing is managed from outside the field.
 
 *The author's, 2026-11-01: there is no special chrome on top, it's all first-class native, as if Unix were built on programs and files.*
 
-## 6. The history stack is the arrangement's commits
+## 6. The history stack is the root's versions
 
-Every change to the arrangement is a commit, so the arrangement already has a history. Going back and forward walks it, and the browser's own back and forward are one more way of walking it, translated by the chassis. A reload restores the arrangement as it was left.
+Every move is a new version of the root mount, and a holon keeps its versions, so the root already has a history. Going back and forward walks it, and the browser's own back and forward are one more way of walking it, translated by the interface. A reload restores the root as it was left.
 
-*Reasoned, the session's, 2026-11-01, answering the author's question of what a virtual history stack means.*
+*Reasoned, the session's, 2026-11-01, answering the author's question of what a virtual history stack means; the arrangement's commits became the root's versions on 2026-11-03, as [the interface](interface.md#8-moving-is-a-new-version-of-the-root) tells.*
 
 ## 7. When the shape of state changes
 

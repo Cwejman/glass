@@ -6,15 +6,13 @@ import { references } from "./references.ts";
 import { isType } from "./types.ts";
 
 // An expression is data: a value that says what to gather from the field,
-// held in a body like any other value, so a layout can gather as easily as
+// held in a body like any other value, so a holon can gather as easily as
 // it can point. Evaluated against the field, it gives the holons it gathers,
 // in the order the field holds them. Each form names one way of looking:
 //
 //   { "instances": T }    the instances of the type T
 //   { "types": true }     every type
 //   { "pointing": H }     what points at the holon H
-//   { "held": H }         what the holon H holds, in the order it holds them
-//   { "held": H, "under": key }   what it holds under one key
 //   { "named": true }     every holon a store gives a name
 //   { "all": [ … ] }      what every expression in the list gathers
 //   { "any": [ … ] }      what any expression in the list gathers
@@ -27,7 +25,6 @@ export type Expression =
   | { instances: Given }
   | { types: true }
   | { pointing: Given }
-  | { held: Given; under?: string }
   | { named: true }
   | { all: Expression[] }
   | { any: Expression[] };
@@ -50,14 +47,6 @@ export function gather(field: Field, expression: Expression): Id[] {
     const target = idOf(expression.pointing);
     return held.filter(({ body }) => references(body).some(({ id }) => id === target)).map(({ id }) => id);
   }
-  if ("held" in expression) {
-    const holder = field.known.get(idOf(expression.held))?.version;
-    if (!holder) return [];
-    const held = references(holder.body).filter(
-      ({ key }) => expression.under === undefined || key === expression.under,
-    );
-    return [...new Set(held.map(({ id }) => id))].filter((id) => field.known.has(id));
-  }
   if ("named" in expression) {
     const named = new Set(field.stores.flatMap(({ names }) => Object.values(names)));
     return held.filter(({ id }) => named.has(id)).map(({ id }) => id);
@@ -74,13 +63,6 @@ export function gather(field: Field, expression: Expression): Id[] {
 // What is wrong with a value meant as an expression, if anything.
 export function expressionProblem(value: Json | undefined, nested = 0): string | undefined {
   if (nested >= depth) return `an expression nests at most ${depth} deep`;
-  if (isRecord(value) && "held" in value) {
-    const extra = Object.keys(value).filter((key) => key !== "held" && key !== "under");
-    if (extra.length) return `held takes only a holon and, where it says so, a key under which it holds`;
-    if (!isGiven(value.held)) return "held names a holon, by its id or a reference to it";
-    if (value.under !== undefined && typeof value.under !== "string") return "under names a key, as parts";
-    return undefined;
-  }
   if (!isRecord(value) || Object.keys(value).length !== 1)
     return "an expression is one form, as { instances: … }";
   const [form, given] = Object.entries(value)[0]!;
