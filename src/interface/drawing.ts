@@ -5,6 +5,7 @@ import type { FieldPlace, HolonRead } from "../engine/engine.ts";
 import type { Connection } from "./connection.ts";
 import { isId } from "../store/id.ts";
 import type { Expression, Read } from "../engine/engine.ts";
+import { isMount } from "./arrangement.ts";
 import { readProblem } from "../engine/field.ts";
 import { references } from "../engine/references.ts";
 import type { Component, Given, Kind, Reading, Settings, Space } from "./component.ts";
@@ -201,6 +202,7 @@ export function drawing(engine: Connection, options: Options): Drawing {
     };
 
     const read = (async (asked: Read) => {
+      if (!current()) refuse("reads from a drawing that has been overtaken");
       const query = copied(asked) as Read;
       const wrong = readProblem(query);
       if (wrong) refuse(`asks ${wrong}`);
@@ -233,6 +235,7 @@ export function drawing(engine: Connection, options: Options): Drawing {
     const around = call.kind === "full" && holon ? new Set([...(call.around ?? []), holon.id]) : call.around;
 
     const slot = (inner: Call) => {
+      if (!current()) refuse("opens a slot from a drawing that has been overtaken");
       const host = document.createElement("div");
       host.className = `slot ${inner.kind}`;
       if (current()) {
@@ -270,7 +273,25 @@ export function drawing(engine: Connection, options: Options): Drawing {
         within(idsIn(expression), "gathers by");
         return slot(opened({ gather: expression }, kind, copied(settings ?? {}) as Settings));
       },
-      openMount: (index) => slot({ ...options.paneOf(holon!, index, call), ...(around ? { around } : {}) }),
+      // A layout's own mount, by its place among the mounts: what it reads
+      // is the layout's to say, so it needs no read declared, but it must
+      // still stand within what the layout's component reaches.
+      openMount: (asked) => {
+        const index = copied(asked);
+        const mounts = holon?.body.mounts;
+        if (!Array.isArray(mounts)) refuse("opens a mount of what is not a layout");
+        if (
+          !Number.isInteger(index) ||
+          (index as number) < 0 ||
+          (index as number) >= (mounts as unknown[]).length
+        )
+          refuse(`opens no mount ${String(index)}`);
+        const mount = (mounts as unknown[])[index as number];
+        if (!isMount(mount)) refuse(`opens mount ${String(index)}, which says nothing of what it reads`);
+        const pane = options.paneOf(holon!, index as number, call);
+        within("list" in pane.reads ? pane.reads.list : askedIds(pane.reads as Read), "opens a mount of");
+        return slot({ ...pane, ...(around ? { around } : {}) });
+      },
       read,
       holon: async (id) => (await read({ holon: id })) as never,
       place: call.place,
@@ -422,7 +443,7 @@ function idsIn(value: unknown): Id[] {
   if (Array.isArray(value)) return value.flatMap(idsIn);
   if (value === null || typeof value !== "object") return [];
   const record = value as Record<string, unknown>;
-  if ("version" in record && "body" in record) {
+  if (Object.hasOwn(record, "version") && Object.hasOwn(record, "body")) {
     const holon = record as unknown as HolonRead;
     return [holon.id, ...holon.instance, ...references(holon.body).map(({ id }) => id)];
   }

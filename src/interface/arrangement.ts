@@ -28,6 +28,13 @@ export interface Mount {
 export const readingOf = (mount: Mount): Reading =>
   mount.reads ? { holon: mount.reads.$ref } : mount.gathers ? { gather: mount.gathers } : { field: true };
 
+// Whether a value is a mount that says what it reads: a holon, a gathering,
+// or the field it projects.
+export const isMount = (value: unknown): value is Mount =>
+  typeof value === "object" &&
+  value !== null &&
+  (Object.hasOwn(value, "reads") || Object.hasOwn(value, "gathers") || (value as Mount).projects === "field");
+
 const mountOn = (to: Target): Mount => (to === "field" ? { projects: "field" } : { reads: { $ref: to } });
 
 export async function arrangement(engine: Connection): Promise<HolonRead> {
