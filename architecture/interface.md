@@ -11,7 +11,7 @@ The interface draws the field as it is. Every place in it is a holon called by a
 
 ## 1. The root is a mount
 
-The field has no single hierarchy. In the store every holon stands flat, an id and its version; order and nesting live only in bodies, in a brief's parts, a lone link. So the root is no holon of the field's own making but a mount: what the reader is looking at, held as data. Glass ships one as its entry, giving everything, grouped by what splits it best, and a holarchy such as this wiki is entered from there, like anything else.
+The field has no single hierarchy. In the store every holon stands flat, an id and its version; order and nesting live only in bodies, in a brief's parts, a lone link. So the root is no holon of the field's own making but a mount: what the reader is looking at, held as data. Glass ships one as its entry, giving the field's roots, what nothing references, grouped by type, and a holarchy such as this wiki is entered from there, like anything else.
 
 The primitives themselves are still: they hold no state, take no press and move nowhere. Looking around is something built on them, and the one thing it needs to stand still to be changed is the root mount, so that is where it lives, as [§8](#8-moving-is-a-new-version-of-the-root) tells.
 
@@ -24,7 +24,7 @@ A mount is a component and what it is given: a location, holons in order, its ar
 ```ts
 holon The root : Mount {
   component: ref(Reader)
-  gathers:   { call: ref(Group by), with: [ { call: ref(Everything) }, "auto" ] }
+  gathers:   Group by(Not(Children of(Everything)), "type")
 }
 ```
 
@@ -79,15 +79,14 @@ As built: the kinds full and face are holons the field names; each component lis
 
 A slot can read more than one holon: what an expression gathers. An expression is a program given what it takes, data held in a body like any other, and the engine evaluates it to the holons it gathers, in the field's order. It is a holon, `{ $ref: H }`, a set of one; a call, `{ call: P, with: [ … ] }`, the program P given its arguments; or, within a program of one's own, `{ arg: i }`, what it was given. Every program is a holon of the type Program. Glass's own are native, run by the engine: Everything; Type, the instances of the types given; Children of and Parents of, what the holons given point to and what points to them; Text, what contains each word given; Store; Has a name; Is a type; And, Or and Not; and Group by. Each takes sets, which are expressions, so they compose as deep as one likes, Not: Children of: Type: Brief as it reads, or words, as a store's key or an axis. A program of one's own gives an expression over what it is given, so it is called as glass's are and stands beside them. Held in a mount, an expression is what the mount gives, and a component may gather in what it reads, so the same field can be looked at from as many angles as there are expressions, each drawn by whatever takes it.
 
-Gathered, a set is flat, and a flat field is never what one wants to see. So Group by gives what it is given in collections besides, one for each value along an axis: type, parent or store. Each collection is itself an expression, the first narrowed by one value, so it opens like any place and is grouped again inside; layer by layer, the field is entered as it is made. Grouped automatically, the field chooses: for whatever is gathered it takes the axis that gives a few groups, three to a dozen, covering most of it, and where nothing splits a set, or every holon shares a value, it is given as it is. The root gives everything, grouped so, and nothing is chosen for the reader beforehand.
+Gathered, a set is flat, and a flat field is never what one wants to see. So Group by gives what it is given in collections besides, one for each value along an axis: type, parent or store. Each collection is itself an expression, the first narrowed by one value, so it opens like any place and is grouped again inside; layer by layer, the field is entered as it is made. Grouped automatically, the field chooses: for whatever is gathered it takes the axis that gives a few groups, three to a dozen, covering most of it, and where nothing splits a set, or every holon shares a value, it is given as it is. The root gives the field's roots: what nothing references, `Not(Children of(Everything))`, a pure expression and no program of its own. A holon that holds others is their group, so the field shows only the tops of its trees, a few dozen holons, each opened to go down; all of glass's briefs stand under one of them, Glass. Grouped by type, a holon nothing holds still collects under what it is, as orphans would. References build direction, from what holds to what is held; instanceship, from an instance to its type, groups crosswise and makes nothing anyone's child, so types do not swallow their instances.
 
 ```ts
-Group by(Everything, "auto")
-// opened: Brief (232), Program, Type, Component, …
-// Brief opened: Group by(Type(ref(Brief)), "auto")
+Group by(Not(Children of(Everything)), "type")
+// opened: Program (8), Component (6), Type (4), Mount (2), Brief (1: Glass), …
 ```
 
-*The author's, 2026-11-03: expressions are just data, so no language is invented; open the power to look upon data from different angles, which is what the reader will become. The forms the session's. A form for what a holon holds, by key, was let go the same day as convoluted: a holon's parts are its own to open. Grouping the author's, the same day: expressions are grouping, expressions are locations, in layers, a collection opened to see what is inside; if nothing is chosen, everything grouped by the strongest, and play welcome to see what works. The axes and how strength is weighed the session's, a first try. Programs the author's, that night: an expression is taking a program and putting something into it; set operations are programs too, not reserved functionality, so one can add one's own just the same; held by and holds are simply parents and children; and not is needed. OpenLight had its core verbs as native programs, discoverable and called like any other; glass takes that, and sets as what they take, so they compose.*
+*The author's, 2026-11-03: expressions are just data, so no language is invented; open the power to look upon data from different angles, which is what the reader will become. The forms the session's. A form for what a holon holds, by key, was let go the same day as convoluted: a holon's parts are its own to open. Grouping the author's, the same day: expressions are grouping, expressions are locations, in layers, a collection opened to see what is inside; if nothing is chosen, everything grouped by the strongest, and play welcome to see what works. The axes and how strength is weighed the session's, a first try. Programs the author's, that night: an expression is taking a program and putting something into it; set operations are programs too, not reserved functionality, so one can add one's own just the same; held by and holds are simply parents and children; and not is needed. OpenLight had its core verbs as native programs, discoverable and called like any other; glass takes that, and sets as what they take, so they compose. The roots the author's, the same night: a group of holons is a holon, so looking upon the field one sees only the roots of the trees its references make; orphans still collect under their type; written as a pure expression.*
 
 ## 7. What a component may do
 
