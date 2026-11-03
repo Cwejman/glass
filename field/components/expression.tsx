@@ -6,8 +6,9 @@ import { programsIn, titleOf, together } from "./parts.ts";
 // many it gathers. A grouping is drawn as its collections, the larger
 // first, each said by the value its holons share and how many there are,
 // and each a way of looking of its own that a press can open, grouped again
-// by what splits it best; then what had no value on its axis. What nothing
-// splits is drawn as it is, a list of faces.
+// by what splits it best; a collection of one is that one holon, so it is
+// drawn as its face, entered by one press. Then what had no value on its
+// axis. What nothing splits is drawn as it is, a list of faces.
 
 export const declared = {
   title: "Expression",
@@ -15,7 +16,7 @@ export const declared = {
   takes: [],
   kinds: ["full"],
   argument: "expression",
-  reads: ["holon", "groups", "name", "instances"],
+  reads: ["holon", "groups", "gather", "name", "instances"],
 } satisfies Declaration;
 
 export default async function draw(given: Given, space: Space) {
@@ -35,6 +36,8 @@ export default async function draw(given: Given, space: Space) {
   if (grouped && grouped.groups.length > 0) {
     const collections = await Promise.all(
       grouped.groups.map(async ({ value, count, gathers }) => {
+        if (count === 1)
+          return space.open((await space.read({ gather: gathers }))[0]!, { offer: { kind: "face" } });
         const holon = grouped.by === "store" ? null : await space.holon(value);
         const titled =
           grouped.by === "store" ? value : String(holon?.body.title ?? "what is no longer in the field");
