@@ -215,7 +215,11 @@ export default async function draw(given: Given<MountBody>, space: Space) {
   function menu(event: MouseEvent, at: HTMLElement | null) {
     const search = (offer.search as Ref | undefined)?.$ref;
     if (!search) return;
-    const { location, expression, component: drawnBy, said } = (at ?? (drawn as HTMLElement)).dataset;
+    const place = at ?? (drawn as HTMLElement);
+    const { location, expression } = place.dataset;
+    // A place drawn within a component, as a collection, is that
+    // component's to set, as its slot left it.
+    const { component: drawnBy, said } = place.closest<HTMLElement>("[data-component]")?.dataset ?? {};
     const ids = JSON.parse(location ?? "[]") as Id[];
     const pressed = expression
       ? { gather: JSON.parse(expression) as Expression }

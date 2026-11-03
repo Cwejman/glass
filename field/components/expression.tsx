@@ -7,8 +7,10 @@ import { programsIn, titleOf, together } from "./parts.ts";
 // first, each said by the value its holons share and how many there are,
 // and each a way of looking of its own that a press can open, grouped again
 // by what splits it best; a collection of one is that one holon, so it is
-// drawn as its face, entered by one press. Then what had no value on its
-// axis. What nothing splits is drawn as it is, a list of faces.
+// drawn as its face, entered by one press. The collections stand one under
+// another, or as cards side by side, as a list's items do. Then what had
+// no value on its axis. What nothing splits is drawn as it is, a list of
+// faces.
 
 export const declared = {
   title: "Expression",
@@ -17,9 +19,16 @@ export const declared = {
   kinds: ["full"],
   argument: "expression",
   reads: ["holon", "groups", "gather", "name", "instances"],
+  settings: {
+    cards: {
+      says: "Whether its collections stand as cards side by side, where there is room, rather than one under another.",
+      shape: "boolean",
+      optional: true,
+    },
+  },
 } satisfies Declaration;
 
-export default async function draw(given: Given, space: Space) {
+export default async function draw(given: Given<never, { cards?: boolean }>, space: Space) {
   const gathers = given.gathers!;
   const gathered = given.list ?? [];
   const programs = await programsIn({
@@ -61,7 +70,7 @@ export default async function draw(given: Given, space: Space) {
         <p class="meta">
           {counted} in {collections.length === 1 ? "one collection" : `${collections.length} collections`}
         </p>
-        <div class="collections">{collections}</div>
+        <div class={given.settings.cards ? "collections cards" : "collections"}>{collections}</div>
         {grouped.rest.length > 0 && space.open(grouped.rest, { offer: { kind: "face" } })}
       </article>
     );
