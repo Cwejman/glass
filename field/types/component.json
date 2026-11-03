@@ -23,7 +23,7 @@
       }
     },
     "argument": {
-      "says": "What a mount of it is given: one holon, a list of holons, or a selection, either; one holon unless it says otherwise.",
+      "says": "What a mount of it is given: one holon, a list of holons, a selection, either, or a way of looking, with the list it gathers; one holon unless it says otherwise.",
       "shape": "string",
       "optional": true
     },
@@ -45,7 +45,7 @@
       "optional": true
     },
     "template": {
-      "says": "For a component made of data instead of code: the mounts it is drawn as, in order, each giving `$`, what the component itself is given, and, where it says so, the kind of slot it is.",
+      "says": "For a component made of data instead of code: the mounts it is drawn as, in order, each giving `$`, what the component itself is given, and, where it says so, the kind of slot it is and the component it calls.",
       "shape": {
         "list": {
           "fields": {
@@ -57,6 +57,11 @@
             "argument": {
               "says": "What the mount gives: `$`, what the component itself was given.",
               "shape": "json"
+            },
+            "component": {
+              "says": "The component the mount calls, where it names one; otherwise one is found for what it is given.",
+              "shape": "ref",
+              "optional": true
             }
           }
         }

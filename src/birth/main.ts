@@ -10,7 +10,6 @@ import type { Declaration } from "../interface/component.ts";
 import {
   components,
   entry,
-  expressions,
   kinds,
   materials,
   types,
@@ -18,7 +17,6 @@ import {
   type Born,
   type ComponentFile,
   type EntryFile,
-  type ExpressionFile,
   type KindFile,
   type TypeFile,
 } from "./holons.ts";
@@ -26,7 +24,7 @@ import { flatten, linkTargets, parseFile, resolve, type WikiFile } from "./wiki.
 
 // Births glass's field into its store as one commit: the types, the
 // materials, the components built from their code or held as data, this
-// wiki, the ways of looking at it, and the entry, the mount that reads it.
+// wiki, and the entry, the mount that reads it.
 // A holon keeps
 // the id it was first born with, found by where it came from, its file and
 // its heading's anchor, so a birth after the files change is a change to the
@@ -111,24 +109,12 @@ const bornMaterials = materials(
 
 const files = await readWiki("README.md");
 const bornWiki = wiki(files, "README.md", idOf, bornTypes.names);
-const expressionFiles = JSON.parse(
-  await readFile(join(repo, "field/expressions.json"), "utf8"),
-) as ExpressionFile[];
-const bornExpressions = expressions(expressionFiles, idOf, bornTypes.names);
 const entryFile = JSON.parse(await readFile(join(repo, "field/entry.json"), "utf8")) as EntryFile;
-const fieldNames = Object.assign({}, bornTypes.names, bornKinds.names, bornWiki.names, bornExpressions.names);
+const fieldNames = Object.assign({}, bornTypes.names, bornKinds.names, bornWiki.names);
 const componentTitled = Object.fromEntries(componentFiles.map(({ from, title }) => [title, idOf(from)]));
 const bornEntry = entry(entryFile, idOf, bornTypes.names, fieldNames, componentTitled);
 
-const field: Born[] = [
-  bornTypes,
-  bornKinds,
-  bornMaterials,
-  bornComponents,
-  bornWiki,
-  bornExpressions,
-  bornEntry,
-];
+const field: Born[] = [bornTypes, bornKinds, bornMaterials, bornComponents, bornWiki, bornEntry];
 const holons = field.flatMap(({ holons }) => holons);
 const given: Record<string, Id> = Object.assign({}, ...field.map(({ names }) => names));
 

@@ -174,3 +174,17 @@ test("a collection deep down is narrowed by its steps side by side", () => {
     all: [{ everything: true }, { instances: NOTE }, { store: "home" }],
   });
 });
+
+test("a match gathers what says each of its words, in any case, but not by the ids it points by", () => {
+  const said = fieldOf([
+    standing("glass", [
+      [a, { title: "The Reader", prose: "draws what is given" }, [NOTE]],
+      [b, { title: "B", about: { $ref: a }, from: "wiki/reader.md" }, [NOTE]],
+    ]),
+  ]);
+  expect(gather(said, { match: "reader GIVEN" })).toEqual([a]);
+  expect(gather(said, { match: a.slice(0, 8) })).toEqual([]);
+  expect(gather(said, { match: "reader.md" })).toEqual([]);
+  expect(expressionProblem({ match: "  " })).toContain("words");
+  expect(expressionProblem({ match: "reader" })).toBeUndefined();
+});

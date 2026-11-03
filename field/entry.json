@@ -1,1 +1,6 @@
-{ "title": "The root", "component": "Reader", "argument": ["everything"] }
+{
+  "title": "The root",
+  "component": "Reader",
+  "gathers": { "group": { "everything": true }, "by": "strongest" },
+  "offer": { "search": "Search" }
+}

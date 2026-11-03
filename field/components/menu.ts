@@ -1,85 +1,42 @@
-// A menu: what can be done where something was pressed with the secondary
-// button, offered by whatever took the press. An action closes the menu
-// once it is done; one that could not be done says why beneath, and the
-// menu stays. One menu stands at a time; it closes on an outside press, on
-// Escape or Tab, and gives the focus back to where it was. A menu may hold
-// something to fill in before its actions, as a value to change.
-
-export interface Action {
-  label: string;
-  run: () => void | Promise<void>;
-}
+// A menu: what a mount draws where something was pressed with the
+// secondary button, laid over the page at the press. What stands in it is
+// drawn as anything is; the menu only lays it there and takes it away. One
+// menu stands at a time; it closes on an outside press or on Escape, and
+// gives the focus back to where it was.
 
 let standing: (() => void) | undefined;
 
-// Close the menu that stands, if one does.
-export function dismiss() {
+export function overlay(x: number, y: number, content: HTMLElement, from: HTMLElement) {
   standing?.();
-}
-
-export function offer(
-  x: number,
-  y: number,
-  title: string,
-  actions: Action[],
-  from: HTMLElement,
-  before?: HTMLElement,
-) {
-  dismiss();
   const returnTo = (document.activeElement as HTMLElement | null) ?? from;
 
   const menu = document.createElement("div");
   menu.className = "menu";
-  menu.setAttribute("role", "menu");
-  menu.setAttribute("aria-label", title);
-
-  const heading = document.createElement("div");
-  heading.className = "menu-title";
-  heading.textContent = title;
-  menu.append(heading);
-  if (before) menu.append(before);
-
-  const said = document.createElement("div");
-  said.className = "menu-said";
-  said.setAttribute("role", "status");
-  for (const action of actions) {
-    const item = document.createElement("button");
-    item.type = "button";
-    item.setAttribute("role", "menuitem");
-    item.textContent = action.label;
-    item.addEventListener("click", () =>
-      Promise.resolve()
-        .then(action.run)
-        .then(close, (error: unknown) => {
-          said.textContent = error instanceof Error ? error.message : String(error);
-        }),
-    );
-    menu.append(item);
-  }
-  menu.append(said);
-
-  const items = () => [...menu.querySelectorAll<HTMLElement>('[role="menuitem"]')];
-  const step = (by: number) => {
-    const all = items();
-    const at = all.indexOf(document.activeElement as HTMLElement);
-    all[(at + by + all.length) % all.length]?.focus();
-  };
+  menu.setAttribute("role", "dialog");
+  menu.append(content);
 
   const keys = (event: KeyboardEvent) => {
-    if (event.key === "Escape" || event.key === "Tab") return (event.preventDefault(), close());
-    if (event.key === "ArrowDown") return (event.preventDefault(), step(1));
-    if (event.key === "ArrowUp") return (event.preventDefault(), step(-1));
+    if (event.key === "Escape") return (event.preventDefault(), close());
   };
   const outside = (event: Event) => !menu.contains(event.target as Node) && close();
 
-  // An action that opened another menu in this one's place has closed it
-  // already.
+  // Laid where it was asked for, and moved in from any edge it would cross,
+  // as what stands in it grows.
+  const lay = () => {
+    const { width, height } = menu.getBoundingClientRect();
+    menu.style.left = `${Math.max(8, Math.min(x, innerWidth - width - 8))}px`;
+    menu.style.top = `${Math.max(8, Math.min(y, innerHeight - height - 8))}px`;
+  };
+  const growing = new ResizeObserver(lay);
+
+  // A menu its mount took away when drawn again is let go of all the same.
   function close() {
-    if (!menu.isConnected) return;
-    menu.remove();
+    growing.disconnect();
     removeEventListener("pointerdown", outside, true);
     removeEventListener("keydown", keys, true);
-    standing = undefined;
+    if (standing === close) standing = undefined;
+    if (!menu.isConnected) return;
+    menu.remove();
     returnTo.focus?.();
   }
 
@@ -87,26 +44,9 @@ export function offer(
   addEventListener("keydown", keys, true);
   standing = close;
 
-  // Laid where it was asked for, then moved in from any edge it would cross.
-  document.body.append(menu);
-  const { width, height } = menu.getBoundingClientRect();
-  menu.style.left = `${Math.max(8, Math.min(x, innerWidth - width - 8))}px`;
-  menu.style.top = `${Math.max(8, Math.min(y, innerHeight - height - 8))}px`;
-  (before ?? items()[0])?.focus();
-}
-
-// Words asked for in a menu: a value to change, kept when Keep is pressed.
-export function ask(
-  x: number,
-  y: number,
-  title: string,
-  value: string,
-  keep: (value: string) => Promise<void>,
-  from: HTMLElement,
-) {
-  const area = document.createElement("textarea");
-  area.className = "menu-value";
-  area.value = value;
-  area.rows = Math.min(12, value.split("\n").length + 1);
-  offer(x, y, title, [{ label: "Keep", run: () => keep(area.value) }], from, area);
+  // Within what drew it, so a press in it rises there.
+  from.append(menu);
+  lay();
+  growing.observe(menu);
+  return close;
 }

@@ -1,7 +1,0 @@
-[
-  {
-    "name": "everything",
-    "title": "Everything",
-    "gathers": { "group": { "everything": true }, "by": "strongest" }
-  }
-]

@@ -11,7 +11,7 @@ The interface draws the field as it is. Every place in it is a holon called by a
 
 ## 1. The root is a mount
 
-The field has no single hierarchy. In the store every holon stands flat, an id and its version; order and nesting live only in bodies, in a brief's parts, a lone link. So the root is no holon of the field's own making but a mount: what the reader is looking at, held as data. Glass ships one as its entry, giving everything the field names, and a holarchy such as this wiki is entered from there, like anything else.
+The field has no single hierarchy. In the store every holon stands flat, an id and its version; order and nesting live only in bodies, in a brief's parts, a lone link. So the root is no holon of the field's own making but a mount: what the reader is looking at, held as data. Glass ships one as its entry, giving everything, grouped by what splits it best, and a holarchy such as this wiki is entered from there, like anything else.
 
 The primitives themselves are still: they hold no state, take no press and move nowhere. Looking around is something built on them, and the one thing it needs to stand still to be changed is the root mount, so that is where it lives, as [§8](#8-moving-is-a-new-version-of-the-root) tells.
 
@@ -19,32 +19,29 @@ The primitives themselves are still: they hold no state, take no press and move 
 
 ## 2. A mount is a call
 
-A mount is a component and what it is given, its argument: a selection, holons in order. One holon is drawn as itself; several, which truly are a list, are drawn as a list, by the list component. An expression given in an argument is a holon too, of the type Expression, so a mount can give a way of looking as easily as a thing looked at, and what draws an expression shows its words or what it gathers. A component says what it is given, one holon, a list, or a selection, either, so the list component is found for a list.
+A mount is a component and what it is given: a location, holons in order, its argument; or a way of looking, an expression held in the mount itself. One holon is drawn as itself; several, which truly are a list, are drawn as a list, by the list component; a way of looking, as what it gathers. An expression is born as a holon of its own only where it is kept, on the favorites; a way of looking kept so, given to a mount, is looked through. A component says what it is given, one holon, a list, a selection, either, or a way of looking, with the list it gathers, so the list component is found for a list, and the expression component for a way of looking.
 
 ```ts
 holon The root : Mount {
   component: ref(Reader)
-  argument:  [ ref(Everything named) ]
-}
-
-holon Everything named : Expression {
-  gathers: { named: true }
+  gathers:   { group: { everything: true }, by: "strongest" }
 }
 ```
 
-*The author's, 2026-11-03: for the location of a brief it is always just one brief, unless it truly is an array, and then naturally a list; a mount sets an expression or a set, a location, and the component to render it, and that's it. The mount as a call, its argument as a selection, and expressions given as holons, OpenLight's.*
+*The author's, 2026-11-03: for the location of a brief it is always just one brief, unless it truly is an array, and then naturally a list; a mount sets an expression or a set, a location, and the component to render it, and that's it. The mount as a call, its argument as a selection, OpenLight's. Expressions were first given as holons, as OpenLight materialized every expression entering an argument; that bred a holon for every place looked at, and the author's word the same evening let it go: everything is simply everything, and expressions are not to be added where they are not needed.*
 
 ## 3. Each value is mounted by what it is
 
 A component draws its holon's own values, and opens a space for each value that points further: a reference is a mount of the holon it points at, and a list of references is a mount of the list component, whose every item is a mount in turn. What a value is, the holon's type says, since every connector has a shape, so the interface reads the type to know what to mount and where.
 
-A component is made of code, or of data. As data it is a template: mounts held in order, each giving `$`, what the component itself is given, in the kind of slot it says. The reader is such a component: what it is given, drawn in full, the ground where more ways of looking can stand beside it.
+A component is made of code, or of data. As data it is a template: mounts held in order, each giving `$`, what the component itself is given, in the kind of slot it says, by the component it names or else the one found. The reader is such a component: the search, saying where one stands, above what it is given, drawn in full, the ground where more ways of looking can stand beside it.
 
 ```ts
 holon Reader : Component {
   takes:    []
   argument: "selection"
   template: [
+    { component: ref(Search), argument: "$" },
     { argument: "$" }
   ]
 }
@@ -80,15 +77,13 @@ As built: the kinds full and face are holons the field names; each component lis
 
 ## 6. Looking from many angles
 
-A slot can read more than one holon: what an expression gathers. An expression is data, a value held in a body like any other, and the engine evaluates it to the holons it gathers, in the field's order. Its forms walk the few axes every holon has: what it is, the instances of a type or every type; how it connects, what points at a holon and what a holon points at; and where it enters, what a store holds and what the stores name; with everything, and what all or any of several gather. Held as a holon of its own, an expression can be given to a mount, and a component may gather in what it reads, so the same field can be looked at from as many angles as there are expressions, each drawn by whatever takes it.
+A slot can read more than one holon: what an expression gathers. An expression is data, a value held in a body like any other, and the engine evaluates it to the holons it gathers, in the field's order. Its forms walk the few axes every holon has: what it is, the instances of a type or every type; how it connects, what points at a holon and what a holon points at; and where it enters, what a store holds and what the stores name; what says some words, so a search is a way of looking too; with everything, and what all or any of several gather. Held in a mount, an expression is what the mount gives, and a component may gather in what it reads, so the same field can be looked at from as many angles as there are expressions, each drawn by whatever takes it.
 
 Gathered, a set is flat, and a flat field is never what one wants to see. So an expression can group: what it gathers, in collections, one for each value along an axis, by what it is, by what holds it, or by where it is kept. Each collection is itself a way of looking, the first narrowed by one value, so it opens like any place and is grouped again inside; layer by layer, the field is entered as it is made. A grouping by what splits it best lets the field choose: for whatever is gathered it takes the axis that gives a few groups, three to a dozen, covering most of it, and where nothing splits a set, or every holon shares a value, it is given as it is. The root gives everything, grouped so, and nothing is chosen for the reader beforehand.
 
 ```ts
-holon Everything : Expression {
-  gathers: { group: { everything: true }, by: "strongest" }
-}
-// opened: Brief (226), Expression, Type, Component, …
+{ group: { everything: true }, by: "strongest" }
+// opened: Brief (230), Expression, Type, Component, …
 // Brief opened: { group: { instances: ref(Brief) }, by: "strongest" }
 ```
 
@@ -102,11 +97,13 @@ It is told what it may do, as OpenLight delivers reach facts rather than have a 
 
 Its reach is a ceiling: it reaches what it was handed, what that references and is an instance of, and what its own declared reads give back; reading a holon it was handed opens nothing further. It reads only by the forms it declares, each read one form and nothing beside it, and opens slots only for what it reaches, each held to the same ceiling; a template's mounts give only what the template was given, so they reach nothing new. A drawing that has been overtaken or closed can neither read nor open anything more. Anything else is refused by name, and every query and every list it opens is copied before it is judged, so what is judged is what is used. The reach is each slot's own: unlike OpenLight's, which narrows from parent to child with grants, a child's starts again from what its slot reads. This is a ceiling among components in one page, which keeps each honest about what it looks at; it is not isolation, for code in the page can reach everything the page can, which is why only glass's own components and the home's are run until components can run apart.
 
+What a holder offers trickles down to everything beneath it, the nearer shadowing the farther, and a component is given it, and reaches what it names. A setting a component takes and its slot leaves unsaid is taken from what is offered under its name, where the offer fits; an offer is for everything beneath, so one that does not fit a component is passed by. So a setting chosen once, as a list's cards, is a mount's offer, and holds for whatever that mount draws.
+
 A component is a pure function of what it is given and of the field: it draws again whole when what it read changes. What must last across a drawing lives in the slot's host, which stays while what is in it is drawn again.
 
 A list says nothing of what its items are, so a component that takes a type for its items, such as a timeline of a day's words, draws there only where a slot names it; otherwise one that takes nothing in particular is found. A full slot never draws in full a holon that a slot around it already draws in full; there it shows its face, so nothing stands inside itself without end. And a component a slot names that is not run, or cannot draw there, is said to be so in the slot, as OpenLight's "not admitted here", rather than quietly replaced, except where the nesting guard, not the slot, changed what was asked.
 
-*Reach, settings and typed bodies from OpenLight's view, read the same day; the session's reading of where glass went against it, mended after three fresh readings. The nesting guard adds to the slot contract, which is provisional; a template draws nothing of its own, so it adds nothing to the guard. Not yet built, having no use yet: acts beyond a component's own holon, and launching programs; offers carry only the kind of slot so far. Keeping a component's own state between drawings, as OpenLight's update does, is held open.*
+*Reach, settings and typed bodies from OpenLight's view, read the same day; the session's reading of where glass went against it, mended after three fresh readings. The nesting guard adds to the slot contract, which is provisional; a template draws nothing of its own, so it adds nothing to the guard. Not yet built, having no use yet: acts beyond a component's own holon, and launching programs; Keeping a component's own state between drawings, as OpenLight's update does, is held open.*
 
 ## 8. Moving is a new version of the root
 
@@ -114,16 +111,23 @@ A holon keeps every state it has had, each version pointing back at the one befo
 
 A press does not need catching from above. Every slot says where it is: its element carries the holons it reads as its location, and a link in prose carries the one it mentions. A press rises through the page from where it landed, past those locations, to whatever holds them and cares. The mount component cares, where it may write its mount: a press inside it gives the innermost location it passed, and the mount gives that instead, drawn again by the component the entry calls, the reader. The brief that was pressed never knows it was read; a mount that may not be written lets a press rise on.
 
-Where one is looking is said above it, as the way walked to it: everything first, then each step a way of looking was narrowed by, as Everything › Brief › 2026-11-03, and the axes the last is grouped by, the one it is grouped by marked. Each step and each axis is a way of looking, so pressing one goes there, as a press inside goes anywhere; a holon is reached from what it is, as Everything › Brief › Glass. It is the mount's own data, so it is the mount that says it, not what it gives; pressed with the secondary button, a step or a collection offers only to look there. A way of looking the field does not hold yet is born in the home as the mount moves to it, and the one it already holds is looked through again.
+Where one is looking is said above it by the search, the first of the reader's two mounts, given what the second draws. A way of looking is said by its parts, each a meaning, of this type, held by that, saying these words, grouped by what splits it best, each a chip let go with a press; a holon by what it is, each type a way to its kind, and what it is called, let go for everything. The search holds every brick of an expression: of a type, held by a holon, pointing at one, saying some words, kept in a store, named, a type, grouped by an axis, or, which joins the next brick to the last as either, and open, which goes to one holon. Typing finds the brick, Enter takes it, and what it is of is chosen the same way, a type among the types, a holon among those whose title says the words; Backspace lets go of a brick taken, then of or, then of the last part; the grouping is let go of by its own chip. So an intersection grows a part at a time, a union where or joins, and an expression is built in place. Before anything is typed it offers the favorites and the bricks. Each thing it offers is a press that says where it leads, and rises to the mount like any other: a place, a place drawn by a component, a way of looking, what the mount offers, or a way of looking to keep. Nothing is born as one moves: the mount holds the way of looking it gives.
 
-The secondary press rises the same way, and the mount offers what can be done there: to look there; to look there with each component that takes what is there, found by its type, for that one look; and to change what the mount gives by hand, its component and argument as data, judged by the engine as any write is.
+The secondary press rises the same way, and the mount lays the same search where it landed, given the place pressed, the component it is drawn by, and the settings its slot gave, so what can be done there is found as anything is: to look there, a holon or a way of looking alike; to look there with each other component that takes it, for that one look; to set what that component takes and nothing gave it, as a list's cards, which the mount then offers; to keep a way of looking on the favorites, born then as a holon, or to place a holon there or take it off. The search is what the mount is offered as its search, and the favorites what it offers, so both are the reader's to change, as data; a favorite no longer in the field is let go of as the mount is next written.
 
 ```ts
 holon The root : Mount {          // the reader's own, in the home
   component: ref(Reader)
-  argument:  [ ref(The primitives) ]   // a press on a part's face, and this is new
+  gathers: {                                    // built in the search, and this is new
+    all: [ { instances: ref(Brief) }, { match: "reader" } ]
+  }
+  offer: {
+    search:    ref(Search)                      // what its menu is drawn by
+    favorites: [ ref(Brief, saying "reader") ]  // a way of looking, kept
+    cards:     true                             // a list's setting, offered to all it draws
+  }
 }
 ```
 
-*The author's, 2026-11-03: navigation needs a kind of history and is based on locations; the reader needs a way to see the actual location you are looking at and to be able to update it, for a face of it is not that helpful, and not by presets or raw text, but ontologically, naturally; the root holds the expression for what you are seeing, and changing it from the context menu's WYSIWYG is fine; the context menu has actual actions, made available by type matching; the history stack and the URL as an integration. Bubbling the session's proposal, which the author was open to; catching every press at the root was OpenLight's answer, not taken for granted. History as the root's versions the session's, as OpenLight's collation cited its predecessor. Programs, once they run, are where more of the menu's actions will come from; the URL is not yet written.*
+*The author's, 2026-11-03: navigation needs a kind of history and is based on locations; the reader needs a way to see the actual location you are looking at and to be able to update it, for a face of it is not that helpful, and not by presets or raw text, but ontologically, naturally; the root holds the expression for what you are seeing, and changing it from the context menu's WYSIWYG is fine; the context menu has actual actions, made available by type matching; the history stack and the URL as an integration. Bubbling the session's proposal, which the author was open to; catching every press at the root was OpenLight's answer, not taken for granted. History as the root's versions the session's, as OpenLight's collation cited its predecessor. Programs, once they run, are where more of the menu's actions will come from; the URL is not yet written. The search the author's, the same evening: expressions are ontology, every part has meaning; the formula said at the top, visualized and editable, a smart search across expressions, briefs and holons, narrowing by type to build an intersection, a made expression found by its name; favorites the reader looks for; a list's cards set by right-clicking it; and the search one common component, the context menu a very similar thing, its input everything or already narrowed. A setting as an offer the author's correction of the session's mount settings. The bricks the author's, later that evening: say type, then Enter, and choose; all the Lego bricks, to add to an intersection and build an expression in place, not a plethora to search and select from. Only settings that are true or false are offered to set so far; a node-based builder for complex expressions is not built, nor nesting deeper than an either among the parts.*
 

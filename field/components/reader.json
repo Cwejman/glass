@@ -1,10 +1,14 @@
 {
   "title": "Reader",
-  "says": "What you are looking at, made of data: what it is given, drawn in full.",
+  "says": "What you are looking at, made of data: where you stand, said by what it means and searched from, above what it gives, drawn in full.",
   "takes": [],
   "kinds": ["full"],
   "argument": "selection",
   "template": [
+    {
+      "component": "Search",
+      "argument": "$"
+    },
     {
       "argument": "$"
     }

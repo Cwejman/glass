@@ -21,7 +21,7 @@ The code, in `src/`:
 Beside it:
 
 - The knowledge: this wiki's files, `architecture/` and `said/`, born into the store.
-- `field/`: the field glass ships, born into the store beside the knowledge: the types as JSON, each field said in prose; the components, holons that hold code, each declaring itself in its own module, or data, a template in its own JSON file; the ways of looking, expressions in `expressions.json`; the entry, the mount a client boots into, in `entry.json`; and the materials everything is drawn with, declared in `materials.json`.
+- `field/`: the field glass ships, born into the store beside the knowledge: the types as JSON, each field said in prose; the components, holons that hold code, each declaring itself in its own module, or data, a template in its own JSON file; the entry, the mount a client boots into, in `entry.json`; and the materials everything is drawn with, declared in `materials.json`.
 - `vectors/`: the store's contract, in no language, which any implementation answers to.
 - `site/`: the page, the built client, and the store, as a static host serves them.
 

@@ -19,6 +19,7 @@ import { isType } from "./types.ts";
 //   { "from": H }           what the holon H points at
 //   { "store": key }        what the store holds
 //   { "named": true }       every holon a store gives a name
+//   { "match": words }      every holon whose body says each of the words
 //   { "all": [ … ] }        what every expression in the list gathers
 //   { "any": [ … ] }        what any expression in the list gathers
 //   { "group": E, "by": axis }   what E gathers, in collections
@@ -42,6 +43,7 @@ export type Expression =
   | { from: Given }
   | { store: string }
   | { named: true }
+  | { match: string }
   | { all: Expression[] }
   | { any: Expression[] }
   | { group: Expression; by: By };
@@ -79,6 +81,10 @@ export function gather(field: Field, expression: Expression): Id[] {
     const target = idOf(expression.pointing);
     return held.filter(({ body }) => references(body).some(({ id }) => id === target)).map(({ id }) => id);
   }
+  if ("match" in expression) {
+    const wanted = wordsOf(expression.match);
+    return held.filter(({ body }) => says(body, wanted)).map(({ id }) => id);
+  }
   if ("named" in expression) {
     const named = new Set(field.stores.flatMap(({ names }) => Object.values(names)));
     return held.filter(({ id }) => named.has(id)).map(({ id }) => id);
@@ -90,6 +96,27 @@ export function gather(field: Field, expression: Expression): Id[] {
   const kept = (id: Id) =>
     "all" in expression ? parts.every((part) => part.has(id)) : parts.some((part) => part.has(id));
   return held.map(({ id }) => id).filter(kept);
+}
+
+// The words a search is made of, set in one case, so a search finds a word
+// however it was written.
+const wordsOf = (text: string) => text.toLocaleLowerCase().split(/\s+/).filter(Boolean);
+
+// Whether a body says each of the words wanted, anywhere in what it holds
+// as text: its title, its prose, any string within it, but never the ids
+// it points by, the code or style it runs, or the file it was born from.
+const unsaid = new Set(["$ref", "@", "code", "source", "css", "from"]);
+function says(body: unknown, wanted: string[]) {
+  const text: string[] = [];
+  const walk = (value: unknown, key?: string) => {
+    if (key !== undefined && unsaid.has(key)) return;
+    if (typeof value === "string") return text.push(value);
+    if (Array.isArray(value)) return value.forEach((inner) => walk(inner));
+    if (isRecord(value)) for (const [inner, held] of Object.entries(value)) walk(held, inner);
+  };
+  walk(body);
+  const said = text.join(" ").toLocaleLowerCase();
+  return wanted.every((word) => said.includes(word));
 }
 
 // A grouping's collections: the axis it groups by, each collection with
@@ -203,6 +230,10 @@ export function expressionProblem(value: Json | undefined, nested = 0): string |
       return isGiven(given) ? undefined : `${form} names a holon, by its id or a reference to it`;
     case "store":
       return typeof given === "string" ? undefined : "store names a store, as glass";
+    case "match":
+      return typeof given === "string" && wordsOf(given).length > 0
+        ? undefined
+        : "match is the words to look for, as a string";
     case "everything":
     case "types":
     case "named":

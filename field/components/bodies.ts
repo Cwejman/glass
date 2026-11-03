@@ -33,7 +33,7 @@ export interface ComponentBody {
   takes: Ref[];
   /** The kinds of slot it draws in, as full or face. */
   kinds: Ref[];
-  /** What a mount of it is given: one holon, a list of holons, or a selection, either; one holon unless it says otherwise. */
+  /** What a mount of it is given: one holon, a list of holons, a selection, either, or a way of looking, with the list it gathers; one holon unless it says otherwise. */
   argument?: string;
   /** The settings it takes from the slot that opens it, each said in prose with its shape, as a type declares its fields; none unless it says. */
   settings?: Json;
@@ -41,12 +41,14 @@ export interface ComponentBody {
   reads?: string[];
   /** The module the interface runs, as JavaScript, for a component made of code. */
   code?: string;
-  /** For a component made of data instead of code: the mounts it is drawn as, in order, each giving `$`, what the component itself is given, and, where it says so, the kind of slot it is. */
+  /** For a component made of data instead of code: the mounts it is drawn as, in order, each giving `$`, what the component itself is given, and, where it says so, the kind of slot it is and the component it calls. */
   template?: {
     /** The kind of slot the mount is, where it says so. */
     kind?: Ref;
     /** What the mount gives: `$`, what the component itself was given. */
     argument: Json;
+    /** The component the mount calls, where it names one; otherwise one is found for what it is given. */
+    component?: Ref;
   }[];
   /** The code as it was written, before it was built. */
   source?: string;
@@ -86,14 +88,18 @@ export interface MaterialBody {
   from?: string;
 }
 
-/** A call: a component and its argument, what it is given to draw. The argument is a selection, holons in order: one is drawn as itself, several as a list. A mount is the one thing that stands still to be changed, so the root of what one looks at is a mount, and every move is a new version of it. */
+/** A call: a component and what it gives it to draw, holons in order or a way of looking. One holon is drawn as itself, several as a list, a way of looking as what it gathers. A mount is the one thing that stands still to be changed, so the root of what one looks at is a mount, and every move is a new version of it. */
 export interface MountBody {
   /** What the mount is called. */
   title?: string;
   /** The component the mount calls, when it names one; otherwise one is found for what it is given. */
   component?: Ref;
-  /** What the component is given: holons in order, among them expressions, which are holons too. */
-  argument: Ref[];
+  /** What the component is given, where it is given holons: holons in order. */
+  argument?: Ref[];
+  /** What the component is given, where it is given a way of looking: the expression itself, held in the mount, so a place one looks at needs no holon of its own. */
+  gathers?: Expression;
+  /** What the mount offers everything it draws, nearer offers shadowing it: settings a component takes and its slot leaves unsaid, by their names, and what components look for, as the favorites, or the search a mount's menu is drawn by. */
+  offer?: Json;
   /** Where the holon was born from, as a path in the files it arrived from. */
   from?: string;
 }
@@ -122,4 +128,16 @@ export interface ListSettings {
   numbered?: boolean;
   /** The number of the whole whose items these are, which each item's number runs on from. */
   number?: string;
+  /** Whether its items stand as cards side by side, where there is room, rather than one under another. */
+  cards?: boolean;
+}
+
+/** The settings the Search component takes from the slot that opens it. */
+export interface SearchSettings {
+  /** The component the place is drawn by where it was pressed, whose settings it offers to set. */
+  drawn?: Ref;
+  /** The settings the place's slot gave already, which no offer reaches, so are not offered to set. */
+  said?: string[];
+  /** Whether it was laid where something was pressed: it takes the focus, and offers first what can be done there. */
+  pressed?: boolean;
 }

@@ -34,12 +34,13 @@ export interface MaterialFile {
 
 // A component as it declares itself: a module, with its code built and its
 // source as written, or data, with the mounts of its template, each kind
-// given by its name.
+// given by its name, and the component it calls, where it calls one, by
+// its title.
 export interface ComponentFile extends Declaration {
   from: string;
   code?: string;
   source?: string;
-  template?: { argument: Json; kind?: string }[];
+  template?: { argument: Json; kind?: string; component?: string }[];
 }
 
 // The types, each an instance of the type of types, which is one of itself.
@@ -76,10 +77,12 @@ export function components(
   typeOf: Record<string, Id>,
   kindOf: Record<string, Id>,
 ): Born {
+  const titles = new Set(files.map(({ title }) => title));
   const wrong = files.flatMap((file) =>
-    declarationProblems(file, typeOf, kindOf).map((problem) => `${file.from}: ${problem}`),
+    declarationProblems(file, typeOf, kindOf, titles).map((problem) => `${file.from}: ${problem}`),
   );
   if (wrong.length) throw new Error(`components that declare what is not so:\n  ${wrong.join("\n  ")}`);
+  const titled = Object.fromEntries(files.map(({ from, title }) => [title, idOf(from)]));
   return {
     holons: files.map(
       ({ from, title, says, takes, kinds, argument, settings, reads, code, source, template }) => ({
@@ -97,9 +100,10 @@ export function components(
           ...(source !== undefined ? { source } : {}),
           ...(template
             ? {
-                template: template.map(({ argument, kind }) => ({
+                template: template.map(({ argument, kind, component }) => ({
                   argument,
                   ...(kind ? { kind: { $ref: kindOf[kind]! } } : {}),
+                  ...(component ? { component: { $ref: titled[component]! } } : {}),
                 })),
               }
             : {}),
@@ -119,19 +123,23 @@ function declarationProblems(
   { takes, kinds, reads, settings, argument, code, template }: ComponentFile,
   typeOf: Record<string, Id>,
   kindOf: Record<string, Id>,
+  titles: ReadonlySet<string>,
 ): string[] {
   const notLists = Object.entries({ takes, kinds, reads: reads ?? [] })
     .filter(([, value]) => !Array.isArray(value))
     .map(([key]) => `${key} is not a list`);
   if (notLists.length) return notLists;
   return [
-    ...(argument !== undefined && !["holon", "list", "selection"].includes(argument)
-      ? [`it is given ${argument}, which is not a holon, a list or a selection`]
+    ...(argument !== undefined && !["holon", "list", "selection", "expression"].includes(argument)
+      ? [`it is given ${argument}, which is not a holon, a list, a selection or a way of looking`]
       : []),
     ...((code === undefined) === (template === undefined)
       ? ["it is made of code or of a template, one of them"]
       : []),
-    ...(template ?? []).flatMap(({ argument, kind }, i) => [
+    ...(template ?? []).flatMap(({ argument, kind, component }, i) => [
+      ...(component !== undefined && !titles.has(component)
+        ? [`its template's mount ${i} calls ${component}, which is no component`]
+        : []),
       ...(argument !== "$" ? [`its template's mount ${i} gives ${JSON.stringify(argument)}, not $`] : []),
       ...(kind !== undefined && !Object.hasOwn(kindOf, kind)
         ? [`its template's mount ${i} is a ${kind} slot, which is no kind`]
@@ -210,48 +218,19 @@ export function wiki(
   return { holons, names: { wiki: idAt(entry)! } };
 }
 
-export interface ExpressionFile {
-  name: string;
-  title: string;
-  gathers: Json;
-}
-
-// The ways of looking the field ships, each an expression held as a holon
-// and named. In the files a holon is given by the name the field gives it,
-// as `{ "instances": "brief" }`, and made a reference to what it names.
-export function expressions(files: ExpressionFile[], idOf: IdOf, typeOf: Record<string, Id>): Born {
-  const fromOf = (name: string) => `field/expressions.json#${name}`;
-  const holonKeys = new Set(["instances", "pointing"]);
-  const resolved = (value: Json, at: string): Json => {
-    if (Array.isArray(value)) return value.map((inner) => resolved(inner, at));
-    if (value === null || typeof value !== "object") return value;
-    return Object.fromEntries(
-      Object.entries(value).map(([key, inner]) => {
-        if (typeof inner !== "string" || !holonKeys.has(key)) return [key, resolved(inner, at)];
-        if (!Object.hasOwn(typeOf, inner)) throw new Error(`${at}: ${key} names ${inner}, which is no type`);
-        return [key, { $ref: typeOf[inner]! }];
-      }),
-    );
-  };
-  return {
-    holons: files.map(({ name, title, gathers }) => ({
-      id: idOf(fromOf(name)),
-      instance: [typeOf.expression!],
-      body: { title, gathers: resolved(gathers, fromOf(name)), from: fromOf(name) },
-    })),
-    names: Object.fromEntries(files.map(({ name }) => [name, idOf(fromOf(name))])),
-  };
-}
-
 export interface EntryFile {
   title: string;
   component?: string;
-  argument: string[];
+  argument?: string[];
+  gathers?: Json;
+  offer?: Record<string, Json>;
 }
 
 // The entry: the mount a client boots into before the reader has one of
-// their own, its component given by its title and each holon of its
-// argument by the name the field gives it.
+// their own, its component given by its title, and what it gives: each
+// holon of its argument by the name the field gives it, or a way of
+// looking, as it is. What it offers everything it draws is kept as it is,
+// but for a component, given by its title.
 export function entry(
   file: EntryFile,
   idOf: IdOf,
@@ -267,7 +246,20 @@ export function entry(
   const body = {
     title: file.title,
     ...(file.component ? { component: nameOf(file.component, componentTitled) } : {}),
-    argument: file.argument.map((name) => nameOf(name, named)),
+    ...(file.argument ? { argument: file.argument.map((name) => nameOf(name, named)) } : {}),
+    ...(file.gathers !== undefined ? { gathers: file.gathers } : {}),
+    ...(file.offer
+      ? {
+          offer: Object.fromEntries(
+            Object.entries(file.offer).map(([key, given]) => [
+              key,
+              typeof given === "string" && Object.hasOwn(componentTitled, given)
+                ? nameOf(given, componentTitled)
+                : given,
+            ]),
+          ),
+        }
+      : {}),
     from,
   };
   const id = idOf(from);

@@ -29,7 +29,7 @@ import { settingsProblem } from "./settings.ts";
 // changes nothing, and lets go of what it held.
 //
 // Every slot says where it is: its element carries the holons it reads as
-// its location, so a press inside it rises through the locations it passes,
+// its location, or the way of looking it reads, so a press inside it rises through the locations it passes,
 // and whatever holds them, and cares, can take it. Nothing here acts on a
 // press.
 
@@ -71,14 +71,16 @@ interface Hosted {
 }
 
 // The components that can draw what a slot reads, in its kind: given that
-// kind of thing, and drawing in that kind of slot.
+// kind of thing, and drawing in that kind of slot. A way of looking reads
+// as the list it gathers, so what draws a list draws it too.
 export function able(components: readonly HolonRead[], reads: Reading, kind: Id) {
-  const argument = "holon" in reads ? "holon" : "list";
-  const given = (component: HolonRead) => component.body.argument ?? "holon";
+  const argument = "holon" in reads ? "holon" : "list" in reads ? "list" : "expression";
+  const takes = (given: string) =>
+    given === argument || given === "selection" || (argument === "expression" && given === "list");
   return components.filter(
     (component) =>
       (component.body.kinds as { $ref: Id }[]).some(({ $ref }) => $ref === kind) &&
-      (given(component) === argument || given(component) === "selection"),
+      takes((component.body.argument as string | undefined) ?? "holon"),
   );
 }
 
@@ -102,7 +104,8 @@ export function candidates(
 }
 
 // The one found for a slot. For a holon, one that takes one of its types
-// before the wildcard. For a list, which says nothing of what its items
+// before the wildcard. For a way of looking, one given ways of looking,
+// before one given lists. For a list, which says nothing of what its items
 // are, one that takes nothing in particular;
 // a component that takes a type for its items draws there only where a
 // slot names it. Finding lives here alone, so how a component is found can
@@ -110,6 +113,8 @@ export function candidates(
 export function match(components: readonly HolonRead[], reads: Reading, holon: HolonRead | null, kind: Id) {
   const fitting = candidates(components, reads, holon, kind);
   const takes = (component: HolonRead) => (component.body.takes as unknown[]).length;
+  const looking = fitting.find((component) => component.body.argument === "expression");
+  if ("gather" in reads && looking) return looking;
   if (!("holon" in reads)) return fitting.find((component) => takes(component) === 0);
   return fitting.find((component) => takes(component) > 0) ?? fitting[0];
 }
@@ -205,6 +210,10 @@ export function drawing(engine: Connection, options: Options): Drawing {
     const reached = new Set<Id>(handed);
     const reach = (value: unknown) => idsIn(value).forEach((id) => reached.add(id));
     if (holon) reach(holon);
+    // What its holders offer it, and the settings its slot gives it, are
+    // given to it as well.
+    reach(call.offered);
+    reach(call.settings);
 
     const refuse = (what: string): never => {
       throw new Error(`${title} ${what}`);
@@ -263,6 +272,9 @@ export function drawing(engine: Connection, options: Options): Drawing {
       const { offer, settings, kind, component } = (copied(opening ?? {}) ?? {}) as Opening;
       offerProblem(offer, kind);
       if (component !== undefined) within([component], "calls");
+      // What it offers and gives names only what it reaches itself.
+      within(idsIn(offer), "offers");
+      within(idsIn(settings), "gives");
       return {
         reads,
         offered: { ...call.offered, ...offer },
@@ -280,6 +292,10 @@ export function drawing(engine: Connection, options: Options): Drawing {
         if (typeof where === "string") {
           within([where], "opens");
           return slot(opened({ holon: where }, opening));
+        }
+        if (!Array.isArray(where) && where && typeof where === "object" && "gather" in where) {
+          within(idsIn(where.gather), "opens a way of looking at");
+          return slot(opened({ gather: where.gather }, opening));
         }
         if (!Array.isArray(where) || !where.every(isId)) refuse("opens what is neither a holon nor holons");
         within(where, "opens");
@@ -313,14 +329,21 @@ export function drawing(engine: Connection, options: Options): Drawing {
     redraw: () => void,
     call: Call,
     holon: HolonRead | null,
+    gathered: Id[],
     component: HolonRead,
   ) {
-    // What the slot reads is what its component is handed.
-    const handed = "list" in call.reads ? call.reads.list : idsIn(holon);
+    // What the slot reads is what its component is handed: of a way of
+    // looking, what it names and what it gathers.
+    const list = "list" in call.reads ? call.reads.list : "gather" in call.reads ? gathered : undefined;
+    const handed =
+      "holon" in call.reads
+        ? idsIn(holon)
+        : [...list!, ...("gather" in call.reads ? idsIn(call.reads.gather) : [])];
     const space = spaceFor(held, current, redraw, call, holon, handed, component);
     const given: Given = {
       ...(holon ? { holon } : {}),
-      ...("list" in call.reads ? { list: call.reads.list } : {}),
+      ...(list ? { list } : {}),
+      ...("gather" in call.reads ? { gathers: call.reads.gather } : {}),
       kind: kindOf(call),
       offered: call.offered,
       settings: call.settings,
@@ -339,7 +362,7 @@ export function drawing(engine: Connection, options: Options): Drawing {
   function template(held: Hosted, current: () => boolean, call: Call, component: HolonRead) {
     const named = (id: Id | undefined) =>
       (Object.keys(options.kinds) as Kind[]).find((kind) => options.kinds[kind] === id);
-    const mounts = component.body.template as { kind?: { $ref: Id } }[];
+    const mounts = component.body.template as { kind?: { $ref: Id }; component?: { $ref: Id } }[];
     const element = document.createElement("div");
     element.className = "template";
     for (const mount of mounts) {
@@ -350,6 +373,7 @@ export function drawing(engine: Connection, options: Options): Drawing {
         offered: call.offered,
         ...(own ? { own } : {}),
         settings: {},
+        ...(mount.component ? { called: mount.component.$ref } : {}),
         ...(call.around ? { around: call.around } : {}),
       };
       host.className = `slot ${kindOf(inner)}`;
@@ -366,7 +390,11 @@ export function drawing(engine: Connection, options: Options): Drawing {
     const held: Hosted = { closed: false, drawing: 0, children: [], reads: [] };
     hosted.set(host, held);
     let read: HolonRead | null = null;
-    host.dataset.location = JSON.stringify(locationOf(asked.reads));
+    let gathered: Id[] = [];
+    if ("gather" in asked.reads) host.dataset.expression = JSON.stringify(asked.reads.gather);
+    else host.dataset.location = JSON.stringify(locationOf(asked.reads));
+    // The settings its slot gave, which no offer reaches.
+    if (Object.keys(asked.settings).length) host.dataset.said = Object.keys(asked.settings).join(" ");
 
     const render = async () => {
       if (held.closed) return;
@@ -403,10 +431,11 @@ export function drawing(engine: Connection, options: Options): Drawing {
       try {
         const wrong = settingsProblem(component, call.settings);
         if (wrong) return host.replaceChildren(note(`${component.body.title as string} was given ${wrong}`));
+        const settled = { ...call, settings: bound(component, call) };
 
         const drawn = component.body.template
-          ? template(held, current, call, component)
-          : await code(held, current, () => void render(), call, holon, component);
+          ? template(held, current, settled, component)
+          : await code(held, current, () => void render(), settled, holon, gathered, component);
         if (!current() || !drawn) return;
 
         if (holon) {
@@ -422,19 +451,27 @@ export function drawing(engine: Connection, options: Options): Drawing {
       }
     };
 
-    // A holon is read, and drawn again when it changes; a list is what it
-    // is, and its items each read their own. A read that fails is said in
+    // A holon is read, and drawn again when it changes; a way of looking is
+    // gathered, and drawn again when what it gathers changes; a list is what
+    // it is, and its items each read their own. A read that fails is said in
     // the slot.
     if ("list" in asked.reads) return render();
     try {
-      const subscription = await engine.subscribeHolon(asked.reads.holon, (value) => {
-        read = value;
-        void render();
-      });
+      const subscription =
+        "gather" in asked.reads
+          ? await engine.subscribe({ gather: asked.reads.gather }, (value) => {
+              gathered = value as Id[];
+              void render();
+            })
+          : await engine.subscribeHolon(asked.reads.holon, (value) => {
+              read = value;
+              void render();
+            });
       if (held.closed) return subscription.close();
 
       held.unsubscribe = subscription.close;
-      read = subscription.value;
+      if ("gather" in asked.reads) gathered = subscription.value as Id[];
+      else read = subscription.value as HolonRead | null;
     } catch (error) {
       if (!held.closed)
         host.replaceChildren(
@@ -450,8 +487,23 @@ export function drawing(engine: Connection, options: Options): Drawing {
   return { draw, close };
 }
 
+// The settings a component is drawn with: those its slot gave, and, for
+// each it declares that the slot left unsaid, what its holders offer under
+// that name, where the offer fits. An offer is for everything beneath, so
+// one that does not fit this component is passed by, not a fault.
+function bound(component: HolonRead, call: Call): Settings {
+  const settings = { ...call.settings };
+  for (const key of Object.keys((component.body.settings ?? {}) as object)) {
+    const offered = call.offered[key];
+    if (key in settings || offered === undefined) continue;
+    if (!settingsProblem(component, { ...settings, [key]: offered })) settings[key] = offered;
+  }
+  return settings;
+}
+
 // Where a slot is: the holons it reads, in order.
-const locationOf = (reads: Reading): Id[] => ("holon" in reads ? [reads.holon] : reads.list);
+const locationOf = (reads: Reading): Id[] =>
+  "holon" in reads ? [reads.holon] : "list" in reads ? reads.list : [];
 
 // The holons a read or its answer names: ids standing alone or as
 // references, a holon's own references and types, a gathering's items.
@@ -483,6 +535,7 @@ const copied = (value: unknown) => JSON.parse(JSON.stringify(value ?? null)) as 
 
 const describe = (reads: Reading, read: unknown) => {
   if ("list" in reads) return "a list";
+  if ("gather" in reads) return "a way of looking";
   return String((read as HolonRead | null)?.body.title ?? reads.holon);
 };
 

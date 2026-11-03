@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { newId } from "../store/id.ts";
-import { components, entry, expressions, wiki } from "./holons.ts";
+import { components, entry, wiki } from "./holons.ts";
 import { parseFile } from "./wiki.ts";
 
 const typeOf = { brief: newId() };
@@ -43,25 +43,20 @@ test("a link that leads nowhere is refused", () => {
   expect(() => wiki(files, "README.md", idOf, typeOf)).toThrow("links that lead nowhere");
 });
 
-test("the entry is a mount: a component and its argument, each named in the files resolved to a holon", () => {
-  const typeOf = { mount: newId(), expression: newId(), component: newId(), brief: newId() };
-  const looks = expressions(
-    [{ name: "briefs", title: "Every brief", gathers: { instances: "brief" } }],
-    idOf,
-    typeOf,
-  );
-  const briefs = looks.names.briefs!;
-  expect(looks.holons[0]!.body.gathers).toEqual({ instances: { $ref: typeOf.brief } });
-  expect(looks.holons[0]!.instance).toEqual([typeOf.expression]);
-
+test("the entry is a mount: a component and what it gives, each named in the files resolved to a holon", () => {
+  const typeOf = { mount: newId(), component: newId() };
+  const briefs = newId();
   const reader = newId();
   const born = entry(
-    { title: "The root", component: "Reader", argument: ["briefs"] },
+    {
+      title: "The root",
+      component: "Reader",
+      argument: ["briefs"],
+      offer: { search: "Reader", cards: true },
+    },
     idOf,
     typeOf,
-    {
-      ...looks.names,
-    },
+    { briefs },
     { Reader: reader },
   );
   const root = born.holons[0]!;
@@ -69,6 +64,9 @@ test("the entry is a mount: a component and its argument, each named in the file
   expect(root.instance).toEqual([typeOf.mount]);
   expect(root.body.component).toEqual({ $ref: reader });
   expect(root.body.argument).toEqual([{ $ref: briefs }]);
+  expect(root.body.offer).toEqual({ search: { $ref: reader }, cards: true });
+  const looking = entry({ title: "x", gathers: { everything: true } }, idOf, typeOf, {}, {}).holons[0]!;
+  expect(looking.body.gathers).toEqual({ everything: true });
   expect(() => entry({ title: "x", argument: ["nothing"] }, idOf, typeOf, {}, {})).toThrow("does not name");
 });
 

@@ -36,18 +36,21 @@ export interface Declaration {
   says: string;
   takes: string[];
   kinds: Kind[];
-  argument?: "holon" | "list" | "selection";
+  argument?: "holon" | "list" | "selection" | "expression";
   settings?: { [key: string]: { says: string; shape: Shape; optional?: boolean } };
   reads?: ReadForm[];
 }
 
-// What a slot reads: one holon, or a list of holons.
-export type Reading = { holon: Id } | { list: Id[] };
+// What a slot reads: one holon, a list of holons, or a way of looking,
+// which reads as what it gathers.
+export type Reading = { holon: Id } | { list: Id[] } | { gather: Expression };
 
 // A holon read with the body its type declares.
 export type HolonOf<B> = Omit<HolonRead, "body"> & { body: B };
 
-// What a component is given: what its slot reads, the holon or the list;
+// What a component is given: what its slot reads, the holon or the list,
+// and, where the slot reads a way of looking, the way itself beside the
+// list it gathers;
 // the kind of slot it stands in; what the holders above it offer; the
 // settings the slot that opened it gave, checked against those the
 // component declares; and what it may do, as a fact it is told, never one
@@ -57,6 +60,7 @@ export type HolonOf<B> = Omit<HolonRead, "body"> & { body: B };
 export interface Given<B = Body, S = Settings> {
   holon?: HolonOf<B>;
   list?: Id[];
+  gathers?: Expression;
   kind: Kind;
   offered: Offer;
   settings: S;
@@ -69,8 +73,9 @@ export interface Given<B = Body, S = Settings> {
 // itself says.
 export type Offer = { kind?: Kind; [key: string]: Json | undefined };
 
-// Where a slot reads: one holon by its id, or several by theirs.
-export type Where = Id | Id[];
+// Where a slot reads: one holon by its id, several by theirs, or a way of
+// looking.
+export type Where = Id | Id[] | { gather: Expression };
 
 // How a slot is opened: what its holder offers it and what lies beneath,
 // the settings it gives the component drawn in it, the slot's own word on

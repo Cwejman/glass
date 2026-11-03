@@ -1,6 +1,6 @@
 {
   "title": "Mount",
-  "says": "A call: a component and its argument, what it is given to draw. The argument is a selection, holons in order: one is drawn as itself, several as a list. A mount is the one thing that stands still to be changed, so the root of what one looks at is a mount, and every move is a new version of it.",
+  "says": "A call: a component and what it gives it to draw, holons in order or a way of looking. One holon is drawn as itself, several as a list, a way of looking as what it gathers. A mount is the one thing that stands still to be changed, so the root of what one looks at is a mount, and every move is a new version of it.",
   "fields": {
     "title": {
       "says": "What the mount is called.",
@@ -13,10 +13,21 @@
       "optional": true
     },
     "argument": {
-      "says": "What the component is given: holons in order, among them expressions, which are holons too.",
+      "says": "What the component is given, where it is given holons: holons in order.",
       "shape": {
         "list": "ref"
-      }
+      },
+      "optional": true
+    },
+    "gathers": {
+      "says": "What the component is given, where it is given a way of looking: the expression itself, held in the mount, so a place one looks at needs no holon of its own.",
+      "shape": "expression",
+      "optional": true
+    },
+    "offer": {
+      "says": "What the mount offers everything it draws, nearer offers shadowing it: settings a component takes and its slot leaves unsaid, by their names, and what components look for, as the favorites, or the search a mount's menu is drawn by.",
+      "shape": "json",
+      "optional": true
     },
     "from": {
       "says": "Where the holon was born from, as a path in the files it arrived from.",
