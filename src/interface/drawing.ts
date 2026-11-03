@@ -203,6 +203,13 @@ export function drawing(engine: Connection, options: Options): Drawing {
     const refuse = (what: string): never => {
       throw new Error(`${title} ${what}`);
     };
+    // An offer of a kind, and a slot's own word, are one of the kinds there are.
+    const offerProblem = (offer: Offer | undefined, kind: unknown) => {
+      if (offer?.kind !== undefined && offer.kind !== "full" && offer.kind !== "face")
+        refuse(`offers the kind ${String(offer.kind)}, which is no kind`);
+      if (kind !== undefined && kind !== "full" && kind !== "face")
+        refuse(`says the kind ${String(kind)}, which is no kind`);
+    };
     const within = (ids: Id[], doing: string) => {
       const beyond = ids.find((id) => !reached.has(id));
       if (beyond) refuse(`${doing} ${beyond}, which is beyond what it was handed or has read`);
@@ -256,6 +263,7 @@ export function drawing(engine: Connection, options: Options): Drawing {
     // and what this component offers it, nearer over farther.
     const opened = (reads: Reading, opening: Opening | undefined): Call => {
       const { offer, settings, kind } = (copied(opening ?? {}) ?? {}) as Opening;
+      offerProblem(offer, kind);
       return {
         reads,
         offered: { ...call.offered, ...offer },
@@ -298,9 +306,18 @@ export function drawing(engine: Connection, options: Options): Drawing {
         const mount = (mounts as unknown[])[index as number];
         if (!isMount(mount)) refuse(`opens mount ${String(index)}, which says nothing of what it reads`);
         const pane = options.paneOf(holon!, index as number, call);
+        const { offer, settings, kind } = (copied(opening ?? {}) ?? {}) as Opening;
+        offerProblem(offer, kind);
         within("list" in pane.reads ? pane.reads.list : askedIds(pane.reads as Read), "opens a mount of");
-        const { offer } = (copied(opening ?? {}) ?? {}) as Opening;
-        return slot({ ...pane, offered: { ...call.offered, ...offer }, ...(around ? { around } : {}) });
+        // The mount's own data comes first; what the layout's component asks
+        // of the pane fills in where the mount says nothing.
+        return slot({
+          ...pane,
+          ...(pane.own ? {} : kind ? { own: kind } : {}),
+          settings: { ...settings, ...pane.settings },
+          offered: { ...call.offered, ...offer },
+          ...(around ? { around } : {}),
+        });
       },
       read,
       holon: async (id) => (await read({ holon: id })) as never,
@@ -368,7 +385,10 @@ export function drawing(engine: Connection, options: Options): Drawing {
       // A holon already standing in full around this slot is shown here as
       // its face.
       const guarded = kindOf(asked) === "full" && !!holon && !!asked.around?.has(holon.id);
-      const call: Call = guarded ? { ...asked, own: "face" } : asked;
+      const call: Call = guarded
+        ? { ...asked, own: "face", offered: { ...asked.offered, kind: "face" } }
+        : asked;
+      host.className = `slot ${kindOf(call)}`;
 
       const found = componentFor(call, holon, guarded);
       if (typeof found !== "object") {

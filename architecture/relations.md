@@ -35,7 +35,7 @@ A relation that has a time or attributes of its own is a holon of its own, holdi
 
 A whole says what it holds, and in what order. In prose, the rule already says how: a link standing alone in a paragraph places a part there, with the sentence before it saying why, and a link inside a sentence only mentions. Elsewhere a whole holds its parts as a typed list, and each place in the list may carry data of its own: a track's disc and number on an album, the moment it was added to a playlist.
 
-A part may stand in many wholes, each with its own sentence or its own place. And an entry of a record holds a reference to its record instead, since a record's entries are ordered by a value, the day said or the moment visited, so adding one writes one holon and touches nothing else.
+A part may stand in many wholes, each with its own sentence or its own place. And an entry of something kept by time holds a reference to what keeps it instead, since such entries are ordered by a value, the day said or the moment visited, so adding one writes one holon and touches nothing else.
 
 *The author's, 2026-11-02: a brief holds its children, a visit belongs instead. The lone link as the part carried from the rule's practice.*
 

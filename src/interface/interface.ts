@@ -28,7 +28,8 @@ export async function mount(engine: Connection, root: HTMLElement) {
   let moves: Promise<unknown> = Promise.resolve();
 
   const kinds = await kindsOf(engine);
-  const kindNamed = (id: Id): Kind => (id === kinds.face ? "face" : "full");
+  const kindNamed = (id: Id): Kind | undefined =>
+    id === kinds.face ? "face" : id === kinds.full ? "full" : undefined;
 
   // A layout's mount as a slot. The arrangement's mounts are where the
   // reader stands, so a move inside one moves that mount, and a change from
@@ -39,7 +40,7 @@ export async function mount(engine: Connection, root: HTMLElement) {
     const own = layout.id === arranged?.id;
     return {
       reads: readingOf(each),
-      ...(each.kind ? { own: kindNamed(each.kind.$ref) } : {}),
+      ...(each.kind && kindNamed(each.kind.$ref) ? { own: kindNamed(each.kind.$ref)! } : {}),
       settings: (each.settings ?? {}) as Settings,
       called: each.component?.$ref,
       place: own ? (to) => moveTo(index, to) : outer.place,
