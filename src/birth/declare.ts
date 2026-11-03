@@ -3,7 +3,8 @@ import { join } from "node:path";
 import type { Connector, Connectors, Shape } from "../engine/types.ts";
 
 // The bodies of the field's types, written as TypeScript for the components
-// to draw with: each type an interface, each of its fields a property, with
+// to draw with: each type an interface named for its body, as BriefBody, so
+// no name of TypeScript's own is shadowed, each of its fields a property, with
 // what the field means, said in prose, as the property's comment. Made from
 // the types themselves, so a component knows a body by what its type
 // declares and never by guessing; and each component's settings, made from
@@ -31,17 +32,15 @@ export async function declarations(): Promise<string> {
     "// Never written by hand: change a type, and declare again.",
     "",
     'import type { Json } from "../../src/store/canonical.ts";',
-    'import type { Expression, HolonRead } from "../../src/engine/engine.ts";',
+    'import type { Expression } from "../../src/engine/engine.ts";',
     "",
     "// A reference to a holon, pinned to one version where it says so.",
     'export type Ref = { $ref: string; "@"?: string };',
-    "",
-    "// A holon's body, read as the body its type declares.",
-    "export const bodyOf = <T>(holon: HolonRead) => holon.body as unknown as T;",
+
     ...types.flatMap(({ title, says, fields }) => [
       "",
       comment(says, ""),
-      `export interface ${identifier(title)} ${block(fields, "")}`,
+      `export interface ${identifier(title)}Body ${block(fields, "")}`,
     ]),
     ...components
       .filter(({ settings }) => settings)

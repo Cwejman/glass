@@ -35,6 +35,11 @@
               "says": "What the mount gathers instead of one holon, as an expression: the holons it gives are drawn as a list.",
               "shape": "expression",
               "optional": true
+            },
+            "settings": {
+              "says": "The settings the mount gives the component drawn in it, as that component declares them.",
+              "shape": "json",
+              "optional": true
             }
           }
         }

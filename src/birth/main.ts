@@ -100,7 +100,9 @@ const files = await readWiki("README.md");
 const bornWiki = wiki(files, "README.md", idOf, bornTypes.names);
 const bornEntry = entry(idOf, bornTypes.names);
 const layoutFiles = JSON.parse(await readFile(join(repo, "field/layouts.json"), "utf8")) as LayoutFile[];
-const bornLayouts = layouts(layoutFiles, idOf, bornTypes.names);
+const fieldNames = Object.assign({}, bornTypes.names, bornKinds.names, bornWiki.names, bornEntry.names);
+const componentTitled = Object.fromEntries(componentFiles.map(({ from, title }) => [title, idOf(from)]));
+const bornLayouts = layouts(layoutFiles, idOf, bornTypes.names, fieldNames, componentTitled);
 
 const field: Born[] = [bornTypes, bornKinds, bornMaterials, bornComponents, bornWiki, bornEntry, bornLayouts];
 const holons = field.flatMap(({ holons }) => holons);

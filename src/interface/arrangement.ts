@@ -1,3 +1,4 @@
+import type { Json } from "../store/canonical.ts";
 import { newId, type Id } from "../store/id.ts";
 import type { Name } from "../store/name.ts";
 import type { Body } from "../store/objects.ts";
@@ -18,6 +19,7 @@ export interface Mount {
   reads?: { $ref: Id };
   gathers?: Expression;
   projects?: "field";
+  settings?: Json;
 }
 
 // What a mount reads: the holon it names, what its expression gathers, or

@@ -1,5 +1,5 @@
 import type { Declaration, Given, Space } from "../../src/interface/component.ts";
-import type { Layout, LayoutSettings } from "./bodies.ts";
+import type { LayoutBody, LayoutSettings } from "./bodies.ts";
 import { follow, Way } from "./way.tsx";
 import { h } from "./jsx.ts";
 
@@ -36,7 +36,7 @@ export const style = `
 }
 `;
 
-export default function draw(given: Given<Layout, LayoutSettings>, space: Space) {
+export default function draw(given: Given<LayoutBody, LayoutSettings>, space: Space) {
   const { mounts } = given.holon!.body;
   const panes = mounts.map((_, index) => space.openMount(index));
   for (const pane of panes)

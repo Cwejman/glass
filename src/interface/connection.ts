@@ -49,10 +49,11 @@ export function connect(worker: Worker): Connection {
   const subscribe = async (query: Read, listener: (value: Json) => void): Promise<Subscription<Json>> => {
     const id = next++;
     listeners.set(id, listener);
-    const { value } = (await send({ op: "subscribe", read: query }, id)) as {
-      subscription: number;
-      value: Json;
-    };
+    const answered = await send({ op: "subscribe", read: query }, id).catch((error: unknown) => {
+      listeners.delete(id);
+      throw error;
+    });
+    const { value } = answered as { subscription: number; value: Json };
     return {
       value,
       close: () => {

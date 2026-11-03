@@ -2,7 +2,7 @@ import type { Id } from "../store/id.ts";
 import type { Name } from "../store/name.ts";
 import type { HolonRead } from "../engine/engine.ts";
 import { arrangement, mountsOf, place, readingOf, restyle, walk } from "./arrangement.ts";
-import type { Kind, Target } from "./component.ts";
+import type { Kind, Settings, Target } from "./component.ts";
 import type { Connection } from "./connection.ts";
 import { drawing, type Call } from "./drawing.ts";
 import { dismiss } from "./chrome.ts";
@@ -40,7 +40,7 @@ export async function mount(engine: Connection, root: HTMLElement) {
     return {
       reads: readingOf(each),
       kind: kindNamed(each.kind?.$ref),
-      settings: {},
+      settings: (each.settings ?? {}) as Settings,
       called: each.component?.$ref,
       place: own ? (to) => moveTo(index, to) : outer.place,
       why: `this pane is part of ${String(layout.body.title ?? "a layout")}, which is only shown here; your own arrangement is where changes go`,
@@ -121,7 +121,7 @@ export async function mount(engine: Connection, root: HTMLElement) {
         await draw();
       }),
   );
-  await know(known.value as Id[]);
+  await inTurn(() => know(known.value as Id[]));
   await lay(engine);
 
   addEventListener(

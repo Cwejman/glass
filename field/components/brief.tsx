@@ -1,6 +1,6 @@
 import type { Id } from "../../src/store/id.ts";
 import type { Declaration, Given, HolonOf, Space } from "../../src/interface/component.ts";
-import type { Brief, BriefSettings } from "./bodies.ts";
+import type { BriefBody, BriefSettings } from "./bodies.ts";
 import { h } from "./jsx.ts";
 import { faceOf, isConfidence, markdown, placed, slotOf } from "./prose.ts";
 import { Card, follow, Way } from "./way.tsx";
@@ -102,7 +102,7 @@ export const style = `
 }
 `;
 
-type Drawn = Given<Brief, BriefSettings>;
+type Drawn = Given<BriefBody, BriefSettings>;
 
 export default function draw(given: Drawn, space: Space) {
   return given.kind === "face" ? face(given, space) : full(given, space);
@@ -119,7 +119,7 @@ async function full(given: Drawn, space: Space) {
   const holon = given.holon!;
   const brief = holon.body;
   const record = await space.read({ name: "record" });
-  const numbers = (whole: HolonOf<Brief>) => !record || !whole.instance.includes(record);
+  const numbers = (whole: HolonOf<BriefBody>) => !record || !whole.instance.includes(record);
 
   const levels = await wayDown(holon, space, numbers);
   const number = levels.at(-1)?.number ?? "";
@@ -164,7 +164,7 @@ function face(given: Drawn, space: Space) {
 // The prose, block by block; a block that is nothing but a link into the
 // field is a slot, the holon it places mounted there, as a face, or whole
 // where the link says so.
-function proseOf(holon: HolonOf<Brief>, space: Space) {
+function proseOf(holon: HolonOf<BriefBody>, space: Space) {
   return markdown.lexer(holon.body.prose).map((token) => {
     const slot = slotOf(token);
     if (slot) return space.open(slot.id, slot.kind);
@@ -177,13 +177,13 @@ function proseOf(holon: HolonOf<Brief>, space: Space) {
 // What holds a brief, and where: the whole that lists it among its parts, at
 // its place there, or the whole whose prose places it by a lone link.
 interface Holder {
-  whole: HolonOf<Brief>;
+  whole: HolonOf<BriefBody>;
   place?: number;
 }
 
-async function holderOf(holon: HolonOf<Brief>, space: Space): Promise<Holder | undefined> {
+async function holderOf(holon: HolonOf<BriefBody>, space: Space): Promise<Holder | undefined> {
   for (const { id, key } of await space.read({ holders: holon.id })) {
-    const whole = await space.holon<Brief>(id);
+    const whole = await space.holon<BriefBody>(id);
     if (!whole) continue;
     if (key === "parts")
       return { whole, place: (whole.body.parts ?? []).findIndex(({ $ref }) => $ref === holon.id) };
@@ -197,11 +197,11 @@ async function holderOf(holon: HolonOf<Brief>, space: Space): Promise<Holder | u
 // it: by its place among its whole's parts, running on from the whole's own
 // number while the whole is a part too, and starting again across a file.
 async function wayDown(
-  holon: HolonOf<Brief>,
+  holon: HolonOf<BriefBody>,
   space: Space,
-  numbers: (whole: HolonOf<Brief>) => boolean,
+  numbers: (whole: HolonOf<BriefBody>) => boolean,
 ): Promise<Level[]> {
-  const up: { holon: HolonOf<Brief>; place?: number }[] = [];
+  const up: { holon: HolonOf<BriefBody>; place?: number }[] = [];
   const seen = new Set<Id>();
   for (let at: Holder | undefined = { whole: holon }; at && !seen.has(at.whole.id); ) {
     seen.add(at.whole.id);

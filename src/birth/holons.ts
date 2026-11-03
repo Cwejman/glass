@@ -102,11 +102,18 @@ export function components(
 // What a component declares that is not so: a type or a kind the field
 // does not name, a read form there is not, or settings not said as fields.
 function declarationProblems(
-  { takes, kinds, reads, settings }: ComponentFile,
+  { takes, kinds, reads, settings, argument }: ComponentFile,
   typeOf: Record<string, Id>,
   kindOf: Record<string, Id>,
 ): string[] {
+  const notLists = Object.entries({ takes, kinds, reads: reads ?? [] })
+    .filter(([, value]) => !Array.isArray(value))
+    .map(([key]) => `${key} is not a list`);
+  if (notLists.length) return notLists;
   return [
+    ...(argument !== undefined && !["holon", "list", "field"].includes(argument)
+      ? [`it is given ${argument}, which is not a holon, a list or the field`]
+      : []),
     ...takes
       .filter((type) => !Object.hasOwn(typeOf, type))
       .map((type) => `it takes ${type}, which is no type`),
@@ -183,19 +190,29 @@ export interface LayoutFile {
   mounts: Json[];
 }
 
-// Layouts the field ships beside its entry. An expression in a mount may
-// name a type by its name, as `{ "instances": "brief" }`, which is made a
-// reference to that type.
-export function layouts(files: LayoutFile[], idOf: IdOf, typeOf: Record<string, Id>): Born {
-  const named = (value: Json): Json => {
-    if (Array.isArray(value)) return value.map(named);
+// Layouts the field ships beside its entry. In a layout's file a holon may
+// be given by the name the field gives it, as `{ "instances": "brief" }` or
+// `{ "held": "wiki", "under": "parts" }`, and a component by its title, as
+// `{ "component": "List" }`; each is made a reference to what it names.
+export function layouts(
+  files: LayoutFile[],
+  idOf: IdOf,
+  typeOf: Record<string, Id>,
+  named: Record<string, Id>,
+  componentTitled: Record<string, Id>,
+): Born {
+  const holonKeys = new Set(["instances", "pointing", "held", "reads"]);
+  const resolved = (value: Json, at: string): Json => {
+    if (Array.isArray(value)) return value.map((inner) => resolved(inner, at));
     if (value === null || typeof value !== "object") return value;
     return Object.fromEntries(
-      Object.entries(value).map(([key, inner]) =>
-        (key === "instances" || key === "pointing") && typeof inner === "string" && typeOf[inner]
-          ? [key, { $ref: typeOf[inner]! }]
-          : [key, named(inner)],
-      ),
+      Object.entries(value).map(([key, inner]) => {
+        if (typeof inner !== "string" || !(holonKeys.has(key) || key === "component"))
+          return [key, resolved(inner, at)];
+        const id = key === "component" ? componentTitled[inner] : named[inner];
+        if (!id) throw new Error(`${at}: ${key} names ${inner}, which the field does not name`);
+        return [key, { $ref: id }];
+      }),
     );
   };
   const fromOf = (name: string) => `field/layouts.json#${name}`;
@@ -203,7 +220,7 @@ export function layouts(files: LayoutFile[], idOf: IdOf, typeOf: Record<string, 
     holons: files.map(({ name, title, mounts }) => ({
       id: idOf(fromOf(name)),
       instance: [typeOf.layout!],
-      body: { title, mounts: named(mounts), from: fromOf(name) },
+      body: { title, mounts: resolved(mounts, fromOf(name)), from: fromOf(name) },
     })),
     names: Object.fromEntries(files.map(({ name }) => [name, idOf(fromOf(name))])),
   };

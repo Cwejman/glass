@@ -2,16 +2,13 @@
 // Never written by hand: change a type, and declare again.
 
 import type { Json } from "../../src/store/canonical.ts";
-import type { Expression, HolonRead } from "../../src/engine/engine.ts";
+import type { Expression } from "../../src/engine/engine.ts";
 
 // A reference to a holon, pinned to one version where it says so.
 export type Ref = { $ref: string; "@"?: string };
 
-// A holon's body, read as the body its type declares.
-export const bodyOf = <T>(holon: HolonRead) => holon.body as unknown as T;
-
 /** One piece of prose giving one understanding, under the rule: its face is its title and first paragraph, and what stands beneath it, its parts, are briefs in the order each stands on those before. */
-export interface Brief {
+export interface BriefBody {
   /** The heading: the understanding in a few words. */
   title: string;
   /** The understanding itself, in markdown. A link standing alone in a paragraph places a part there; a link in a sentence only mentions. */
@@ -25,7 +22,7 @@ export interface Brief {
 }
 
 /** A holon that declares the types it takes and draws what it is given, opening space in it where what it holds is drawn in turn by the components that match. */
-export interface Component {
+export interface ComponentBody {
   /** What the component is called. */
   title: string;
   /** What it draws, in a sentence. */
@@ -49,7 +46,7 @@ export interface Component {
 }
 
 /** A kind of slot: how what stands in a slot is drawn, said between the one that holds it and the one held, so neither has to know the other. */
-export interface Kind {
+export interface KindBody {
   /** What the kind is called. */
   title: string;
   /** How what stands in a slot of this kind is drawn, in a sentence. */
@@ -59,7 +56,7 @@ export interface Kind {
 }
 
 /** Mounts held as data: each a component called with what it reads, a holon or the field itself. The layout a client boots into is the store's entry, and the reader's own arrangement is a layout in their home. */
-export interface Layout {
+export interface LayoutBody {
   /** What the layout is called. */
   title: string;
   /** Each mount, drawn in order: what it reads, a holon, what an expression gathers, or the field itself, and, where it says so, the kind of slot it is and the component it calls. */
@@ -74,13 +71,15 @@ export interface Layout {
     kind?: Ref;
     /** What the mount gathers instead of one holon, as an expression: the holons it gives are drawn as a list. */
     gathers?: Expression;
+    /** The settings the mount gives the component drawn in it, as that component declares them. */
+    settings?: Json;
   }[];
   /** Where the holon was born from, as a path in the files it arrived from. */
   from?: string;
 }
 
 /** What everything drawn is made of: the colours, the type, the measure and the spacing, named once so every component draws with the same material. */
-export interface Material {
+export interface MaterialBody {
   /** What the material is called. */
   title: string;
   /** What the material is, in a sentence. */
@@ -92,7 +91,7 @@ export interface Material {
 }
 
 /** Knowledge kept in the order of time rather than by importance, like the author's words kept by day. */
-export interface Record {
+export interface RecordBody {
   /** What is recorded, in a few words. */
   title: string;
   /** What the record holds, in markdown, its entries placed by links standing alone. */
@@ -104,7 +103,7 @@ export interface Record {
 }
 
 /** A schema in the field: the structure a holon's data has. Each field is said in prose beside its shape, for the fields are where holons connect. */
-export interface Type {
+export interface TypeBody {
   /** What the type is called. */
   title: string;
   /** What an instance of the type is, in a sentence or two. */

@@ -1,6 +1,6 @@
 import type { Json } from "../store/canonical.ts";
-import type { Id } from "../store/id.ts";
-import type { Name } from "../store/name.ts";
+import { isId, type Id } from "../store/id.ts";
+import { isName, type Name } from "../store/name.ts";
 import type { Body, Version } from "../store/objects.ts";
 import type { Change as StoreChange, Holon, Store } from "../store/store.ts";
 import { expressionProblem, gather, type Expression } from "./expression.ts";
@@ -127,7 +127,39 @@ export function fieldOf(stores: readonly Standing[]): Field {
   return { stores, known, holders: Map.groupBy(held, ({ id }) => id) };
 }
 
+// What is wrong with a value asked as a read, if anything: it must be one
+// form and nothing beside it, a holon's read alone taking a commit too.
+export function readProblem(value: unknown): string | undefined {
+  if (typeof value !== "object" || value === null || Array.isArray(value))
+    return "a read is one form, as { holon: … }";
+  const record = value as Record<string, unknown>;
+  const keys = Object.keys(record);
+  const form = keys.find((key) => key !== "at");
+  if (!form || keys.length > (form === "holon" && "at" in record ? 2 : 1))
+    return "a read is one form and nothing beside it";
+  const given = record[form];
+  switch (form) {
+    case "holon":
+    case "holders":
+    case "instances":
+      if (!isId(given)) return `${form} names a holon by its id`;
+      if (form === "holon" && "at" in record && !isName(record.at)) return "at names a commit";
+      return undefined;
+    case "name":
+    case "head":
+      return typeof given === "string" ? undefined : `${form} is a name`;
+    case "field":
+      return given === true ? undefined : "field is written field: true";
+    case "gather":
+      return expressionProblem(given as Json);
+    default:
+      return `there is no read ${form}`;
+  }
+}
+
 export async function read(field: Field, past: Past, read: Read): Promise<Json> {
+  const problem = readProblem(read);
+  if (problem) throw new Error(problem);
   if ("holon" in read) {
     const known = read.at ? await past.versionAt(read.holon, read.at) : field.known.get(read.holon);
     return known ? view(known) : null;
@@ -140,11 +172,7 @@ export async function read(field: Field, past: Past, read: Read): Promise<Json> 
     );
   if ("head" in read) return field.stores.find(({ key }) => key === read.head)?.head ?? null;
   if ("field" in read) return placeOf(field) as unknown as Json;
-  if ("gather" in read) {
-    const problem = expressionProblem(read.gather as unknown as Json);
-    if (problem) throw new Error(problem);
-    return gather(field, read.gather);
-  }
+  if ("gather" in read) return gather(field, read.gather);
   if ("holders" in read)
     return (field.holders.get(read.holders) ?? []).map(({ from, key, pinned }) => ({
       id: from,

@@ -124,3 +124,16 @@ test("a component can draw a slot only where it is given that kind of thing, in 
   expect(able([field], { field: true }, full)).toEqual([field]);
   expect(able([reader], { holon: newId() }, newId())).toEqual([]);
 });
+
+test("a read is one known form and nothing beside it", async () => {
+  const { readProblem } = await import("./field.ts");
+  const id = newId();
+  expect(readProblem({ holon: id })).toBeUndefined();
+  expect(readProblem({ holon: id, at: `sha256-${"0".repeat(64)}` })).toBeUndefined();
+  expect(readProblem({ gather: { types: true } })).toBeUndefined();
+  expect(readProblem({ holon: id, version: 0, body: {}, id })).toContain("nothing beside it");
+  expect(readProblem({ instances: id, field: true })).toContain("nothing beside it");
+  expect(readProblem({ holders: "x" })).toContain("by its id");
+  expect(readProblem({ every: true })).toContain("no read every");
+  expect(readProblem({ gather: { every: true } })).toContain("no expression every");
+});

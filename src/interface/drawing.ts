@@ -4,7 +4,8 @@ import type { Name } from "../store/name.ts";
 import type { FieldPlace, HolonRead } from "../engine/engine.ts";
 import type { Connection } from "./connection.ts";
 import { isId } from "../store/id.ts";
-import type { Read } from "../engine/engine.ts";
+import type { Expression, Read } from "../engine/engine.ts";
+import { readProblem } from "../engine/field.ts";
 import { references } from "../engine/references.ts";
 import type { Component, Given, Kind, Reading, Settings, Space } from "./component.ts";
 import { settingsProblem } from "./settings.ts";
@@ -86,12 +87,16 @@ export function candidates(
   );
 }
 
-// The one found for a slot: one that takes one of its holon's types before
-// the wildcard. Finding lives here alone, so how a component is found can
+// The one found for a slot. For a holon, one that takes one of its types
+// before the wildcard. For a list, a gathering or the field, which say
+// nothing of what their items are, one that takes nothing in particular;
+// a component that takes a type for its items draws there only where a
+// slot names it. Finding lives here alone, so how a component is found can
 // change in one place.
 export function match(components: readonly HolonRead[], reads: Reading, holon: HolonRead | null, kind: Id) {
   const fitting = candidates(components, reads, holon, kind);
   const takes = (component: HolonRead) => (component.body.takes as unknown[]).length;
+  if (!("holon" in reads)) return fitting.find((component) => takes(component) === 0);
   return fitting.find((component) => takes(component) > 0) ?? fitting[0];
 }
 
@@ -105,15 +110,24 @@ export function drawing(engine: Connection, options: Options): Drawing {
   const hosted = new Map<HTMLElement, Hosted>();
 
   // The component a slot names, where it can draw there; one that is named
-  // but cannot is a fault, said in the slot, as OpenLight's "not admitted
-  // here". A slot that names none, or names one no longer in the field,
-  // draws with the one found for it.
-  const componentFor = (call: Call, holon: HolonRead | null): HolonRead | string | undefined => {
+  // but is not run, or cannot draw there, is a fault, said in the slot, as
+  // OpenLight's "not admitted here". A slot that names none draws with the
+  // one found for it.
+  const componentFor = (
+    call: Call,
+    holon: HolonRead | null,
+    guarded: boolean,
+  ): HolonRead | string | undefined => {
     const kind = options.kinds[call.kind];
     const known = options.components();
-    const named = call.called ? known.find(({ id }) => id === call.called) : undefined;
-    if (!named) return match(known, call.reads, holon, kind);
-    if (candidates([named], call.reads, holon, kind).length) return named;
+    if (!call.called) return match(known, call.reads, holon, kind);
+
+    const named = known.find(({ id }) => id === call.called);
+    if (named && candidates([named], call.reads, holon, kind).length) return named;
+    // Where the nesting guard turned the slot into a face, the slot did not
+    // ask for it, so what it named is not at fault.
+    if (guarded) return match(known, call.reads, holon, kind);
+    if (!named) return "the component named here is not in the field, or is not among those run";
     return `${named.body.title as string} is named here, but cannot draw ${describe(call.reads, holon)} as a ${call.kind} slot`;
   };
 
@@ -123,6 +137,9 @@ export function drawing(engine: Connection, options: Options): Drawing {
     if (!loaded.has(component.version)) {
       const url = URL.createObjectURL(new Blob([component.body.code as string], { type: "text/javascript" }));
       const running = (import(/* @vite-ignore */ url) as Promise<Component>).then((module) => {
+        URL.revokeObjectURL(url);
+        for (const old of document.head.querySelectorAll(`style[data-component="${component.id}"]`))
+          old.remove();
         if (module.style) {
           const style = document.createElement("style");
           style.dataset.component = component.id;
@@ -184,16 +201,21 @@ export function drawing(engine: Connection, options: Options): Drawing {
     };
 
     const read = (async (asked: Read) => {
-      const query = JSON.parse(JSON.stringify(asked)) as Read;
-      const form = Object.keys(query)[0]!;
-      const handedHolon = "holon" in query && !("at" in query && query.at) && reached.has(query.holon);
-      if (!handedHolon && !declared.has(form)) refuse(`reads ${form}, which it does not declare it reads`);
-      within(idsAsked(query), `reads ${form} of`);
+      const query = copied(asked) as Read;
+      const wrong = readProblem(query);
+      if (wrong) refuse(`asks ${wrong}`);
+      const form = Object.keys(query).find((key) => key !== "at")!;
+      const isDeclared = declared.has(form);
+      const handedHolon = form === "holon" && !("at" in query) && reached.has((query as { holon: Id }).holon);
+      if (!handedHolon && !isDeclared) refuse(`reads ${form}, which it does not declare it reads`);
+      within(askedIds(query), `reads ${form} of`);
 
       const subscription = await engine.subscribe(query, () => current() && redraw());
       if (current()) held.reads.push(subscription.close);
       else subscription.close();
-      reach(subscription.value);
+      // Only a declared read reaches further: reading a holon one was
+      // handed does not open what it points at.
+      if (isDeclared) reach(subscription.value);
       return subscription.value;
     }) as Space["read"];
 
@@ -229,12 +251,24 @@ export function drawing(engine: Connection, options: Options): Drawing {
     });
 
     const space: Space = {
-      open: (id, kind, settings) => (within([id], "opens"), slot(opened({ holon: id }, kind, settings))),
-      openList: (ids, kind, settings) => (within(ids, "opens"), slot(opened({ list: ids }, kind, settings))),
-      openGathered: (expression, kind, settings) => {
+      open: (asked, kind, settings) => {
+        const id = copied(asked) as Id;
+        within([id], "opens");
+        return slot(opened({ holon: id }, kind, copied(settings ?? {}) as Settings));
+      },
+      openList: (asked, kind, settings) => {
+        const ids = copied(asked) as Id[];
+        if (!Array.isArray(ids)) refuse("opens a list that is not a list");
+        within(ids, "opens");
+        return slot(opened({ list: ids }, kind, copied(settings ?? {}) as Settings));
+      },
+      openGathered: (asked, kind, settings) => {
+        const expression = copied(asked) as Expression;
         if (!declared.has("gather")) refuse("gathers, which it does not declare it reads");
-        within(idsAsked({ gather: expression }), "gathers by");
-        return slot(opened({ gather: expression }, kind, settings));
+        const wrong = readProblem({ gather: expression });
+        if (wrong) refuse(`gathers by ${wrong}`);
+        within(idsIn(expression), "gathers by");
+        return slot(opened({ gather: expression }, kind, copied(settings ?? {}) as Settings));
       },
       openMount: (index) => slot({ ...options.paneOf(holon!, index, call), ...(around ? { around } : {}) }),
       read,
@@ -302,10 +336,10 @@ export function drawing(engine: Connection, options: Options): Drawing {
 
       // A holon already standing in full around this slot is shown here as
       // its face.
-      const call: Call =
-        asked.kind === "full" && holon && asked.around?.has(holon.id) ? { ...asked, kind: "face" } : asked;
+      const guarded = asked.kind === "full" && !!holon && !!asked.around?.has(holon.id);
+      const call: Call = guarded ? { ...asked, kind: "face" } : asked;
 
-      const found = componentFor(call, holon);
+      const found = componentFor(call, holon, guarded);
       if (typeof found !== "object") {
         chrome = () => chromeOf(call, holon, undefined);
         return host.replaceChildren(
@@ -395,11 +429,18 @@ function idsIn(value: unknown): Id[] {
   return Object.values(record).flatMap(idsIn);
 }
 
-// The holons a query asks about, wherever they stand in it.
-function idsAsked(query: Read): Id[] {
-  const { at: _, ...asked } = query as Read & { at?: unknown };
-  return idsIn(asked);
+// The holons a query asks about, by its form: the one it names, or every
+// holon its expression names.
+function askedIds(query: Read): Id[] {
+  if ("holon" in query) return [query.holon];
+  if ("holders" in query) return [query.holders];
+  if ("instances" in query) return [query.instances];
+  if ("gather" in query) return idsIn(query.gather);
+  return [];
 }
+
+// A value as plain data, so what is judged is what is used.
+const copied = (value: unknown) => JSON.parse(JSON.stringify(value ?? null)) as unknown;
 
 const describe = (reads: Reading, read: unknown) => {
   if ("list" in reads) return "a list";

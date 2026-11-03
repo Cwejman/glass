@@ -1,6 +1,6 @@
 import type { Id } from "../../src/store/id.ts";
 import type { Declaration, Given, Space } from "../../src/interface/component.ts";
-import type { Type } from "./bodies.ts";
+import type { TypeBody } from "./bodies.ts";
 import { h } from "./jsx.ts";
 import { Card, follow, Way } from "./way.tsx";
 
@@ -44,7 +44,7 @@ interface Connector {
   optional?: boolean;
 }
 
-export default async function draw(given: Given<Type>, space: Space) {
+export default async function draw(given: Given<TypeBody>, space: Space) {
   const type = given.holon!;
   const { title, says, fields: declared } = type.body;
   const instances = await space.read({ instances: type.id });
