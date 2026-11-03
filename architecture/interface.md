@@ -29,7 +29,7 @@ A component draws its holon's own values, and opens a space for each value that 
 
 A component may also compose by code, using other components inside its own, as OpenLight allows; only what it places as mounts are mounts. Where a holon's holarchy is meant to be seen and changed, its parts are mounts.
 
-*The author's, 2026-11-03: dissect the brief before plotting it out; mounts are made, and what renders within them depends. Mounting by a connector's shape the session's reading; composition by code and by data OpenLight's.*
+*The author's, 2026-11-03: dissect the brief before plotting it out; mounts are made, and what renders within them depends. Mounting by a connector's shape the session's reading; composition by code and by data OpenLight's. As built, each component still knows which of its values to mount, as the reader knows a brief's parts; reading it from the type is not yet done.*
 
 ## 4. Which component draws a mount
 
@@ -37,4 +37,4 @@ A mount can name its component, and then that one draws, whatever else would. Ot
 
 How a component is found is not settled. Glass now matches by type each time it draws. OpenLight ruled instead that the engine never infers a component: the one composing picks, from a table of defaults held in the field with the wildcard last, and the pick is recorded in the mount, so what is seen never depends on a table changing underneath. Mounts that are derived, such as a brief's parts, would be drawn through the table. Whatever is built on how a component is found is built knowing it may change, so finding a component is one function of the interface, the one place that would change.
 
-*The override, the wildcard and switching the author's, 2026-11-03; the recorded pick OpenLight's ruling of 2026-08-23. Which glass takes the author does not know yet: "if we do good code and good knowledge around these things, it's easy to switch later."*
+*Switching is not yet offered in the interface. The override, the wildcard and switching the author's, 2026-11-03; the recorded pick OpenLight's ruling of 2026-08-23. Which glass takes the author does not know yet: "if we do good code and good knowledge around these things, it's easy to switch later."*
