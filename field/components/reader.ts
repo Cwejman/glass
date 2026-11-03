@@ -39,15 +39,6 @@ export const style = `
   font-size: var(--aside);
 }
 
-.reader pre {
-  background: var(--raised);
-  border: var(--hairline) solid var(--line);
-  border-radius: var(--radius);
-  padding: var(--inset);
-  overflow-x: auto;
-  font-size: var(--code);
-  line-height: var(--leading-close);
-}
 
 .reader :not(pre) > code {
   font-size: var(--aside);
@@ -74,7 +65,8 @@ export const style = `
 }
 `;
 
-interface Step {
+// A level on the way down: a brief, its title, and its number where it has one.
+interface Level {
   id: Id;
   title: string;
   number: string;
@@ -165,7 +157,7 @@ async function wayDown(
   holon: HolonRead,
   space: Space,
   numbers: (whole: HolonRead) => boolean,
-): Promise<Step[]> {
+): Promise<Level[]> {
   const up: { holon: HolonRead; place?: number }[] = [];
   const seen = new Set<Id>();
   for (let at: Holder | undefined = { whole: holon }; at && !seen.has(at.whole.id); ) {
@@ -177,7 +169,7 @@ async function wayDown(
     });
     at = holder;
   }
-  return up.reverse().reduce<Step[]>((way, { holon, place }) => {
+  return up.reverse().reduce<Level[]>((way, { holon, place }) => {
     const above = way.at(-1)?.number;
     const number = place === undefined ? "" : above ? `${above}.${place + 1}` : `${place + 1}`;
     return [...way, { id: holon.id, title: String(holon.body.title ?? ""), number }];

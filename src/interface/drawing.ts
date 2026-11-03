@@ -5,9 +5,10 @@ import type { FieldPlace, HolonRead } from "../engine/engine.ts";
 import type { Connection } from "./connection.ts";
 import type { Component, Given, Reading, Space } from "./component.ts";
 
-// Drawing a holon into a host: the component that matches it draws what it
-// is given, opening spaces where what it holds is drawn in turn, and draws
-// again whenever the holon, or anything it read, changes. A drawing that a
+// Drawing what a mount reads into a host, a holon, a list or the field: the
+// component found for it draws what it is given, opening spaces where what
+// it holds is drawn in turn, and draws again whenever what it reads, or
+// anything it read on the way, changes. A drawing that a
 // newer one or a close has overtaken changes nothing, and lets go of what it
 // held.
 
@@ -17,7 +18,7 @@ import type { Component, Given, Reading, Space } from "./component.ts";
 export interface Call {
   reads: Reading;
   draws: string;
-  given: Json;
+  with: Json;
   place: Space["place"];
   called?: Id;
 }
@@ -42,18 +43,29 @@ export function match(
   holon: HolonRead | null,
   draws: string,
 ) {
-  const argument = "holon" in reads ? "holon" : "list" in reads ? "list" : "field";
-  const able = components.filter(
-    (component) =>
-      (component.body.draws as string[]).includes(draws) && (component.body.argument ?? "holon") === argument,
-  );
-  if (argument !== "holon") return able[0];
+  const able = components.filter((component) => fits(component, reads, draws));
+  if (!("holon" in reads)) return able[0];
 
   const takes = (component: HolonRead) => (component.body.takes as { $ref: Id }[]).map((ref) => ref.$ref);
   return (
     able.find((component) => takes(component).some((type) => holon?.instance.includes(type))) ??
     able.find((component) => takes(component).length === 0)
   );
+}
+
+const argumentOf = (reads: Reading) => ("holon" in reads ? "holon" : "list" in reads ? "list" : "field");
+
+// Whether a component can draw what a mount reads, in the way asked: it is
+// given that kind of thing, and draws that way.
+export const fits = (component: HolonRead, reads: Reading, draws: string) =>
+  (component.body.draws as string[]).includes(draws) &&
+  (component.body.argument ?? "holon") === argumentOf(reads);
+
+// The component a mount names, where it can draw what the mount reads, or
+// else the one found for it.
+function componentFor(known: readonly HolonRead[], call: Call, holon: HolonRead | null) {
+  const named = call.called ? known.find(({ id }) => id === call.called) : undefined;
+  return named && fits(named, call.reads, call.draws) ? named : match(known, call.reads, holon, call.draws);
 }
 
 export interface Drawing {
@@ -110,19 +122,19 @@ export function drawing(engine: Connection, components: () => readonly HolonRead
       return subscription.value;
     };
 
-    const opened = (reads: Reading, draws: string, given: Json) => {
+    const opened = (reads: Reading, draws: string, passed: Json) => {
       const host = document.createElement("div");
       host.className = `space ${draws}`;
       if (current()) {
         held.children.push(host);
-        void draw(host, { reads, draws, given, place });
+        void draw(host, { reads, draws, with: passed, place });
       }
       return host;
     };
 
     return {
-      open: (id, draws, given = null) => opened({ holon: id }, draws, given),
-      openList: (ids, draws, given = null) => opened({ list: ids }, draws, given),
+      open: (id, draws, passed = null) => opened({ holon: id }, draws, passed),
+      openList: (ids, draws, passed = null) => opened({ list: ids }, draws, passed),
       read,
       holon: async (id) => (await read({ holon: id })) as unknown as HolonRead | null,
       place,
@@ -136,6 +148,7 @@ export function drawing(engine: Connection, components: () => readonly HolonRead
     let read: HolonRead | FieldPlace | null = null;
 
     const render = async () => {
+      if (held.closed) return;
       const turn = ++held.drawing;
       const current = () => !held.closed && held.drawing === turn;
       release(held);
@@ -144,10 +157,7 @@ export function drawing(engine: Connection, components: () => readonly HolonRead
       if ("holon" in call.reads && !holon)
         return host.replaceChildren(note(`${call.reads.holon} is not in the field`));
 
-      const known = components();
-      const component = call.called
-        ? known.find(({ id }) => id === call.called)
-        : match(known, call.reads, holon, call.draws);
+      const component = componentFor(components(), call, holon);
       if (!component)
         return host.replaceChildren(note(`nothing draws ${describe(call.reads)} as ${call.draws}`));
 
@@ -157,7 +167,7 @@ export function drawing(engine: Connection, components: () => readonly HolonRead
         ...("list" in call.reads ? { list: call.reads.list } : {}),
         ...("field" in call.reads ? { field: read as FieldPlace } : {}),
         draws: call.draws,
-        with: call.given,
+        with: call.with,
       };
 
       try {

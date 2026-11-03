@@ -7,12 +7,18 @@ import type { Connection } from "./connection.ts";
 import { drawing } from "./drawing.ts";
 import { lay } from "./materials.ts";
 
-// The interface mounts what the arrangement names, and each component
-// encloses what it is given and opens space in it, where what it holds is
-// drawn in turn by the component whose type matches. Nothing it holds lasts:
-// it keeps the components it knows and what it is drawing now, and takes
-// the reader's moves one at a time. What lasts, even where the reader
-// stands, is in the field.
+// The interface mounts what the arrangement names: a holon, a list or the
+// field itself, each drawn by the component found for it, which opens space
+// for what it holds, drawn in turn. Nothing it holds lasts: it keeps the
+// components it knows and what it is drawing now, and takes the reader's
+// moves one at a time. What lasts, even where the reader stands, is in the
+// field.
+//
+// A component is code, and code runs in the page with all it can reach, so
+// only the components of the home and of glass's own store are run. Another
+// store's components wait until what they draw can run apart.
+
+const trusted = new Set(["home", "glass"]);
 
 export async function mount(engine: Connection, root: HTMLElement) {
   let components: HolonRead[] = [];
@@ -27,9 +33,10 @@ export async function mount(engine: Connection, root: HTMLElement) {
   };
 
   const know = async (ids: Id[]) => {
-    components = (await Promise.all(ids.map((id) => engine.holon(id)))).filter(
-      (component) => component !== null,
-    );
+    const read = await Promise.all(ids.map((id) => engine.holon(id)));
+    components = read.filter(
+      (component) => component !== null && trusted.has(component.store),
+    ) as HolonRead[];
   };
 
   const draw = async () => {
@@ -41,7 +48,7 @@ export async function mount(engine: Connection, root: HTMLElement) {
         const call = {
           reads: readingOf(each),
           draws: "whole",
-          given: null,
+          with: null,
           place: (to: Target) => moveTo(index, to),
           called: each.component?.$ref,
         };

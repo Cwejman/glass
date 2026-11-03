@@ -35,6 +35,8 @@ A component may also compose by code, using other components inside its own, as 
 
 A mount can name its component, and then that one draws, whatever else would. Otherwise one is found for it: one whose types the holon is an instance of, or else the wildcard, which takes any holon and draws it as its values, so nothing in the field is ever left undrawn. Switching to another available component is a change to the layout, a commit like every move.
 
+A component is code, and runs in the page with everything the page can reach, so for now only the components of the home and of glass's own store are run; another store's components wait until what they draw can run apart, as [the client](client.md#5-a-full-client-preloaded) asks.
+
 How a component is found is not settled. Glass now matches by type each time it draws. OpenLight ruled instead that the engine never infers a component: the one composing picks, from a table of defaults held in the field with the wildcard last, and the pick is recorded in the mount, so what is seen never depends on a table changing underneath. Mounts that are derived, such as a brief's parts, would be drawn through the table. Whatever is built on how a component is found is built knowing it may change, so finding a component is one function of the interface, the one place that would change.
 
 *Switching is not yet offered in the interface. The override, the wildcard and switching the author's, 2026-11-03; the recorded pick OpenLight's ruling of 2026-08-23. Which glass takes the author does not know yet: "if we do good code and good knowledge around these things, it's easy to switch later."*

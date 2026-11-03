@@ -17,6 +17,8 @@ export interface Mount {
   projects?: "field";
 }
 
+// What a mount reads: the holon it names, or else the field it projects,
+// which is also where a mount that names neither stands.
 export const readingOf = (mount: Mount): Reading =>
   mount.reads ? { holon: mount.reads.$ref } : { field: true };
 

@@ -113,9 +113,9 @@ export function pastOf(stores: readonly { key: string; store: Store }[]): Past {
 // so the home's stand before a pulled store's; every reference in every body
 // is indexed by what it points at.
 export function fieldOf(stores: readonly Standing[]): Field {
-  // Laid from the last store to the first, so the first store's holon is
-  // the one left standing.
-  const known = new Map(stores.toReversed().flatMap(({ holons }) => [...holons]));
+  const known = new Map<Id, Known>();
+  for (const [id, holon] of stores.flatMap(({ holons }) => [...holons]))
+    if (!known.has(id)) known.set(id, holon);
 
   const held = [...known.values()].flatMap(({ version }) =>
     references(version.body).map((reference) => ({ ...reference, from: version.id })),

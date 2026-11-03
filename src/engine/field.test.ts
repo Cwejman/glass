@@ -101,3 +101,22 @@ test("the field as a place: its stores and names, and every type with its instan
     ],
   });
 });
+
+test("a component the mount names is used only where it can draw what the mount reads", async () => {
+  const { match: _, fits } = await import("../interface/drawing.ts");
+  const reader = {
+    id: "r",
+    store: "glass",
+    version: "",
+    instance: [],
+    body: { takes: [], draws: ["whole"] },
+  } as unknown as HolonRead;
+  const field = {
+    ...reader,
+    id: "f",
+    body: { takes: [], draws: ["whole"], argument: "field" },
+  } as unknown as HolonRead;
+  expect(fits(reader, { field: true }, "whole")).toBe(false);
+  expect(fits(field, { field: true }, "whole")).toBe(true);
+  expect(fits(reader, { holon: newId() }, "face")).toBe(false);
+});

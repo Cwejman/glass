@@ -25,7 +25,7 @@
     "title": "List",
     "says": "A list of holons, each item a mount of its own, numbered where the whole that opened it numbers its parts.",
     "takes": [],
-    "draws": ["whole", "face"],
+    "draws": ["whole"],
     "argument": "list"
   },
   {

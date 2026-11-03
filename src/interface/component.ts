@@ -32,8 +32,8 @@ export type Target = Id | "field";
 // or a list of them; reads of the field, which draw it again when what they
 // read changes; and a way to place the reader.
 export interface Space {
-  open(id: Id, draws: string, given?: Json): HTMLElement;
-  openList(ids: Id[], draws: string, given?: Json): HTMLElement;
+  open(id: Id, draws: string, passed?: Json): HTMLElement;
+  openList(ids: Id[], draws: string, passed?: Json): HTMLElement;
   read(read: Read): Promise<Json>;
   holon(id: Id): Promise<HolonRead | null>;
   place(to: Target): Promise<void>;

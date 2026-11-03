@@ -2,6 +2,7 @@ import type { Json } from "../../src/store/canonical.ts";
 import type { Id } from "../../src/store/id.ts";
 import type { Given, Space } from "../../src/interface/component.ts";
 import { element } from "./element.ts";
+import { markdown } from "./prose.ts";
 import { card, follow, way } from "./way.ts";
 
 // Any holon, when nothing closer draws it: the wildcard. Whole, it is what
@@ -33,17 +34,6 @@ export const style = `
   gap: calc(var(--gap) * 0.5);
 }
 
-.values pre {
-  background: var(--raised);
-  border: var(--hairline) solid var(--line);
-  border-radius: var(--radius);
-  padding: var(--inset);
-  overflow: auto;
-  max-height: 24rem;
-  font-size: var(--code);
-  line-height: var(--leading-close);
-  margin: 0;
-}
 `;
 
 export default async function draw(given: Given, space: Space) {
@@ -87,7 +77,16 @@ function valueOf(value: Json, space: Space): HTMLElement {
 }
 
 function contentOf(value: Json, space: Space): Node[] {
-  if (isRef(value)) return [space.open(value.$ref, "face")];
+  if (isRef(value)) return refOf(value, space);
+
+  if (Array.isArray(value) && value.length && value.every(isRef) && !value.some((ref) => ref["@"]))
+    return [
+      space.openList(
+        value.map((ref) => ref.$ref),
+        "whole",
+        { draws: "face" },
+      ),
+    ];
 
   if (Array.isArray(value)) {
     const items = element("ol");
@@ -106,10 +105,25 @@ function contentOf(value: Json, space: Space): Node[] {
     return [fields];
   }
 
+  // Text that links into the field is prose, drawn so its links can be
+  // followed; other long text is kept in its own box.
+  if (typeof value === "string" && value.includes("](ref:")) {
+    const prose = element("div", "prose");
+    prose.innerHTML = markdown.parse(value) as string;
+    return [prose];
+  }
   if (typeof value === "string" && (value.length > 160 || value.includes("\n")))
     return [element("pre", undefined, value)];
   return [document.createTextNode(String(value))];
 }
 
-const isRef = (value: Json): value is { $ref: Id } =>
+// A reference, as the face of what it points at; a pinned one says so, since
+// what is drawn is the holon as it stands now, not the version it pins.
+function refOf(ref: { $ref: Id; "@"?: string }, space: Space): Node[] {
+  const face = space.open(ref.$ref, "face");
+  if (!ref["@"]) return [face];
+  return [face, element("span", "meta", `pinned to ${ref["@"].slice(0, 15)}…, shown as it stands now`)];
+}
+
+const isRef = (value: Json): value is { $ref: Id; "@"?: string } =>
   typeof value === "object" && value !== null && !Array.isArray(value) && typeof value.$ref === "string";

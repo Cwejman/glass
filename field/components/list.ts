@@ -13,8 +13,8 @@ interface Asked {
   number?: string;
 }
 
-export default function draw({ list, with: given }: Given, space: Space) {
-  const asked = (given ?? {}) as Asked;
+export default function draw({ list, with: passed }: Given, space: Space) {
+  const asked = (passed ?? {}) as Asked;
   const items = element("ol", "list");
 
   (list ?? []).forEach((id: Id, i) => {

@@ -47,9 +47,9 @@ export default function draw(given: Given, space: Space) {
 
     const names = Object.entries(store.names);
     if (names.length === 0) continue;
-    const given = element("div", "names");
-    for (const [name, id] of names) given.append(element("span", "name", name), space.open(id, "face"));
-    article.append(given);
+    const named = element("div", "names");
+    for (const [name, id] of names) named.append(element("span", "name", name), space.open(id, "face"));
+    article.append(named);
   }
 
   article.append(element("h2", undefined, "Its types"));
