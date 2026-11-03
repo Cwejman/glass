@@ -184,6 +184,82 @@ pre {
   margin-top: calc(var(--gap) * 2);
 }
 
+/* Where a mount is, said above what it gives: quiet, and pressed to be
+   changed in place. */
+
+.location {
+  display: block;
+  width: 100%;
+  margin: calc(var(--gap) * 1.5) 0 0;
+  padding: 0.5rem 0;
+  font: var(--small) / var(--leading-close) var(--sans);
+  color: var(--quiet);
+  text-align: left;
+  background: none;
+  border: 0;
+  border-bottom: var(--hairline) solid var(--line);
+}
+
+button.location {
+  cursor: text;
+}
+
+button.location:hover,
+button.location:focus-visible {
+  color: var(--ink);
+  outline: none;
+}
+
+.location-edit {
+  margin: calc(var(--gap) * 1.5) 0 0;
+  padding: 0.5rem 0;
+  border-bottom: var(--hairline) solid var(--line);
+  font: var(--small) / var(--leading-close) var(--sans);
+}
+
+.location-ways {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.location-ways button {
+  font: inherit;
+  color: var(--ink);
+  background: var(--raised);
+  border: var(--hairline) solid var(--line);
+  border-radius: var(--pill);
+  padding: 0.25em 0.8em;
+  cursor: pointer;
+}
+
+.location-ways button:hover {
+  border-color: var(--quiet);
+}
+
+.location-input {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  font: var(--smaller) / var(--leading-close) var(--mono);
+  color: var(--ink);
+  background: transparent;
+  border: var(--hairline) solid var(--line);
+  border-radius: calc(var(--radius) * 0.6);
+}
+
+.location-said:empty {
+  display: none;
+}
+
+.location-said {
+  margin: 0.4rem 0 0;
+  color: var(--quiet);
+  font-size: var(--smaller);
+}
+
 /* A mount's menu: what can be done where it was pressed. */
 
 .menu {

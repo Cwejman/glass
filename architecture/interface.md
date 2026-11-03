@@ -38,14 +38,13 @@ holon Everything named : Expression {
 
 A component draws its holon's own values, and opens a space for each value that points further: a reference is a mount of the holon it points at, and a list of references is a mount of the list component, whose every item is a mount in turn. What a value is, the holon's type says, since every connector has a shape, so the interface reads the type to know what to mount and where.
 
-A component is made of code, or of data. As data it is a template: mounts held in order, each giving `$`, what the component itself is given, in the kind of slot it says. The reader is such a component: what it is given, shown as its face, and then the same drawn in full.
+A component is made of code, or of data. As data it is a template: mounts held in order, each giving `$`, what the component itself is given, in the kind of slot it says. The reader is such a component: what it is given, drawn in full, the ground where more ways of looking can stand beside it.
 
 ```ts
 holon Reader : Component {
   takes:    []
   argument: "selection"
   template: [
-    { argument: "$", kind: ref(face) }
     { argument: "$" }
   ]
 }
@@ -89,7 +88,7 @@ A slot can read more than one holon: what an expression gathers. An expression i
 
 A component declares itself in its own module, beside its code: what it is, the types it takes and the kinds of slot it draws in, by their names, what it is given, the settings it takes, each said in prose with its shape as a type declares its fields, and the reads it makes beyond what it is handed. The birth checks every name and that the declaration is well formed; the engine checks that each declared setting is said as a field; and what a slot gives is checked against the settings before the component draws. A component is then given what its slot reads, typed as its type declares, the bodies made by the build from the field's own types with each field's prose as its comment, and its reads answered with the shape their form gives.
 
-It is told what it may do, as OpenLight delivers reach facts rather than have a component work them out: whether it may write the holon it was given. That one act, a new version of its own holon, is all a component may do so far, and a holon may be written where it is the reader's, in the home, or the entry while it is still the root, which the first write makes the reader's own; once the reader has a root of their own, the entry is only shown.
+It is told what it may do, as OpenLight delivers reach facts rather than have a component work them out: whether it may write the holon it was given. That one act, a new version of its own holon, in one commit with any new holons it comes to point at, born in the home, is all a component may do so far; what it brings into being is never a component, since a component in the home is run, and a holon may be written where it is the reader's, in the home, or the entry while it is still the root, which the first write makes the reader's own; once the reader has a root of their own, the entry is only shown.
 
 Its reach is a ceiling: it reaches what it was handed, what that references and is an instance of, and what its own declared reads give back; reading a holon it was handed opens nothing further. It reads only by the forms it declares, each read one form and nothing beside it, and opens slots only for what it reaches, each held to the same ceiling; a template's mounts give only what the template was given, so they reach nothing new. A drawing that has been overtaken or closed can neither read nor open anything more. Anything else is refused by name, and every query and every list it opens is copied before it is judged, so what is judged is what is used. The reach is each slot's own: unlike OpenLight's, which narrows from parent to child with grants, a child's starts again from what its slot reads. This is a ceiling among components in one page, which keeps each honest about what it looks at; it is not isolation, for code in the page can reach everything the page can, which is why only glass's own components and the home's are run until components can run apart.
 
@@ -105,6 +104,8 @@ A holon keeps every state it has had, each version pointing back at the one befo
 
 A press does not need catching from above. Every slot says where it is: its element carries the holons it reads as its location, and a link in prose carries the one it mentions. A press rises through the page from where it landed, past those locations, to whatever holds them and cares. The mount component cares, where it may write its mount: a press inside it gives the innermost location it passed, and the mount gives that instead, drawn again by the component the entry calls, the reader. The brief that was pressed never knows it was read; a mount that may not be written lets a press rise on.
 
+Where one is looking is said above it: the mount's location, in words, a way of looking by what it gathers, as "Every brief: the instances of Brief", anything else by its title and what it is, as "Glass · Brief". It is the mount's own data, so it is the mount that says it, not what it gives, and pressed it opens to be changed where it stands: to one of the ways of looking the field holds, to a holon by the name the field gives it, or to an expression written as data, its holons by their names, as `{ "instances": "brief" }`, which is born in the home as a way of looking of its own and can be chosen again. Escape leaves it as it was.
+
 The secondary press rises the same way, and the mount offers what can be done there: to look there; to look there with each component that takes what is there, found by its type, for that one look; and to change what the mount gives by hand, its component and argument as data, judged by the engine as any write is.
 
 ```ts
@@ -114,5 +115,5 @@ holon The root : Mount {          // the reader's own, in the home
 }
 ```
 
-*The author's, 2026-11-03: navigation needs a kind of history and is based on locations; the root holds the expression for what you are seeing, and changing it from the context menu's WYSIWYG is fine; the context menu has actual actions, made available by type matching; the history stack and the URL as an integration. Bubbling the session's proposal, which the author was open to; catching every press at the root was OpenLight's answer, not taken for granted. History as the root's versions the session's, as OpenLight's collation cited its predecessor. Programs, once they run, are where more of the menu's actions will come from; the URL is not yet written.*
+*The author's, 2026-11-03: navigation needs a kind of history and is based on locations; the reader needs a way to see the actual location you are looking at and to be able to update it, for a face of it is not that helpful; the root holds the expression for what you are seeing, and changing it from the context menu's WYSIWYG is fine; the context menu has actual actions, made available by type matching; the history stack and the URL as an integration. Bubbling the session's proposal, which the author was open to; catching every press at the root was OpenLight's answer, not taken for granted. History as the root's versions the session's, as OpenLight's collation cited its predecessor. Programs, once they run, are where more of the menu's actions will come from; the URL is not yet written.*
 

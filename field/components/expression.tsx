@@ -1,7 +1,7 @@
-import type { Expression } from "../../src/engine/engine.ts";
 import type { Declaration, Given, Space } from "../../src/interface/component.ts";
 import type { ExpressionBody } from "./bodies.ts";
 import { h } from "./jsx.ts";
+import { words } from "./words.ts";
 
 // An expression, a way of looking at the field: as a face, what it is
 // called and what it gathers, said in words; in full, those, and what it
@@ -17,7 +17,7 @@ export const declared = {
 
 export default async function draw(given: Given<ExpressionBody>, space: Space) {
   const { title, gathers } = given.holon!.body;
-  const said = await words(gathers, space);
+  const said = await words(gathers, async (id) => String((await space.holon(id))?.body.title ?? id));
 
   if (given.kind === "face")
     return (
@@ -37,20 +37,4 @@ export default async function draw(given: Given<ExpressionBody>, space: Space) {
       {space.open(gathered, { offer: { kind: "face" } })}
     </article>
   );
-}
-
-// An expression said in words, each holon it names by its title.
-async function words(expression: Expression, space: Space): Promise<string> {
-  const titleOf = async (given: string | { $ref: string }) => {
-    const id = typeof given === "string" ? given : given.$ref;
-    return String((await space.holon(id))?.body.title ?? id);
-  };
-  if ("instances" in expression) return `the instances of ${await titleOf(expression.instances)}`;
-  if ("types" in expression) return "every type";
-  if ("pointing" in expression) return `what points at ${await titleOf(expression.pointing)}`;
-  if ("named" in expression) return "every holon a store names";
-  const parts = await Promise.all(
-    ("all" in expression ? expression.all : expression.any).map((inner) => words(inner, space)),
-  );
-  return parts.join("all" in expression ? " which are also " : ", or ");
 }

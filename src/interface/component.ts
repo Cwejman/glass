@@ -100,11 +100,20 @@ export type Answer<R extends Read> = R extends { holon: Id }
 
 // What a component works with: slots to open where what it holds stands;
 // reads of the field, answered as their form says and drawing it again when
-// what they read changes; and, where it may, a new version of the holon it
-// was given, its one act.
+// what they read changes; and, where it may write the holon it was given,
+// its one act: a new version of that holon, in one commit with any new
+// holons it comes to point at, each born in the home under an id the
+// component gave it.
 export interface Space {
   open(where: Where, opening?: Opening): HTMLElement;
   read<R extends Read>(read: R): Promise<Answer<R>>;
   holon<B = Body>(id: Id): Promise<HolonOf<B> | null>;
-  write(body: Body): Promise<void>;
+  write(body: Body, made?: Made[]): Promise<void>;
+}
+
+// A holon a write brings into being beside it.
+export interface Made {
+  id: Id;
+  instance: Id;
+  body: Body;
 }

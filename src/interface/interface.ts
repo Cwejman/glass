@@ -2,7 +2,7 @@ import { newId, type Id } from "../store/id.ts";
 import type { Name } from "../store/name.ts";
 import type { Body } from "../store/objects.ts";
 import type { HolonRead } from "../engine/engine.ts";
-import type { Kind } from "./component.ts";
+import type { Kind, Made } from "./component.ts";
 import type { Connection } from "./connection.ts";
 import { drawing } from "./drawing.ts";
 import { lay } from "./materials.ts";
@@ -36,27 +36,33 @@ export async function mount(engine: Connection, root: HTMLElement) {
   const kinds = await kindsOf(engine);
   const entry = (await engine.read({ name: "entry" })) as Id | null;
   if (!entry) throw new Error("the field has no entry to boot into");
+  const componentType = (await engine.read({ name: "component" })) as Id | null;
+  if (!componentType) throw new Error("the field holds no component type");
   const rootOf = async () => ((await engine.read({ name: "root" })) as Id | null) ?? entry;
 
   // A holon may be written where it is the reader's: in the home, or the
   // entry while it is still the root, which the reader's first move makes
   // their own. Once they have one, the entry is only shown.
   const may = (holon: HolonRead) => holon.store === "home" || (holon.id === entry && drawnRoot === entry);
-  const write = (holon: HolonRead, body: Body) =>
+  const write = (holon: HolonRead, body: Body, made: Made[]) =>
     inTurn(async () => {
       const { from: _, ...written } = body;
       // A write that waited behind the first move finds the entry no longer
       // the reader's to write.
       if (holon.store !== "home" && (await engine.read({ name: "root" }))) return;
-      if (holon.store === "home")
-        await engine.commit({ holons: [{ id: holon.id, instance: holon.instance, body: written }] });
-      else {
-        const id = newId();
-        await engine.commit({
-          holons: [{ id, instance: holon.instance, body: written }],
-          names: { root: id },
-        });
+      // What it brings into being is new: an id the field already holds is
+      // not the component's to give again. Nor is it code: a component in the
+      // home is run, so no component brings another into being.
+      for (const { id, instance } of made) {
+        if (await engine.holon(id)) throw new Error(`${id} is already in the field`);
+        if (instance === componentType) throw new Error("a component brings no component into being");
       }
+      const born = made.map(({ id, instance, body }) => ({ id, instance: [instance], body }));
+      const id = holon.store === "home" ? holon.id : newId();
+      await engine.commit({
+        holons: [{ id, instance: holon.instance, body: written }, ...born],
+        ...(id !== holon.id ? { names: { root: id } } : {}),
+      });
       // A move of the root is a step in the reader's history, and a new place
       // to look at, seen from its top.
       if (holon.id !== drawnRoot) return;
@@ -95,8 +101,6 @@ export async function mount(engine: Connection, root: HTMLElement) {
     await drawn.draw(root, { reads: { holon: drawnRoot }, offered: { kind: "full" }, settings: {} });
   };
 
-  const componentType = (await engine.read({ name: "component" })) as Id | null;
-  if (!componentType) throw new Error("the field holds no component type");
   const known = await engine.subscribe(
     { instances: componentType },
     (ids) =>

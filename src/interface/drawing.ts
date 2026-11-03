@@ -8,7 +8,18 @@ import type { Body } from "../store/objects.ts";
 import type { Read } from "../engine/engine.ts";
 import { readProblem } from "../engine/field.ts";
 import { references } from "../engine/references.ts";
-import type { Component, Given, Kind, Offer, Opening, Reading, Settings, Space, Where } from "./component.ts";
+import type {
+  Component,
+  Given,
+  Kind,
+  Made,
+  Offer,
+  Opening,
+  Reading,
+  Settings,
+  Space,
+  Where,
+} from "./component.ts";
 import { settingsProblem } from "./settings.ts";
 
 // Drawing a slot: what it reads, a holon or a list, drawn by the component
@@ -39,10 +50,10 @@ export interface Options {
   components: () => readonly HolonRead[];
   // The kinds of slot, by name, as the field holds them.
   kinds: Record<Kind, Id>;
-  // Whether a holon may be written, and writing a new version of it: the
-  // interface's to say and to do.
+  // Whether a holon may be written, and writing a new version of it with
+  // what it brings into being: the interface's to say and to do.
   may: (holon: HolonRead) => boolean;
-  write: (holon: HolonRead, body: Body) => Promise<void>;
+  write: (holon: HolonRead, body: Body, made: Made[]) => Promise<void>;
 }
 
 // The kind of slot a call is: its own word, else what its holders offer,
@@ -276,11 +287,19 @@ export function drawing(engine: Connection, options: Options): Drawing {
       },
       read,
       holon: async (id) => (await read({ holon: id })) as never,
-      // Its one act: a new version of the holon it was given, where it may.
-      write: async (body) => {
+      // Its one act: a new version of the holon it was given, where it may,
+      // with the holons it brings into being beside it.
+      write: async (body, made = []) => {
         if (!current()) refuse("writes from a drawing that has been overtaken");
         if (!holon || !options.may(holon)) refuse("writes what it may not");
-        await options.write(holon!, copied(body) as Body);
+        const making = copied(made) as Made[];
+        if (!Array.isArray(making) || !making.every((each) => isId(each?.id) && isId(each?.instance)))
+          refuse("brings into being what is not a holon with an id and a type");
+        within(
+          making.map(({ instance }) => instance),
+          "brings into being an instance of",
+        );
+        await options.write(holon!, copied(body) as Body, making);
       },
     };
     return space;

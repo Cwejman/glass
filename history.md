@@ -15,6 +15,10 @@ The author saw that the root was still a custom component, and that nothing in g
 
 What was left is small. The root is one mount in the home, a component and its argument, and every move is a new version of it, so its versions are the history. The reader is a component made of data, a template of two mounts giving `$`. Expressions given in an argument are holons. A press rises from where it landed, past the locations slots carry, to the mount that may be written, and its menu offers what takes the place pressed, found by type. Let go with it: the layout and the arrangement, the Field component, `held` and `under`, the slot's chrome, and every way a component placed the reader.
 
+Two fresh readings followed. The first found the entry could be written twice, cutting the reader's history, and the field's projection still in the engine; the second, that a component chosen from the menu stuck to every press after it, and that presses queued behind the first move could make a second root. All were mended.
+
+Then the author asked to see where he is: a face of what is looked at says too little. The mount now says its own location above what it gives, in words, and opens it to be changed where it stands, to a way of looking the field holds, a holon by its name, or an expression written there and born in the home. Writing one brought the first holon a component makes, so a write became one act with what it brings into being, in one commit.
+
 *Reasoned on 2026-11-03 by the session.*
 
 ## The kind as an offer
