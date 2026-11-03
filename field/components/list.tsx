@@ -6,7 +6,7 @@ import { h } from "./jsx.ts";
 // A list of holons, each item a slot of its own, drawn by whatever is found
 // for it. A list shows its items at a glance, so it offers each a face,
 // whatever was offered the list itself; an item that should stand in full
-// is a different arrangement, a layout's pane. Where the whole numbers its
+// is looked at by itself. Where the whole numbers its
 // items, each is numbered by its place, running on from the whole's own
 // number.
 
