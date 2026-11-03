@@ -37,6 +37,8 @@ export interface ComponentFile {
   takes: string[];
   kinds: string[];
   argument?: string;
+  settings?: Json;
+  reads?: string[];
   code: string;
   source: string;
 }
@@ -76,7 +78,7 @@ export function components(
   kindOf: Record<string, Id>,
 ): Born {
   return {
-    holons: files.map(({ from, title, says, takes, kinds, argument, code, source }) => ({
+    holons: files.map(({ from, title, says, takes, kinds, argument, settings, reads, code, source }) => ({
       id: idOf(from),
       instance: [typeOf.component!],
       body: {
@@ -85,6 +87,8 @@ export function components(
         takes: takes.map((type) => ({ $ref: typeOf[type]! })),
         kinds: kinds.map((kind) => ({ $ref: kindOf[kind]! })),
         ...(argument ? { argument } : {}),
+        ...(settings ? { settings } : {}),
+        ...(reads ? { reads } : {}),
         code,
         source,
         from,
@@ -147,6 +151,38 @@ export function wiki(
   if (nowhere.length) throw new Error(`links that lead nowhere:\n  ${nowhere.join("\n  ")}`);
 
   return { holons, names: { wiki: idAt(entry)! } };
+}
+
+export interface LayoutFile {
+  name: string;
+  title: string;
+  mounts: Json[];
+}
+
+// Layouts the field ships beside its entry. An expression in a mount may
+// name a type by its name, as `{ "instances": "brief" }`, which is made a
+// reference to that type.
+export function layouts(files: LayoutFile[], idOf: IdOf, typeOf: Record<string, Id>): Born {
+  const named = (value: Json): Json => {
+    if (Array.isArray(value)) return value.map(named);
+    if (value === null || typeof value !== "object") return value;
+    return Object.fromEntries(
+      Object.entries(value).map(([key, inner]) =>
+        (key === "instances" || key === "pointing") && typeof inner === "string" && typeOf[inner]
+          ? [key, { $ref: typeOf[inner]! }]
+          : [key, named(inner)],
+      ),
+    );
+  };
+  const fromOf = (name: string) => `field/layouts.json#${name}`;
+  return {
+    holons: files.map(({ name, title, mounts }) => ({
+      id: idOf(fromOf(name)),
+      instance: [typeOf.layout!],
+      body: { title, mounts: named(mounts), from: fromOf(name) },
+    })),
+    names: Object.fromEntries(files.map(({ name }) => [name, idOf(fromOf(name))])),
+  };
 }
 
 // The entry: the layout a client boots into, one mount standing at the

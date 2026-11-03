@@ -7,7 +7,8 @@
     "check": "tsc --noEmit -p .",
     "format": "./node_modules/.bin/prettier --write \"src/**/*.ts\" \"field/**/*.{ts,tsx,css,json}\" vectors/make.ts site/index.html",
     "birth": "bun src/birth/main.ts",
-    "build": "bun src/build.ts",
+    "build": "bun src/birth/declare.ts && bun src/build.ts",
+    "declare": "bun src/birth/declare.ts",
     "serve": "bun src/serve.ts"
   },
   "dependencies": {

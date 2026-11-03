@@ -35,7 +35,7 @@ Everything runs with [Bun](https://bun.sh).
 
 - `bun test` runs every test, the store's vectors among them; `bun run check` checks the types, and `bun run format` lays every file in the one form the code is kept in.
 - `bun run birth` births the wiki and the field into `site/store/` as a commit, when anything changed.
-- `bun run build` builds the chassis and the engine into `site/`.
+- `bun run build` declares the bodies of the field's types for the components, and builds the chassis and the engine into `site/`.
 - `bun run serve` serves `site/` on this machine, at `http://127.0.0.1:4330/`.
 
 After changing the wiki or a component, birth it; after changing the engine or the interface, build. The built client is not kept in git; the store is.

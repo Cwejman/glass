@@ -10,12 +10,14 @@ import {
   components,
   entry,
   kinds,
+  layouts,
   materials,
   types,
   wiki,
   type Born,
   type ComponentFile,
   type KindFile,
+  type LayoutFile,
   type TypeFile,
 } from "./holons.ts";
 import { flatten, linkTargets, parseFile, resolve, type WikiFile } from "./wiki.ts";
@@ -100,8 +102,10 @@ const bornMaterials = materials(
 const files = await readWiki("README.md");
 const bornWiki = wiki(files, "README.md", idOf, bornTypes.names);
 const bornEntry = entry(idOf, bornTypes.names);
+const layoutFiles = JSON.parse(await readFile(join(repo, "field/layouts.json"), "utf8")) as LayoutFile[];
+const bornLayouts = layouts(layoutFiles, idOf, bornTypes.names);
 
-const field: Born[] = [bornTypes, bornKinds, bornMaterials, bornComponents, bornWiki, bornEntry];
+const field: Born[] = [bornTypes, bornKinds, bornMaterials, bornComponents, bornWiki, bornEntry, bornLayouts];
 const holons = field.flatMap(({ holons }) => holons);
 const names = Object.assign({}, ...field.map(({ names }) => names));
 const gone = [...before].filter((id) => !holons.some((holon) => holon.id === id));

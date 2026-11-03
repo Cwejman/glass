@@ -1,5 +1,6 @@
 import type { Id } from "../../src/store/id.ts";
 import type { Given, Space } from "../../src/interface/component.ts";
+import { bodyOf, type Type } from "./bodies.ts";
 import { h } from "./jsx.ts";
 import { Card, follow, Way } from "./way.tsx";
 
@@ -37,25 +38,23 @@ interface Connector {
 
 export default async function draw(given: Given, space: Space) {
   const type = given.holon!;
-  const title = String(type.body.title ?? type.id);
+  const { title, says, fields: declared } = bodyOf<Type>(type);
   const instances = (await space.read({ instances: type.id })) as Id[];
 
   if (given.kind === "face")
     return (
       <Card to={type.id} space={space}>
         <strong>{title}</strong>
-        <span class="meta">
-          {[String(type.body.says ?? ""), counted(instances.length, "instance")].filter(Boolean).join(" · ")}
-        </span>
+        <span class="meta">{[says, counted(instances.length, "instance")].filter(Boolean).join(" · ")}</span>
       </Card>
     );
 
-  const fields = Object.entries((type.body.fields ?? {}) as unknown as Record<string, Connector>);
+  const fields = Object.entries(declared as unknown as Record<string, Connector>);
   return (
     <article class="place type" onClick={follow(space)}>
       <Way steps={[]} />
       <h1>{title}</h1>
-      {type.body.says && <p>{String(type.body.says)}</p>}
+      {says && <p>{says}</p>}
 
       <h2>Its fields</h2>
       <dl class="type-fields">

@@ -1,7 +1,7 @@
 import { newId, type Id } from "../store/id.ts";
 import type { Name } from "../store/name.ts";
 import type { Body } from "../store/objects.ts";
-import type { HolonRead } from "../engine/engine.ts";
+import type { Expression, HolonRead } from "../engine/engine.ts";
 import type { Reading, Target } from "./component.ts";
 import type { Connection } from "./connection.ts";
 
@@ -16,13 +16,15 @@ export interface Mount {
   component?: { $ref: Id };
   kind?: { $ref: Id };
   reads?: { $ref: Id };
+  gathers?: Expression;
   projects?: "field";
 }
 
-// What a mount reads: the holon it names, or else the field it projects,
-// which is also where a mount that names neither stands.
+// What a mount reads: the holon it names, what its expression gathers, or
+// else the field it projects, which is also where a mount that names none
+// of them stands.
 export const readingOf = (mount: Mount): Reading =>
-  mount.reads ? { holon: mount.reads.$ref } : { field: true };
+  mount.reads ? { holon: mount.reads.$ref } : mount.gathers ? { gather: mount.gathers } : { field: true };
 
 const mountOn = (to: Target): Mount => (to === "field" ? { projects: "field" } : { reads: { $ref: to } });
 

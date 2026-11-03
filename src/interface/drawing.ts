@@ -3,7 +3,8 @@ import type { Id } from "../store/id.ts";
 import type { Name } from "../store/name.ts";
 import type { FieldPlace, HolonRead } from "../engine/engine.ts";
 import type { Connection } from "./connection.ts";
-import type { Component, Given, Kind, Reading, Space } from "./component.ts";
+import type { Component, Given, Kind, Reading, Settings, Space } from "./component.ts";
+import { settingsProblem } from "./settings.ts";
 import { offer, type Action } from "./chrome.ts";
 
 // Drawing a slot: what it reads, a holon, a list or the field, drawn by the
@@ -20,7 +21,7 @@ import { offer, type Action } from "./chrome.ts";
 export interface Call {
   reads: Reading;
   kind: Kind;
-  with: Json;
+  settings: Settings;
   place: Space["place"];
   called?: Id;
   keep?: (change: { kind?: Kind; component?: Id | null }) => Promise<void>;
@@ -53,7 +54,7 @@ interface Hosted {
 // The components that can draw what a slot reads, in its kind: given that
 // kind of thing, and drawing in that kind of slot.
 export function able(components: readonly HolonRead[], reads: Reading, kind: Id) {
-  const argument = "holon" in reads ? "holon" : "list" in reads ? "list" : "field";
+  const argument = "holon" in reads ? "holon" : "field" in reads ? "field" : "list";
   return components.filter(
     (component) =>
       (component.body.kinds as { $ref: Id }[]).some(({ $ref }) => $ref === kind) &&
@@ -152,8 +153,19 @@ export function drawing(engine: Connection, options: Options): Drawing {
     redraw: () => void,
     call: Call,
     holon: HolonRead | null,
+    component: HolonRead,
   ) {
+    // A component reads what it is handed freely, and beyond it only the
+    // forms it declares it reads; any other read is refused, by name.
+    const handed = new Set([...(holon ? [holon.id] : []), ...("list" in call.reads ? call.reads.list : [])]);
+    const declared = new Set((component.body.reads ?? []) as string[]);
     const read = async (query: Parameters<Space["read"]>[0]) => {
+      const form = Object.keys(query)[0]!;
+      const isHanded = "holon" in query && handed.has(query.holon);
+      if (!isHanded && !declared.has(form))
+        throw new Error(
+          `${component.body.title as string} reads ${form}, which it does not declare it reads`,
+        );
       const subscription = await engine.subscribe(query, () => current() && redraw());
       if (current()) held.reads.push(subscription.close);
       else subscription.close();
@@ -179,10 +191,12 @@ export function drawing(engine: Connection, options: Options): Drawing {
     };
 
     const space: Space = {
-      open: (id, kind, passed = null) =>
-        slot({ reads: { holon: id }, kind, with: passed, place: call.place, why }),
-      openList: (ids, kind, passed = null) =>
-        slot({ reads: { list: ids }, kind, with: passed, place: call.place, why }),
+      open: (id, kind, settings = {}) =>
+        slot({ reads: { holon: id }, kind, settings, place: call.place, why }),
+      openList: (ids, kind, settings = {}) =>
+        slot({ reads: { list: ids }, kind, settings, place: call.place, why }),
+      openGathered: (expression, kind, settings = {}) =>
+        slot({ reads: { gather: expression }, kind, settings, place: call.place, why }),
       openMount: (index) => slot(options.paneOf(holon!, index, call)),
       read,
       holon: async (id) => (await read({ holon: id })) as unknown as HolonRead | null,
@@ -221,7 +235,7 @@ export function drawing(engine: Connection, options: Options): Drawing {
     close(host);
     const held: Hosted = { closed: false, drawing: 0, children: [], reads: [] };
     hosted.set(host, held);
-    let read: HolonRead | FieldPlace | null = null;
+    let read: HolonRead | FieldPlace | Id[] | null = null;
     let chrome: (() => Action[]) | undefined;
 
     // The secondary press offers the slot's chrome; with Shift held, or where
@@ -254,13 +268,17 @@ export function drawing(engine: Connection, options: Options): Drawing {
         );
       chrome = () => chromeOf(call, holon, component);
 
-      const space = spaceFor(held, current, () => void render(), call, holon);
+      const wrong = settingsProblem(component, call.settings);
+      if (wrong) return host.replaceChildren(note(`${component.body.title as string} was given ${wrong}`));
+
+      const space = spaceFor(held, current, () => void render(), call, holon, component);
       const given: Given = {
         ...(holon ? { holon } : {}),
         ...("list" in call.reads ? { list: call.reads.list } : {}),
+        ...("gather" in call.reads ? { list: (read as Id[] | null) ?? [] } : {}),
         ...("field" in call.reads ? { field: read as FieldPlace } : {}),
         kind: call.kind,
-        with: call.with,
+        settings: call.settings,
       };
 
       try {
@@ -279,18 +297,23 @@ export function drawing(engine: Connection, options: Options): Drawing {
       }
     };
 
-    // A holon and the field are read, and drawn again when they change; a
-    // list is what it is, and its items each read their own.
+    // A holon, a gathering and the field are read, and drawn again when they
+    // change; a list is what it is, and its items each read their own.
     if ("list" in call.reads) return render();
-    const query = "holon" in call.reads ? { holon: call.reads.holon } : { field: true as const };
+    const query =
+      "holon" in call.reads
+        ? { holon: call.reads.holon }
+        : "gather" in call.reads
+          ? { gather: call.reads.gather }
+          : { field: true as const };
     const subscription = await engine.subscribe(query, (value) => {
-      read = value as unknown as HolonRead | FieldPlace | null;
+      read = value as unknown as HolonRead | FieldPlace | Id[] | null;
       void render();
     });
     if (held.closed) return subscription.close();
 
     held.unsubscribe = subscription.close;
-    read = subscription.value as unknown as HolonRead | FieldPlace | null;
+    read = subscription.value as unknown as HolonRead | FieldPlace | Id[] | null;
     await render();
   }
 
@@ -299,6 +322,7 @@ export function drawing(engine: Connection, options: Options): Drawing {
 
 const describe = (reads: Reading, read: unknown) => {
   if ("list" in reads) return "a list";
+  if ("gather" in reads) return "what is gathered";
   if ("field" in reads) return "the field";
   return String((read as HolonRead | null)?.body.title ?? reads.holon);
 };

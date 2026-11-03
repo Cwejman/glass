@@ -1,6 +1,7 @@
 import type { Json } from "../store/canonical.ts";
 import type { Body } from "../store/objects.ts";
 import { first, firstOf, type Problem } from "./problem.ts";
+import { expressionProblem } from "./expression.ts";
 import { isRef } from "./references.ts";
 
 // A type is a holon whose body declares fields. Each field is said in prose,
@@ -16,6 +17,7 @@ export type Shape =
   | "number"
   | "boolean"
   | "ref"
+  | "expression"
   | "json"
   | { list: Shape }
   | { fields: Connectors };
@@ -53,7 +55,7 @@ export function bodyProblem(body: Body, types: Connectors[]): Problem {
 
 // A type's own connectors: each said in prose, and each of a shape there is.
 
-const shapes = ["string", "markdown", "number", "boolean", "ref", "json"];
+const shapes = ["string", "markdown", "number", "boolean", "ref", "expression", "json"];
 
 function connectorsProblem(connectors: Json, at: string): Problem {
   if (!isMap(connectors)) return `${at} are not a map of fields`;
@@ -111,6 +113,7 @@ const fits: Record<string, (value: Json) => boolean> = {
   number: (value) => typeof value === "number",
   boolean: (value) => typeof value === "boolean",
   ref: isRef,
+  expression: (value) => expressionProblem(value) === undefined,
   json: () => true,
 };
 

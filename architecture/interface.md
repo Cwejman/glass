@@ -52,3 +52,18 @@ A slot's own data comes first. Turning a face into full, or choosing another com
 As built: the kinds full and face are holons the field names; each component lists the kinds it draws, and a brief's one component draws itself both ways; the arrangement is drawn whole in the page's one slot by the layout's component, which sets its mounts side by side as panes; and every slot answers the secondary press with its chrome, to open what it holds as the place, to show it in the other kind, or to draw it with another component that takes it. A change from the chrome is kept where the slot's own data can be written, the arrangement's panes; in a slot that is part of a brief in glass's store, which is only read, the chrome says so and keeps nothing.
 
 *Built by the session, 2026-11-03, on the author's go. Where a change to such a slot would be kept is still open, with the reader's own branch of a pulled store.*
+
+## 6. Looking from many angles
+
+A slot can read more than one holon: what an expression gathers. An expression is data, a value held in a body like any other, and the engine evaluates it to the holons it gathers, in the field's order: the instances of a type, every type, what points at a holon, every named holon, and what all or any of several gather. A layout's mount may gather instead of point, and a component may gather in what it reads, so the same field can be looked at from as many angles as there are expressions, each drawn by the list or by whatever takes it. This is the ground the reader grows on: its collations are such looks, through the primitives and not beside them.
+
+*The author's, 2026-11-03: expressions are just data, so no language is invented; open the power to look upon data from different angles, which is what the reader will become. The forms the session's; grouping, and a template's `$` into what it is given, wait for their use.*
+
+## 7. What a component may do
+
+A component is given what its slot reads, the kind of slot, and its settings, and works through its space. Three things keep that honest. Its settings are declared, each said in prose with its shape, as a type declares its fields, and what a slot gives it is checked against them before it draws. Its reads beyond what it is handed are declared too, by their forms, and any other read is refused by name, so what a component looks at is said where it can be seen, as OpenLight's reach asks. And the bodies it draws are typed from the field's own types, each field's prose its comment, made by the build from the types and checked to be current.
+
+A component is a pure function of what it is given and of the field: it draws again whole when what it read changes. What must last across a drawing, as where a pane is scrolled, lives in the slot's host, which stays while what is in it is drawn again; a pane scrolls within itself, its top fading once scrolled.
+
+*Reach, settings and typed bodies from OpenLight's view, read the same day; the session's reading of where glass went against it. Not yet built, having no use yet: acts, a component committing or launching with the reach facts that say what it may write; and offers, what a holder gives everything beneath it to bind by type, which wait for something that must trickle. Keeping a component's own state between drawings, as OpenLight's update does, is held open.*
+

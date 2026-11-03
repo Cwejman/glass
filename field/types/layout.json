@@ -7,7 +7,7 @@
       "shape": "string"
     },
     "mounts": {
-      "says": "Each mount, drawn in order: what it reads, and the component it calls, if it names one; otherwise one is found for what it reads.",
+      "says": "Each mount, drawn in order: what it reads, a holon, what an expression gathers, or the field itself, and, where it says so, the kind of slot it is and the component it calls.",
       "shape": {
         "list": {
           "fields": {
@@ -29,6 +29,11 @@
             "kind": {
               "says": "The kind of slot the mount is, where it says so; full unless it does.",
               "shape": "ref",
+              "optional": true
+            },
+            "gathers": {
+              "says": "What the mount gathers instead of one holon, as an expression: the holons it gives are drawn as a list.",
+              "shape": "expression",
               "optional": true
             }
           }

@@ -1,6 +1,7 @@
 import type { Id } from "../../src/store/id.ts";
 import type { HolonRead } from "../../src/engine/engine.ts";
 import type { Given, Space } from "../../src/interface/component.ts";
+import { bodyOf, type Brief, type BriefSettings } from "./bodies.ts";
 import { h } from "./jsx.ts";
 import { faceOf, isConfidence, markdown, placed, slotOf } from "./prose.ts";
 import { Card, follow, Way } from "./way.tsx";
@@ -100,6 +101,7 @@ interface Level {
 
 async function full(given: Given, space: Space) {
   const holon = given.holon!;
+  const brief = bodyOf<Brief>(holon);
   const record = (await space.read({ name: "record" })) as Id | null;
   const numbers = (whole: HolonRead) => !record || !whole.instance.includes(record);
 
@@ -108,15 +110,15 @@ async function full(given: Given, space: Space) {
   const steps = levels
     .slice(0, -1)
     .map(({ id, title, number }) => ({ to: id, label: number ? `${number} ${title}` : title }));
-  const parts = ((holon.body.parts ?? []) as { $ref: Id }[]).map(({ $ref }) => $ref);
+  const parts = (brief.parts ?? []).map(({ $ref }) => $ref);
 
   return (
     <article class="place reader" onClick={follow(space)}>
       <Way steps={steps} />
       <h1>
         {number && <span class="number">{number}</span>}
-        {String(holon.body.title ?? "")}
-        {holon.body.status && <span class="status">{String(holon.body.status)}</span>}
+        {brief.title}
+        {brief.status && <span class="status">{brief.status}</span>}
       </h1>
       <div class="prose">{proseOf(holon, space)}</div>
       {parts.length > 0 && space.openList(parts, "full", { kind: "face", numbered: numbers(holon), number })}
@@ -126,15 +128,16 @@ async function full(given: Given, space: Space) {
 
 function face(given: Given, space: Space) {
   const holon = given.holon!;
-  const number = (given.with as { number?: string } | null)?.number;
-  const first = faceOf(String(holon.body.prose ?? ""));
-  const beneath = ((holon.body.parts ?? []) as unknown[]).length;
+  const brief = bodyOf<Brief>(holon);
+  const { number } = given.settings as BriefSettings;
+  const first = faceOf(brief.prose);
+  const beneath = brief.parts?.length ?? 0;
 
   return (
     <Card to={holon.id} space={space} class="face-card">
       <h2>
         {number && <span class="number">{number}</span>}
-        {String(holon.body.title ?? "")}
+        {brief.title}
       </h2>
       {first && <p html={first} />}
       {beneath > 0 && <span class="meta">{beneath} beneath</span>}
@@ -146,7 +149,7 @@ function face(given: Given, space: Space) {
 // field is a slot, the holon it places mounted there, as a face, or whole
 // where the link says so.
 function proseOf(holon: HolonRead, space: Space) {
-  return markdown.lexer(String(holon.body.prose ?? "")).map((token) => {
+  return markdown.lexer(bodyOf<Brief>(holon).prose).map((token) => {
     const slot = slotOf(token);
     if (slot) return space.open(slot.id, slot.kind);
 
@@ -169,11 +172,11 @@ async function holderOf(holon: HolonRead, space: Space): Promise<Holder | undefi
     if (key === "parts")
       return {
         whole,
-        place: ((whole.body.parts ?? []) as { $ref: Id }[]).findIndex((part) => part.$ref === holon.id),
+        place: (bodyOf<Brief>(whole).parts ?? []).findIndex((part) => part.$ref === holon.id),
       };
     if (
       key === "prose" &&
-      markdown.lexer(String(whole.body.prose ?? "")).some((token) => placed(token) === holon.id)
+      markdown.lexer(bodyOf<Brief>(whole).prose).some((token) => placed(token) === holon.id)
     )
       return { whole };
   }
@@ -202,6 +205,6 @@ async function wayDown(
   return up.reverse().reduce<Level[]>((way, { holon, place }) => {
     const above = way.at(-1)?.number;
     const number = place === undefined ? "" : above ? `${above}.${place + 1}` : `${place + 1}`;
-    return [...way, { id: holon.id, title: String(holon.body.title ?? ""), number }];
+    return [...way, { id: holon.id, title: bodyOf<Brief>(holon).title, number }];
   }, []);
 }

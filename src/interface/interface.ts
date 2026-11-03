@@ -40,7 +40,7 @@ export async function mount(engine: Connection, root: HTMLElement) {
     return {
       reads: readingOf(each),
       kind: kindNamed(each.kind?.$ref),
-      with: null,
+      settings: {},
       called: each.component?.$ref,
       place: own ? (to) => moveTo(index, to) : outer.place,
       why: `this pane is part of ${String(layout.body.title ?? "a layout")}, which is only shown here; your own arrangement is where changes go`,
@@ -79,7 +79,7 @@ export async function mount(engine: Connection, root: HTMLElement) {
     const call: Call = {
       reads: { holon: arranged.id },
       kind: "full",
-      with: null,
+      settings: {},
       place: (to) => moveTo(0, to),
       root: true,
       why: "the page always shows your arrangement whole",
@@ -93,7 +93,6 @@ export async function mount(engine: Connection, root: HTMLElement) {
     inTurn(async () => {
       if (!(await place(engine, index, to))) return;
       history.pushState({ commit: await engine.read({ head: "home" }) }, "");
-      scrollTo(0, 0);
       await draw();
     });
 

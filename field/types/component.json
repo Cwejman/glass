@@ -27,6 +27,18 @@
       "shape": "string",
       "optional": true
     },
+    "settings": {
+      "says": "The settings it takes from the slot that opens it, each said in prose with its shape, as a type declares its fields; none unless it says.",
+      "shape": "json",
+      "optional": true
+    },
+    "reads": {
+      "says": "The reads it makes of the field beyond what it is handed, by their forms, as holders or instances: what it may look at, said where it can be seen. None unless it says.",
+      "shape": {
+        "list": "string"
+      },
+      "optional": true
+    },
     "code": {
       "says": "The module the interface runs, as JavaScript.",
       "shape": "string"

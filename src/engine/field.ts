@@ -3,6 +3,7 @@ import type { Id } from "../store/id.ts";
 import type { Name } from "../store/name.ts";
 import type { Body, Version } from "../store/objects.ts";
 import type { Change as StoreChange, Holon, Store } from "../store/store.ts";
+import { expressionProblem, gather, type Expression } from "./expression.ts";
 import { references, type Reference } from "./references.ts";
 import { firstAsync, firstOf, firstOfAsync, type Problem } from "./problem.ts";
 import { bodyProblem, connectorsOf, isType, typeProblem } from "./types.ts";
@@ -14,15 +15,17 @@ import { bodyProblem, connectorsOf, isType, typeProblem } from "./types.ts";
 // stores' past, which never changes either and is asked for by its own name.
 
 // What may be read of a field: a holon, now or at a commit; what a name
-// gives; what points at a holon; a type's instances; a store's head; and
-// the field itself, as a place.
+// gives; what points at a holon, and under which key; a type's instances;
+// a store's head; the field itself, as a place; and whatever an expression
+// gathers.
 export type Read =
   | { holon: Id; at?: Name }
   | { name: string }
   | { holders: Id }
   | { instances: Id }
   | { head: string }
-  | { field: true };
+  | { field: true }
+  | { gather: Expression };
 
 // The field as a place: no holon holds it, so the engine shows it from what
 // the field holds. Each store with its head and the names it gives, and
@@ -137,6 +140,11 @@ export async function read(field: Field, past: Past, read: Read): Promise<Json> 
     );
   if ("head" in read) return field.stores.find(({ key }) => key === read.head)?.head ?? null;
   if ("field" in read) return placeOf(field) as unknown as Json;
+  if ("gather" in read) {
+    const problem = expressionProblem(read.gather as unknown as Json);
+    if (problem) throw new Error(problem);
+    return gather(field, read.gather);
+  }
   if ("holders" in read)
     return (field.holders.get(read.holders) ?? []).map(({ from, key, pinned }) => ({
       id: from,

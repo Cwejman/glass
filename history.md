@@ -9,6 +9,12 @@ How glass came to be what it is, told over its commits, newest first, each day b
 
 *Begun 2026-11-02, on the author's word that the effort be noted in the log as the work goes. Each story reasoned by the session that did the work, from the commits and the author's words.*
 
+## Many angles, and components held to what they may do
+
+The author asked that the power to look upon the field from many angles be opened, the reader to grow from it, and that every way glass's components went against OpenLight be resolved. Expressions came in as data, gathered by the engine and readable by any mount or component; a layout ships that looks at the field two ways side by side. Components now declare their settings and their reads, checked and refused by name, and draw with bodies typed from the field's own types. Panes scroll within themselves, so a redraw keeps one's place.
+
+*Reasoned on 2026-11-03 by the session.*
+
 ## What informs a slot
 
 The author asked how a brief in a slot knows to be drawn as a face or in full, and the session circled a long while: a flag the opener asked for, real estate, crossings set apart from slots, a table of defaults. The author kept the problem open until the answer was a contract: the one that holds and the one held share only a small vocabulary, the kinds of slot, full and face, so neither must know the other, and a slot's own data comes first, so a change made from its chrome is kept. He took it provisionally, the second decision whose rightness is not known, and asked that whatever depends on it be named before it is built. It was then built: kinds as holons, components that list the kinds they draw, one brief component drawing itself both ways, a layout component setting the arrangement's mounts side by side as panes, and chrome on every slot.
