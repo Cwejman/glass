@@ -217,9 +217,11 @@ export default async function draw(given: Given<MountBody>, space: Space) {
     if (!search) return;
     const place = at ?? (drawn as HTMLElement);
     const { location, expression } = place.dataset;
-    // A place drawn within a component, as a collection, is that
-    // component's to set, as its slot left it.
-    const { component: drawnBy, said } = place.closest<HTMLElement>("[data-component]")?.dataset ?? {};
+    // A face stands in what holds it, as an item in a list, so its settings
+    // to set are its holder's, as the holder's slot left them; any other
+    // place is its own component's.
+    const holder = place.classList.contains("face") ? place.parentElement : place;
+    const { component: drawnBy, said } = holder?.closest<HTMLElement>("[data-component]")?.dataset ?? {};
     const ids = JSON.parse(location ?? "[]") as Id[];
     const pressed = expression
       ? { gather: JSON.parse(expression) as Expression }

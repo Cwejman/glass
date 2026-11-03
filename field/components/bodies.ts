@@ -128,12 +128,6 @@ export interface BriefSettings {
   number?: string;
 }
 
-/** The settings the Expression component takes from the slot that opens it. */
-export interface ExpressionSettings {
-  /** Whether its collections stand as cards side by side, where there is room, rather than one under another. */
-  cards?: boolean;
-}
-
 /** The settings the List component takes from the slot that opens it. */
 export interface ListSettings {
   /** Whether each item is numbered by its place. */

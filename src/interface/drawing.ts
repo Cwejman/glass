@@ -105,7 +105,7 @@ export function candidates(
 
 // The one found for a slot. For a holon, one that takes one of its types
 // before the wildcard. For a way of looking, one given ways of looking,
-// before one given lists. For a list, which says nothing of what its items
+// else one given lists that takes nothing in particular. For a list, which says nothing of what its items
 // are, one that takes nothing in particular;
 // a component that takes a type for its items draws there only where a
 // slot names it. Finding lives here alone, so how a component is found can
@@ -113,8 +113,12 @@ export function candidates(
 export function match(components: readonly HolonRead[], reads: Reading, holon: HolonRead | null, kind: Id) {
   const fitting = candidates(components, reads, holon, kind);
   const takes = (component: HolonRead) => (component.body.takes as unknown[]).length;
-  const looking = fitting.find((component) => component.body.argument === "expression");
-  if ("gather" in reads && looking) return looking;
+  const given = (component: HolonRead) => component.body.argument;
+  if ("gather" in reads)
+    return (
+      fitting.find((component) => given(component) === "expression") ??
+      fitting.find((component) => given(component) === "list" && takes(component) === 0)
+    );
   if (!("holon" in reads)) return fitting.find((component) => takes(component) === 0);
   return fitting.find((component) => takes(component) > 0) ?? fitting[0];
 }
@@ -416,9 +420,9 @@ export function drawing(engine: Connection, options: Options): Drawing {
         ? { ...asked, own: "face", offered: { ...asked.offered, kind: "face" } }
         : asked;
       host.className = `slot ${kindOf(call)}`;
-      // A holon's face is entered, so it can be reached by the keyboard as a
-      // press can.
-      if (kindOf(call) === "face" && holon) host.tabIndex = 0;
+      // A face is entered, a holon's or a way of looking's, so it can be
+      // reached by the keyboard as a press can.
+      if (kindOf(call) === "face" && (holon || "gather" in call.reads)) host.tabIndex = 0;
       else host.removeAttribute("tabindex");
 
       const found = componentFor(call, holon, guarded);

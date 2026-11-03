@@ -137,20 +137,26 @@ test("a value that is not an expression says what is wrong with its shape", () =
   expect(expressionProblem(deep as never)).toContain("nests at most");
 });
 
-test("a grouping gathers what it groups, and gives its collections, each an expression of its own", () => {
+test("a grouping gathers what it groups, and gives its collections, each an expression of its own, grouped again", () => {
   const everything = call("everything");
   expect(gather(field, call("group", everything, "type"))).toEqual(gather(field, everything));
   expect(groups(field, call("group", everything, "type"))).toEqual({
     by: "type",
     groups: [
-      { value: NOTE, count: 2, gathers: call("type", ref(NOTE)) },
-      { value: TYPE, count: 2, gathers: call("type", ref(TYPE)) },
+      { value: NOTE, count: 2, gathers: call("group", call("type", ref(NOTE)), "auto") },
+      { value: TYPE, count: 2, gathers: call("group", call("type", ref(TYPE)), "auto") },
     ],
     rest: P,
   });
   expect(groups(field, call("group", call("type", ref(NOTE)), "parent"))).toEqual({
     by: "parent",
-    groups: [{ value: b, count: 1, gathers: call("and", call("type", ref(NOTE)), call("children", ref(b))) }],
+    groups: [
+      {
+        value: b,
+        count: 1,
+        gathers: call("group", call("and", call("type", ref(NOTE)), call("children", ref(b))), "auto"),
+      },
+    ],
     rest: [b],
   });
   expect(groups(field, everything)).toBeNull();
@@ -159,7 +165,11 @@ test("a grouping gathers what it groups, and gives its collections, each an expr
 test("a collection deep down is narrowed by its steps side by side", () => {
   const two = call("and", call("type", ref(NOTE)), call("not", call("named")));
   expect(groups(field, call("group", two, "store"))!.groups[0]!.gathers).toEqual(
-    call("and", call("type", ref(NOTE)), call("not", call("named")), call("store", "home")),
+    call(
+      "group",
+      call("and", call("type", ref(NOTE)), call("not", call("named")), call("store", "home")),
+      "auto",
+    ),
   );
 });
 

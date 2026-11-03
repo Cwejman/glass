@@ -250,7 +250,8 @@ export function groups(field: Field, expression: Expression, nested = 0): Groupe
 }
 
 // What a grouping gathers, narrowed to one value along its axis: what it
-// was given and the value side by side, however deep.
+// was given and the value side by side, however deep, grouped again
+// automatically, so a collection opens as a place of its own, in layers.
 function narrowed(field: Field, inner: Expression, by: Axis, value: string): Expression {
   const ids = nativeIds(field);
   const call = (name: string, ...given: Argument[]): Expression => ({
@@ -264,8 +265,10 @@ function narrowed(field: Field, inner: Expression, by: Axis, value: string): Exp
         ? call("children", { $ref: value })
         : call("store", value);
   const calls = (e: Expression, name: string) => "call" in e && e.call.$ref === ids.get(name);
-  if (calls(inner, "everything")) return narrow;
-  return call("and", ...(calls(inner, "and") ? (inner as { with: Argument[] }).with : [inner]), narrow);
+  const both = calls(inner, "everything")
+    ? narrow
+    : call("and", ...(calls(inner, "and") ? (inner as { with: Argument[] }).with : [inner]), narrow);
+  return call("group", both, "auto");
 }
 
 // The values a set has along an axis, each with the holons that have it, in

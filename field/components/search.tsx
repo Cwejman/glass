@@ -538,6 +538,18 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     <input class="search-input" type="search" role="combobox" aria-autocomplete="list" spellcheck="false" />
   ) as HTMLInputElement;
   const pending = (<span class="part pending" />) as HTMLElement;
+  // How much is in view, said beneath where one stands: how many holons a way
+  // of looking gathers, and, grouped, in how many collections.
+  const grouped = given.gathers ? await space.read({ groups: given.gathers }) : null;
+  const counted = (n: number, what: string) => `${n} ${what}${n === 1 ? "" : "s"}`;
+  const status = !given.gathers
+    ? ""
+    : grouped?.groups.length
+      ? [
+          `${counted(given.list?.length ?? 0, "holon")}: ${counted(grouped.groups.length, "collection")}`,
+          ...(grouped.rest.length ? [`${grouped.rest.length} more`] : []),
+        ].join(", ")
+      : counted(given.list?.length ?? 0, "holon");
   const listed = (<ul class="search-found" role="listbox" />) as HTMLElement;
   const element = (
     <div class={settings.pressed ? "search pressed" : "search"}>
@@ -547,6 +559,7 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
         {pending}
         {input}
       </div>
+      {status && <p class="search-status">{status}</p>}
       {listed}
     </div>
   ) as HTMLElement;
@@ -668,6 +681,9 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     said();
     again();
   });
+  // A press on what was found keeps the focus where one types, so what was
+  // found stays shown while it is pressed, and typing goes on.
+  listed.addEventListener("mousedown", (event) => event.preventDefault());
   input.addEventListener("input", again);
   input.addEventListener("keydown", (event) => {
     if (event.key === "ArrowDown") return (event.preventDefault(), mark(active + 1));
