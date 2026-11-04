@@ -218,21 +218,21 @@ export function wiki(
   return { holons, names: { wiki: idAt(entry)! } };
 }
 
-export interface ProgramFile {
+export interface FunctionFile {
   native: string;
   title: string;
   says: string;
   takes?: string[];
 }
 
-// Glass's own programs, each a holon the engine runs by its native name.
-export const programFrom = (native: string) => `field/programs.json#${native}`;
-export function programs(files: ProgramFile[], idOf: IdOf, typeOf: Record<string, Id>): Born {
+// Glass's own functions, each a holon the engine runs by its native name.
+export const functionFrom = (native: string) => `field/functions.json#${native}`;
+export function functions(files: FunctionFile[], idOf: IdOf, typeOf: Record<string, Id>): Born {
   return {
     holons: files.map(({ native, title, says, takes }) => ({
-      id: idOf(programFrom(native)),
-      instance: [typeOf.program!],
-      body: { title, says, ...(takes ? { takes } : {}), native, from: programFrom(native) },
+      id: idOf(functionFrom(native)),
+      instance: [typeOf.function!],
+      body: { title, says, ...(takes ? { takes } : {}), native, from: functionFrom(native) },
     })),
     names: {},
   };
@@ -249,7 +249,7 @@ export interface EntryFile {
 // The entry: the mount a client boots into before the reader has one of
 // their own, its component given by its title, and what it gives: each
 // holon of its argument by the name the field gives it, or a way of
-// looking, each program it calls by its native name. What it offers everything it draws is kept as it is,
+// looking, each function it calls by its native name. What it offers everything it draws is kept as it is,
 // but for a component, given by its title.
 export function entry(
   file: EntryFile,
@@ -257,7 +257,7 @@ export function entry(
   typeOf: Record<string, Id>,
   named: Record<string, Id>,
   componentTitled: Record<string, Id>,
-  programOf: Record<string, Id> = {},
+  functionOf: Record<string, Id> = {},
 ): Born {
   const from = "field/entry.json";
   const called = (value: Json): Json => {
@@ -265,7 +265,7 @@ export function entry(
     if (value === null || typeof value !== "object") return value;
     return Object.fromEntries(
       Object.entries(value).map(([key, inner]) =>
-        key === "call" && typeof inner === "string" ? [key, nameOf(inner, programOf)] : [key, called(inner)],
+        key === "call" && typeof inner === "string" ? [key, nameOf(inner, functionOf)] : [key, called(inner)],
       ),
     );
   };

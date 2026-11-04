@@ -1,6 +1,6 @@
 import type { Declaration, Given, Space } from "../../src/interface/component.ts";
 import { h } from "./jsx.ts";
-import { partSaid, partsOf, programsIn } from "./parts.ts";
+import { partSaid, partsOf, functionsIn } from "./parts.ts";
 
 // A collection, seen from outside: a way of looking narrowed to one value,
 // given with what it gathers. Closed, it is a card: the value it narrows
@@ -29,15 +29,15 @@ export const declared = {
 const named = 12;
 
 export default async function draw(given: Given<never, { open?: boolean }>, space: Space) {
-  const programs = await programsIn({
-    name: () => space.read({ name: "program" }),
+  const functions = await functionsIn({
+    name: () => space.read({ name: "function" }),
     instances: (type) => space.read({ instances: type }),
     holon: (id) => space.holon(id),
   });
-  const last = partsOf(programs, given.gathers!).parts.at(-1);
+  const last = partsOf(functions, given.gathers!).parts.at(-1);
   const titled = async (id: string) =>
     String((await space.holon(id))?.body.title ?? "what is no longer in the field");
-  const said = last ? (await partSaid(programs, last, titled)).value : "Everything";
+  const said = last ? (await partSaid(functions, last, titled)).value : "Everything";
   const holds = given.list ?? [];
   const count = holds.length === 1 ? "1 holon" : `${holds.length} holons`;
 

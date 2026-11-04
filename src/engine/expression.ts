@@ -5,21 +5,21 @@ import type { Field } from "./field.ts";
 import { references } from "./references.ts";
 import { isType } from "./types.ts";
 
-// An expression is a program given what it takes: data, held in a body
+// An expression is a function given what it takes: data, held in a body
 // like any other value, so a holon can gather as easily as it can point.
 // Evaluated against the field, it gives the holons it gathers, in the order
 // the field holds them. It is one of three forms:
 //
 //   { "$ref": H }                    the holon H, as a set of one
-//   { "call": P, "with": [ … ] }     the program P, given its arguments
-//   { "arg": i }                     within a program of one's own, the
+//   { "call": P, "with": [ … ] }     the function P, given its arguments
+//   { "arg": i }                     within a function of one's own, the
 //                                    i-th argument it was given
 //
-// A program is a holon. Glass's own are native, run by the engine: every
+// A function is a holon. Glass's own are native, run by the engine: every
 // holon, the instances of types, the children and the parents of holons,
 // what contains some words, what a store holds, what a store names, the
 // types; and, or, not; and group. Each takes sets, which are expressions,
-// or words, as a store's key or an axis. A program of one's own gives an
+// or words, as a store's key or an axis. A function of one's own gives an
 // expression over the arguments it is given, so it is called as glass's
 // are, and stands beside them.
 //
@@ -29,7 +29,7 @@ import { isType } from "./types.ts";
 // grouped again. Grouped automatically, the axis is the one that splits
 // what is gathered into a few groups, evenly filled, covering most of it.
 //
-// Expressions nest at most `depth` deep, programs of one's own counted.
+// Expressions nest at most `depth` deep, functions of one's own counted.
 
 export type Expression = { $ref: Id } | { call: { $ref: Id }; with?: Argument[] } | { arg: number };
 export type Argument = Expression | string;
@@ -40,13 +40,13 @@ export type By = Axis | "auto";
 
 export const depth = 32;
 
-// What a program takes, each in turn: a set, any number of sets, words, a
+// What a function takes, each in turn: a set, any number of sets, words, a
 // store's key, or an axis.
 export type Takes = "set" | "sets" | "words" | "store" | "axis";
 
-// A program as its body holds it: native, run by the engine, or of one's
+// A function as its body holds it: native, run by the engine, or of one's
 // own, giving an expression over what it is given.
-interface Program {
+interface Definition {
   title?: string;
   takes?: Takes[];
   native?: string;
@@ -56,31 +56,31 @@ interface Program {
 export function gather(field: Field, expression: Expression, nested = 0): Id[] {
   if (nested >= depth) throw new Error(`an expression nests at most ${depth} deep`);
   if ("$ref" in expression) return field.known.has(expression.$ref) ? [expression.$ref] : [];
-  if ("arg" in expression) throw new Error("an argument is given only within a program of one's own");
+  if ("arg" in expression) throw new Error("an argument is given only within a function of one's own");
 
-  const { program, given } = called(field, expression);
-  if (program.gives) return gather(field, substituted(program.gives, given), nested + 1);
-  const native = natives[program.native!];
-  if (!native) throw new Error(`there is no native program ${program.native}`);
+  const { fn, given } = called(field, expression);
+  if (fn.gives) return gather(field, substituted(fn.gives, given), nested + 1);
+  const native = natives[fn.native!];
+  if (!native) throw new Error(`there is no native function ${fn.native}`);
   const set = (argument: Argument) => gather(field, argument as Expression, nested + 1);
   return native(field, given, set);
 }
 
-// The program an expression calls, and what it gives it, checked against
-// what the program takes.
+// The function an expression calls, and what it gives it, checked against
+// what the function takes.
 function called(field: Field, expression: { call: { $ref: Id }; with?: Argument[] }) {
   const holon = field.known.get(expression.call.$ref)?.version;
   if (!holon) throw new Error(`${expression.call.$ref} is not in the field`);
-  const program = holon.body as unknown as Program;
-  const title = program.title ?? holon.id;
-  if (!program.native && !program.gives) throw new Error(`${title} is not a program`);
+  const fn = holon.body as unknown as Definition;
+  const title = fn.title ?? holon.id;
+  if (!fn.native && !fn.gives) throw new Error(`${title} is not a function`);
   const given = expression.with ?? [];
-  const wrong = argumentsProblem(program.takes ?? [], given);
+  const wrong = argumentsProblem(fn.takes ?? [], given);
   if (wrong) throw new Error(`${title} ${wrong}`);
-  return { program, given };
+  return { fn, given };
 }
 
-// What is wrong with what a program is given, held against what it takes.
+// What is wrong with what a function is given, held against what it takes.
 function argumentsProblem(takes: Takes[], given: Argument[]): string | undefined {
   const variadic = takes.at(-1) === "sets";
   if (variadic ? given.length < takes.length : given.length !== takes.length)
@@ -98,7 +98,7 @@ function argumentsProblem(takes: Takes[], given: Argument[]): string | undefined
     .find(Boolean);
 }
 
-// A program of one's own's expression, each argument it names given in.
+// A function of one's own's expression, each argument it names given in.
 function substituted(expression: Expression, given: Argument[]): Expression {
   const inner = (value: Argument): Argument => {
     if (typeof value === "string") return value;
@@ -111,11 +111,11 @@ function substituted(expression: Expression, given: Argument[]): Expression {
     return { call: value.call, ...(value.with ? { with: value.with.map(inner) } : {}) };
   };
   const done = inner(expression);
-  if (typeof done === "string") throw new Error("a program gives a set, not words");
+  if (typeof done === "string") throw new Error("a function gives a set, not words");
   return done;
 }
 
-// Glass's own programs, by the name their holons give them.
+// Glass's own functions, by the name their holons give them.
 type Native = (field: Field, given: Argument[], set: (argument: Argument) => Id[]) => Id[];
 
 const held = (field: Field) => [...field.known.values()].map(({ version }) => version);
@@ -175,14 +175,14 @@ const natives: Record<string, Native> = {
   group: (_field, [grouped], set) => set(grouped!),
 };
 
-// The native programs a field holds, by their names, so an expression can
+// The native functions a field holds, by their names, so an expression can
 // be made of them; the first of each name, as the field orders them.
 const nativesOf = new WeakMap<Field, Map<string, Id>>();
 export function nativeIds(field: Field): Map<string, Id> {
   if (!nativesOf.has(field)) {
     const found = new Map<string, Id>();
     for (const { id, body } of held(field)) {
-      const native = (body as unknown as Program).native;
+      const native = (body as unknown as Definition).native;
       if (typeof native === "string" && !found.has(native)) found.set(native, id);
     }
     nativesOf.set(field, found);
@@ -214,7 +214,7 @@ function says(body: unknown, wanted: string[]) {
 // A grouping's collections: the axis it groups by, each collection with
 // the value it shares, how many it holds and the expression that gathers
 // it, the larger first; and what has no value on the axis. What is not a
-// grouping has none; a program of one's own that gives one is looked
+// grouping has none; a function of one's own that gives one is looked
 // through to it.
 export interface Grouped {
   by: Axis;
@@ -224,9 +224,9 @@ export interface Grouped {
 
 export function groups(field: Field, expression: Expression, nested = 0): Grouped | null {
   if (!("call" in expression) || nested >= depth) return null;
-  const { program, given } = called(field, expression);
-  if (program.gives) return groups(field, substituted(program.gives, given), nested + 1);
-  if (program.native !== "group") return null;
+  const { fn, given } = called(field, expression);
+  if (fn.gives) return groups(field, substituted(fn.gives, given), nested + 1);
+  if (fn.native !== "group") return null;
 
   const [inner, asked] = given as [Expression, By];
   const gathered = gather(field, inner);
@@ -314,7 +314,7 @@ function strength({ values, rest }: ReturnType<typeof splitBy>, total: number) {
 }
 
 // What is wrong with a value meant as an expression, in its shape, if
-// anything; what each program takes is judged as it is called.
+// anything; what each function takes is judged as it is called.
 export function expressionProblem(value: Json | undefined, nested = 0): string | undefined {
   if (nested >= depth) return `an expression nests at most ${depth} deep`;
   if (!isRecord(value)) return "an expression is a holon, a call or an argument, as { call: …, with: [ … ] }";
@@ -329,7 +329,7 @@ export function expressionProblem(value: Json | undefined, nested = 0): string |
     return "an expression is a holon, a call or an argument, as { call: …, with: [ … ] }";
   const call = value.call;
   if (!isRecord(call) || Object.keys(call).length !== 1 || !isId(call.$ref))
-    return "a call names its program as { $ref: id }";
+    return "a call names its function as { $ref: id }";
   if (value.with === undefined) return undefined;
   if (!Array.isArray(value.with)) return "what a call gives is a list";
   return value.with

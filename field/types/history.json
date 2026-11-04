@@ -1,0 +1,37 @@
+{
+  "title": "History",
+  "says": "Where one has looked, in order: each visit when it was and what was looked at, said as an expression's text, so a visit points at nothing that can be gone. Each move adds a visit; nothing is rewritten, and going back adds none.",
+  "fields": {
+    "title": {
+      "says": "What the history is called.",
+      "shape": "string"
+    },
+    "visits": {
+      "says": "Each visit, the earliest first.",
+      "shape": {
+        "list": {
+          "fields": {
+            "at": {
+              "says": "When it was, as a moment in time.",
+              "shape": "string"
+            },
+            "looked": {
+              "says": "What was looked at, said as an expression's text, as the address says it.",
+              "shape": "string"
+            },
+            "with": {
+              "says": "The component it was looked at with, by its id, where one was chosen.",
+              "shape": "string",
+              "optional": true
+            }
+          }
+        }
+      }
+    },
+    "from": {
+      "says": "Where the holon was born from, as a path in the files it arrived from.",
+      "shape": "string",
+      "optional": true
+    }
+  }
+}

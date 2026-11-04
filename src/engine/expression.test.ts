@@ -21,7 +21,7 @@ function standing(key: string, holons: Held[], names: Record<string, string> = {
   return { key, head: undefined, names, holons: known };
 }
 
-// Glass's own programs, each a holon in a store of their own.
+// Glass's own functions, each a holon in a store of their own.
 const takes: Record<string, string[]> = {
   everything: [],
   type: ["set"],
@@ -36,16 +36,16 @@ const takes: Record<string, string[]> = {
   not: ["set"],
   group: ["set", "axis"],
 };
-const program = Object.fromEntries(Object.keys(takes).map((name) => [name, newId()]));
-const programs = standing(
-  "programs",
+const fn = Object.fromEntries(Object.keys(takes).map((name) => [name, newId()]));
+const functions = standing(
+  "functions",
   Object.entries(takes).map(
-    ([name, given]): Held => [program[name]!, { title: name, takes: given, native: name }, []],
+    ([name, given]): Held => [fn[name]!, { title: name, takes: given, native: name }, []],
   ),
 );
-const P = Object.values(program);
+const P = Object.values(fn);
 const call = (name: string, ...given: Argument[]): Expression => ({
-  call: { $ref: program[name]! },
+  call: { $ref: fn[name]! },
   with: given,
 });
 const ref = (id: string): Expression => ({ $ref: id });
@@ -63,10 +63,10 @@ const field = fieldOf([
     ],
     { note: NOTE },
   ),
-  programs,
+  functions,
 ]);
 
-test("a program given what it takes gathers from the field, in the field's order", () => {
+test("a function given what it takes gathers from the field, in the field's order", () => {
   expect(gather(field, call("everything"))).toEqual([b, TYPE, NOTE, a, ...P]);
   expect(gather(field, call("type", ref(NOTE)))).toEqual([b, a]);
   expect(gather(field, call("types"))).toEqual([TYPE, NOTE]);
@@ -82,7 +82,7 @@ test("relations take sets, so they compose: the children of every note, the type
   expect(gather(field, call("type", call("types")))).toEqual([b, TYPE, NOTE, a]);
 });
 
-test("and, or and not are programs too, and nest as deep as one likes", () => {
+test("and, or and not are functions too, and nest as deep as one likes", () => {
   expect(gather(field, call("and", call("type", ref(NOTE)), call("parents", ref(a))))).toEqual([b]);
   expect(gather(field, call("or", ref(a), call("types")))).toEqual([TYPE, NOTE, a]);
   expect(gather(field, call("and", call("type", ref(NOTE)), call("not", call("store", "home"))))).toEqual([
@@ -96,7 +96,7 @@ test("a match gathers what says each of its words, in any case, but not by the i
   expect(gather(field, call("text", a.slice(0, 8)))).toEqual([]);
 });
 
-test("a program of one's own gives an expression over what it is given, and is called as glass's are", () => {
+test("a function of one's own gives an expression over what it is given, and is called as glass's are", () => {
   const notesOf = newId();
   const own = fieldOf([
     standing("home", [
@@ -116,20 +116,20 @@ test("a program of one's own gives an expression over what it is given, and is c
   expect(() => gather(own, { call: { $ref: notesOf } })).toThrow("takes set, and was given 0");
 });
 
-test("what a program is given is held against what it takes", () => {
+test("what a function is given is held against what it takes", () => {
   expect(() => gather(field, call("type", "Note"))).toThrow("takes a set");
   expect(() => gather(field, call("text", ref(a)))).toThrow("takes a words");
   expect(() => gather(field, call("and", ref(a)))).toThrow("takes set, sets, and was given 1");
   expect(() => gather(field, call("group", call("everything"), "colour"))).toThrow("groups by");
-  expect(() => gather(field, { call: { $ref: a } })).toThrow("is not a program");
-  expect(() => gather(field, { arg: 0 })).toThrow("within a program");
+  expect(() => gather(field, { call: { $ref: a } })).toThrow("is not a function");
+  expect(() => gather(field, { arg: 0 })).toThrow("within a function");
 });
 
 test("a value that is not an expression says what is wrong with its shape", () => {
   expect(expressionProblem(call("type", ref(NOTE)) as never)).toBeUndefined();
   expect(expressionProblem({ arg: 1 })).toBeUndefined();
   expect(expressionProblem({ instances: NOTE })).toContain("a holon, a call or an argument");
-  expect(expressionProblem({ call: "x" })).toContain("names its program");
+  expect(expressionProblem({ call: "x" })).toContain("names its function");
   expect(expressionProblem({ call: { $ref: a }, with: "x" })).toContain("a list");
   expect(expressionProblem({ arg: -1 })).toContain("counted from 0");
   let deep: Expression = ref(a);
@@ -173,7 +173,7 @@ test("a collection deep down is narrowed by its steps side by side", () => {
   );
 });
 
-test("a program of one's own that groups is looked through to its collections", () => {
+test("a function of one's own that groups is looked through to its collections", () => {
   const grouped = newId();
   const own = fieldOf([
     standing("home", [
@@ -202,7 +202,7 @@ test("grouped automatically, a value every holon shares says nothing, and a few 
       ...items.map((id, i): Held => [id, { title: "x" }, [kinds[i % 4 === 0 ? 0 : 1]!]]),
       ...holders.map((id, i): Held => [id, { part: { $ref: items[i]! } }, [TYPE]]),
     ]),
-    programs,
+    functions,
   ]);
   const either = call("or", call("type", ref(kinds[0]!)), call("type", ref(kinds[1]!)));
   expect(groups(many, call("group", either, "auto"))!.by).toBe("type");

@@ -67,7 +67,7 @@ Governing the home is done by programs, judged by the engine like any act: reset
 
 Every move is a new version of the root mount, and a holon keeps its versions, so the root already has a history. Going back and forward walks it, and the browser's own back and forward are one more way of walking it, translated by the interface. A reload restores the root as it was left.
 
-*Reasoned, the session's, 2026-11-01, answering the author's question of what a virtual history stack means; the arrangement's commits became the root's versions on 2026-11-03, as [the interface](interface.md#8-moving-is-a-new-version-of-the-root) tells.*
+*Reasoned, the session's, 2026-11-01, answering the author's question of what a virtual history stack means; the arrangement's commits became the root's versions on 2026-11-03, as [the interface](interface.md#8-moving-is-a-new-address) tells.*
 
 ## 7. When the shape of state changes
 

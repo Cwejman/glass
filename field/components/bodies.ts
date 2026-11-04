@@ -56,6 +56,39 @@ export interface ComponentBody {
   from?: string;
 }
 
+/** Something pure that gathers from the field, given what it takes: glass's own, evaluated by the engine, or one's own, an expression over what it is given. An expression calls a function, and is evaluated wherever it is used, as in what is drawn, so nothing it gives is kept; a function kept as a favorite is a way of looking one can return to. */
+export interface FunctionBody {
+  /** What the function is called, as it is offered to be called. */
+  title: string;
+  /** What it gathers, in a sentence. */
+  says?: string;
+  /** What it is given, each in turn: a set, any number of sets, words, a store's key, or an axis to group by; nothing unless it says. */
+  takes?: string[];
+  /** For one of glass's own, the name the engine evaluates it by. */
+  native?: string;
+  /** For a function of one's own, the expression it gives, each argument it was given named as { arg: i }. */
+  gives?: Expression;
+  /** Where the holon was born from, as a path in the files it arrived from. */
+  from?: string;
+}
+
+/** Where one has looked, in order: each visit when it was and what was looked at, said as an expression's text, so a visit points at nothing that can be gone. Each move adds a visit; nothing is rewritten, and going back adds none. */
+export interface HistoryBody {
+  /** What the history is called. */
+  title: string;
+  /** Each visit, the earliest first. */
+  visits: {
+    /** When it was, as a moment in time. */
+    at: string;
+    /** What was looked at, said as an expression's text, as the address says it. */
+    looked: string;
+    /** The component it was looked at with, by its id, where one was chosen. */
+    with?: string;
+  }[];
+  /** Where the holon was born from, as a path in the files it arrived from. */
+  from?: string;
+}
+
 /** A kind of slot: how what stands in a slot is drawn, said between the one that holds it and the one held, so neither has to know the other. */
 export interface KindBody {
   /** What the kind is called. */
@@ -94,18 +127,12 @@ export interface MountBody {
   from?: string;
 }
 
-/** Something that gathers from the field, given what it takes: glass's own, run by the engine, or one's own, an expression over what it is given. An expression calls a program, and is called by what it gives; a program kept as a favorite is a way of looking one can return to. */
+/** Something that is run, not evaluated: each run an event in the field, with a record of what it was given and the return it gave, kept with the run, since a run's return is new and may not come out the same twice. A program is not used in what is drawn, as a function is. Glass runs none yet. */
 export interface ProgramBody {
-  /** What the program is called, as it is offered to be called. */
+  /** What the program is called. */
   title: string;
-  /** What it gathers, in a sentence. */
+  /** What it does, in a sentence. */
   says?: string;
-  /** What it is given, each in turn: a set, any number of sets, words, a store's key, or an axis to group by; nothing unless it says. */
-  takes?: string[];
-  /** For one of glass's own, the name the engine runs it by. */
-  native?: string;
-  /** For a program of one's own, the expression it gives, each argument it was given named as { arg: i }. */
-  gives?: Expression;
   /** Where the holon was born from, as a path in the files it arrived from. */
   from?: string;
 }

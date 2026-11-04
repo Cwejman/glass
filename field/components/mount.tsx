@@ -6,7 +6,7 @@ import type { Expression } from "../../src/engine/expression.ts";
 import type { MountBody, Ref } from "./bodies.ts";
 import { h } from "./jsx.ts";
 import { overlay } from "./menu.ts";
-import { call, native, programsIn, titleOf } from "./parts.ts";
+import { call, native, functionsIn, titleOf } from "./parts.ts";
 
 // A mount: a component and what it gives it, holons or a way of looking
 // held in the mount itself, drawn in full, offered what the mount offers.
@@ -32,7 +32,20 @@ export const declared = {
 
 export default async function draw(given: Given<MountBody>, space: Space) {
   const mount = given.holon!;
-  const { title, component, argument = [], gathers } = mount.body;
+  // Where it looks, and with what, is its own, or, where the page offers a
+  // place, as for the root the address names, that place.
+  const placed = !given.offered.within
+    ? (given.offered.place as Partial<MountBody> | null | undefined)
+    : null;
+  const { title } = mount.body;
+  const { argument = [], gathers } = placed ?? mount.body;
+  // A place that names no component is looked at with the one the entry
+  // calls, the reader; a mount that is not placed, with its own.
+  const entryAt = await space.read({ name: "entry" });
+  const enteredComponent = entryAt ? (await space.holon<MountBody>(entryAt))?.body.component : undefined;
+  const component = placed
+    ? (placed.component ?? enteredComponent ?? mount.body.component)
+    : mount.body.component;
   const giving = argument.map(({ $ref }) => $ref);
   if (given.kind === "face")
     return (
@@ -48,8 +61,8 @@ export default async function draw(given: Given<MountBody>, space: Space) {
   // component it calls, and what it gives, a way of looking pressed to look
   // through it, or the holons it gives, each a face.
   if (given.offered.within) {
-    const programs = await programsIn({
-      name: () => space.read({ name: "program" }),
+    const functions = await functionsIn({
+      name: () => space.read({ name: "function" }),
       instances: (type) => space.read({ instances: type }),
       holon: (id) => space.holon(id),
     });
@@ -66,7 +79,7 @@ export default async function draw(given: Given<MountBody>, space: Space) {
             data-expression={JSON.stringify(gathers)}
             {...(component ? { "data-calls": component.$ref } : {})}
           >
-            {await titleOf(programs, gathers, titled)}
+            {await titleOf(functions, gathers, titled)}
           </button>
         ) : (
           space.open(giving, { offer: { kind: "face" } })
@@ -82,13 +95,15 @@ export default async function draw(given: Given<MountBody>, space: Space) {
   const offerOf = (body?: MountBody) => (body?.offer ?? {}) as Record<string, Json>;
   const offer = { ...offerOf(entered?.body), ...offerOf(mount.body) };
   // What it draws stands within it, so a mount found there is shown.
-  const offering = { ...offer, kind: "full" as const, within: true };
+  const offering = { ...offer, kind: "full" as const, within: true, place: null };
 
   // What it gave and is no longer in the field, or the mount itself, gives
   // way to what the entry gives, so a root is never left with nothing to
   // stand in, nor stands in itself.
   const gone =
-    !gathers && giving.length === 1 && (giving[0] === mount.id || !(await space.holon(giving[0]!)));
+    !gathers &&
+    (giving.length === 0 ||
+      (giving.length === 1 && (giving[0] === mount.id || !(await space.holon(giving[0]!)))));
   // An expression that cannot be read gives way too, so a root is never
   // left with nothing but what is wrong with it.
   const broken =
@@ -108,12 +123,12 @@ export default async function draw(given: Given<MountBody>, space: Space) {
 
   // A mount that may be written may move anywhere in the field, so it
   // reaches the whole of it.
-  const programs = await programsIn({
-    name: () => space.read({ name: "program" }),
+  const functions = await functionsIn({
+    name: () => space.read({ name: "function" }),
     instances: (type) => space.read({ instances: type }),
     holon: (id) => space.holon(id),
   });
-  const present = new Set(await space.read({ gather: call(native(programs, "everything")) }));
+  const present = new Set(await space.read({ gather: call(native(functions, "everything")) }));
   const element = (<div class="mount">{drawn}</div>) as HTMLElement;
   let closeMenu: (() => void) | undefined;
 
@@ -154,18 +169,19 @@ export default async function draw(given: Given<MountBody>, space: Space) {
   const offerAnew = (changed: Record<string, Json | null>, made: Made[] = []) => {
     const next = { ...own(), ...changed };
     for (const [key, value] of Object.entries(next)) if (value === null) delete next[key];
-    const { offer: _, ...rest } = mount.body;
+    // Only what it offers changes: where it looks stays as it is.
+    const { offer: _, gathers: __, argument: ___, ...rest } = mount.body;
     return space.write({ ...rest, ...(Object.keys(next).length ? { offer: next } : {}) } as never, made);
   };
 
-  // A way of looking kept, as a program of one's own that takes nothing and
+  // A way of looking kept, as a function of one's own that takes nothing and
   // gives it, born in the home and placed on the favorites.
   const keep = async (gives: Expression, title: string) => {
-    const programType = await space.read({ name: "program" });
-    if (!programType) throw new Error("the field holds no type for programs");
+    const functionType = await space.read({ name: "function" });
+    if (!functionType) throw new Error("the field holds no type for functions");
     const id = newId();
     const favorites = [...((offer.favorites ?? []) as Ref[]), { $ref: id }];
-    return offerAnew({ favorites }, [{ id, instance: programType, body: { title, gives } as never }]);
+    return offerAnew({ favorites }, [{ id, instance: functionType, body: { title, gives } as never }]);
   };
 
   // The innermost place a press passed, inside this mount; in the menu, only

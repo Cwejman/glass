@@ -10,19 +10,19 @@ import {
   native,
   partSaid,
   partsOf,
-  programsIn,
+  functionsIn,
   titleOf,
   together,
   type Called,
   type Parts,
 } from "./parts.ts";
 
-// A search: where one stands, said by what it means, and the programs to
+// A search: where one stands, said by what it means, and the functions to
 // build where to look next. Given an expression, it says its parts, each a
-// program and what it is given, as Type: Brief, pressed to change it or let
+// function and what it is given, as Type: Brief, pressed to change it or let
 // go; given a holon, what it is and what it is called.
 //
-// Every program the field holds is a brick, glass's own and one's own
+// Every function the field holds is a brick, glass's own and one's own
 // alike, offered by its title. Typing finds the brick, Enter takes it, and
 // what it takes is chosen in turn: a set among what is in view, the types
 // and parents of what one is looking at, each with how many it
@@ -37,7 +37,7 @@ import {
 // Before anything is typed it offers what is near: what can be done here,
 // given the component a place is drawn by, as look with another component,
 // set what that component takes and nothing gave it, keep the way of
-// looking as a program of one's own on the favorites; then the favorites;
+// looking as a function of one's own on the favorites; then the favorites;
 // then the bricks.
 //
 // It acts on nothing. Each thing it offers that leads somewhere is a press
@@ -46,7 +46,7 @@ import {
 
 export const declared = {
   title: "Search",
-  says: "Where one stands, said by what it means, and the field's programs as bricks to build where to look next, each built expression a press that rises to the mount.",
+  says: "Where one stands, said by what it means, and the field's functions as bricks to build where to look next, each built expression a press that rises to the mount.",
   takes: [],
   kinds: ["full"],
   argument: "selection",
@@ -88,10 +88,10 @@ interface Found {
   step?: () => void;
 }
 
-// A program being given what it takes, one argument after another; Open
+// A function being given what it takes, one argument after another; Open
 // is taken as one, given a holon to go to.
 interface Frame {
-  program: Called;
+  fn: Called;
   given: Argument[];
 }
 const opening: Called = { id: "", title: "Open", takes: ["holon"] };
@@ -103,44 +103,44 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
   const settings = given.settings;
   const one = given.holon as HolonOf<Record<string, unknown>> | undefined;
   const ids = given.list ?? (one ? [one.id] : []);
-  const programs = await programsIn({
-    name: () => space.read({ name: "program" }),
+  const functions = await functionsIn({
+    name: () => space.read({ name: "function" }),
     instances: (type) => space.read({ instances: type }),
     holon: (id) => space.holon(id),
   });
-  const is = (name: string) => native(programs, name);
-  const standing: Parts | undefined = given.gathers ? partsOf(programs, given.gathers) : undefined;
+  const is = (name: string) => native(functions, name);
+  const standing: Parts | undefined = given.gathers ? partsOf(functions, given.gathers) : undefined;
   const [componentType, full] = await Promise.all(["component", "full"].map((name) => space.read({ name })));
 
-  // What is being built: the programs taken and what each is given so far,
+  // What is being built: the functions taken and what each is given so far,
   // and which part it changes, if it changes one.
   let frames: Frame[] = [];
   let changing: number | undefined;
 
-  const toward = (parts: Parts): Lead => ({ expression: together(programs, parts) });
+  const toward = (parts: Parts): Lead => ({ expression: together(functions, parts) });
   const same = (a: Argument, b: Argument) => canonical(a) === canonical(b);
 
-  // A part changed to another: the same program given one holon more, or
+  // A part changed to another: the same function given one holon more, or
   // one fewer, where both are given holons; let go when none is left; else
   // the other part instead.
   const changed = (was: Expression, part: Expression): Expression[] => {
     const before =
       "call" in was && "call" in part && was.call.$ref === part.call.$ref ? (was.with ?? []) : [];
-    const had = before.length === 1 ? holonsOf(programs, before[0]) : undefined;
-    const now = "call" in part && part.with?.length === 1 ? holonsOf(programs, part.with[0]) : undefined;
+    const had = before.length === 1 ? holonsOf(functions, before[0]) : undefined;
+    const now = "call" in part && part.with?.length === 1 ? holonsOf(functions, part.with[0]) : undefined;
     if (!had || now?.length !== 1) return [part];
     const kept = had.some((each) => same(each, now[0]!))
       ? had.filter((each) => !same(each, now[0]!))
       : [...had, now[0]!];
-    const program = programs.get((part as { call: { $ref: Id } }).call.$ref)!;
+    const fn = functions.get((part as { call: { $ref: Id } }).call.$ref)!;
     if (kept.length === 0) return [];
-    return [call(program, kept.length === 1 ? kept[0]! : call(is("or"), ...kept))];
+    return [call(fn, kept.length === 1 ? kept[0]! : call(is("or"), ...kept))];
   };
   // Whether a value is one the part being changed is given already.
   const holds = (value: Argument) => {
     const was = changing !== undefined ? standing?.parts[changing] : undefined;
     const given =
-      was && "call" in was && was.with?.length === 1 ? holonsOf(programs, was.with[0]) : undefined;
+      was && "call" in was && was.with?.length === 1 ? holonsOf(functions, was.with[0]) : undefined;
     return !!given?.some((each) => same(each, value));
   };
 
@@ -163,25 +163,24 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
   // takes the place of; from a holon, everything.
   const base = (): Expression => {
     if (!standing) return call(is("everything"));
-    return together(programs, { parts: standing.parts.filter((_, i) => i !== changing) });
+    return together(functions, { parts: standing.parts.filter((_, i) => i !== changing) });
   };
 
-  // The kind of argument the program being built takes next.
+  // The kind of argument the function being built takes next.
   const needs = (): string | undefined => {
     const frame = frames.at(-1);
     if (!frame) return undefined;
-    const { takes } = frame.program;
+    const { takes } = frame.fn;
     return takes[Math.min(frame.given.length, takes.length - 1)];
   };
-  const complete = ({ program, given }: Frame) =>
-    given.length >= program.takes.length && program.takes.at(-1) !== "sets";
+  const complete = ({ fn, given }: Frame) => given.length >= fn.takes.length && fn.takes.at(-1) !== "sets";
   // What is built once a value is given: the frames as they would stand,
-  // and, where every program taken has all it takes, the part made.
+  // and, where every function taken has all it takes, the part made.
   const settled = (value: Argument | undefined, within = frames): { frames: Frame[]; part?: Expression } => {
     // With nothing being built, what is given is the part itself.
     if (!within.length) return { frames: within, ...(value ? { part: value as Expression } : {}) };
     const next = within.map((frame) => ({ ...frame, given: [...frame.given] }));
-    // Nothing given closes the program built last, as Done does.
+    // Nothing given closes the function built last, as Done does.
     let giving = value;
     for (;;) {
       const top = next.at(-1)!;
@@ -190,7 +189,7 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
         if (!complete(top)) return { frames: next };
       }
       next.pop();
-      const made = call(top.program, ...top.given);
+      const made = call(top.fn, ...top.given);
       if (!next.length) return { frames: next, part: made };
       giving = made;
     }
@@ -213,7 +212,7 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     if (!facets.has(key))
       facets.set(
         key,
-        space.read({ groups: together(programs, { parts: [base()], by: axis }) }).then((grouped) =>
+        space.read({ groups: together(functions, { parts: [base()], by: axis }) }).then((grouped) =>
           Promise.all(
             (grouped?.groups ?? []).map(async ({ value, count }) => ({
               value,
@@ -278,21 +277,21 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
   const begins = (text: string, label: string) =>
     label.toLocaleLowerCase().startsWith(text.trim().toLocaleLowerCase());
 
-  // The bricks: every program the field holds, glass's own first, as the
+  // The bricks: every function the field holds, glass's own first, as the
   // field orders them. At the top, the parts stand side by side, which is
   // And, and no part at all is Everything; Or is built as any brick is, of
   // the sets it is given; Group by groups what is in view, and Open goes to
-  // a holon. Within a brick, And and Everything are programs like any
+  // a holon. Within a brick, And and Everything are functions like any
   // other.
   const unoffered = new Set(["everything", "and"]);
-  const brick = (program: Called): Found => {
-    const says = String(program.title);
-    if (program.takes.length === 0) return offered(call(program), says, "a set of its own");
-    return { label: says, meta: `takes ${program.takes.join(", ")}`, step: () => take(program) };
+  const brick = (fn: Called): Found => {
+    const says = String(fn.title);
+    if (fn.takes.length === 0) return offered(call(fn), says, "a set of its own");
+    return { label: says, meta: `takes ${fn.takes.join(", ")}`, step: () => take(fn) };
   };
   const bricks = (): Found[] => {
     const within = frames.length > 0;
-    const own = [...programs.values()].filter(
+    const own = [...functions.values()].filter(
       ({ native }) => !native || (native !== "group" && (within || !unoffered.has(native))),
     );
     return [
@@ -311,7 +310,7 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
   };
 
   // What can be chosen for what is being built, as what is typed narrows
-  // it: by the kind of argument the program takes next.
+  // it: by the kind of argument the function takes next.
   const choices = async (text: string): Promise<Found[]> => {
     const frame = frames.at(-1)!;
     const kind = needs();
@@ -338,16 +337,16 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     // A set: what is in view, for a type or a parent; else the holons whose
     // title says what is typed; and every brick, to build it of.
     const values =
-      frame.program.native === "type"
+      frame.fn.native === "type"
         ? await facet("type", text)
-        : frame.program.native === "children"
+        : frame.fn.native === "children"
           ? await facet("parent", text)
           : await Promise.all(
               (await holonsSaying(text)).map(async (holon) =>
                 offered({ $ref: holon.id }, String(holon.body.title ?? holon.id), await kinds(holon)),
               ),
             );
-    const enough = frame.program.takes.at(-1) === "sets" && frame.given.length >= frame.program.takes.length;
+    const enough = frame.fn.takes.at(-1) === "sets" && frame.given.length >= frame.fn.takes.length;
     // The bricks the words name come first, so a brick is built rather
     // than its own holon chosen.
     const named = bricks()
@@ -358,7 +357,7 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     const done = enough ? [settledRow()] : [];
     return text.trim() ? [...named, ...values, ...done] : [...done, ...values, ...named];
   };
-  // Enough sets given: the program as it stands.
+  // Enough sets given: the function as it stands.
   const settledRow = (): Found => {
     const { frames: next, part } = settled(undefined);
     return part
@@ -366,10 +365,10 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
       : { label: "Done", meta: "with the sets given", step: () => ((frames = next), again()) };
   };
 
-  // What a part changed starts from: a program of any number of sets, the
+  // What a part changed starts from: a function of any number of sets, the
   // sets it is given; any other, nothing.
-  const sets = (program: Called, part: Expression): Argument[] =>
-    program.takes.at(-1) === "sets" && "call" in part ? [...(part.with ?? [])] : [];
+  const sets = (fn: Called, part: Expression): Argument[] =>
+    fn.takes.at(-1) === "sets" && "call" in part ? [...(part.with ?? [])] : [];
 
   // Where one stands: each part a chip, its field and value, pressed to
   // change it or let go; a holon, by its types, each a way to its kind, and
@@ -384,13 +383,13 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     ? [
         ...(await Promise.all(
           standing.parts.map(async (part, i) => {
-            const { field, value } = await partSaid(programs, part, titled);
-            const program = "call" in part ? programs.get(part.call.$ref) : undefined;
+            const { field, value } = await partSaid(functions, part, titled);
+            const fn = "call" in part ? functions.get(part.call.$ref) : undefined;
             return chip(
               field,
               value,
               letGo(toward({ ...standing, parts: standing.parts.filter((_, j) => j !== i) })),
-              changeBy(program?.takes.length ? () => take(program, sets(program, part), i) : undefined),
+              changeBy(fn?.takes.length ? () => take(fn, sets(fn, part), i) : undefined),
             );
           }),
         )),
@@ -424,7 +423,7 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     // A favorite no longer in the field is passed by.
     for (const id of favorites) {
       const favorite = await space.holon(id);
-      // A program kept, taking nothing, is opened in the search as what it
+      // A function kept, taking nothing, is opened in the search as what it
       // gives, so its parts can be seen and changed; any other favorite is
       // gone to.
       const gives = favorite?.body.gives as Expression | undefined;
@@ -482,8 +481,8 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     if (given.gathers)
       found.push({
         label: "Keep on the favorites",
-        meta: "as a program of one's own",
-        lead: { keep: given.gathers, title: await titleOf(programs, given.gathers, titled) },
+        meta: "as a function of one's own",
+        lead: { keep: given.gathers, title: await titleOf(functions, given.gathers, titled) },
       });
     else if (one) {
       const placed = favorites.includes(one.id);
@@ -527,11 +526,11 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
   // what near they name; and, always, the words themselves as Text.
   const search = async (text: string): Promise<Found[]> => {
     const said = text.trim();
-    const values = async (axis: "type" | "parent", program: Called) =>
-      (await facet(axis, said, [{ program, given: [] }]))
+    const values = async (axis: "type" | "parent", fn: Called) =>
+      (await facet(axis, said, [{ fn, given: [] }]))
         .filter(({ lead }) => lead)
         .slice(0, 3)
-        .map((row) => ({ ...row, label: `${program.title}: ${row.label}` }));
+        .map((row) => ({ ...row, label: `${fn.title}: ${row.label}` }));
     const types = await values("type", is("type"));
     const parents = await values("parent", is("children"));
     // The holons whose title says the words, each a place to go: those it
@@ -602,16 +601,16 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     axis: "an axis",
   };
   const said = () => {
-    pending.textContent = frames.map(({ program }) => program.title).join(" ▸ ");
+    pending.textContent = frames.map(({ fn }) => fn.title).join(" ▸ ");
     pending.hidden = !pending.textContent;
     const frame = frames.at(-1);
     const kind = needs();
     input.placeholder = !frame
       ? ""
       : kind === "set"
-        ? frame.program.native === "type"
+        ? frame.fn.native === "type"
           ? "a type"
-          : frame.program.native === "children"
+          : frame.fn.native === "children"
             ? "a parent"
             : "a title"
         : (asks[kind!] ?? "");
@@ -669,15 +668,15 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
   };
   const again = () => void (asking = ask().catch((error: unknown) => console.error(error)));
 
-  // A program taken, to be given what it takes, maybe given some already,
+  // A function taken, to be given what it takes, maybe given some already,
   // in the place of the part it changes, if it changes one.
-  function take(program: Called, given: Argument[] = [], change?: number) {
+  function take(fn: Called, given: Argument[] = [], change?: number) {
     input.value = "";
     if (change !== undefined) {
       frames = [];
       changing = change;
     }
-    frames = [...frames, { program, given }];
+    frames = [...frames, { fn, given }];
     said();
     again();
     input.focus();
@@ -688,7 +687,7 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     changing = undefined;
     take(is("group"), [base()]);
   }
-  // Letting go of the program taken last, and of the change with the last.
+  // Letting go of the function taken last, and of the change with the last.
   const back = () => {
     frames = frames.slice(0, -1);
     if (!frames.length) changing = undefined;
