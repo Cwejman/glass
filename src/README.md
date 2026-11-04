@@ -15,7 +15,7 @@ The code, in `src/`:
 
 - `src/store/`: canonical JSON, names, ids and the objects; objects checked before they are trusted; the index tree; and the store over a backend, in memory, as files, or served over HTTP. The store's format is fixed by `vectors/`, made apart from this code.
 - `src/engine/`: the field as a value and what reads and judges it, the engine that keeps it, the references it finds in bodies, the types it judges by, pulling a served store, the home in the browser's storage, the protocol, and the worker it runs in.
-- `src/interface/`: the contract every component draws against, the interface's end of the protocol, the materials laid on the page, the drawing of holons into hosts, by code or by template, the root drawn and walked through its versions, and the chassis that starts it all.
+- `src/interface/`: the contract every component draws against, the interface's end of the protocol, the materials laid on the page, the drawing of holons into hosts, by code or by template, the root drawn where the page's address says, the syntax that says an expression as text and reads it back, and the chassis that starts it all.
 - `src/birth/`: reading the wiki's files under the rule, what the field's holons are made from what the files hold, and committing them into `site/store/`.
 
 Beside it:

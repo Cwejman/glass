@@ -2,7 +2,7 @@ import { canonical, type Json } from "../store/canonical.ts";
 import { newId, type Id } from "../store/id.ts";
 import type { Body } from "../store/objects.ts";
 import type { Expression, HolonRead } from "../engine/engine.ts";
-import { parse, print } from "../engine/syntax.ts";
+import { parse, print } from "./syntax.ts";
 import type { Kind, Made } from "./component.ts";
 import type { Connection } from "./connection.ts";
 import { drawing } from "./drawing.ts";

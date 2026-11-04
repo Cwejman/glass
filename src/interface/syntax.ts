@@ -1,5 +1,5 @@
 import { isId, type Id } from "../store/id.ts";
-import type { Argument, Expression } from "./expression.ts";
+import type { Argument, Expression } from "../engine/expression.ts";
 
 // An expression said as text, and the text read back: a pure pair of
 // functions, so an expression can stand where only text does, as in an
