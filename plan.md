@@ -96,7 +96,7 @@ These two, how a component is found and what kind a slot is, are decisions whose
 
 - **The material.** How things look is held in the field as a holon of its own, a style sheet of named colours, type and spacing that every component draws with, so the chassis holds no style. It was built on 2026-11-03, named from the author's word for what one builds in; whether this decoupling serves, and whether the word should mean that or something wider, he does not know yet.
 
-- **How a type's contract is written**, and how the engine checks a body against it at commit; that a holon's types are stored as its instance, and that each field is said in prose beside its shape, is settled.
+- **How a type's contract is written**, and how the engine checks a body against it at commit; that a holon's types are stored as its instance, and that each field is said in prose beside its shape, is settled; that the fields stand beside the identity, out of the body, the author's of 2026-11-05, and that a holon is a type by its fields alone, and whether they are still to be called fields, proposed and asked the same day, as [the store](architecture/store.md#24-a-version-is-one-holon-as-it-stood) tells.
 
 - **Provenance.** A published commit says nothing of the run that made it, so only the runner's home knows; whether published history should say how it was made.
 
@@ -106,11 +106,11 @@ These two, how a component is found and what kind a slot is, are decisions whose
 
 - **How a read is asked.** Glass reads by identity and by expressions of its functions; whether the engine plans an expression as one request, as OpenLight's does, is open.
 
-- **Prose as typed parts**, as [knowledge](knowledge.md#2-prose-stays-prose-for-now) leaves it.
+- **Prose made native**, as [knowledge](knowledge.md#2-prose-made-native) proposes, and the interior of a holon it stands on, as [the relations](architecture/relations.md#7-within-a-holon) propose.
 
 - **Merging**, when two lines of commits meet, a question for peers.
 
-- **The wholes of the field**, left open by the author on 2026-11-04 and gathered in [the relations](architecture/relations.md#9-what-is-open): what makes a whole a dimension, how briefs hold their parts and prose made native, a single owner, whether a mount holds what it offers, how a bare name is found.
+- **The wholes of the field**, left open by the author on 2026-11-04 and gathered in [the relations](architecture/relations.md#10-what-is-open): how far a dimension's mark reaches, a single owner, whether a mount holds what it offers, how a bare name is found.
 
 - **How a commit says which wholes it touched**, and which wholes keep an index of their own, as [the store](architecture/store.md#221-a-commit-across-the-fields-cuts) leaves it.
 

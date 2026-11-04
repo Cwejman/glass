@@ -74,7 +74,7 @@ A name is unique within its store and resolves to an identity, so references nev
 
 *The store as the namespace the author's, 2026-11-02; names held in the index the session's, 2026-11-03.*
 
-This is how it is built, and it is to change: a holon carries its own name, unique among what each whole holding it holds, and an address is a route of names through wholes, as [the relations](relations.md#6-a-holon-is-named-by-itself) tell; the store's names are then its root's, the first whole an address starts from.
+This is how it is built, and it is to change: a holon carries its own name, in its version beside its identity, unique among what each whole holding it holds, and an address is a route of names through wholes, as [the relations](relations.md#6-a-holon-is-named-by-itself) tell; the store's names are then its root's, the first whole an address starts from.
 
 *The author's, 2026-11-04; not yet built.*
 
@@ -91,6 +91,18 @@ A version holds what the store needs and the holon's body: the holon's id, the v
 Every object says what kind it is, so any one of them can be read alone, by a person browsing the files or a program checking them, without knowing how it was reached.
 
 *The author's, 2026-11-02: a holon is what the storage needs and then its body, and title and prose go into the body. Keeping `kind` the session's.*
+
+A version is to hold two more of what the storage needs, out of the body: the holon's name, and, if it is a type, its fields, what its instances hold, each with its prose and the shape the engine checks. The body then holds only what the holon holds itself. That a holon is then a type by having fields alone, an instance of nothing to be one, is proposed. Not yet built: [the vectors](#7-laid-out-as-files), the store and the engine change with it, and `either`, a union, is a shape the engine does not yet know.
+
+```json
+{ "kind": "version", "id": "01JB…paragraph", "name": "paragraph", "prev": "sha256-…",
+  "instance": [],
+  "fields": { "text": { "says": "What it says: words, and the links and terms among them.",
+                        "shape": { "either": [ "string", { "list": { "either": [ "string", { "$ref": "01JB…link" }, { "$ref": "01JB…term" } ] } } ] } } },
+  "body": { "title": "Paragraph", "says": "One point of prose, read in its place." } }
+```
+
+*The author's, 2026-11-05: name first class; fields goes out of the body, for whether you are a type by being an instance of Type or by having fields was double. A type by its fields, and Type let go, the session's answer, which the author has not yet ratified, nor whether the word stays fields; glass's engine already finds a type by its fields, though the birth still makes every type an instance of the type of types.*
 
 ## 3. A change adds and never rewrites
 

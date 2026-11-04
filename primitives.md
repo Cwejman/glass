@@ -13,9 +13,9 @@ Data, types, programs, AI and interfaces are one field of whole pieces, and ever
 
 A holon is a small piece that is whole in itself, and part of the field and of any whole that holds it. A note is a holon, and so is a program, a type, a component and a mount: the same kind of piece throughout.
 
-A holon is its identity, what it is an instance of, and its body: what it holds. The identity is given when it is born and never changes; every state it has had is kept as a version, each pointing back at the one before, so how it came to be stays readable.
+A holon is its identity, what it is an instance of, and its body: what it holds. Beside them it may carry a name, by which it is addressed. The identity is given when it is born and never changes; every state it has had is kept as a version, each pointing back at the one before, so how it came to be stays readable.
 
-*Whole pieces the author's, from the grant; part of the field his, 2026-11-02: everything is part of the field; that holons have ids and history his, 2026-11-01 ("holons have to have ids I think and have to have commits"); the shape of versions the session's, laid out in [the store](architecture/store.md).*
+*The name beside the identity the author's, 2026-11-05, not yet built. Whole pieces the author's, from the grant; part of the field his, 2026-11-02: everything is part of the field; that holons have ids and history his, 2026-11-01 ("holons have to have ids I think and have to have commits"); the shape of versions the session's, laid out in [the store](architecture/store.md).*
 
 ## 2. Type
 
@@ -26,6 +26,14 @@ A type is a schema in the field: the structure a holon's data has. Data is by it
 Each field a type declares is said in prose as well as in structure: what the key means, beside the shape the engine checks. A field is where holons connect, so the fields are the field's ontological connectors, and holons joined at them form a larger ontology, readable by a person, a program or a language model alike.
 
 *The author's, 2026-11-02: the fields of a holon are contact points for prose, so that we can build ontologically upon them; where each holon connects are the ontological connectors, forming larger ontology. That the prose stands beside the checked shape, and models read it, the session's proposal of the same day, which he answered yes.*
+
+A type's fields are to stand beside its identity, out of its body, since they say what other holons hold and not what the type itself holds.
+
+*The author's, 2026-11-05: fields goes out of the body. Not yet built.*
+
+A holon would then be a type by declaring fields alone, with no need to be an instance of a type of types.
+
+*The author's question, 2026-11-05: whether a holon is a type by being an instance of Type or by having fields was double. That it is by its fields the session's answer, not yet ratified, and as [the store](architecture/store.md#24-a-version-is-one-holon-as-it-stood) tells, not yet built.*
 
 ## 3. Store
 

@@ -9,6 +9,18 @@ How glass came to be what it is, told over its commits, newest first, each day b
 
 *Begun 2026-11-02, on the author's word that the effort be noted in the log as the work goes. Each story reasoned by the session that did the work, from the commits and the author's words.*
 
+## Dimensions, prose made native, and what a type is
+
+Asked for the right open-ended way to dimensions, the session first made a dimension a holon of its own with a gathering expression, and the author found it a take without reasoning: a brief that is a dimension would need a twin. Reasoned again, being a dimension is what a brief's own body says, with a look, marking all it holds, and the author saw it is knowledge schema, the brief only the pilot's proposal, and nothing the substrate must know.
+
+Then how Markdown is replaced. Prose became a list of typed elements, its three links three types, its parts read from the flow and its confidence line a paragraph of its own type, with Markdown only its text form.
+
+The author asked what is lost if this is all one body, whether words should be addressable, and whether reserved names are what remain; the answer was a holon's interior, elements shaped as holons at a smaller scale, each with a local id and a type of its own, pointed into from outside.
+
+Reading a piece of the store brief written that way, he took a holon's name out of its body to stand beside its identity, and a type's fields with it, and found it double that a holon is a type both by being an instance of Type and by having fields. None of it is built. Decided: dimension as brief schema, the name and the fields out of the body, nested lists, the confidence line as prose. Proposed and waiting on his word: the interior, a type by its fields alone, Markdown as the text form, and whether the word is fields.
+
+*Reasoned on 2026-11-05 by the session, from the author's words of [2026-11-04](said/2026-11-04.md#21-the-right-open-ended-way-to-dimensions) and [2026-11-05](said/2026-11-05.md).*
+
 ## The search, the address, and the wholes of the field
 
 The author asked for the search to build expressions from bricks in place, in plain words and without presets, and for nothing to be born as one moves. Expressions became calls of functions given what they take, each function a holon, glass's own run natively and one's own an expression over its arguments; the search offers every function as a brick, chips said as a field and its value, and the menu the same search laid where a press landed. The field opens on its roots, what nothing references, grouped by type, a collection of one shown as its holon. The author then set functions apart from programs: pure, evaluated where drawn, their results never kept, while programs stay first class for what is run.
