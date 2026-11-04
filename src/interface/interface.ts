@@ -114,7 +114,7 @@ export async function mount(engine: Connection, root: HTMLElement) {
   const readable = (text: string) =>
     encodeURIComponent(text)
       .replace(/%20/g, "+")
-      .replace(/%(28|29|2C|40|24|27|3A)/g, (escaped) => decodeURIComponent(escaped));
+      .replace(/%(28|29|2C|40|24|3A)/g, (escaped) => decodeURIComponent(escaped));
   const addressOf = async (at: Place) =>
     `${location.pathname}?look=${readable(await said(at))}${at.component ? `&with=${at.component.$ref}` : ""}`;
 

@@ -4,14 +4,17 @@ import type { Argument, Expression } from "./expression.ts";
 // An expression said as text, and the text read back: a pure pair of
 // functions, so an expression can stand where only text does, as in an
 // address, and the way it is written can change without anything that
-// holds expressions changing. A call is said by the title of the function
-// it calls, its arguments in parentheses, none needing none; a holon by its
-// id after @; an argument within a function of one's own by its place
-// after $; words in single quotes, which an address carries as they are,
-// though double quotes are read too.
+// holds expressions changing. It is made to stand in an address as it is,
+// using only what an address carries without escaping it, a space being
+// carried as +. A call is said by the title of the function it calls, its
+// arguments in parentheses after it, none needing none, set apart by
+// commas; a holon by its id after @; an argument within a function of
+// one's own by its place after $; words after :, up to the comma or
+// parenthesis that ends them, a backslash keeping one within them.
 //
-//   Group by(Not(Children of(Everything)), 'type')
+//   Group by(Not(Children of(Everything)),:type)
 //   Type(@01M6GXF94Z4ZJF0AQQ4JVRTHHQ)
+//   Text(:what is said)
 //
 // A function is found by its title among those given; a title two
 // functions share is said, and read, by the id instead, @id(…).
@@ -21,16 +24,16 @@ export function print(expression: Expression, titles: ReadonlyMap<Id, string>): 
     [...titles.values()].filter((title, i, all) => all.indexOf(title) !== all.lastIndexOf(title)),
   );
   const said = (value: Argument): string => {
-    if (typeof value === "string") return `'${value.replace(/\\/g, "\\\\").replace(/'/g, "\\'")}'`;
+    if (typeof value === "string") return `:${value.replace(/[\\,()]/g, (kept) => `\\${kept}`)}`;
     if ("$ref" in value) return `@${value.$ref}`;
     if ("arg" in value) return `$${value.arg}`;
     const title = titles.get(value.call.$ref);
-    const byTitle = title && !shared.has(title) && title === title.trim() && !/[(),"'@$]/.test(title);
+    const byTitle = title && !shared.has(title) && title === title.trim() && !/[(),@$:\\]/.test(title);
     const given = value.with ?? [];
     // A call by id is always said with its parentheses, so it is never read
     // back as the holon of that id.
-    if (!byTitle) return `@${value.call.$ref}(${given.map(said).join(", ")})`;
-    return given.length ? `${title}(${given.map(said).join(", ")})` : title!;
+    if (!byTitle) return `@${value.call.$ref}(${given.map(said).join(",")})`;
+    return given.length ? `${title}(${given.map(said).join(",")})` : title!;
   };
   return said(expression);
 }
@@ -45,20 +48,18 @@ export function parse(text: string, functions: ReadonlyMap<string, Id[]>): Expre
   };
   const take = (char: string) => (space(), text[at] === char ? (at++, true) : false);
 
-  // Words in quotes, single or double, a backslash keeping the quote or
-  // backslash after it as it is.
+  // Words after a colon, up to the comma or parenthesis that ends them, a
+  // backslash keeping the one after it as it is.
   const words = (): string => {
-    const quote = text[at++];
+    at++;
     let said = "";
-    while (at < text.length && text[at] !== quote) {
+    while (at < text.length && !/[,()]/.test(text[at]!)) {
       if (text[at] === "\\") at++;
       said += text[at++] ?? "";
     }
-    if (text[at] !== quote) fail("words begun with a quote are not ended");
-    at++;
     return said;
   };
-  const argument = (): Argument => (space(), text[at] === '"' || text[at] === "'" ? words() : expression());
+  const argument = (): Argument => (space(), text[at] === ":" ? words() : expression());
 
   // A call's arguments, if it is given any.
   const given = (): Argument[] => {
@@ -91,7 +92,7 @@ export function parse(text: string, functions: ReadonlyMap<string, Id[]>): Expre
       return { arg: Number(digits) };
     }
     const start = at;
-    while (at < text.length && !/[(),"'@$]/.test(text[at]!)) at++;
+    while (at < text.length && !/[(),@$:]/.test(text[at]!)) at++;
     const title = text.slice(start, at).trim();
     if (!title) fail("an expression is a function, a holon or an argument");
     const found = functions.get(title) ?? [];
