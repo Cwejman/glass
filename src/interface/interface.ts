@@ -109,13 +109,14 @@ export async function mount(engine: Connection, root: HTMLElement) {
     if (argument.length === 1 || !or) return argument.map(({ $ref }) => `@${$ref}`)[0] ?? "";
     return print({ call: { $ref: or }, with: argument }, titles);
   };
-  const addressOf = async (at: Place) => {
-    const url = new URL(location.href);
-    url.searchParams.set("look", await said(at));
-    if (at.component) url.searchParams.set("with", at.component.$ref);
-    else url.searchParams.delete("with");
-    return url.href;
-  };
+  // An address escapes only what it must, so what it says stays readable:
+  // a space as +, and what would end or mislead the address.
+  const readable = (text: string) =>
+    encodeURIComponent(text)
+      .replace(/%20/g, "+")
+      .replace(/%(28|29|2C|40|24|27|3A)/g, (escaped) => decodeURIComponent(escaped));
+  const addressOf = async (at: Place) =>
+    `${location.pathname}?look=${readable(await said(at))}${at.component ? `&with=${at.component.$ref}` : ""}`;
 
   // A visit added to the reader's history in the home, born with the first.
   const visit = async (at: Place) => {

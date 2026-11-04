@@ -7,9 +7,10 @@ import type { Argument, Expression } from "./expression.ts";
 // holds expressions changing. A call is said by the title of the function
 // it calls, its arguments in parentheses, none needing none; a holon by its
 // id after @; an argument within a function of one's own by its place
-// after $; words in quotes.
+// after $; words in single quotes, which an address carries as they are,
+// though double quotes are read too.
 //
-//   Group by(Not(Children of(Everything)), "type")
+//   Group by(Not(Children of(Everything)), 'type')
 //   Type(@01M6GXF94Z4ZJF0AQQ4JVRTHHQ)
 //
 // A function is found by its title among those given; a title two
@@ -20,11 +21,11 @@ export function print(expression: Expression, titles: ReadonlyMap<Id, string>): 
     [...titles.values()].filter((title, i, all) => all.indexOf(title) !== all.lastIndexOf(title)),
   );
   const said = (value: Argument): string => {
-    if (typeof value === "string") return JSON.stringify(value);
+    if (typeof value === "string") return `'${value.replace(/\\/g, "\\\\").replace(/'/g, "\\'")}'`;
     if ("$ref" in value) return `@${value.$ref}`;
     if ("arg" in value) return `$${value.arg}`;
     const title = titles.get(value.call.$ref);
-    const byTitle = title && !shared.has(title) && title === title.trim() && !/[(),"@$]/.test(title);
+    const byTitle = title && !shared.has(title) && title === title.trim() && !/[(),"'@$]/.test(title);
     const given = value.with ?? [];
     // A call by id is always said with its parentheses, so it is never read
     // back as the holon of that id.
@@ -44,15 +45,20 @@ export function parse(text: string, functions: ReadonlyMap<string, Id[]>): Expre
   };
   const take = (char: string) => (space(), text[at] === char ? (at++, true) : false);
 
+  // Words in quotes, single or double, a backslash keeping the quote or
+  // backslash after it as it is.
   const words = (): string => {
-    const start = at;
+    const quote = text[at++];
+    let said = "";
+    while (at < text.length && text[at] !== quote) {
+      if (text[at] === "\\") at++;
+      said += text[at++] ?? "";
+    }
+    if (text[at] !== quote) fail("words begun with a quote are not ended");
     at++;
-    while (at < text.length && text[at] !== '"') at += text[at] === "\\" ? 2 : 1;
-    if (text[at] !== '"') fail("words begun with a quote are not ended");
-    at++;
-    return JSON.parse(text.slice(start, at)) as string;
+    return said;
   };
-  const argument = (): Argument => (space(), text[at] === '"' ? words() : expression());
+  const argument = (): Argument => (space(), text[at] === '"' || text[at] === "'" ? words() : expression());
 
   // A call's arguments, if it is given any.
   const given = (): Argument[] => {
@@ -85,7 +91,7 @@ export function parse(text: string, functions: ReadonlyMap<string, Id[]>): Expre
       return { arg: Number(digits) };
     }
     const start = at;
-    while (at < text.length && !/[(),"@$]/.test(text[at]!)) at++;
+    while (at < text.length && !/[(),"'@$]/.test(text[at]!)) at++;
     const title = text.slice(start, at).trim();
     if (!title) fail("an expression is a function, a holon or an argument");
     const found = functions.get(title) ?? [];

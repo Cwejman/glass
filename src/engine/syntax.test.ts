@@ -27,7 +27,7 @@ const roots = {
 
 test("an expression is said by its functions' titles, and read back as it was", () => {
   const said = print(roots, titles);
-  expect(said).toBe('Group by(Not(Children of(Everything)), "type")');
+  expect(said).toBe("Group by(Not(Children of(Everything)), 'type')");
   expect(parse(said, functions)).toEqual(roots);
 });
 
@@ -36,10 +36,15 @@ test("a holon is said by its id, an argument by its place, words in quotes as wr
   expect(print(typed, titles)).toBe(`Type(@${brief})`);
   expect(parse(`Type( @${brief} )`, functions)).toEqual(typed);
   expect(parse("Type($0)", functions)).toEqual({ call: { $ref: type }, with: [{ arg: 0 }] });
-  expect(parse(`Group by(Everything, "a \\"b\\"")`, functions)).toEqual({
+  expect(parse(`Group by(Everything, 'a \\'b\\' "c"')`, functions)).toEqual({
     call: { $ref: group },
-    with: [{ call: { $ref: everything } }, 'a "b"'],
+    with: [{ call: { $ref: everything } }, `a 'b' "c"`],
   });
+});
+
+test("words with quotes and backslashes in them are said and read back as they were", () => {
+  const worded = { call: { $ref: group }, with: [{ call: { $ref: everything } }, `it's a \\ "word"`] };
+  expect(parse(print(worded, titles), functions)).toEqual(worded);
 });
 
 test("a function whose title is shared, or unknown, is said and read by its id", () => {
