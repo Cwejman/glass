@@ -42,6 +42,14 @@ A commit does not say who made it. A change is made by a program's run, and the 
 
 *The author's, 2026-11-02: a commit is added to the program run that made it, so it is already connected, and there may be no need for a by. The shape and the direction of the link reasoned, the session's.*
 
+#### 2.2.1 A commit across the field's cuts
+
+A store is one space, and it may hold many wholes, any of which may one day be taken away as a store of its own; nobody knows in advance where the field will be cut. So a commit is to say which wholes it touched, and a whole's history is read from the commits that touched it alone. A commit that also touched something beyond the whole goes with it whole: what it says of the rest is a few names with nothing behind them, which does no harm, since the holons point at what they are and the commit only says they were changed together. So a commit is never cut in two and a store never needs one writer for the sake of its history, which were OpenLight's answers when a commit was a row inside one store.
+
+How a commit says what it touched is not settled. Naming, for each whole it touched, that whole's commit before and its index after would let one whole's history be read without reading any other; which wholes keep an index of their own, every whole that holds, only those served as stores, or none but the store, with a whole's contents worked out when it is cut, waits until it is needed. Nothing here is built: a commit still names the one index of its store.
+
+*The author's, [late on 2026-11-03](../said/2026-11-03.md#25-what-consumes-from-everything): commits only exist in relation to what they affect; a whole taken away is shipped with the commits that affected it, and a commit that affected something else pointing to it is something different. And 2026-11-04: a commit is traceable, so you know which spaces it touches; if you ask for the commits of only one space there is really no problem, and none of the problems OpenLight talks about; OpenLight's one writer and broken commits were a compromise, because we didn't think far enough, not to be taken for granted. The per-whole index the session's proposal, left open by him: I've never worked with indexes that much.*
+
 ### 2.3 The index is the whole field at one commit
 
 An index maps every holon's id to the version it has at that commit, and every name given in the store to the holon it names. It holds no content itself, only which state of each holon is current, so one index is the whole field at one moment.
@@ -65,6 +73,10 @@ An id is a ULID: ten characters of the moment the holon was born and sixteen of 
 A name is unique within its store and resolves to an identity, so references never break when a name changes. The store says only what its names are; `entry`, the mount a client boots into, is the first.
 
 *The store as the namespace the author's, 2026-11-02; names held in the index the session's, 2026-11-03.*
+
+This is how it is built, and it is to change: a holon carries its own name, unique among what each whole holding it holds, and an address is a route of names through wholes, as [the relations](relations.md#6-a-holon-is-named-by-itself) tell; the store's names are then its root's, the first whole an address starts from.
+
+*The author's, 2026-11-04; not yet built.*
 
 ### 2.4 A version is one holon as it stood
 
@@ -134,11 +146,17 @@ The format is fixed by test vectors anyone can run, in any language: canonical t
 
 ## 8. Relations
 
-A version stores nothing about other holons beside its body: every relation is a reference inside a body, and part and whole is read from the whole's. How that came to be, and what was let go, is told in the relations.
+A version stores nothing about other holons beside its body: every relation is a reference inside a body, holding or only pointing, and part and whole is read from the whole's. The store stays flat: a holon held by two wholes is one holon with one line of versions, never a copy, and taking either whole away takes it. How that came to be, and what was let go, is told in the relations.
 
 [How holons relate](relations.md)
 
-*The author's decisions, 2026-11-02, after reasoning through OpenLight's relations and six simulated fields.*
+*The author's decisions, 2026-11-02, after reasoning through OpenLight's relations and six simulated fields; holding and many wholes his, 2026-11-04: maybe the store should be flat anyway, assembled only by the primitives we have.*
+
+### 8.1 Taking a whole away
+
+Any whole can be taken away as a store of its own: what it holds, through every reference that holds, with every version they had and the commits that touched them. What it stands on, its types and what it points at, may come with it, each still with its id and versions, so the day it meets the store they came from again, they plug back in. Relying on other foundations is no fault; it is how anything is built. What it holds is read through its types, so a whole taken without them is not known to hold; how much of what it stands on must come with it is open.
+
+*The author's, 2026-11-04: you rely upon other foundations to build yours, that's completely fine; they still have their id, their version, and would plug back in; that one can't take it completely is another question. Holding read through types the session's. How the commits that touched a whole are found is [above](#221-a-commit-across-the-fields-cuts).*
 
 ## 9. A format of its own
 
@@ -147,3 +165,11 @@ Glass's object model is its own, with only the smallest standards beneath it; th
 [The formats considered](formats.md)
 
 *Proposed by the session and agreed by the author, 2026-11-01.*
+
+## 10. Every source is an integration
+
+Glass's store is one source the engine attaches, and every source is an integration: a truth of its own, in a format of its own, reached through programs that present it to the field as holons. Glass's store is the native one, its format the one the engine speaks without translating, so its holons need none; files on a disk, files over HTTP and a peer streaming live are only ways of reaching it. A git repository, the browser's history or a video's high-fidelity data are integrations with formats better suited to them, never copied into glass's store, each wherever the engine runs supplying it.
+
+What an integration allows is its own to say: to be only read, or written through its programs, and how. A holon pointing into one may be pinned, as a reference to a file is pinned to the git commit it was read at.
+
+*The author's, 2026-11-04: why can't the stores we are talking about be the same first-class citizen as the other integrations; it's up to the integration if you can manipulate the holons or not; a git repository is its own store, its own source of truth, you never include it into your own; is an integration just a program, his question carried from OpenLight. Format, transport and integration kept apart the session's. How git in particular is integrated, its files edited from the field, their content shown or only addressed, its commits meeting the field's, is open; so is what an integration's programs owe the engine, waiting for programs to run.*

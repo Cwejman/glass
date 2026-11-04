@@ -5,28 +5,26 @@ kind: brief
 
 # The URL
 
-With glass the domain delivers a client and its default store, and nothing more, so a URL says how to start the client: which store, which commit, what to mount. On the bare domain it carries nothing, and the client starts with its defaults.
+With glass the domain delivers a client and its default store, and nothing more, so a URL says how to start the client, which store, which commit, what to mount, and where the reader looks. On the bare domain it carries nothing, and the client starts with its defaults.
 
 *The author's, 2026-11-01: today the domain is everything; now the domain just hosts the client, and on the bare domain you see no `at` and no mount, because they are default loaded for you.*
 
 ## 1. A URL is the chassis's flags
 
-What a URL may carry is what a chassis can be started with: a store to attach when it is not the default, a commit to pin a read to, and a mount to boot into. Opened on the bare domain, the client takes the store it ships with and the entry that store holds, and the URL stays empty.
+What a URL may carry is what a chassis can be started with: a store to attach when it is not the default, a commit to pin a read to, and a mount to boot into; and beside them where one looks, as [beneath](#2-the-address-is-where-one-looks). Opened on the bare domain, the client takes the store it ships with and the entry that store holds, and the URL stays empty.
 
 *The bare domain the author's, 2026-11-01; the flags carried from OpenLight's chassis: `--at`, `--entry`, `--mount`.*
 
-## 2. A mount reads what it reads
+## 2. The address is where one looks
 
-The root mount says what it gives, so what is on screen follows from it, and the reader is not at an address within a store.
+Where the reader looks is the URL's to say: the expression the root is offered, said as text, and the component it is looked at with. So a URL is shared, bookmarked or reloaded as it is, and lands where it says, and back and forward are only the address changing; how it is said, and what is kept of it in the field, [the interface](interface.md#8-moving-is-a-new-address) tells. A reader laid over another place, not the root, needs no address.
 
-Acting on what is drawn may change what the root gives or what draws it, and that is a new version of the root, kept and walkable. Whether glass will want anything like pages, with a whole other way of drawing behind a press, is left until there is a site to want it; the author knows of nothing like it in OpenLight.
+Whether glass will want anything like pages, with a whole other way of drawing behind a press, is left until there is a site to want it.
 
-*The author's, 2026-11-01: your layout is what it is, and it reads what it reads; on 2026-10-31 he had thought of one central address for where you are, and on 2026-11-01 found a holon's address in the URL strange. The root's versions the session's, from [the home](home.md#6-the-history-stack-is-the-roots-versions).*
+*On 2026-11-01 the author found a holon's address in the URL strange, and the root's versions were to be the history; [late on 2026-11-03](../said/2026-11-03.md#25-what-consumes-from-everything) he took the URL as the source of truth, as it still has to be real history.*
 
-## 3. Sharing is an act
+## 3. What a link carries
 
-Since what a reader does is not mirrored into the URL, sharing is something they do: a program takes a mount they point at and writes the URL that starts a client on that mount, over that store, pinned if they wish. Whoever opens it opens it in their own client and sees what the link pinned.
+A link carries where one looks and nothing of the reader's own: their favorites and settings stay in their home, so whoever opens it sees the same place drawn by their own root. Pinning a link to a commit, so it shows what was there however far the store has moved, is not yet written.
 
-The author named the cost: with tabs or many pages inside the application, their state is not in the URL, so sharing a page does not quite work. What a site on glass will want to share is not known until there is a site.
-
-*The sharing program the session's proposal, 2026-11-01; the cost the author's, the same day.*
+*The session's, 2026-11-04, from what the address became; the first thought, a program writing a URL as an act of sharing, the session's of 2026-11-01, is no longer needed for where one looks.*

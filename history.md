@@ -9,6 +9,18 @@ How glass came to be what it is, told over its commits, newest first, each day b
 
 *Begun 2026-11-02, on the author's word that the effort be noted in the log as the work goes. Each story reasoned by the session that did the work, from the commits and the author's words.*
 
+## The search, the address, and the wholes of the field
+
+The author asked for the search to build expressions from bricks in place, in plain words and without presets, and for nothing to be born as one moves. Expressions became calls of functions given what they take, each function a holon, glass's own run natively and one's own an expression over its arguments; the search offers every function as a brick, chips said as a field and its value, and the menu the same search laid where a press landed. The field opens on its roots, what nothing references, grouped by type, a collection of one shown as its holon. The author then set functions apart from programs: pure, evaluated where drawn, their results never kept, while programs stay first class for what is run.
+
+Next the address became the truth of where one looks: an expression said as text by a pure pair of functions, in a syntax made for a URL, words after a colon and a holon by the shortest end of its id, with back and forward only the address changing and a history in the home added to and never rewritten. The syntax was moved beside the interface, its one reader. Each piece was read afresh and mended.
+
+The address asked what a name is, and that opened the day's question: namespaces, dimensions and the store as one. After a compaction the author asked that the dialogue, glass's substrate, OpenLight and the rule all be read again, and that the session think for itself rather than borrow OpenLight's answers or the rule's. Settled with him, as a spec and not built: a reference holds or points, said by itself or fixed by a type; holding is a set or a list; a part stands whole in many wholes, a single owner left open on purpose; a holon carries its own name and an address is a route; types own nothing; a commit stands across the field's cuts and is never broken; every source is an integration, glass's store the native one. Left open: what makes a whole a dimension, how briefs hold their parts and prose made native, which wholes keep an index.
+
+[The search, the functions and the address](git:0b54403..4dd30c2)
+
+*Reasoned on 2026-11-04 by the session, from the commits and the author's words of [2026-11-03](said/2026-11-03.md#20-expressions-are-ontology) and [2026-11-04](said/2026-11-04.md).*
+
 ## The root as a mount
 
 The author saw that the root was still a custom component, and that nothing in glass could move: the primitives hold no state, take no press and go nowhere, so looking around had to be built on them. The session proposed a Reading holon, then actions as holons, then a layout whose mounts follow presses, and the author found each made up or convoluted, and asked that it look wide, at glass and at OpenLight, and say what is pure and what is not. It read OpenLight's view and components itself, after stopping an agent the author did not trust to carry it, and named what was convoluted, most of it its own: components that navigated, a location with four shapes, the field's own component, chrome wired into the interface, and a form of expression no one could read.

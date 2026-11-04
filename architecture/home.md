@@ -11,13 +11,15 @@ The engine in the client has a field of its own, its home, kept in the browser s
 
 ## 1. What the home holds
 
-The home is a store like any other, written by the engine and kept in the browser's own storage. It holds five things:
+The home is a store like any other, written by the engine and kept in the browser's own storage. It holds six things:
 
 - **What is attached**: each store, where it is fetched from, which ref, whether pinned to one commit, and whether it may be written.
 
 - **The entry**: the mount the client boots into, at first the one the attached store ships.
 
-- **The root**: the mount the reader looks through, as they have it now.
+- **The root**: the mount the reader looks through, holding what is theirs, the component it calls and what it offers.
+
+- **The history**: where the reader has looked, a visit added with each move.
 
 - **The runs**: every program the reader's engine has run.
 
@@ -63,11 +65,11 @@ Governing the home is done by programs, judged by the engine like any act: reset
 
 *The author's, 2026-11-01: there is no special chrome on top, it's all first-class native, as if Unix were built on programs and files.*
 
-## 6. The history stack is the root's versions
+## 6. The history is a holon of its own
 
-Every move is a new version of the root mount, and a holon keeps its versions, so the root already has a history. Going back and forward walks it, and the browser's own back and forward are one more way of walking it, translated by the interface. A reload restores the root as it was left.
+Where the reader looks is the page's address, so going back and forward is only the address changing, and a reload lands where the address says. What the reader has looked at is kept in the home as their history, a holon each move adds a visit to and nothing rewrites; the root mount holds only what is the reader's, the component it calls and what it offers, and no longer changes with every move.
 
-*Reasoned, the session's, 2026-11-01, answering the author's question of what a virtual history stack means; the arrangement's commits became the root's versions on 2026-11-03, as [the interface](interface.md#8-moving-is-a-new-address) tells.*
+*Reasoned, the session's, 2026-11-01, answering the author's question of what a virtual history stack means; the root's versions were the history from 2026-11-03 until the author found, the same night, that walking back by writing old versions again is not real history, since commits are a line you can't reverse, [said](../said/2026-11-03.md#25-what-consumes-from-everything). As [the interface](interface.md#8-moving-is-a-new-address) tells.*
 
 ## 7. When the shape of state changes
 

@@ -33,6 +33,14 @@ A store is where holons are kept and how they travel: every version of every hol
 
 *The store as a primitive the author's, 2026-11-01; its shape proposed by the session and agreed by the author, given whole in [the store](architecture/store.md).*
 
+A store is one space, and any whole within it can be taken away as a store of its own.
+
+*The author's, 2026-11-04, told in [the store](architecture/store.md#81-taking-a-whole-away).*
+
+A store is one source among the engine's integrations, the native one: git, the browser's history or a video's data are sources too, each with its own truth and format, reached through programs.
+
+*The author's, 2026-11-04, told in [the store](architecture/store.md#10-every-source-is-an-integration).*
+
 ## 4. Engine
 
 The engine holds the stores it attaches and is the only way into them. It reads them, carries out every change as a commit, and runs programs, and it judges every act against what the field declares, whoever asks. Nothing reaches a store but through an engine.
@@ -52,6 +60,10 @@ A program is a holon holding code that the engine runs. It declares the types it
 A program exists only through the engine: it is data until the engine runs it. How a run is carried out is the engine's, and still open.
 
 *The author's, 2026-11-01: the program only exists through the engine, and how it is executed and run is open. Runs kept as holons his, the same day ("it does use the field for runs, I would think"); where they are kept is [the home](architecture/home.md).*
+
+A function is not a program. It is pure: evaluated wherever it is used, as in what an interface draws, every time it is drawn, so evaluating it is no event and nothing it gives is kept. A program is run, and a run is an event with a record. Both are first class, and a program cannot be used where a function is.
+
+*The author's, 2026-11-03: functions are different from programs, and functions are what are used in the UI; we're not renaming program to function, they're still a first class thing; can you use a program in a UI, I don't think you can.*
 
 ## 7. Effect
 
