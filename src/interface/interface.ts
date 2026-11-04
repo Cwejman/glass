@@ -56,14 +56,18 @@ export async function mount(engine: Connection, root: HTMLElement) {
     const ids = type ? ((await engine.read({ instances: type })) as Id[]) : [];
     const titles = new Map<Id, string>();
     let or: Id | undefined;
+    let everything: Id | undefined;
     for (const id of ids) {
       const body = (await engine.holon(id))?.body;
       titles.set(id, String(body?.title ?? id));
       if (body?.native === "or") or ??= id;
+      if (body?.native === "everything") everything ??= id;
     }
     const byTitle = new Map<string, Id[]>();
     for (const [id, title] of titles) byTitle.set(title, [...(byTitle.get(title) ?? []), id]);
-    return { titles, byTitle, or };
+    // Every holon the field holds, so an id is said and read by its end.
+    const known = everything ? ((await engine.read({ gather: { call: { $ref: everything } } })) as Id[]) : [];
+    return { titles, byTitle, or, known };
   };
 
   // A place: what the root gives, an expression or holons, and the
@@ -80,8 +84,8 @@ export async function mount(engine: Connection, root: HTMLElement) {
     const looked = query.get("look");
     if (!looked) return undefined;
     try {
-      const { byTitle, or } = await functionsNow();
-      const expression = parse(looked, byTitle);
+      const { byTitle, or, known } = await functionsNow();
+      const expression = parse(looked, byTitle, known);
       const by = query.get("with");
       // Holons said one by one, alone or given together as either, are the
       // holons themselves, as a place of several is said.
@@ -104,10 +108,10 @@ export async function mount(engine: Connection, root: HTMLElement) {
   };
   // The text a place is said by, as an address carries it.
   const said = async ({ gathers, argument = [] }: Place) => {
-    const { titles, or } = await functionsNow();
-    if (gathers) return print(gathers, titles);
-    if (argument.length === 1 || !or) return argument.map(({ $ref }) => `@${$ref}`)[0] ?? "";
-    return print({ call: { $ref: or }, with: argument }, titles);
+    const { titles, or, known } = await functionsNow();
+    if (gathers) return print(gathers, titles, known);
+    if (argument.length === 1 || !or) return print(argument[0]!, titles, known);
+    return print({ call: { $ref: or }, with: argument }, titles, known);
   };
   // An address escapes only what it must, so what it says stays readable:
   // a space as +, and what would end or mislead the address.

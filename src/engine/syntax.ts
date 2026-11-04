@@ -17,28 +17,40 @@ import type { Argument, Expression } from "./expression.ts";
 //   Text(:what is said)
 //
 // A function is found by its title among those given; a title two
-// functions share is said, and read, by the id instead, @id(…).
+// functions share is said, and read, by the id instead, @id(…). An id is
+// said as short as the holons known let it be, by its last characters,
+// enough of them that no other id ends so, and read back by finding the
+// one id that ends so.
 
-export function print(expression: Expression, titles: ReadonlyMap<Id, string>): string {
+export function print(
+  expression: Expression,
+  titles: ReadonlyMap<Id, string>,
+  known: readonly Id[] = [],
+): string {
+  const short = shortest(known);
   const shared = new Set(
     [...titles.values()].filter((title, i, all) => all.indexOf(title) !== all.lastIndexOf(title)),
   );
   const said = (value: Argument): string => {
     if (typeof value === "string") return `:${value.replace(/[\\,()]/g, (kept) => `\\${kept}`)}`;
-    if ("$ref" in value) return `@${value.$ref}`;
+    if ("$ref" in value) return `@${short(value.$ref)}`;
     if ("arg" in value) return `$${value.arg}`;
     const title = titles.get(value.call.$ref);
     const byTitle = title && !shared.has(title) && title === title.trim() && !/[(),@$:\\]/.test(title);
     const given = value.with ?? [];
     // A call by id is always said with its parentheses, so it is never read
     // back as the holon of that id.
-    if (!byTitle) return `@${value.call.$ref}(${given.map(said).join(",")})`;
+    if (!byTitle) return `@${short(value.call.$ref)}(${given.map(said).join(",")})`;
     return given.length ? `${title}(${given.map(said).join(",")})` : title!;
   };
   return said(expression);
 }
 
-export function parse(text: string, functions: ReadonlyMap<string, Id[]>): Expression {
+export function parse(
+  text: string,
+  functions: ReadonlyMap<string, Id[]>,
+  known: readonly Id[] = [],
+): Expression {
   let at = 0;
   const fail = (what: string): never => {
     throw new Error(`${what}, at ${at + 1} of “${text}”`);
@@ -79,11 +91,13 @@ export function parse(text: string, functions: ReadonlyMap<string, Id[]>): Expre
   function expression(): Expression {
     space();
     if (take("@")) {
-      const id = text.slice(at, at + 26);
-      if (!isId(id)) fail("@ is followed by a holon's id");
-      at += 26;
+      const said = /^[0-9A-HJKMNP-TV-Z]{1,26}/.exec(text.slice(at))?.[0] ?? "";
+      at += said.length;
+      const ids = isId(said) ? [said] : said ? known.filter((id) => id.endsWith(said)) : [];
+      if (ids.length === 0) fail("@ is followed by a holon's id, or its last characters");
+      if (ids.length > 1) fail(`@${said} is the end of more than one id; say more of it`);
       space();
-      return text[at] === "(" ? called(id) : { $ref: id };
+      return text[at] === "(" ? called(ids[0]!) : { $ref: ids[0]! };
     }
     if (take("$")) {
       const digits = /^\d+/.exec(text.slice(at))?.[0];
@@ -105,4 +119,18 @@ export function parse(text: string, functions: ReadonlyMap<string, Id[]>): Expre
   space();
   if (at < text.length) fail("what follows the expression is not part of it");
   return read;
+}
+
+// The shortest end of each id that no other known id ends with, four
+// characters at the least; an id not among those known is said whole, for
+// nothing could read its end back.
+function shortest(known: readonly Id[]) {
+  return (id: Id) => {
+    if (!known.includes(id)) return id;
+    for (let length = 4; length < id.length; length++) {
+      const tail = id.slice(-length);
+      if (!known.some((other) => other !== id && other.endsWith(tail))) return tail;
+    }
+    return id;
+  };
 }

@@ -47,6 +47,17 @@ test("words with commas, parentheses and backslashes in them are said and read b
   expect(parse(print(worded, titles), functions)).toEqual(worded);
 });
 
+test("a holon is said by the shortest end of its id that no other known id ends with, and read back", () => {
+  const near = brief.slice(0, -4) + (brief.endsWith("ZZZZ") ? "YYYY" : "ZZZZ");
+  const typed = { call: { $ref: type }, with: [{ $ref: brief }] };
+  const said = print(typed, titles, [brief, type, near]);
+  expect(said).toBe(`Type(@${brief.slice(-4)})`);
+  expect(parse(said, functions, [brief, type, near])).toEqual(typed);
+  const twin = "0".repeat(20) + brief.slice(-6);
+  expect(print(typed, titles, [brief, twin])).toBe(`Type(@${brief.slice(-7)})`);
+  expect(() => parse(`Type(@${brief.slice(-4)})`, functions, [brief, twin])).toThrow("more than one id");
+});
+
 test("a function whose title is shared, or unknown, is said and read by its id", () => {
   const twin = newId();
   const shared = new Map([...titles, [twin, "Type"]]);
