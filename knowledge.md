@@ -23,44 +23,46 @@ Some wholes carry an ontological weight that what stands beneath them shares: a 
 
 This is the brief's schema, not the substrate's: the substrate gives holding, and reads belonging upward through it, and the Brief type says what it is for a brief to mark what it holds, drawn by the components made for briefs. The brief is glass's own way of holding knowledge, a proposal and never fixed, so whoever holds knowledge otherwise may say it otherwise. A way of looking kept as a function is not a dimension but a favorite, the session's reading of the author's remark that such views are not strictly dimensions; whether it may carry a look as well is left until it is wanted.
 
-*The author's, 2026-11-04 and [2026-11-05](said/2026-11-05.md#2-knowledge-schema-and-the-next-question): in the holon for workflow, for domain, I want to say this is a dimension, all briefs under it part of it, with an icon, a colour; and really what we're doing is schema, the primitives are the primitives; the brief is the pilot's way, a proposal, meaning glass's own first way, and if someone wants to do something else, that's fine. Being a dimension said in the body rather than by a type or a second holon the session's, since unmarked a brief is still the same brief. Whether marking reaches all the way down, or as far as a dimension says, and whether what is beneath may refuse a mark, are open.*
+*The author's, 2026-11-04 and [2026-11-05](said/2026-11-05.md#2-knowledge-schema-and-the-next-question): in the holon for workflow, for domain, I want to say this is a dimension, all briefs under it part of it, with an icon, a colour; and really what we're doing is schema, the primitives are the primitives; the brief is the pilot's way, a proposal, meaning glass's own first way, and if someone wants to do something else, that's fine. Being a dimension said in the body rather than by a type or a second holon the session's, since unmarked a brief is still the same brief. How far a mark reaches is no question of the data: belonging is read upward through holding, as far as the expression that reads it says, the author's of 2026-11-05. Whether what is beneath may refuse a mark is open.*
 
 ## 2. Prose made native
 
-The prose of a brief is kept today as one piece of markdown, its parts placed by a link standing alone in a paragraph, a reading convention the store does not know. Prose is to be made native: a list of elements the store holds, each typed, the links among them references the store sees, and markdown only one way of saying it as text. The birth can read today's files into it first; the files go once glass can show its own files and history, and briefs are written in glass. None of it is built.
+The prose of a brief is kept today as one piece of markdown, its parts placed by a link standing alone in a paragraph, a reading convention the store does not know. Prose is to be made native: holons the store holds, each typed, the links among them references the store sees. Native prose supersedes markdown: any markdown can be read into it, and it cannot be written back to markdown without loss. The birth can read today's files into it first; the files go once glass can show its own files and history, and briefs are written in glass. None of it is built.
 
-*The author's, 2026-11-04 and 2026-11-05: Markdown is probably going to be replaced, and when it is, we're going native again; a standard native format for prose is what is truly agnostic, and the brief holds it and gives it its structure. The first build's markdown the session's, 2026-11-01.*
+*The author's, 2026-11-04 and 2026-11-05: Markdown is probably going to be replaced, and when it is, we're going native again; a standard native format for prose is what is truly agnostic, and the brief holds it and gives it its structure; native prose is not markdown and supersedes it, all markdown can be converted to native prose, but native prose would not be lossless in conversion to markdown. The files dropped once glass can show the files and their relation to the field, the author's, 2026-11-04; the first build's markdown the session's, 2026-11-01.*
 
-### 2.1 Prose is a list of typed elements
+### 2.1 A brief holds its prose
 
-A brief's prose is a list, and what it may hold is a union of types: a Paragraph, a Part, a Card, a list, a quote, an image, code, and Ground, the confidence line. A Paragraph's text is a string, or a list of strings and the elements that stand among words, a Link, a Term. Each level is a type naming the types it may hold, so prose nests, lists within lists among it, and stays typed without one schema knowing the whole.
+A brief's prose is a list of references that hold, each to a holon: a Paragraph, a List, a Quote, an Image, Code, or a holon of a kind no one has thought of yet, drawn by the component its type finds, so whoever adds a kind adds what draws it and nothing else changes. A reference that only points stands among them too, a holon shown from its own tree and not made a part, so Brief's mould leaves holding unsaid for its prose and each reference says it for itself, by `$holds`. The rule's practice has three links: one in a sentence, which mentions; a lone link, standing in a paragraph of its own, which places a part; and a quoted lone link, which shows a brief from its own tree. So the practice's lone link is a reference that holds, its quoted lone link one that points, and the brief's parts are what its prose holds, in the order they stand.
 
-The three links of the rule's practice, the link in a sentence, the lone link and the quoted lone link, become three types: a Link in a sentence only points, a Part standing in the flow holds the brief it places there, and a Card shows a brief from its own tree without making it a part. So the brief's parts are the Parts in its prose, in the order they stand, and no separate list says them again. The confidence line stays prose, a paragraph whose type is Ground, so it is as organic as any and still found as what it is.
+Within a holon of prose is what is not typed: its text, a string, or a list of strings and the references among words, a link to where they lead or a Term. A List holds its items, each a Paragraph or another List, so lists nest as holons hold holons. Code is a string, and a real file is a holon from an integration, placed like any other.
 
-*The author's, 2026-11-05: prose is really just a list with a union in terms of what it can contain, so I think we can type it; oh no, it nests, maybe we can't, I don't know; nesting of bullet points, there's nothing wrong with that; a confidence line being just prose means it can be organic and dynamic. That nesting stays typed, each level its own type, the session's answer, not yet confirmed; the types, and the parts read from the flow, the session's, shown him as a piece of the store brief, which he found looked better.*
-
-```json
-{ "$id": "a2", "text": [
-    "Every object is ",
-    { "$id": "a3", "instance": [ { "$ref": "…link" } ],
-      "to": { "$ref": "…canonical-json" }, "text": "canonical JSON" },
-    ", so ",
-    { "$id": "a4", "instance": [ { "$ref": "…term" } ],
-      "means": { "$ref": "…object" }, "text": "an object" },
-    " proves itself to whoever fetches it." ] }
-```
+*The author's, 2026-11-05: you can place anything, any holon, and by placing it you place the reference, and it becomes a mount; a list of anything means any JSON can be typed and things can't be matched, so it has to say its contents are interior holons, which is a new primitive, a critique that led to prose as holons; the list has to contain a holon, and that holon may take another list; nesting of bullet points, there's nothing wrong with that; for code we start with a string, and real files are another component you mount anyway. Part and Card as one reference that holds or points his too: it is just a mount that either holds or points. Prose held as holons, and the parts read from the flow, the session's.*
 
 ### 2.2 Words carry meaning by reference
 
-A word may be only characters, its meaning left to be inferred, or a symbol, standing for something in the field. One that stands for something is a Term, holding a reference to what it means, and is then a link of its own kind. Emphasis and its like are no reserved words either: an emphasised word is an element whose type is Emphasis, as a Term's is Term, and the material says how each looks.
+A word may be only characters, its meaning left to be inferred, or a symbol, standing for something in the field. One that stands for something is a Term, a holon holding a reference to what it means, and is then a link of its own kind. Emphasis and its like are no reserved words either: an emphasised phrase is a holon whose type is Emphasis, and the material says how it looks.
 
-*The author's, 2026-11-05: words carry such meaning, words may be symbols; sometimes prose is just characters put together, and the meaning is to be inferred; when you want true ontological mapping, that very word is a word with a reference; bolding and the like are just reserved strings, whilst holons and types would be different. Term, and emphasis as a type of element, the session's answer, not yet ratified.*
+*The author's, 2026-11-05: words carry such meaning, words may be symbols; sometimes prose is just characters put together, and the meaning is to be inferred; when you want true ontological mapping, that very word is a word with a reference; bolding and the like are just reserved strings, whilst holons and types would be different. Term and Emphasis as types the session's, not yet ratified.*
 
-### 2.3 Markdown becomes the text form
+### 2.3 The types of prose
 
-What the store holds is said as text, and read back from it, by a pure pair of functions, as an address is. Markdown is that text, its conventions the syntax: a lone link a Part, a quoted lone link a Card. A person types it, a model reads it, a diff shows it, and none of it is the truth; the elements are. Until briefs are written in glass, the birth reads the files into elements, so the store holds native prose before the files go.
+The types prose is made of are to be confirmed whole before any of it is built. As drafted, each holding its text unless said otherwise:
 
-*That the stored form is only for the engine and the experience upon it need not be so heavy, the author's, 2026-11-05; markdown as the text form the session's proposal, which he has not yet answered; the files dropped once glass can show the files and their relation to the field, the author's, 2026-11-04.*
+```
+Paragraph    text                         one point, as the rule has it
+List         items: Paragraphs or Lists   ordered or not
+Quote        text                         a passage from elsewhere
+Image        source: a holon or an address; alt; caption
+Code         text, a string; its language
+Term         text; means: a holon
+Emphasis     text
+Strong       text
+```
+
+The author wondered whether a paragraph is only spacing in a list; Paragraph is kept for what the rule makes it, one point, so a paragraph is a thing of its own and not the space between. Where the confidence line stands is open: a holon in the flow, of a type Ground, which allows a ground after each claim as this wiki writes them, or a field of the brief, prose too, which allows one, as the rule's practice asks.
+
+*The author's, 2026-11-05: we need to confirm the spec of the types we declare for prose before we can let it go for implementation; ground, I thought it is per brief. Drafted by the session; the question of the ground, between the practice's one line and this wiki's many, the session's.*
 
 ## 3. The first reader component
 

@@ -5,7 +5,7 @@ kind: brief
 
 # How holons relate
 
-A holon is its identity, what it is, and its body, with a name beside them, and for a type its fields, and nothing else is stored. Every relation between holons is a reference inside a body, or a type's fields, and a reference either holds what it points at or only points. A whole is a holon whose references hold its parts, and a part may stand whole in many wholes. So the field needs no relation of its own beyond instance, and every way of reading it, as a holarchy, as namespaces or as dimensions, is the engine reading bodies.
+A holon is its identity, what it is, and its body, with a name beside them, and for a type its mould, and nothing else is stored. Every relation between holons is a reference inside a body, or a type's mould, and a reference either holds what it points at or only points. A whole is a holon whose references hold its parts, and a part may stand whole in many wholes. So the field needs no relation of its own beyond instance, and every way of reading it, as a holarchy, as namespaces or as dimensions, is the engine reading bodies.
 
 *The author's decisions, 2026-11-02, reasoned through OpenLight's five connection kinds and tried in six simulated fields, each holding the whole of a field at once; holding said in the references themselves the author's, [2026-11-04](../said/2026-11-04.md#15-holding-said-in-the-fields-themselves), after a day weighing namespaces, dimensions and the store as one question.*
 
@@ -15,9 +15,9 @@ A version stores a holon's identity, what it is an instance of, and its body. In
 
 *The author's, 2026-11-02: something is an instance of something, that makes perfect sense; the store holds everything.*
 
-Two more are to stand beside them, out of the body, since the engine reads them whatever a holon's type: its name, as [beneath](#6-a-holon-is-named-by-itself), and, for a type, its fields, what its instances hold. The body is then only what a holon holds itself. Neither is built.
+Two more are to stand beside them, out of the body, since the engine reads them whatever a holon's type: its name, as [beneath](#6-a-holon-is-named-by-itself), and, for a type, its mould, what its instances hold. The body is then only what a holon holds itself. Neither is built.
 
-*The author's, 2026-11-05: I thought name was something first class for holons; fields goes out of the body.*
+*The author's, 2026-11-05: I thought name was something first class for holons; fields goes out of the body; mould, for now, for a single word with the ontological meaning of a cast, but a cast for children.*
 
 ## 2. References live in bodies
 
@@ -26,6 +26,10 @@ Any relation a holon has to another is a reference in its body, under a key its 
 A reference points at a holon's identity, so it follows the holon as it changes, or it is pinned to one version, so it keeps saying what it said: a note pins the version of the brief it was written against.
 
 *The author's, 2026-11-02: specific relations are defined by type reference. That references must be visible without types, and may be pinned, was found by every simulation that tried to do without it.*
+
+Glass works on top of JSON rather than in it: a syntax of its own laid on objects, so it could be specified without JSON at all, JSON being one way to write it down. Inside a body, what is glass's is known by a leading `$`, and everything else is the holon's own: a reference is `$ref`, and would be pinned by `$at` and say it holds by `$holds`. As built, a pin is written `@`, and holding is not yet said at all. A version's own places, its id, instance, name and body, and a mould's words, are the store's and carry no `$`.
+
+*The author's, 2026-11-05: we do not work in JSON, we work on top of JSON, creating our own syntax upon objects having reserved internal fields; perhaps id is one such thing, just like references are; one could spec the JSON without the JSON. The `$` for all of them, `$at` for `@` and the name `$holds`, the session's proposal, not yet answered.*
 
 ## 3. A reference holds or points
 
@@ -49,9 +53,9 @@ Any holon may reference, typed or not. Untyped is no lesser state: it is how a t
 
 *The author's, 2026-11-04: types are not mandatory to have references in your fields; if you do write a type, you pre-select, and you're locked to it; if it's not typed, you're free for each field to specify its contents, its name, and whether it holds or points. Refusing a disagreement the session's, as glass refuses any body that does not fit.*
 
-Holding is the field's meaning, and the shape of a field does not decide it. A mount's offer is a set of names, each to a holon, `search` to the Search component and `favorites` to the reader's favorites, and by its shape alone it would look like a whole holding its parts. Whether a mount holds what it offers, so that it travels with what it needs, is the mount's type to say, and leans towards holding. If it holds, the offer's names are its settings' and not the names of what it holds, which a holon carries itself, as [beneath](#6-a-holon-is-named-by-itself); how the two stand together is open.
+Holding is the field's meaning, and the shape of a field does not decide it. A mount's offer is a set of names, each to a holon, `search` to the Search component and `favorites` to the reader's favorites, and by its shape alone it would look like a whole holding its parts. What a mount gives may be written in it, an expression that is the mount's own, so neither held nor pointed at; or it names a function already kept, and points at it. Either way the mount works. A mount that points at what it offers names it under its settings' own names, so the question of the offer's names beside the names holons carry dissolves with it.
 
-*The counter-case the session's, 2026-11-04; the lean the author's: perhaps it should hold, it makes sense, why not. Not yet decided.*
+*The counter-case the session's, 2026-11-04; the author's, 2026-11-05: if it already exists, it makes sense that it points to it, but ultimately it doesn't really matter, the mount works regardless. An expression written in a mount as its own, neither held nor pointed at, the session's answer to his question whether there is then no holding or pointing.*
 
 ### 3.3 Types own nothing
 
@@ -87,45 +91,43 @@ That one holon has one owner, as OpenLight held, is left open on purpose. Nothin
 
 ## 6. A holon is named by itself
 
-A holon may carry a name of its own, kept beside its identity rather than in its body, and beside its title: short and lowercase, made to be typed and written, where the title is for reading. The name is the holon's, not given by whoever holds it, so it is the same in every whole that holds it, and each whole asks only that what it holds be unique by name. Two holons named `type` can stand in the field, never in one whole.
+A holon may carry a name of its own, kept beside its identity rather than in its body, and beside its title: short and lowercase, made to be typed and written, where the title is for reading. The name is the holon's, not given by whoever holds it, so it is the same in every whole that holds it, and each whole asks only that what it holds be unique by name. Two holons named `brief` can stand in the field, the type and the component that draws it, never in one whole.
 
 *The author's, 2026-11-04: a holon that has no name unless you know its parent is not very holon-like, not very autonomous; the holon earns the name. Unique among what one whole holds his too: the name still has to be unique for that space, because otherwise I can't type against that; unique for that level only.*
 
 ### 6.1 An address is a route; a reference is an identity
 
-An address is a route of names through wholes, from where the field begins: `glass/types/type` and `glass/functions/type` are two holons, so the clash between the type and the function of one name is gone. A holon held by several wholes has as many routes, `glass/wiki/the-store` and `favorites/the-store`, and is one holon, its identity its id. A whole reached by its parts' names is a namespace, and the store's root is the first of them.
+An address is a route of names through wholes, from where the field begins: `glass/types/brief` and `glass/components/brief` are two holons, so a clash of one name between a type and a component, or a type and a function, is gone. A holon held by several wholes has as many routes, `glass/wiki/the-store` and `favorites/the-store`, and is one holon, its identity its id. A whole reached by its parts' names is a namespace, and the store's root is the first of them.
 
 A reference holds the id, never a route, so moving a holon or adding one before it changes no reference. A part's place in a list, as a brief's number, is for reading, never for linking; a link by a heading's anchor, its number and words, is what broke when the interface's eighth section was renamed.
 
 *The author's, 2026-11-04: what forces us to think that the number is the true reference; if I add a brief in the middle I still linked by the id. Namespaces as wholes reached by names the session's, from OpenLight's paths and the store as the namespace of 2026-11-02, weighed with the author the same day.*
 
-How a bare name is found, as `group` written in an address without its route, is open: most simply from the wholes a place says it uses. Glass's build still holds names as one flat map in each store's index, its root as the one namespace, and its address calls functions by their titles; holons carrying their own names is not built.
+How a bare name is found, as `group` written in an address without its route, is open: one resolves from the location one is in, and may be in several namespaces, most simply the wholes a place says it uses; what it means for the URL is not yet known. Glass's build still holds names as one flat map in each store's index, its root as the one namespace, and its address calls functions by their titles; holons carrying their own names is not built.
 
-*The session's, 2026-11-04.*
+*The session's, 2026-11-04; resolving from where one is, in several namespaces, the author's, 2026-11-05.*
 
-## 7. Within a holon
+## 7. What is finer than a holon
 
-What is finer than a holon need not be one. A holon of its own gives an identity anything can point at, a history of versions, a place in many wholes and in the field's index; a paragraph, a word or a list in a brief needs at most the first, and text being written has no identity that lasts as a holon's must: a sentence rewritten or split, it is never clear which is the one it was. So a holon is broken out when it needs a life of its own, and everything finer is its interior.
+A brief's paragraphs, a list in it, an image, a word that stands for something: each is a holon of its own, held by the brief, typed, and drawn by the component its type finds. Inside them is only what is not a holon: values, shaped by the holon's mould, text and the references among it, an image's caption, code's language. So the field holds holons and values within them, and nothing between.
 
-*The author's question, 2026-11-05: when do we need to break a holon into multiple holons, or should we create virtual spaces for holons, nested universes that you don't clutter unless you care for them. The line drawn the session's, to which he said most of that makes sense; the interior that follows is proposed, not yet ratified: he liked it, and found it strange territory.*
+*The author's, 2026-11-05: good, that leaves us with indexing; his critiques of the interior the session first proposed decided it, and the count of holons it costs is still to be measured.*
 
-### 7.1 Holons at a smaller scale
+### 7.1 Why not an interior
 
-An element of a holon's interior has the shape of a holon at a smaller scale: an id of its own, unique within the holon it stands in, written `$id`; what it is an instance of, as references to types, written `{ "$ref": … }` as any reference in a body is, where a version holds bare ids; and a body, checked against those types at commit as any holon's is. Its type may be fixed by what holds it, as a brief's prose is [Paragraphs](../knowledge.md#21-prose-is-a-list-of-typed-elements) unless an element says otherwise, so it is said only where it differs. Each element brings its own small type, which is what keeps a deep structure typed: no type knows more than its own level.
+A holon's interior was first proposed: elements with ids of their own inside a body, typed, pointed into with `within`.
 
-An interior element is in no index as a holon of its own and travels with its holon. The day it needs a life of its own it is lifted, given an identity in the field and versions, and keeps what it already is.
+To keep it typed, so that a brief's prose could say it holds only typed things and not any JSON, the interior had to be a second kind of holon, a primitive of its own.
 
-*The author's, 2026-11-05: if it is interior, do we work with reserved JSON names, for we would have no type structure anymore; can we even type such structures. The shape at a smaller scale the session's answer, shown him in a piece of the store brief.*
+Its main ground, that a paragraph needs no versions of its own, failed against what the author wants of history: an act kept at the fidelity of the act, finer than git, which commits whole files. That text under editing has no lasting identity, a sentence split and which half is it, holds for an interior's ids as much as for holons, so it decided nothing.
 
-### 7.2 A reference may point within
+*The author's, 2026-11-05: if a brief takes a list of anything, any JSON can be typed and things can't be matched, so it has to say its contents are interior holons, a new primitive; a commit is bloat in a way, and an act that changes something you want kept at the fidelity of that act; is there any reason to think the internals should really be exposed holons, namespaced, the namespace simplifying the internals to the outside. Weighed again by the session, which had argued for the interior and found its reasons wrong, or not telling, or unmeasured.*
 
-A reference may name an element within a holon, `{ "$ref": holon, "within": "a2" }`, pinned to a version when it should keep saying what it said. So a comment on a word is a holon of its own, in its writer's home, pointing in, and the word it is about is never made a holon. Every element has an id, so adding and moving others loses no address; text inside an element is addressed through its element, by its words and where they stand, and a word whose meaning is to last is made an element.
+### 7.2 The whole keeps them out of sight
 
-*The author's, 2026-11-05: to mark a word and add a comment on it, the word needs to be addressable; ids are useful, because you can add and shift and they don't lose the address. What has an address, and how, the session's.*
+A brief's paragraphs are its parts, held by it, so the field's roots, what nothing holds, never show them: they are seen in the brief, or when asked for. The whole is the namespace that keeps its insides from cluttering the field, and nothing beside holding is needed for it. What is gained is what any holon has: an edit to one paragraph writes a version of that paragraph only, its history is its own, a comment points at it by its identity, and a word whose meaning should last is a holon of its own, a Term.
 
-Two forms are added to what the substrate reads in a body: an element, and a reference within. A reference that holds may stand wherever a reference may, as a [Part](../knowledge.md#21-prose-is-a-list-of-typed-elements) in prose does, not only in a field of its own. None of it is built.
-
-*The session's, 2026-11-05; the author liked references standing anywhere, though he had not thought they would.*
+*The session's, 2026-11-05, answering the author's nested universes that you don't clutter unless you care for them. What it costs, a dozen holons a brief and the wiki in thousands, and more objects to a commit, is to be measured, with the index in view. None of it is built.*
 
 ## 8. What was let go
 
@@ -153,7 +155,7 @@ A relation every holon has regardless of type, placing itself in a collection or
 
 ## 9. The engine reads it all
 
-Since every relation is a reference in a body, or in a type's fields, the engine keeps one index over the bodies and fields of every store it reads: which values and references appear where. It is the engine's own, not the store's index of which version each holon is at. From any holon it answers what holds it, what it holds, what points at it, grouped by the type and key that point, and what has a given value. Visits by page, by day or by browser are answers of that index, so many things that look like dimensions are values.
+Since every relation is a reference in a body, or in a type's mould, the engine keeps one index over the bodies and moulds of every store it reads: which values and references appear where. It is the engine's own, not the store's index of which version each holon is at. From any holon it answers what holds it, what it holds, what points at it, grouped by the type and key that point, and what has a given value. Visits by page, by day or by browser are answers of that index, so many things that look like dimensions are values.
 
 Belonging is read upward through holding references alone: from any holon, every whole that holds it, and the wholes above those. A route down always ends; reading upward can meet a cycle, a whole that comes to hold itself through others, and the engine guards against it rather than forbid it.
 
@@ -165,11 +167,10 @@ The index belongs to the engine, so each engine sees its own: the author's engin
 
 What the days of 2026-11-04 and 2026-11-05 did not settle, each to be weighed when the work reaches it:
 
-- **How far a dimension's mark reaches**, now that being one is the brief's own schema, as [knowledge](../knowledge.md#11-a-brief-may-be-a-dimension) tells.
-- **The interior of a holon**, as [above](#7-within-a-holon), proposed and not yet ratified.
+- **Whether what is beneath a dimension may refuse its mark**, as [knowledge](../knowledge.md#11-a-brief-may-be-a-dimension) leaves it.
+- **What a holon per paragraph costs**, as [above](#72-the-whole-keeps-them-out-of-sight), to be measured.
 - **A single owner**, left open on purpose, as [above](#5-a-part-stands-whole-in-many-wholes).
-- **Whether a mount holds what it offers**, and how the offer's names stand beside the names holons carry.
-- **How a bare name is found.**
+- **How a bare name is found**: from where one stands, and a place may stand in several namespaces.
 - **Lifetime**: whether a holon nothing holds should ever leave the field on its own. Set aside.
 
 *The author's, 2026-11-04 and 2026-11-05.*

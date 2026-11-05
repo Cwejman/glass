@@ -27,13 +27,9 @@ Each field a type declares is said in prose as well as in structure: what the ke
 
 *The author's, 2026-11-02: the fields of a holon are contact points for prose, so that we can build ontologically upon them; where each holon connects are the ontological connectors, forming larger ontology. That the prose stands beside the checked shape, and models read it, the session's proposal of the same day, which he answered yes.*
 
-A type's fields are to stand beside its identity, out of its body, since they say what other holons hold and not what the type itself holds.
+A type's fields are to stand beside its identity, out of its body, as its mould, since they say what other holons hold and not what the type itself holds; a cast, but for what comes from it. A holon is then a type by having a mould, and the type of types is let go.
 
-*The author's, 2026-11-05: fields goes out of the body. Not yet built.*
-
-A holon would then be a type by declaring fields alone, with no need to be an instance of a type of types.
-
-*The author's question, 2026-11-05: whether a holon is a type by being an instance of Type or by having fields was double. That it is by its fields the session's answer, not yet ratified, and as [the store](architecture/store.md#24-a-version-is-one-holon-as-it-stood) tells, not yet built.*
+*The author's, 2026-11-05: fields goes out of the body; being a type both by being an instance of Type and by having fields was double, so yes, we drop the type type; mould for now. Not yet built, as [the store](architecture/store.md#24-a-version-is-one-holon-as-it-stood) tells.*
 
 ## 3. Store
 

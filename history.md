@@ -17,7 +17,11 @@ Then how Markdown is replaced. Prose became a list of typed elements, its three 
 
 The author asked what is lost if this is all one body, whether words should be addressable, and whether reserved names are what remain; the answer was a holon's interior, elements shaped as holons at a smaller scale, each with a local id and a type of its own, pointed into from outside.
 
-Reading a piece of the store brief written that way, he took a holon's name out of its body to stand beside its identity, and a type's fields with it, and found it double that a holon is a type both by being an instance of Type and by having fields. None of it is built. Decided: dimension as brief schema, the name and the fields out of the body, nested lists, the confidence line as prose. Proposed and waiting on his word: the interior, a type by its fields alone, Markdown as the text form, and whether the word is fields.
+Reading a piece of the store brief written that way, he took a holon's name out of its body to stand beside its identity, and a type's fields with it, and found it double that a holon is a type both by being an instance of Type and by having fields. None of it is built. Decided: dimension as brief schema, the name and the fields out of the body, nested lists, the confidence line as prose.
+
+Then he ratified the interior, the type of types let go, and mould, for now, as the word for what a type gives its instances, and set Markdown right: native prose supersedes it, and is not its text form.
+
+Pressed further, he found that a prose list typed to hold only typed things made the interior a primitive of its own, and asked whether, since an act should be kept at the fidelity of the act, the elements should not be holons, the whole their namespace. The session, which had argued for the interior, found its reasons wrong or not telling, and said so when he asked what had shifted; prose became holons held by their brief, values within them, and the interior went. What a holon per paragraph costs is to be measured, and leads into the index.
 
 *Reasoned on 2026-11-05 by the session, from the author's words of [2026-11-04](said/2026-11-04.md#21-the-right-open-ended-way-to-dimensions) and [2026-11-05](said/2026-11-05.md).*
 
