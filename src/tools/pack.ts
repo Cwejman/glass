@@ -115,7 +115,7 @@ for (const store of stores) {
     if (updates.size) root = await grow(objects, root, updates);
     const index = await objects.put({ kind: "index", names, holons: root ?? null });
     const at = bornAt(slice.body.roots[0]?.$ref ?? slice.id);
-    const commit = await objects.put({ kind: "commit", parent, parentPack, at, index, slice: { $ref: slice.id } });
+    const commit = await objects.put({ kind: "commit", parent, parentPack, at, index, says: slice.body.title });
     // The pack and its index: the objects in the order written, each on a line.
     const lines: string[] = []; const idx: Record<string, [number, number]> = {}; let offset = 0;
     for (const [name, text] of fresh) { const n = Buffer.byteLength(text); idx[name] = [offset, n]; lines.push(text); offset += n + 1; }

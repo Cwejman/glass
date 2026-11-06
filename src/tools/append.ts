@@ -1,26 +1,26 @@
-// Appends one utterance of the author's to the session in the shared branches,
-// keeping every existing id: new holons are born now, the session's list and
-// the lexicon grow, nothing else is rewritten.
-// Usage: bun append.ts <glass repo> <utterance.txt> <typed|spoken> [path-patch.json]
+// Appends one utterance of the author's to the session, as one commit on the
+// store's packs: only the holons it adds or changes are written, as new
+// versions, and nothing written before is touched.
+// Usage: bun src/tools/append.ts <utterance.txt> <typed|spoken> [paths.json]
 // {typed|meant} marks a fix; _ inside it stands for a space.
 
-const [repo, file, as, patchFile] = process.argv.slice(2);
-const { newId } = await import(`${repo}/src/store/id.ts`);
-const dir = `${repo}/store`;
-const read = async (f: string) => Bun.file(`${dir}/${f}`).json();
-const write = async (f: string, hs: unknown[]) =>
-  Bun.write(`${dir}/${f}`, "[\n" + hs.map((h) => "  " + JSON.stringify(h)).join(",\n") + "\n]\n");
+import { newId } from "../store/id.ts";
+import { commit, open } from "./packs.ts";
 
-const primitives = await read("primitives.json");
-const lexicon = await read("lexicon.json");
-const session = await read("session.json");
-const T = Object.fromEntries(primitives.map((h: any) => [h.name, h.id]));
+const [file, as, patchFile] = process.argv.slice(2);
+const store = await open("store");
+const held = await store.holons();
+const holons = [...held.values()].map((x) => x.holon) as any[];
+const T = Object.fromEntries(holons.filter((h) => h.mould).map((h) => [h.name, h.id]).reverse());
 const ref = (to: string) => ({ $ref: to });
 type H = { id: string; instance: string[]; name?: string; body: Record<string, unknown> };
 const born: H[] = [];
 const put = (h: Omit<H, "id">) => { const x = { id: newId(), ...h }; born.push(x); return x.id; };
-
+const changed = new Set<any>();
+const lexicon = holons.filter((h) => h.instance[0] === T.lexeme || (h.name === "lexicon" && h.instance[0] === T.lexicon));
+const session = holons.filter((h) => h.instance[0] === T.session && h.name === "2026-11-06-second");
 const lexiconHolon = lexicon.find((h: any) => h.name === "lexicon");
+
 const byText = new Map<string, string>(lexicon.filter((h: any) => h.instance[0] === T.lexeme).map((h: any) => [h.body.text, h.id]));
 const newLexemes: H[] = [];
 const lexeme = (t: string) => {
@@ -61,6 +61,7 @@ const sentences = (par: string) => par.split(/(?<=[.?!])\s+(?=\S)/).map((s) =>
 
 const text = await Bun.file(file!).text();
 const s0 = session[0];
+changed.add(s0);
 const order = (s0.body.said as unknown[]).length + 1;
 const flow = text.trim().split(/\n\s*\n|\n/).map((p) => p.trim()).filter(Boolean).map((p) =>
   /^[-*]{2,}$/.test(p)
@@ -74,12 +75,12 @@ if (patchFile) {
   const patch: { add?: { title: string; opens: string; restsOn: string[] }[]; edit?: { title: string; opens: string }[] } = await Bun.file(patchFile).json();
   for (const p of patch.add ?? []) (s0.body.paths as unknown[]).push(ref(put({ instance: [T.path], body: { ...p, stands: "noted", from: [ref(u)] } })));
   for (const e of patch.edit ?? []) {
-    const h = session.find((x: any) => x.instance[0] === T.path && x.body.title === e.title);
+    const h = holons.find((x: any) => x.instance[0] === T.path && x.body.title === e.title);
     if (!h) throw new Error(`no path titled ${e.title}`);
-    h.body.opens = e.opens; h.body.from.push(ref(u));
+    h.body.opens = e.opens; h.body.from.push(ref(u)); changed.add(h);
   }
 }
 
-await write("session.json", [...session, ...born]);
-await write("lexicon.json", [...lexicon, ...newLexemes]);
-console.log({ utterance: order, holons: born.length, newLexemes: newLexemes.length, session: session.length + born.length, lexicon: lexicon.length + newLexemes.length });
+if (newLexemes.length) changed.add(lexiconHolon);
+const done = await commit(store, [...changed, ...born, ...newLexemes], `The second session, utterance ${order}`);
+console.log({ utterance: order, holons: born.length + changed.size + newLexemes.length, newLexemes: newLexemes.length, objects: done.objects, packBytes: done.bytes });

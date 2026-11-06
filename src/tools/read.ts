@@ -1,6 +1,7 @@
 // Reads any holon of the union back as text: a brief with its prose, a
 // session with its utterances, a branch with its understandings, down to the
 // words. Nothing is stored; the text is drawn from the holons each time.
+// It reads from the packs: store/, and store/paper/ where it is present.
 // Usage: bun src/tools/read.ts <name | id | wiki path> [depth]
 //   bun src/tools/read.ts union            what stores there are
 //   bun src/tools/read.ts README.md 1      the wiki's entry, its parts by title
@@ -8,11 +9,8 @@
 
 const [what, depthArg] = process.argv.slice(2);
 const depth = Number(depthArg ?? 0);
-const rd = async (f: string) => { const v = await Bun.file(f).json(); return Array.isArray(v) ? v : [v]; };
-const union = (await rd("store/union.json"))[0];
-const all = new Map<string, any>();
-for (const f of [...union.body.stores.map((s: any) => s.file), "store/union.json"])
-  if (await Bun.file(f).exists()) for (const h of await rd(f)) all.set(h.id, h);
+import { field } from "./packs.ts";
+const all: Map<string, any> = await field();
 const typeName = (h: any) => all.get(h?.instance?.[0])?.name ?? (h?.mould ? "type" : "");
 const get = (r: any) => all.get(r?.$ref);
 const many = (v: any) => (Array.isArray(v) ? v : v ? [v] : []).map(get).filter(Boolean);
@@ -57,7 +55,7 @@ function block(h: any, d: number, indent = ""): string[] {
     case "path": return [`## ${b.title} (${b.stands})`, b.opens, "Rests on: " + (b.restsOn ?? []).join("; ")];
     case "branch": return [`# ${h.name} (${b.model}, seed from ${b.seedFrom})`, ...block(get(b.top), d + 4)];
     case "understanding": return [`${indent}${b.title}: ${b.prose} [matters: ${b.matters}]`, ...(d > 0 ? many(b.parts).filter((p: any) => typeName(p) === "understanding").flatMap((p: any) => block(p, d - 1, indent + "  ")) : [])];
-    case "union": return ["# The union", ...b.stores.map((s: any) => `- ${s.name}: ${s.file}, ${s.roots.length} root(s)${s.keeps ? ", " + s.keeps : ""}`)];
+    case "union": return ["# The union", ...b.stores.map((s: any) => `- ${s.name}: ${s.roots.length} root(s)${s.keeps ? ", " + s.keeps : ""}`)];
     case "type": return [`# ${h.name}`, b.says ?? "", ...Object.entries(h.mould ?? {}).map(([k, f]: any) => `- ${k}: ${f.says}${f.holds === true ? " (holds)" : f.holds === false ? " (points)" : ""}`)];
     case "statistic": return [`## ${b.title}`, b.says, "Gives: " + JSON.stringify(b.gives)];
     default: return [indent + (inline(h) || JSON.stringify(b).slice(0, 300))];
