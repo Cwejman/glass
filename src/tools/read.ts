@@ -62,6 +62,6 @@ function block(h: any, d: number, indent = ""): string[] {
   }
 }
 
-const found = all.get(what!) ?? [...all.values()].find((h) => h.name === what || h.body?.path === what);
+const found = all.get(what!) ?? [...all.values()].find((h) => h.name === what || h.body?.path === what) ?? [...all.values()].find((h) => h.body?.title === what);
 if (!found) { console.error(`nothing named ${what}`); process.exit(1); }
 console.log(block(found, depth).join("\n"));
