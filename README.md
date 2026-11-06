@@ -1,42 +1,46 @@
----
-under: the rule
-kind: brief
----
-
 # Glass
 
-Glass puts data, programs, AI and interfaces in one place, as small whole pieces kept with their whole history, and runs them with a real engine in your own browser. Programs then build on each other by what they take and give, not by glue, and an interface draws itself from the pieces it shows. Glass is the successor to the author's OpenLight, and the foundation a personal site will be built on first.
+Glass puts data, programs, AI and interfaces in one place, as small whole pieces kept with their whole history. Since 2026-11-06 glass's knowledge lives in its store, as holons, not in markdown. This file is the one way in: it says how the store is laid out and how to read it.
 
-Before anything else, what glass rests on: what matters most to it, and the culture it grows in.
+## Where things are
 
-[The grounds](grounds.md)
+Everything is a holon: `{id, instance, name?, mould?, body}`. The `id` is a ULID given at birth. `instance` is the type the holon is an instance of. A type is a holon with a `mould`, which says what its instances hold, field by field, each in prose. Inside a body, `{"$ref": id}` is a reference to another holon. A reference holds (makes the other a part) or only points, as the mould says, or as `$holds` on the reference itself says.
 
-Everything in glass stands on a few primitives, so they come next.
+`branches/` holds the stores, each one JSON array with one holon per line:
 
-[The primitives](primitives.md)
+| File | What it holds |
+|---|---|
+| `union.json` | The way in: one holon that points at every store's roots and holds none. |
+| `primitives.json` | The types. Read their moulds first. |
+| `lexicon.json` | Every word as one: the lexemes that words point at. |
+| `wiki.json` | The wiki that was markdown, to the word: briefs, paragraphs, sentences, words. Links are references. |
+| `markdown.json` | Markdown's surface, kept apart: with the wiki it rebuilds each old file. |
+| `session.json` | The author's words in the second session of 2026-11-06, utterance by utterance, and the paths of evolution noted beside them. |
+| `fork-licence.json`, `fork-selection.json` | Two forks that met that session, each pointing at it. |
+| `statistics.json` | Statistics declared as prose and expression, never stored, over proposed functions. |
+| `slices.json` | The store cut into the commits it would be born in, each declared by its roots. |
+| `tools/` | Scripts that read and write all of it (see its README). |
 
-Holding the primitives, the architecture says where they are kept and how they move: a store anyone can serve as plain files, and a client that pulls it and runs an engine over it, in a field of its own.
+`references/` holds works from outside the field. One is there now: a paper on holonic systems, with its licence as a holon. By that licence its holons and the branches drawn over it stay on the machine that made them.
 
-[The architecture](architecture/README.md)
+The author's words before the store, a day to a file, are briefs in `wiki.json` under the paths `said/2026-10-30.md` to `said/2026-11-06.md`. The wiki grew from them; read one with `bun branches/tools/read.ts said/2026-11-05.md 9`.
 
-The first thing the store holds is knowledge, this wiki among it, so how knowledge stands in the store and is read comes next.
+## How to read
 
-[Knowledge in the store](knowledge.md)
+Start at the union, then read whatever its roots lead to:
 
-With that held, the plan proposes what is built first, what waits, and what is still open.
+```
+bun branches/tools/read.ts union
+bun branches/tools/read.ts README.md 1       the old wiki's entry, a level down
+bun branches/tools/read.ts primitives.md     the primitives in prose
+bun branches/tools/read.ts 2026-11-06-second the latest session and its paths
+bun branches/tools/read.ts session           any type, by its name
+```
 
-[The plan](plan.md)
+The text is drawn from the holons each time; none is stored. A word is `before + text + after`, a sentence is its words, and a paragraph is its sentences.
 
-Beneath it all lies where glass comes from: OpenLight, the rule, and glass's own first iteration, built and then cleared.
+## Where it stands
 
-[Where it comes from](origins.md)
-
-Then the work itself, told over its commits as it happened, until the store can hold it.
-
-[History](history.md)
-
-Last stand the author's own words, kept as they were said, which every brief above grew from.
-
-[As it was said](said/README.md)
-
-*The author's aim, 2026-10-31 and 2026-11-01; the wording and the order are the session's, from the outline the author approved on 2026-11-01.*
+- **The holons are the source now.** The birth from markdown has ended. Any birth from here only adds diff-packs: one per commit, each holding only what that commit adds (see the path "The store packed, carried by git" in the session).
+- **The code is older than the primitives.** `src/` still writes loose objects to `site/store`, and still keeps a type's fields and a holon's name inside the body. Bringing it to the primitives as they stand, with packs, is the next build. The new interface comes after that: a glass for the human, born from this store.
+- **Memory is off** for every session (`.claude/settings.json`). What a session knows is in the field.
