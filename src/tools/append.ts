@@ -5,10 +5,10 @@
 // {typed|meant} marks a fix; _ inside it stands for a space.
 
 import { newId } from "../store/id.ts";
-import { commit, open } from "./packs.ts";
+import { commit, open, storeDir } from "./packs.ts";
 
 const [file, as, patchFile] = process.argv.slice(2);
-const store = await open("store");
+const store = await open(storeDir);
 const held = await store.holons();
 const holons = [...held.values()].map((x) => x.holon) as any[];
 const T = Object.fromEntries(holons.filter((h) => h.mould).map((h) => [h.name, h.id]).reverse());

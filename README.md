@@ -2,7 +2,7 @@
 
 Glass puts data, programs, AI and interfaces in one place, as small whole pieces kept with their whole history. Since 2026-11-06 glass's knowledge lives in its store, as holons, not in markdown. This file is the one way in: it says how the store is laid out and how to read it.
 
-The repository holds two things: `store/`, the holons, and `src/`, the code. Only the tooling that bun, tsc and prettier look for sits beside them.
+The repository holds two things: `store/`, the holons, and `src/`, the code, with all its tooling.
 
 ## The store
 
@@ -47,7 +47,7 @@ The text is drawn from the holons each time; none is stored. A word is `before +
 
 ## The code
 
-`src/` holds the store, the engine, the interface, the birth, the field it shipped (`src/field/`), the store's test vectors (`src/store/vectors/`), the page (`src/site/`) and the tools. `bun test`, `bun run check` and `bun run build` run from the root; the build writes the site into `site/`, which is output only and never kept.
+`src/` holds the store, the engine, the interface, the birth, the field it shipped (`src/field/`), the store's test vectors (`src/store/vectors/`), the page (`src/site/`) and the tools. Its tooling lives with it: run `bun install`, `bun test`, `bun run check` and `bun run build` from inside `src/`. The build writes the site into `site/` at the root, which is output only and never kept. The tools can be run from anywhere, as `bun src/tools/read.ts` from the root.
 
 ## Where it stands
 

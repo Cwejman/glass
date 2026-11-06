@@ -15,6 +15,9 @@ import { join } from "node:path";
 import { canonical } from "../store/canonical.ts";
 import { nameOfText, type Name } from "../store/name.ts";
 
+// The repository's store, wherever a tool is run from.
+export const storeDir = join(import.meta.dir, "../../store");
+
 export type Holon = { id: string; instance: string[]; name?: string; mould?: any; body: any };
 export type Store = Awaited<ReturnType<typeof open>>;
 
@@ -127,7 +130,7 @@ async function branchesOf(objects: any, before: Record<string, Name> | undefined
 // The field: every store under store/ read as one.
 export async function field() {
   const all = new Map<string, Holon>();
-  const dirs = ["store", ...[...new Bun.Glob("*/refs/main").scanSync("store")].map((f) => join("store", f.split("/")[0]!))];
+  const dirs = [storeDir, ...[...new Bun.Glob("*/refs/main").scanSync(storeDir)].map((f) => join(storeDir, f.split("/")[0]!))];
   for (const dir of dirs) {
     if (!(await Bun.file(join(dir, "refs/main")).exists())) continue;
     for (const [id, { holon }] of await (await open(dir)).holons()) all.set(id, holon);

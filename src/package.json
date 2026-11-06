@@ -5,11 +5,11 @@
   "scripts": {
     "test": "bun test",
     "check": "tsc --noEmit -p .",
-    "format": "./node_modules/.bin/prettier --write \"src/**/*.{ts,tsx,css,json}\" src/site/index.html",
-    "birth": "bun src/birth/main.ts",
-    "build": "bun src/birth/declare.ts && bun src/build.ts",
-    "declare": "bun src/birth/declare.ts",
-    "serve": "bun src/serve.ts"
+    "format": "./node_modules/.bin/prettier --write \"**/*.{ts,tsx,css,json}\" site/index.html",
+    "birth": "bun birth/main.ts",
+    "build": "bun birth/declare.ts && bun build.ts",
+    "declare": "bun birth/declare.ts",
+    "serve": "bun serve.ts"
   },
   "dependencies": {
     "marked": "18.0.13"

@@ -21,9 +21,10 @@
     "jsxFragmentFactory": "Fragment"
   },
   "include": [
-    "src"
+    "."
   ],
   "exclude": [
-    "src/tools"
+    "tools",
+    "node_modules"
   ]
 }

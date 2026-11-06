@@ -1,6 +1,0 @@
-site/
-src/store/vectors/*.json
-node_modules/
-*.md
-src/field/components/bodies.ts
-store/
