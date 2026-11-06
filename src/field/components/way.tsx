@@ -1,4 +1,4 @@
-import type { Id } from "../../src/store/id.ts";
+import type { Id } from "../../store/id.ts";
 import { h } from "./jsx.ts";
 
 // The way down to a place, from the top of its holarchy: each step a link

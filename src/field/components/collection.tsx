@@ -1,4 +1,4 @@
-import type { Declaration, Given, Space } from "../../src/interface/component.ts";
+import type { Declaration, Given, Space } from "../../interface/component.ts";
 import { h } from "./jsx.ts";
 import { partSaid, partsOf, functionsIn } from "./parts.ts";
 

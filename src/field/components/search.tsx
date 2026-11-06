@@ -1,7 +1,7 @@
-import type { Id } from "../../src/store/id.ts";
-import type { Declaration, Given, HolonOf, Space } from "../../src/interface/component.ts";
-import type { Argument, By, Expression } from "../../src/engine/expression.ts";
-import { canonical } from "../../src/store/canonical.ts";
+import type { Id } from "../../store/id.ts";
+import type { Declaration, Given, HolonOf, Space } from "../../interface/component.ts";
+import type { Argument, By, Expression } from "../../engine/expression.ts";
+import { canonical } from "../../store/canonical.ts";
 import type { ComponentBody, Ref, SearchSettings } from "./bodies.ts";
 import { h } from "./jsx.ts";
 import {

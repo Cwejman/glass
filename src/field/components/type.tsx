@@ -1,5 +1,5 @@
-import type { Id } from "../../src/store/id.ts";
-import type { Declaration, Given, Space } from "../../src/interface/component.ts";
+import type { Id } from "../../store/id.ts";
+import type { Declaration, Given, Space } from "../../interface/component.ts";
 import type { TypeBody } from "./bodies.ts";
 import { h } from "./jsx.ts";
 

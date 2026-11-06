@@ -1,8 +1,8 @@
 // The bodies of the field's types, made from the types by `bun run declare`.
 // Never written by hand: change a type, and declare again.
 
-import type { Json } from "../../src/store/canonical.ts";
-import type { Expression } from "../../src/engine/engine.ts";
+import type { Json } from "../../store/canonical.ts";
+import type { Expression } from "../../engine/engine.ts";
 
 // A reference to a holon, pinned to one version where it says so.
 export type Ref = { $ref: string; "@"?: string };

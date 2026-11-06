@@ -1,6 +1,6 @@
-import type { Json } from "../../src/store/canonical.ts";
-import type { Id } from "../../src/store/id.ts";
-import type { Declaration, Given, Space } from "../../src/interface/component.ts";
+import type { Json } from "../../store/canonical.ts";
+import type { Id } from "../../store/id.ts";
+import type { Declaration, Given, Space } from "../../interface/component.ts";
 import { h, type Child } from "./jsx.ts";
 import { markdown } from "./prose.ts";
 

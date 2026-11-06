@@ -18,14 +18,14 @@ The code, in `src/`:
 - `src/interface/`: the contract every component draws against, the interface's end of the protocol, the materials laid on the page, the drawing of holons into hosts, by code or by template, the root drawn where the page's address says, the syntax that says an expression as text and reads it back, and the chassis that starts it all.
 - `src/birth/`: reading the wiki's files under the rule, what the field's holons are made from what the files hold, and committing them into `site/store/`.
 
-Beside it:
+Beside it, also in `src/`:
 
-- The knowledge: this wiki's files, `architecture/` and `said/`, born into the store.
-- `field/`: the field glass ships, born into the store beside the knowledge: the types as JSON, each field said in prose; the components, holons that hold code, each declaring itself in its own module, or data, a template in its own JSON file; the entry, the mount a client boots into, in `entry.json`; and the materials everything is drawn with, declared in `materials.json`.
-- `vectors/`: the store's contract, in no language, which any implementation answers to.
-- `site/`: the page, the built client, and the store, as a static host serves them.
+- `src/field/`: the field glass shipped, as the birth read it: types as JSON, components as modules or templates, the entry and the materials.
+- `src/store/vectors/`: the store's contract, in no language, which any implementation answers to.
+- `src/site/`: the page; the build writes it, with the built client, into `site/`, which is output only.
+- `src/tools/`: scripts over the store in `store/`.
 
-The code and the field are kept as files in git, their source and their history; born into the store, they are holons too.
+The knowledge is no longer here: since 2026-11-06 it is holons in `store/`, and the birth that read it from markdown has ended.
 
 *The session's, 2026-11-03.*
 

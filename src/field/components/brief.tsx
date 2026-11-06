@@ -1,5 +1,5 @@
-import type { Id } from "../../src/store/id.ts";
-import type { Declaration, Given, HolonOf, Space } from "../../src/interface/component.ts";
+import type { Id } from "../../store/id.ts";
+import type { Declaration, Given, HolonOf, Space } from "../../interface/component.ts";
 import type { BriefBody, BriefSettings } from "./bodies.ts";
 import { h } from "./jsx.ts";
 import { faceOf, isConfidence, markdown, placed, slotOf } from "./prose.ts";

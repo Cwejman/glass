@@ -54,10 +54,10 @@ const idOf = (from: string) => {
 };
 
 const typeFiles: TypeFile[] = await Promise.all(
-  (await readdir(join(repo, "field/types"))).sort().map(async (file) => ({
+  (await readdir(join(repo, "src/field/types"))).sort().map(async (file) => ({
     from: `field/types/${file}`,
     name: file.replace(/\.json$/, ""),
-    body: JSON.parse(await readFile(join(repo, "field/types", file), "utf8")) as Body,
+    body: JSON.parse(await readFile(join(repo, "src/field/types", file), "utf8")) as Body,
   })),
 );
 const bornTypes = types(typeFiles, idOf, "field/types/type.json");
@@ -77,22 +77,22 @@ const componentFiles: ComponentFile[] = await Promise.all([
       source: await readFile(join(repo, from), "utf8"),
     };
   }),
-  ...(await readdir(join(repo, "field/components")))
+  ...(await readdir(join(repo, "src/field/components")))
     .filter((file) => file.endsWith(".json"))
     .sort()
     .map(async (file) => ({
-      ...(JSON.parse(await readFile(join(repo, "field/components", file), "utf8")) as Omit<
+      ...(JSON.parse(await readFile(join(repo, "src/field/components", file), "utf8")) as Omit<
         ComponentFile,
         "from"
       >),
       from: `field/components/${file}`,
     })),
 ]);
-const kindFiles = JSON.parse(await readFile(join(repo, "field/kinds.json"), "utf8")) as KindFile[];
+const kindFiles = JSON.parse(await readFile(join(repo, "src/field/kinds.json"), "utf8")) as KindFile[];
 const bornKinds = kinds(kindFiles, idOf, bornTypes.names);
 const bornComponents = components(componentFiles, idOf, bornTypes.names, bornKinds.names);
 
-const declaredMaterials = JSON.parse(await readFile(join(repo, "field/materials.json"), "utf8")) as {
+const declaredMaterials = JSON.parse(await readFile(join(repo, "src/field/materials.json"), "utf8")) as {
   file: string;
   title: string;
   says: string;
@@ -103,7 +103,7 @@ const bornMaterials = materials(
       from: `field/materials/${file}`,
       title,
       says,
-      css: await readFile(join(repo, "field/materials", file), "utf8"),
+      css: await readFile(join(repo, "src/field/materials", file), "utf8"),
     })),
   ),
   idOf,
@@ -112,9 +112,9 @@ const bornMaterials = materials(
 
 const files = await readWiki("README.md");
 const bornWiki = wiki(files, "README.md", idOf, bornTypes.names);
-const entryFile = JSON.parse(await readFile(join(repo, "field/entry.json"), "utf8")) as EntryFile;
+const entryFile = JSON.parse(await readFile(join(repo, "src/field/entry.json"), "utf8")) as EntryFile;
 const functionFiles = JSON.parse(
-  await readFile(join(repo, "field/functions.json"), "utf8"),
+  await readFile(join(repo, "src/field/functions.json"), "utf8"),
 ) as FunctionFile[];
 const bornFunctions = functions(functionFiles, idOf, bornTypes.names);
 const functionOf = Object.fromEntries(
@@ -194,11 +194,11 @@ async function readWiki(entryPath: string) {
 // The modules among the components that declare themselves, each with its
 // declaration.
 async function declaringModules() {
-  const files = (await readdir(join(repo, "field/components")))
+  const files = (await readdir(join(repo, "src/field/components")))
     .filter((file) => file.endsWith(".tsx"))
     .sort();
   const modules = await Promise.all(
-    files.map(async (file) => ({ file, module: await import(join(repo, "field/components", file)) })),
+    files.map(async (file) => ({ file, module: await import(join(repo, "src/field/components", file)) })),
   );
   return modules
     .filter(({ module }) => module.declared)

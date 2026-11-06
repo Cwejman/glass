@@ -1,4 +1,4 @@
-import type { Declaration, Given, Space, Where } from "../../src/interface/component.ts";
+import type { Declaration, Given, Space, Where } from "../../interface/component.ts";
 import type { ListSettings } from "./bodies.ts";
 import { h } from "./jsx.ts";
 

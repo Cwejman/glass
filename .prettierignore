@@ -1,6 +1,6 @@
-site/store/
-site/*.js
-vectors/*.json
+site/
+src/store/vectors/*.json
 node_modules/
 *.md
-field/components/bodies.ts
+src/field/components/bodies.ts
+store/

@@ -12,17 +12,17 @@ import type { Connector, Connectors, Shape } from "../engine/types.ts";
 // a program it writes it beside the components.
 
 const repo = join(import.meta.dir, "../..");
-export const declared = join(repo, "field/components/bodies.ts");
+export const declared = join(repo, "src/field/components/bodies.ts");
 
 export async function declarations(): Promise<string> {
-  const files = (await readdir(join(repo, "field/types"))).filter((file) => file.endsWith(".json")).sort();
+  const files = (await readdir(join(repo, "src/field/types"))).filter((file) => file.endsWith(".json")).sort();
   const types = await Promise.all(
-    files.map(async (file) => JSON.parse(await readFile(join(repo, "field/types", file), "utf8"))),
+    files.map(async (file) => JSON.parse(await readFile(join(repo, "src/field/types", file), "utf8"))),
   );
-  const files_ = (await readdir(join(repo, "field/components")))
+  const files_ = (await readdir(join(repo, "src/field/components")))
     .filter((file) => file.endsWith(".tsx"))
     .sort();
-  const modules = await Promise.all(files_.map((file) => import(join(repo, "field/components", file))));
+  const modules = await Promise.all(files_.map((file) => import(join(repo, "src/field/components", file))));
   const components = modules
     .filter((module) => module.declared)
     .map((module) => module.declared as { title: string; settings?: Connectors });
@@ -31,8 +31,8 @@ export async function declarations(): Promise<string> {
     "// The bodies of the field's types, made from the types by `bun run declare`.",
     "// Never written by hand: change a type, and declare again.",
     "",
-    'import type { Json } from "../../src/store/canonical.ts";',
-    'import type { Expression } from "../../src/engine/engine.ts";',
+    'import type { Json } from "../../store/canonical.ts";',
+    'import type { Expression } from "../../engine/engine.ts";',
     "",
     "// A reference to a holon, pinned to one version where it says so.",
     'export type Ref = { $ref: string; "@"?: string };',

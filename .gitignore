@@ -1,5 +1,4 @@
 .DS_Store
 .stale/
 node_modules/
-site/chassis.js
-site/worker.js
+site/

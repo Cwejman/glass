@@ -1,5 +1,5 @@
-import type { Id } from "../../src/store/id.ts";
-import type { Argument, By, Expression } from "../../src/engine/expression.ts";
+import type { Id } from "../../store/id.ts";
+import type { Argument, By, Expression } from "../../engine/expression.ts";
 
 // An expression, taken apart into what it means: the parts it narrows by,
 // each a function and what it is given, said as a field and a value, as

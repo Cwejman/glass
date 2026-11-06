@@ -1,8 +1,8 @@
-import type { Json } from "../../src/store/canonical.ts";
-import { canonical } from "../../src/store/canonical.ts";
-import { newId, type Id } from "../../src/store/id.ts";
-import type { Declaration, Given, Made, Space } from "../../src/interface/component.ts";
-import type { Expression } from "../../src/engine/expression.ts";
+import type { Json } from "../../store/canonical.ts";
+import { canonical } from "../../store/canonical.ts";
+import { newId, type Id } from "../../store/id.ts";
+import type { Declaration, Given, Made, Space } from "../../interface/component.ts";
+import type { Expression } from "../../engine/expression.ts";
 import type { MountBody, Ref } from "./bodies.ts";
 import { h } from "./jsx.ts";
 import { overlay } from "./menu.ts";
