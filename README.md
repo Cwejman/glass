@@ -28,7 +28,7 @@ What the store holds:
 
 Its first 81 commits are its birth, a slice each in the order things came. Each commit after them is a diff-pack.
 
-`store/paper/` is a second store, local by the paper's licence: a paper on holonic systems read in whole, with 17 readings drawn over it. Only the PDF is kept in git. Its licence, read as a holon, is in the main store.
+`store/paper/` is a second store: a paper on holonic systems read in whole, as holons in its own order and word, with 17 readings built upon it, each in its readers' own words and holding the paper's paragraphs by reference. Its licence, CC BY-NC-ND 4.0, read as a holon in the main store, says why both may be public: a change of format is no adaptation, and holons built upon a work do not rework it.
 
 ## How to read
 
