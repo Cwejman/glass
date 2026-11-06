@@ -19,7 +19,9 @@ export type Holon = { id: string; instance: string[]; name?: string; mould?: any
 export type Store = Awaited<ReturnType<typeof open>>;
 
 export async function open(dir: string) {
-  const [head, headPack] = (await readFile(join(dir, "refs/main"), "utf8")).trim().split(" ") as [Name, Name];
+  // A store with no ref yet is empty: its first commit has no parent.
+  const ref = Bun.file(join(dir, "refs/main"));
+  const [head, headPack] = ((await ref.exists()) ? (await readFile(join(dir, "refs/main"), "utf8")).trim().split(" ") : [null, null]) as [Name | null, Name | null];
   const where = new Map<string, [string, number, number]>();
   const written = new Map<string, string>();
   const learn = async (pack: string) => {
@@ -36,14 +38,20 @@ export async function open(dir: string) {
     if ((await nameOfText(text)) !== name) throw new Error(`${name} does not match its bytes`);
     return JSON.parse(text);
   }
-  const log: { commit: Name; at: string; says: string }[] = [];
+  const log: { commit: Name; pack: Name; at: string; says: string }[] = [];
   for (let c: string | null = head, p: string | null = headPack; c; ) {
     await learn(p!);
     const commit = await get(c);
-    log.push({ commit: c as Name, at: commit.at, says: commit.says });
+    log.push({ commit: c as Name, pack: p as Name, at: commit.at, says: commit.says });
     c = commit.parent; p = commit.parentPack;
   }
-  const index = await get((await get(head)).index);
+  const index = head ? await get((await get(head)).index) : { kind: "index", names: {}, holons: null };
+  // The versions one pack holds, in the order written: what that commit added.
+  async function added(pack: string) {
+    const hex = pack.slice("sha256-".length);
+    const text = await Bun.file(join(dir, "packs", `${hex}.pack`)).text();
+    return text.split("\n").filter(Boolean).map((l) => JSON.parse(l)).filter((o) => o.kind === "version");
+  }
   // Every holon the head holds: its id, its version's name, and the holon.
   async function holons() {
     const out = new Map<string, { version: Name; holon: Holon }>();
@@ -57,12 +65,12 @@ export async function open(dir: string) {
     if (index.holons) await walk(index.holons);
     return out;
   }
-  return { dir, head, headPack, index, log: log.reverse(), get, holons, written };
+  return { dir, head, headPack, index, log: log.reverse(), get, holons, written, added };
 }
 
 // Adds one commit: the holons given, each a new version pointing back at the
 // one before. Only what this commit adds goes into its pack.
-export async function commit(store: Store, holons: Holon[], says: string, at = new Date().toISOString()) {
+export async function commit(store: Store, holons: Holon[], says: string, at = new Date().toISOString(), gone: string[] = []) {
   const fresh: [Name, string][] = [];
   const put = async (o: unknown) => {
     const text = canonical(o); const name = await nameOfText(text);
@@ -78,6 +86,9 @@ export async function commit(store: Store, holons: Holon[], says: string, at = n
     updates.set(h.id, await put(version));
     if (h.name && !names[h.name]) names[h.name] = h.id;
   }
+  // What the commit takes out of the field: gone from its index from then on,
+  // every version it had still in the packs before.
+  for (const id of gone) if (before.has(id)) { updates.set(id, null as any); for (const [n, i] of Object.entries(names)) if (i === id) delete names[n]; }
   const root = await grow(objects, store.index.holons ?? undefined, updates);
   const index = await put({ kind: "index", names, holons: root });
   const c = await put({ kind: "commit", parent: store.head, parentPack: store.headPack, at, index, says });
@@ -87,6 +98,7 @@ export async function commit(store: Store, holons: Holon[], says: string, at = n
   const pack = await nameOfText(packText);
   const hex = pack.slice("sha256-".length);
   await mkdir(join(store.dir, "packs"), { recursive: true });
+  await mkdir(join(store.dir, "refs"), { recursive: true });
   await writeFile(join(store.dir, "packs", `${hex}.pack`), packText);
   await writeFile(join(store.dir, "packs", `${hex}.idx`), canonical({ kind: "pack-index", pack, objects: idx }) + "\n");
   await writeFile(join(store.dir, "refs", "main"), `${c} ${pack}\n`);
@@ -98,7 +110,8 @@ const leafSize = 64;
 async function grow(objects: any, at: Name | undefined, updates: ReadonlyMap<string, Name>, depth = 0): Promise<Name> {
   const here = at ? await objects.get(at) : { kind: "index-leaf", depth, versions: {} };
   if (here.kind === "index-leaf") {
-    const versions = { ...here.versions, ...Object.fromEntries(updates) };
+    const versions: Record<string, Name> = { ...here.versions, ...Object.fromEntries(updates) };
+    for (const [id, v] of Object.entries(versions)) if (v === null) delete versions[id];
     if (Object.keys(versions).length <= leafSize) return objects.put({ kind: "index-leaf", depth, versions });
     return objects.put({ kind: "index-branch", depth, branches: await branchesOf(objects, undefined, Object.entries(versions) as [string, Name][], depth) });
   }
@@ -111,10 +124,11 @@ async function branchesOf(objects: any, before: Record<string, Name> | undefined
   return { ...before, ...Object.fromEntries(grown) };
 }
 
-// The field: every store under store/ read as one, the paper's where it is present.
+// The field: every store under store/ read as one.
 export async function field() {
   const all = new Map<string, Holon>();
-  for (const dir of ["store", "store/paper"]) {
+  const dirs = ["store", ...[...new Bun.Glob("*/refs/main").scanSync("store")].map((f) => join("store", f.split("/")[0]!))];
+  for (const dir of dirs) {
     if (!(await Bun.file(join(dir, "refs/main")).exists())) continue;
     for (const [id, { holon }] of await (await open(dir)).holons()) all.set(id, holon);
   }
