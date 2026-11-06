@@ -23,7 +23,7 @@ Beside it, also in `src/`:
 - `src/field/`: the field glass shipped, as the birth read it: types as JSON, components as modules or templates, the entry and the materials.
 - `src/store/vectors/`: the store's contract, in no language, which any implementation answers to.
 - `src/site/`: the page; the build writes it, with the built client, into `site/`, which is output only.
-- `src/tools/`: scripts over the store in `store/`.
+- `src/tools/`: reading the store from its packs and adding commits to it.
 
 The knowledge is no longer here: since 2026-11-06 it is holons in `store/`, and the birth that read it from markdown has ended.
 

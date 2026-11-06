@@ -6,23 +6,29 @@ The repository holds two things: `store/`, the holons, and `src/`, the code. Onl
 
 ## The store
 
-Everything is a holon: `{id, instance, name?, mould?, body}`. The `id` is a ULID given at birth. `instance` is the type the holon is an instance of. A type is a holon with a `mould`, which says what its instances hold, field by field, each in prose. Inside a body, `{"$ref": id}` is a reference to another holon. A reference holds (makes the other a part) or only points, as the mould says, or as `$holds` on the reference itself says.
+Everything is a holon: an `id` (a ULID given at birth), the type it is an `instance` of, an optional `name`, an optional `mould`, and a `body`. A type is a holon with a mould, which says what its instances hold, field by field, each in prose. Inside a body, `{"$ref": id}` is a reference to another holon. A reference holds (makes the other a part) or only points, as the mould says, or as `$holds` on the reference itself says.
 
-Each file in `store/` is one JSON array with one holon per line:
+The store is packs: no other copy of it exists.
 
-| File | What it holds |
-|---|---|
-| `union.json` | The way in: one holon that points at every store's roots and holds none. |
-| `primitives.json` | The types. Read their moulds first. |
-| `lexicon.json` | Every word as one: the lexemes that words point at. |
-| `wiki.json` | The wiki that was markdown, to the word: briefs, paragraphs, sentences, words. Links are references. It includes the author's words before the store, a day to a brief, under the paths `said/2026-10-30.md` to `said/2026-11-06.md`. |
-| `markdown.json` | Markdown's surface, kept apart: with the wiki it rebuilds each old file. |
-| `session.json` | The author's words in the second session of 2026-11-06, utterance by utterance, and the paths of evolution noted beside them. |
-| `fork-licence.json`, `fork-selection.json` | Two forks that met that session, each pointing at it. |
-| `statistics.json` | Statistics declared as prose and expression, never stored, over proposed functions. |
-| `slices.json` | The store cut into the commits it is born in, each declared by its roots. |
-| `packs/`, `refs/main` | The store itself: one pack and its index per commit, and the ref naming the head. |
-| `paper/` | A paper on holonic systems, read in whole, with its licence as a holon. By that licence its holons, its reading and the readings drawn over it stay on the machine that made them; only the PDF, the licence and the types are kept in git. |
+```
+store/refs/main             "<commit> <pack>": the one line that ever changes
+store/packs/<hash>.pack     the objects one commit adds, one canonical JSON per line
+store/packs/<hash>.idx      each object's name -> [byte offset, length] in that pack
+```
+
+A version is `{kind, id, prev, instance, name?, mould?, body}`. An index is `{kind, names, holons}`, its tree of leaves keyed by the start of each id, its moment of birth. A commit is `{kind, parent, parentPack, at, index, says}`. From the ref alone, any object is reached by byte range, and checked by its name.
+
+What the store holds:
+- the types;
+- one lexicon of every word;
+- the wiki that was markdown, to the word, with its links as references and markdown's surface kept apart. The author's words before the store are among it, a day to a brief, under `said/2026-10-30.md` to `said/2026-11-06.md`;
+- the second session of 2026-11-06, utterance by utterance, with its paths of evolution, and the two forks that met it;
+- statistics declared as prose and expression, never stored;
+- the union that reads it all.
+
+Its first 81 commits are its birth, a slice each in the order things came. Each commit after them is a diff-pack.
+
+`store/paper/` is a second store, local by the paper's licence: a paper on holonic systems read in whole, with 17 readings drawn over it. Only the PDF is kept in git. Its licence, read as a holon, is in the main store.
 
 ## How to read
 
@@ -37,7 +43,7 @@ bun src/tools/read.ts 2026-11-06-second    the latest session and its paths
 bun src/tools/read.ts session              any type, by its name
 ```
 
-The text is drawn from the holons each time; none is stored. A word is `before + text + after`, a sentence is its words, and a paragraph is its sentences. The other tools, to append a session's words, rebuild the union and slice the store, are in `src/tools/`, with their README.
+The text is drawn from the holons each time; none is stored. A word is `before + text + after`, a sentence is its words, and a paragraph is its sentences. `src/tools/append.ts` adds to the store, as one commit; `src/tools/README.md` says how.
 
 ## The code
 
@@ -45,6 +51,6 @@ The text is drawn from the holons each time; none is stored. A word is `before +
 
 ## Where it stands
 
-- **The holons are the source, and the store is born from them as packs.** `store/packs/` holds one pack per commit, each with only the objects that commit adds, beside an index of where each sits; `store/refs/main` names the head. 81 commits, 22 MB, every holon reads back from the packs identical to its source (`bun src/tools/read-packs.ts store`). The paper is a store of its own in `store/paper/`, kept local. The birth from markdown has ended.
-- **The code is older than the primitives.** It still writes loose objects, keeps a type's fields and a holon's name inside the body, keys its index tree by the end of each id, and its birth reads markdown that is no longer here. Bringing the engine and the client to the packs as `src/tools/pack.ts` writes them is the next build. The new interface comes after that: a glass for the human, born from this store.
+- **The store is the packs.** The JSON that came before them, and the scripts that served it, are in git's history only. The birth from markdown has ended.
+- **The code is older than the store.** The engine and the client still read loose objects, keep a type's fields and a holon's name inside the body, and key the index tree by the end of each id. Bringing them to the packs as `src/tools/packs.ts` reads and writes them is the next build. The new interface comes after that: a glass for the human, born from this store.
 - **Memory is off** for every session (`.claude/settings.json`). What a session knows is in the field.
