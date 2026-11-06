@@ -20,7 +20,8 @@ Each file in `store/` is one JSON array with one holon per line:
 | `session.json` | The author's words in the second session of 2026-11-06, utterance by utterance, and the paths of evolution noted beside them. |
 | `fork-licence.json`, `fork-selection.json` | Two forks that met that session, each pointing at it. |
 | `statistics.json` | Statistics declared as prose and expression, never stored, over proposed functions. |
-| `slices.json` | The store cut into the commits it would be born in, each declared by its roots. |
+| `slices.json` | The store cut into the commits it is born in, each declared by its roots. |
+| `packs/`, `refs/main` | The store itself: one pack and its index per commit, and the ref naming the head. |
 | `paper/` | A paper on holonic systems, read in whole, with its licence as a holon. By that licence its holons, its reading and the readings drawn over it stay on the machine that made them; only the PDF, the licence and the types are kept in git. |
 
 ## How to read
@@ -44,6 +45,6 @@ The text is drawn from the holons each time; none is stored. A word is `before +
 
 ## Where it stands
 
-- **The holons are the source now.** The birth from markdown has ended. Any birth from here only adds diff-packs: one per commit, each holding only what that commit adds (see the path "The store packed, carried by git" in the session). No pack is written yet; `slices.json` is the plan.
-- **The code is older than the primitives.** It still writes loose objects, keeps a type's fields and a holon's name inside the body, and its birth reads markdown that is no longer here. Bringing it to the primitives as they stand, with packs, is the next build. The new interface comes after that: a glass for the human, born from this store.
+- **The holons are the source, and the store is born from them as packs.** `store/packs/` holds one pack per commit, each with only the objects that commit adds, beside an index of where each sits; `store/refs/main` names the head. 81 commits, 22 MB, every holon reads back from the packs identical to its source (`bun src/tools/read-packs.ts store`). The paper is a store of its own in `store/paper/`, kept local. The birth from markdown has ended.
+- **The code is older than the primitives.** It still writes loose objects, keeps a type's fields and a holon's name inside the body, keys its index tree by the end of each id, and its birth reads markdown that is no longer here. Bringing the engine and the client to the packs as `src/tools/pack.ts` writes them is the next build. The new interface comes after that: a glass for the human, born from this store.
 - **Memory is off** for every session (`.claude/settings.json`). What a session knows is in the field.

@@ -1,7 +1,10 @@
 # The paper is CC BY-NC-ND 4.0: it may be shared as it is, with attribution,
 # but material adapted from it may not. Its holons, its reading and every
 # reading drawn over it stay on this machine; the types are glass's own.
+# Its packs and ref are a store of its own, local for the same reason.
 base.json
 readings/
 reading.txt
 keys.json
+packs/
+refs/
