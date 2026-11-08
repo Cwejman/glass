@@ -54,7 +54,7 @@ bun src/tools/read.ts 2026-11-06-second    the latest session and its paths
 bun src/tools/read.ts session              any type, by its name
 bun src/tools/read.ts measured             what was said, measured: each a grade and a note, and the id to read it by
 bun src/tools/read.ts raised               the threads raised from what was said, and where each stands
-bun src/tools/read.ts measured | grep -A1 stale   the briefs the work has overtaken, and what still holds in each
+bun src/tools/read.ts measured | grep -A1 ' stale:'   the briefs the work has overtaken, and what still holds in each
 ```
 
 A brief does not show its own stale mark when read, so read those marks before trusting the wiki. They are marked rather than rewritten, because working in prose takes more effort; what was said stands as it was, and is never measured stale.
