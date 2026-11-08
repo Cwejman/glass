@@ -23,7 +23,7 @@ Beside it, also in `src/`:
 - `src/field/`: the field glass shipped, as the birth read it: types as JSON, components as modules or templates, the entry and the materials.
 - `src/store/vectors/`: the store's contract, in no language, which any implementation answers to.
 - `src/site/`: the page; the build writes it, with the built client, into `site/`, which is output only.
-- `src/tools/`: reading the store from its packs and adding commits to it.
+- `src/tools/`: reading the store from its blocks and adding commits to it, and the format's vectors.
 
 The knowledge is no longer here: since 2026-11-06 it is holons in `store/`, and the birth that read it from markdown has ended.
 
@@ -38,6 +38,6 @@ Everything runs with [Bun](https://bun.sh).
 - `bun run build` declares the bodies of the field's types for the components, and builds the chassis and the engine into `site/`.
 - `bun run serve` serves `site/` on this machine, at `http://127.0.0.1:4330/`.
 
-After changing the engine or the interface, build. The built client is not kept in git; the store is. All of this speaks of the old form of the store until the code is brought to the packs, as the root README tells.
+After changing the engine or the interface, build. The built client is not kept in git; the store is. All of this speaks of the old form of the store until the code is brought to the blocks, as the root README tells.
 
 *The session's, 2026-11-03.*

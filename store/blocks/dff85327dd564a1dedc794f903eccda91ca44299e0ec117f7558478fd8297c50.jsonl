@@ -1,0 +1,346 @@
+{"body":{"level":3,"on":{"$ref":"1M6YBY3G0001W2E"}},"id":"1M6YBY3G0001X1R","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":3,"on":{"$ref":"1M6YBY3G0001W57"}},"id":"1M6YBY3G0001X1S","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":3,"on":{"$ref":"1M6YBY3G0001W8P"}},"id":"1M6YBY3G0001X1T","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":3,"on":{"$ref":"1M6YBY3G0001WAW"}},"id":"1M6YBY3G0001X1V","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"on":{"$ref":"1M6YBY3G0001VKZ"}},"id":"1M6YBY3G0001X1W","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"on":{"$ref":"1M6YBY3G0001WFW"}},"id":"1M6YBY3G0001X1X","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"on":{"$ref":"1M6YBY3G0001WKM"}},"id":"1M6YBY3G0001X1Y","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"on":{"$ref":"1M6YBY3G0001WR0"},"to":"origins.md"},"id":"1M6YBY3G0001X1Z","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"on":{"$ref":"1M6YBY3G0001WPN"}},"id":"1M6YBY3G0001X20","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"front":["under: the rule","kind: record"],"level":1,"on":{"$ref":"1M6YBY3G0001QF9"}},"id":"1M6YBY3G0001X21","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001KCY"},"to":"said/2026-11-05.md#2-knowledge-schema-and-the-next-question"},"id":"1M6YBY3G0001X22","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":3,"number":"1.1 ","on":{"$ref":"1M6YBY3G0001K6M"}},"id":"1M6YBY3G0001X23","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G0001K1K"}},"id":"1M6YBY3G0001X24","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001KTR"},"ticks":"`"},"id":"1M6YBY3G0001X25","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":3,"number":"2.1 ","on":{"$ref":"1M6YBY3G0001KQQ"}},"id":"1M6YBY3G0001X26","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":3,"number":"2.2 ","on":{"$ref":"1M6YBY3G0001M3Q"}},"id":"1M6YBY3G0001X27","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"fence":"```","on":{"$ref":"1M6YBY3G0001M99"}},"id":"1M6YBY3G0001X28","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":3,"number":"2.3 ","on":{"$ref":"1M6YBY3G0001M8B"}},"id":"1M6YBY3G0001X29","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G0001KH5"}},"id":"1M6YBY3G0001X2A","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G0001MDP"}},"id":"1M6YBY3G0001X2B","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"4. ","on":{"$ref":"1M6YBY3G0001MND"}},"id":"1M6YBY3G0001X2C","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"front":["under: the rule","kind: brief"],"level":1,"on":{"$ref":"1M6YBY3G0001JZ7"}},"id":"1M6YBY3G0001X2D","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":3,"number":"1.1 ","on":{"$ref":"1M6YBY3G0001Q03"}},"id":"1M6YBY3G0001X2E","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":3,"number":"1.2 ","on":{"$ref":"1M6YBY3G0001Q2N"}},"id":"1M6YBY3G0001X2F","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G0001PVK"}},"id":"1M6YBY3G0001X2G","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G0001Q55"}},"id":"1M6YBY3G0001X2H","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G0001Q8X"}},"id":"1M6YBY3G0001X2J","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"front":["under: the rule","kind: brief"],"level":1,"on":{"$ref":"1M6YBY3G0001PSQ"}},"id":"1M6YBY3G0001X2K","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"1. ","on":{"$ref":"1M6YBY3G0001MYR"}},"id":"1M6YBY3G0001X2M","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001N1F"},"to":"architecture/client.md#3-one-protocol"},"id":"1M6YBY3G0001X2N","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"2. ","on":{"$ref":"1M6YBY3G0001N0J"}},"id":"1M6YBY3G0001X2P","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"on":{"$ref":"1M6YBY3G0001N36"},"to":"primitives.md#9-interface"},"id":"1M6YBY3G0001X2Q","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"3. ","on":{"$ref":"1M6YBY3G0001N1X"}},"id":"1M6YBY3G0001X2R","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"on":{"$ref":"1M6YBY3G0001N4B"},"to":"knowledge.md#3-the-first-reader-component"},"id":"1M6YBY3G0001X2S","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"4. ","on":{"$ref":"1M6YBY3G0001N3Q"}},"id":"1M6YBY3G0001X2T","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"5. ","on":{"$ref":"1M6YBY3G0001N50"}},"id":"1M6YBY3G0001X2V","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001N7S"},"to":"said/2026-11-02.md#16-well-done-when-i-arrive"},"id":"1M6YBY3G0001X2W","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":3,"number":"1.1 ","on":{"$ref":"1M6YBY3G0001N87"}},"id":"1M6YBY3G0001X2X","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001NB7"}},"id":"1M6YBY3G0001X2Y","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001NB5"}},"id":"1M6YBY3G0001X2Z","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001NCE"}},"id":"1M6YBY3G0001X30","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001NCC"}},"id":"1M6YBY3G0001X31","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001NDK"}},"id":"1M6YBY3G0001X32","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001NDH"}},"id":"1M6YBY3G0001X33","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001NF7"}},"id":"1M6YBY3G0001X34","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001NFC"},"to":"architecture/interface.md"},"id":"1M6YBY3G0001X35","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001NF5"}},"id":"1M6YBY3G0001X36","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001NJ5"}},"id":"1M6YBY3G0001X37","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001NJ3"}},"id":"1M6YBY3G0001X38","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":3,"number":"1.2 ","on":{"$ref":"1M6YBY3G0001NAN"}},"id":"1M6YBY3G0001X39","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":3,"number":"1.3 ","on":{"$ref":"1M6YBY3G0001NPG"}},"id":"1M6YBY3G0001X3A","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G0001MXG"}},"id":"1M6YBY3G0001X3B","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001NWY"}},"id":"1M6YBY3G0001X3C","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001NYX"}},"id":"1M6YBY3G0001X3D","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001NYV"}},"id":"1M6YBY3G0001X3E","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001NZK"}},"id":"1M6YBY3G0001X3F","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001P10"}},"id":"1M6YBY3G0001X3G","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001P0Y"}},"id":"1M6YBY3G0001X3H","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001P1S"}},"id":"1M6YBY3G0001X3J","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001P1Q"}},"id":"1M6YBY3G0001X3K","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001P25"}},"id":"1M6YBY3G0001X3M","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001P23"}},"id":"1M6YBY3G0001X3N","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001P2J"}},"id":"1M6YBY3G0001X3P","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001P2G"}},"id":"1M6YBY3G0001X3Q","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001P3C"}},"id":"1M6YBY3G0001X3R","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001P3A"}},"id":"1M6YBY3G0001X3S","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001P3V"}},"id":"1M6YBY3G0001X3T","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G0001NVW"}},"id":"1M6YBY3G0001X3V","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001P5M"}},"id":"1M6YBY3G0001X3W","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001P6Q"},"to":"architecture/interface.md#4-which-component-draws-a-mount"},"id":"1M6YBY3G0001X3X","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001P5J"}},"id":"1M6YBY3G0001X3Y","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001P7G"}},"id":"1M6YBY3G0001X3Z","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"on":{"$ref":"1M6YBY3G0001P8C"},"to":"architecture/interface.md#5-a-slot-and-the-kind-it-is"},"id":"1M6YBY3G0001X40","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001P7E"}},"id":"1M6YBY3G0001X41","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001PA5"}},"id":"1M6YBY3G0001X42","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001PCK"}},"id":"1M6YBY3G0001X43","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"on":{"$ref":"1M6YBY3G0001PF8"},"to":"architecture/store.md#24-a-version-is-one-holon-as-it-stood"},"id":"1M6YBY3G0001X44","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001PCH"}},"id":"1M6YBY3G0001X45","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001PFD"}},"id":"1M6YBY3G0001X46","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001PGD"}},"id":"1M6YBY3G0001X47","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001PH7"}},"id":"1M6YBY3G0001X48","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001PHT"}},"id":"1M6YBY3G0001X49","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001PJY"}},"id":"1M6YBY3G0001X4A","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"on":{"$ref":"1M6YBY3G0001PK4"},"to":"knowledge.md#2-prose-made-native"},"id":"1M6YBY3G0001X4B","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"on":{"$ref":"1M6YBY3G0001PKS"},"to":"architecture/relations.md#7-what-is-finer-than-a-holon"},"id":"1M6YBY3G0001X4C","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001PJW"}},"id":"1M6YBY3G0001X4D","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001PM1"}},"id":"1M6YBY3G0001X4E","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001PKZ"}},"id":"1M6YBY3G0001X4F","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001PMH"}},"id":"1M6YBY3G0001X4G","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001PN2"},"to":"architecture/relations.md#10-what-is-open"},"id":"1M6YBY3G0001X4H","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001PMF"}},"id":"1M6YBY3G0001X4J","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001PNJ"}},"id":"1M6YBY3G0001X4K","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"on":{"$ref":"1M6YBY3G0001PP6"},"to":"architecture/store.md#221-a-commit-across-the-fields-cuts"},"id":"1M6YBY3G0001X4M","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001PNG"}},"id":"1M6YBY3G0001X4N","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001PPE"}},"id":"1M6YBY3G0001X4P","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"on":{"$ref":"1M6YBY3G0001PPY"},"to":"architecture/store.md#10-every-source-is-an-integration"},"id":"1M6YBY3G0001X4Q","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001PPC"}},"id":"1M6YBY3G0001X4R","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001PQ6"}},"id":"1M6YBY3G0001X4S","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001PQ4"}},"id":"1M6YBY3G0001X4T","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001PQR"}},"id":"1M6YBY3G0001X4V","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"on":{"$ref":"1M6YBY3G0001PR2"},"to":"architecture/home.md#7-when-the-shape-of-state-changes"},"id":"1M6YBY3G0001X4W","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001PQP"}},"id":"1M6YBY3G0001X4X","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001PR9"}},"id":"1M6YBY3G0001X4Y","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001PR7"}},"id":"1M6YBY3G0001X4Z","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G0001P4W"}},"id":"1M6YBY3G0001X50","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"front":["under: the rule","kind: brief","status: proposed"],"level":1,"on":{"$ref":"1M6YBY3G0001MTE"}},"id":"1M6YBY3G0001X51","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"on":{"$ref":"1M6YBY3G00011M5"},"to":"said/2026-10-31.md#12-what-is-new"},"id":"1M6YBY3G0001X52","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00011M9"},"to":"said/2026-10-31.md#2-a-runtime"},"id":"1M6YBY3G0001X53","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00011MR"},"to":"said/2026-11-01.md#15-reading-the-primitives"},"id":"1M6YBY3G0001X54","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00011TJ"},"to":"architecture/store.md"},"id":"1M6YBY3G0001X55","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G00011MV"}},"id":"1M6YBY3G0001X56","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00011XZ"},"to":"plan.md#3-what-is-open"},"id":"1M6YBY3G0001X57","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"on":{"$ref":"1M6YBY3G0001252"},"to":"architecture/store.md#24-a-version-is-one-holon-as-it-stood"},"id":"1M6YBY3G0001X58","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G00011TP"}},"id":"1M6YBY3G0001X59","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G000127M"},"to":"architecture/store.md"},"id":"1M6YBY3G0001X5A","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G000128P"},"to":"architecture/store.md#81-taking-a-whole-away"},"id":"1M6YBY3G0001X5B","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00012A5"},"to":"architecture/store.md#10-every-source-is-an-integration"},"id":"1M6YBY3G0001X5C","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G0001256"}},"id":"1M6YBY3G0001X5D","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"4. ","on":{"$ref":"1M6YBY3G00012A9"}},"id":"1M6YBY3G0001X5E","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00012FW"},"to":"architecture/relations.md"},"id":"1M6YBY3G0001X5F","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"5. ","on":{"$ref":"1M6YBY3G00012D1"}},"id":"1M6YBY3G0001X5G","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00012MC"},"to":"architecture/home.md"},"id":"1M6YBY3G0001X5H","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"6. ","on":{"$ref":"1M6YBY3G00012G0"}},"id":"1M6YBY3G0001X5J","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"7. ","on":{"$ref":"1M6YBY3G00012R2"}},"id":"1M6YBY3G0001X5K","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"8. ","on":{"$ref":"1M6YBY3G00012V8"}},"id":"1M6YBY3G0001X5M","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G000133J"},"to":"said/2026-11-03.md#17-the-root-as-a-mount"},"id":"1M6YBY3G0001X5N","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"9. ","on":{"$ref":"1M6YBY3G00012YG"}},"id":"1M6YBY3G0001X5P","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"front":["under: the rule","kind: brief"],"level":1,"on":{"$ref":"1M6YBY3G00011HF"}},"id":"1M6YBY3G0001X5Q","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G00010A1"}},"id":"1M6YBY3G0001X5R","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G00010B8"}},"id":"1M6YBY3G0001X5S","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G00010C1"}},"id":"1M6YBY3G0001X5T","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":3,"number":"4.1 ","on":{"$ref":"1M6YBY3G00010ER"}},"id":"1M6YBY3G0001X5V","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":3,"number":"4.2 ","on":{"$ref":"1M6YBY3G00010G3"}},"id":"1M6YBY3G0001X5W","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":3,"number":"4.3 ","on":{"$ref":"1M6YBY3G00010GT"}},"id":"1M6YBY3G0001X5X","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"4. ","on":{"$ref":"1M6YBY3G00010D7"}},"id":"1M6YBY3G0001X5Y","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"5. ","on":{"$ref":"1M6YBY3G00010KX"}},"id":"1M6YBY3G0001X5Z","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"6. ","on":{"$ref":"1M6YBY3G00010MW"}},"id":"1M6YBY3G0001X60","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"7. ","on":{"$ref":"1M6YBY3G00010NK"}},"id":"1M6YBY3G0001X61","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"8. ","on":{"$ref":"1M6YBY3G00010R3"}},"id":"1M6YBY3G0001X62","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"9. ","on":{"$ref":"1M6YBY3G00010RS"}},"id":"1M6YBY3G0001X63","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"front":["under: the rule","kind: record"],"level":1,"on":{"$ref":"1M6YBY3G0001091"}},"id":"1M6YBY3G0001X64","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":3,"number":"1.1 ","on":{"$ref":"1M6YBY3G0000YZN"}},"id":"1M6YBY3G0001X65","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":3,"number":"1.2 ","on":{"$ref":"1M6YBY3G0000Z1C"}},"id":"1M6YBY3G0001X66","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":3,"number":"1.3 ","on":{"$ref":"1M6YBY3G0000Z4B"}},"id":"1M6YBY3G0001X67","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":3,"number":"1.4 ","on":{"$ref":"1M6YBY3G0000Z75"}},"id":"1M6YBY3G0001X68","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":3,"number":"1.5 ","on":{"$ref":"1M6YBY3G0000Z9S"}},"id":"1M6YBY3G0001X69","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G0000YZ6"}},"id":"1M6YBY3G0001X6A","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G0000ZBP"}},"id":"1M6YBY3G0001X6B","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G0000ZNS"}},"id":"1M6YBY3G0001X6C","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"4. ","on":{"$ref":"1M6YBY3G0000ZPN"}},"id":"1M6YBY3G0001X6D","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"5. ","on":{"$ref":"1M6YBY3G0000ZQF"}},"id":"1M6YBY3G0001X6E","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"6. ","on":{"$ref":"1M6YBY3G0000ZR1"}},"id":"1M6YBY3G0001X6F","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"7. ","on":{"$ref":"1M6YBY3G0000ZSC"}},"id":"1M6YBY3G0001X6G","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"8. ","on":{"$ref":"1M6YBY3G0000ZTK"}},"id":"1M6YBY3G0001X6H","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"9. ","on":{"$ref":"1M6YBY3G0000ZW7"}},"id":"1M6YBY3G0001X6J","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"10. ","on":{"$ref":"1M6YBY3G0000ZYH"}},"id":"1M6YBY3G0001X6K","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"front":["under: the rule","kind: record"],"level":1,"on":{"$ref":"1M6YBY3G0000YX9"}},"id":"1M6YBY3G0001X6M","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G0000VYN"}},"id":"1M6YBY3G0001X6N","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G0000VZF"}},"id":"1M6YBY3G0001X6P","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G0000W62"}},"id":"1M6YBY3G0001X6Q","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"4. ","on":{"$ref":"1M6YBY3G0000WFA"}},"id":"1M6YBY3G0001X6R","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"5. ","on":{"$ref":"1M6YBY3G0000WJZ"}},"id":"1M6YBY3G0001X6S","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"6. ","on":{"$ref":"1M6YBY3G0000WPS"}},"id":"1M6YBY3G0001X6T","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"7. ","on":{"$ref":"1M6YBY3G0000WZK"}},"id":"1M6YBY3G0001X6V","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"8. ","on":{"$ref":"1M6YBY3G0000X1B"}},"id":"1M6YBY3G0001X6W","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"9. ","on":{"$ref":"1M6YBY3G0000XB8"}},"id":"1M6YBY3G0001X6X","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"10. ","on":{"$ref":"1M6YBY3G0000XDQ"}},"id":"1M6YBY3G0001X6Y","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"11. ","on":{"$ref":"1M6YBY3G0000XMS"}},"id":"1M6YBY3G0001X6Z","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"12. ","on":{"$ref":"1M6YBY3G0000XQR"}},"id":"1M6YBY3G0001X70","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"13. ","on":{"$ref":"1M6YBY3G0000XZ6"}},"id":"1M6YBY3G0001X71","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"14. ","on":{"$ref":"1M6YBY3G0000YBE"}},"id":"1M6YBY3G0001X72","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"15. ","on":{"$ref":"1M6YBY3G0000YPM"}},"id":"1M6YBY3G0001X73","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"front":["under: the rule","kind: record"],"level":1,"on":{"$ref":"1M6YBY3G0000VX7"}},"id":"1M6YBY3G0001X74","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G0000R9A"}},"id":"1M6YBY3G0001X75","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G0000RE2"}},"id":"1M6YBY3G0001X76","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G0000RN5"}},"id":"1M6YBY3G0001X77","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"4. ","on":{"$ref":"1M6YBY3G0000S1F"}},"id":"1M6YBY3G0001X78","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"5. ","on":{"$ref":"1M6YBY3G0000SAK"}},"id":"1M6YBY3G0001X79","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"6. ","on":{"$ref":"1M6YBY3G0000SDJ"}},"id":"1M6YBY3G0001X7A","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"7. ","on":{"$ref":"1M6YBY3G0000SQ6"}},"id":"1M6YBY3G0001X7B","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"8. ","on":{"$ref":"1M6YBY3G0000T10"}},"id":"1M6YBY3G0001X7C","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"9. ","on":{"$ref":"1M6YBY3G0000TDK"}},"id":"1M6YBY3G0001X7D","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"10. ","on":{"$ref":"1M6YBY3G0000TK4"}},"id":"1M6YBY3G0001X7E","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"11. ","on":{"$ref":"1M6YBY3G0000TQA"}},"id":"1M6YBY3G0001X7F","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"12. ","on":{"$ref":"1M6YBY3G0000V1V"}},"id":"1M6YBY3G0001X7G","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"13. ","on":{"$ref":"1M6YBY3G0000V6C"}},"id":"1M6YBY3G0001X7H","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"14. ","on":{"$ref":"1M6YBY3G0000VF3"}},"id":"1M6YBY3G0001X7J","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"15. ","on":{"$ref":"1M6YBY3G0000VKT"}},"id":"1M6YBY3G0001X7K","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"16. ","on":{"$ref":"1M6YBY3G0000VQD"}},"id":"1M6YBY3G0001X7M","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"17. ","on":{"$ref":"1M6YBY3G0000VVY"}},"id":"1M6YBY3G0001X7N","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"front":["under: the rule","kind: record"],"level":1,"on":{"$ref":"1M6YBY3G0000R8D"}},"id":"1M6YBY3G0001X7P","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G0000D41"}},"id":"1M6YBY3G0001X7Q","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G0000D5V"}},"id":"1M6YBY3G0001X7R","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G0000D6F"}},"id":"1M6YBY3G0001X7S","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"4. ","on":{"$ref":"1M6YBY3G0000D71"}},"id":"1M6YBY3G0001X7T","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"5. ","on":{"$ref":"1M6YBY3G0000D9X"}},"id":"1M6YBY3G0001X7V","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"6. ","on":{"$ref":"1M6YBY3G0000DB3"}},"id":"1M6YBY3G0001X7W","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"7. ","on":{"$ref":"1M6YBY3G0000DE8"}},"id":"1M6YBY3G0001X7X","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"8. ","on":{"$ref":"1M6YBY3G0000DG2"}},"id":"1M6YBY3G0001X7Y","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"9. ","on":{"$ref":"1M6YBY3G0000DJ7"}},"id":"1M6YBY3G0001X7Z","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"10. ","on":{"$ref":"1M6YBY3G0000DK0"}},"id":"1M6YBY3G0001X80","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"11. ","on":{"$ref":"1M6YBY3G0000E5T"}},"id":"1M6YBY3G0001X81","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"12. ","on":{"$ref":"1M6YBY3G0000E65"}},"id":"1M6YBY3G0001X82","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"13. ","on":{"$ref":"1M6YBY3G0000EJ7"}},"id":"1M6YBY3G0001X83","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"14. ","on":{"$ref":"1M6YBY3G0000FV6"}},"id":"1M6YBY3G0001X84","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"15. ","on":{"$ref":"1M6YBY3G0000FVA"}},"id":"1M6YBY3G0001X85","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"16. ","on":{"$ref":"1M6YBY3G0000G1H"}},"id":"1M6YBY3G0001X86","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"17. ","on":{"$ref":"1M6YBY3G0000GBX"}},"id":"1M6YBY3G0001X87","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"18. ","on":{"$ref":"1M6YBY3G0000HTX"}},"id":"1M6YBY3G0001X88","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"19. ","on":{"$ref":"1M6YBY3G0000HXH"}},"id":"1M6YBY3G0001X89","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"20. ","on":{"$ref":"1M6YBY3G0000JF0"}},"id":"1M6YBY3G0001X8A","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"21. ","on":{"$ref":"1M6YBY3G0000K83"}},"id":"1M6YBY3G0001X8B","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"22. ","on":{"$ref":"1M6YBY3G0000KHG"}},"id":"1M6YBY3G0001X8C","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"23. ","on":{"$ref":"1M6YBY3G0000KV6"}},"id":"1M6YBY3G0001X8D","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"24. ","on":{"$ref":"1M6YBY3G0000KXP"}},"id":"1M6YBY3G0001X8E","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"25. ","on":{"$ref":"1M6YBY3G0000MCS"}},"id":"1M6YBY3G0001X8F","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"front":["under: the rule","kind: record"],"level":1,"on":{"$ref":"1M6YBY3G0000D2W"}},"id":"1M6YBY3G0001X8G","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G000063X"}},"id":"1M6YBY3G0001X8H","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G00006GH"}},"id":"1M6YBY3G0001X8J","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G00006JB"}},"id":"1M6YBY3G0001X8K","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"4. ","on":{"$ref":"1M6YBY3G00006V0"}},"id":"1M6YBY3G0001X8M","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"5. ","on":{"$ref":"1M6YBY3G00006X1"}},"id":"1M6YBY3G0001X8N","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"6. ","on":{"$ref":"1M6YBY3G000070C"}},"id":"1M6YBY3G0001X8P","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"7. ","on":{"$ref":"1M6YBY3G000073G"}},"id":"1M6YBY3G0001X8Q","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"8. ","on":{"$ref":"1M6YBY3G00007TX"}},"id":"1M6YBY3G0001X8R","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"9. ","on":{"$ref":"1M6YBY3G0000829"}},"id":"1M6YBY3G0001X8S","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"10. ","on":{"$ref":"1M6YBY3G000095P"}},"id":"1M6YBY3G0001X8T","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"11. ","on":{"$ref":"1M6YBY3G00009RX"}},"id":"1M6YBY3G0001X8V","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"12. ","on":{"$ref":"1M6YBY3G00009W9"}},"id":"1M6YBY3G0001X8W","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"13. ","on":{"$ref":"1M6YBY3G0000A4M"}},"id":"1M6YBY3G0001X8X","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"14. ","on":{"$ref":"1M6YBY3G0000AE1"}},"id":"1M6YBY3G0001X8Y","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"15. ","on":{"$ref":"1M6YBY3G0000AFP"}},"id":"1M6YBY3G0001X8Z","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"16. ","on":{"$ref":"1M6YBY3G0000B6A"}},"id":"1M6YBY3G0001X90","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"17. ","on":{"$ref":"1M6YBY3G0000BJC"}},"id":"1M6YBY3G0001X91","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"18. ","on":{"$ref":"1M6YBY3G0000BMS"}},"id":"1M6YBY3G0001X92","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"19. ","on":{"$ref":"1M6YBY3G0000CC1"}},"id":"1M6YBY3G0001X93","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"20. ","on":{"$ref":"1M6YBY3G0000CMN"}},"id":"1M6YBY3G0001X94","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"21. ","on":{"$ref":"1M6YBY3G0000CVT"}},"id":"1M6YBY3G0001X95","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"22. ","on":{"$ref":"1M6YBY3G0000CZS"}},"id":"1M6YBY3G0001X96","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"front":["under: the rule","kind: record"],"level":1,"on":{"$ref":"1M6YBY3G0000631"}},"id":"1M6YBY3G0001X97","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G0000376"}},"id":"1M6YBY3G0001X98","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G0000381"}},"id":"1M6YBY3G0001X99","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G00003D0"}},"id":"1M6YBY3G0001X9A","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"4. ","on":{"$ref":"1M6YBY3G00003N5"}},"id":"1M6YBY3G0001X9B","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"5. ","on":{"$ref":"1M6YBY3G00003RD"}},"id":"1M6YBY3G0001X9C","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"6. ","on":{"$ref":"1M6YBY3G00003VP"}},"id":"1M6YBY3G0001X9D","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"7. ","on":{"$ref":"1M6YBY3G00003XC"}},"id":"1M6YBY3G0001X9E","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"8. ","on":{"$ref":"1M6YBY3G00003Y7"}},"id":"1M6YBY3G0001X9F","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"9. ","on":{"$ref":"1M6YBY3G000047V"}},"id":"1M6YBY3G0001X9G","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"10. ","on":{"$ref":"1M6YBY3G000048J"}},"id":"1M6YBY3G0001X9H","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"11. ","on":{"$ref":"1M6YBY3G00004DP"}},"id":"1M6YBY3G0001X9J","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"12. ","on":{"$ref":"1M6YBY3G00004GE"}},"id":"1M6YBY3G0001X9K","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"13. ","on":{"$ref":"1M6YBY3G00004GM"}},"id":"1M6YBY3G0001X9M","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"14. ","on":{"$ref":"1M6YBY3G00004V1"}},"id":"1M6YBY3G0001X9N","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"15. ","on":{"$ref":"1M6YBY3G000052A"}},"id":"1M6YBY3G0001X9P","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"16. ","on":{"$ref":"1M6YBY3G00005R1"}},"id":"1M6YBY3G0001X9Q","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"17. ","on":{"$ref":"1M6YBY3G00005RV"}},"id":"1M6YBY3G0001X9R","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"18. ","on":{"$ref":"1M6YBY3G00005TK"}},"id":"1M6YBY3G0001X9S","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"19. ","on":{"$ref":"1M6YBY3G00005WT"}},"id":"1M6YBY3G0001X9T","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"20. ","on":{"$ref":"1M6YBY3G00005Z2"}},"id":"1M6YBY3G0001X9V","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"21. ","on":{"$ref":"1M6YBY3G00005ZJ"}},"id":"1M6YBY3G0001X9W","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"22. ","on":{"$ref":"1M6YBY3G00005ZW"}},"id":"1M6YBY3G0001X9X","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"front":["under: the rule","kind: record"],"level":1,"on":{"$ref":"1M6YBY3G000036D"}},"id":"1M6YBY3G0001X9Y","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G000004K"}},"id":"1M6YBY3G0001X9Z","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G00000G5"}},"id":"1M6YBY3G0001XA0","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G000012F"}},"id":"1M6YBY3G0001XA1","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"4. ","on":{"$ref":"1M6YBY3G000014X"}},"id":"1M6YBY3G0001XA2","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"5. ","on":{"$ref":"1M6YBY3G00001N8"}},"id":"1M6YBY3G0001XA3","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"6. ","on":{"$ref":"1M6YBY3G0000201"}},"id":"1M6YBY3G0001XA4","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"7. ","on":{"$ref":"1M6YBY3G000023J"}},"id":"1M6YBY3G0001XA5","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"8. ","on":{"$ref":"1M6YBY3G000028C"}},"id":"1M6YBY3G0001XA6","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"9. ","on":{"$ref":"1M6YBY3G00002H2"}},"id":"1M6YBY3G0001XA7","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"10. ","on":{"$ref":"1M6YBY3G00002QM"}},"id":"1M6YBY3G0001XA8","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"11. ","on":{"$ref":"1M6YBY3G000034Z"}},"id":"1M6YBY3G0001XA9","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"front":["under: the rule","kind: record"],"level":1,"on":{"$ref":"1M6YBY3G000003S"}},"id":"1M6YBY3G0001XAA","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"front":["under: the rule","kind: record"],"level":1,"on":{"$ref":"1M6YBY3G000001M"}},"id":"1M6YBY3G0001XAB","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"on":{"$ref":"1M6YBY3G0001599"},"ticks":"`"},"id":"1M6YBY3G0001XAC","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"on":{"$ref":"1M6YBY3G00015A0"},"ticks":"`"},"id":"1M6YBY3G0001XAD","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G0001596"}},"id":"1M6YBY3G0001XAE","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"on":{"$ref":"1M6YBY3G00015AY"},"ticks":"`"},"id":"1M6YBY3G0001XAF","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"on":{"$ref":"1M6YBY3G00015BD"},"ticks":"`"},"id":"1M6YBY3G0001XAG","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G00015AV"}},"id":"1M6YBY3G0001XAH","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"on":{"$ref":"1M6YBY3G00015DC"},"ticks":"`"},"id":"1M6YBY3G0001XAJ","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00015DR"},"ticks":"`"},"id":"1M6YBY3G0001XAK","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00015EE"},"ticks":"`"},"id":"1M6YBY3G0001XAM","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G00015D9"}},"id":"1M6YBY3G0001XAN","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"front":["under: the rule","kind: brief"],"level":1,"on":{"$ref":"1M6YBY3G0001576"}},"id":"1M6YBY3G0001XAP","instance":["1M6YBY3G0000018"],"prev":null}
+{"body":{"threads":[{"$ref":"1M6YBY3G0001XAR"},{"$ref":"1M6YBY3G0001XAS"},{"$ref":"1M6YBY3G0001XAT"},{"$ref":"1M6YBY3G0001XAV"},{"$ref":"1M6YBY3G0001XAW"},{"$ref":"1M6YBY3G0001XAX"},{"$ref":"1M6YBY3G0001XAY"},{"$ref":"1M6YBY3G0001XAZ"},{"$ref":"1M6YBY3G0001XB0"},{"$ref":"1M6YBY3G0001XB1"},{"$ref":"1M6YBY3G0001XB2"},{"$ref":"1M6YBY3G0001XB3"},{"$ref":"1M6YBY3G0001XB4"},{"$ref":"1M6YBY3G0001XB5"},{"$ref":"1M6YBY3G0001XB6"},{"$ref":"1M6YBY3G0001XB7"},{"$ref":"1M6YBY3G0001XB8"},{"$ref":"1M6YBY3G0001XB9"},{"$ref":"1M6YBY3G0001XBA"},{"$ref":"1M6YBY3G0001XBB"},{"$ref":"1M6YBY3G0001XBC"},{"$ref":"1M6YBY3G0001XBD"},{"$ref":"1M6YBY3G0001XBE"},{"$ref":"1M6YBY3G0001XBF"},{"$ref":"1M6YBY3G0001XBG"},{"$ref":"1M6YBY3G0001XBH"},{"$ref":"1M6YBY3G0001XBJ"},{"$ref":"1M6YBY3G0001XBK"},{"$ref":"1M6YBY3G0001XBM"},{"$ref":"1M6YBY3G0001XBN"},{"$ref":"1M6YBY3G0001XBP"},{"$ref":"1M6YBY3G0001XBQ"}]},"id":"1M6YBY3G0001XAQ","instance":["1M6YBY3G000001C"],"name":"raised","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"A stream is an integration, a temporary store that never outlives a reboot: a commit may point at a buffer that later vanishes, other programs read and write streams live, and a completion model's run is purely its input and its output.","raised":[{"$ref":"1M6YBY3G000018G"},{"$ref":"1M6YBY3G00001BF"}],"stands":"leaning","touches":[{"$ref":"1M6YBY3G0001AND"},{"$ref":"1M6YBY3G000138F"}]},"id":"1M6YBY3G0001XAR","instance":["1M6YBY3G000001E"],"name":"Streams as integrations","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"What depends on something that may vanish depends on it by its declared lifetime: if declared to die, recreating it is no problem, and recreating a missing buffer by itself is not quite pure. The relations set lifetime aside.","raised":[{"$ref":"1M6YBY3G0000351"}],"stands":"leaning","touches":[{"$ref":"1M6YBY3G00015HG"}]},"id":"1M6YBY3G0001XAS","instance":["1M6YBY3G000001E"],"name":"Lifetime as a contract","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"Keeping an act at the fidelity of the act was offered as a possibility, tied to streams, with commits kept at the lowest possible fidelity for now; the briefs took it as settled ground for prose as holons.","raised":[{"$ref":"1M6YBY3G00005JS"},{"$ref":"1M6YBY3G0000623"}],"stands":"open","touches":[{"$ref":"1M6YBY3G00015HG"}]},"id":"1M6YBY3G0001XAT","instance":["1M6YBY3G000001E"],"name":"The fidelity of history","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"Is a buffer made by writing the field, the integration answering, or by running a program the integration provides; and how does free typing in the search show change at once while the address stays the truth of where one looks.","raised":[{"$ref":"1M6YBY3G00002Q0"},{"$ref":"1M6YBY3G00002WM"}],"stands":"open","touches":[{"$ref":"1M6YBY3G0001CX3"}]},"id":"1M6YBY3G0001XAV","instance":["1M6YBY3G000001E"],"name":"How a stream is made, and the search","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"The author was not ready to think about indexes: agents reasoning originally, joined to reach consensus, then three set to prove it wrong, one aligned with what the world already learned.","raised":[{"$ref":"1M6YBY3G00005TN"},{"$ref":"1M6YBY3G00005X7"}],"stands":"open","touches":[{"$ref":"1M6YBY3G000138F"}]},"id":"1M6YBY3G0001XAW","instance":["1M6YBY3G000001E"],"name":"How the index work is done","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"A piece of prior work the author named, under a name heard as varorium, approached the same topic and is not yet read.","raised":[{"$ref":"1M6YBY3G00005QP"}],"stands":"open"},"id":"1M6YBY3G0001XAX","instance":["1M6YBY3G000001E"],"name":"Prior work to read","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"Infer what can be inferred, ask only what must be talked about for the spec to settle, then show everything specified since the code was last brought to it before anything is built.","raised":[{"$ref":"1M6YBY3G000028E"}],"stands":"settled","touches":[{"$ref":"1M6YBY3G0001MTE"}]},"id":"1M6YBY3G0001XAY","instance":["1M6YBY3G000001E"],"name":"The spec settles before the code","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"Briefs and typed holons and data are to intersect: different lattices, a reader moving through prose mixed with typed data, its scenarios not yet seen.","raised":[{"$ref":"1M6YBY3G00009XB"}],"stands":"open","touches":[{"$ref":"1M6YBY3G0001JZ7"}]},"id":"1M6YBY3G0001XAZ","instance":["1M6YBY3G000001E"],"name":"Prose and typed data as lattices","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"Whether workflows, goals and domain knowledge are actual ontological kinds, the rule's briefs becoming typed holons.","raised":[{"$ref":"1M6YBY3G00007RQ"}],"stands":"open","touches":[{"$ref":"1M6YBY3G0001JZ7"}]},"id":"1M6YBY3G0001XB0","instance":["1M6YBY3G000001E"],"name":"The rule's knowledge as typed ontology","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"Collaboration, peer-to-peer and real time are ground the author has not thought about: a knowledge space virtualized together, its parts owned by different people.","raised":[{"$ref":"1M6YBY3G000068Y"}],"stands":"open","touches":[{"$ref":"1M6YBY3G00015HG"},{"$ref":"1M6YBY3G000138F"}]},"id":"1M6YBY3G0001XB1","instance":["1M6YBY3G000001E"],"name":"Peers, real time and shared knowledge, unthought","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"A single owner makes the author sad to the bones; if both sources are true it does not matter where a part is taken from. The single owner is to stay hard to adopt.","raised":[{"$ref":"1M6YBY3G000090B"}],"stands":"leaning","touches":[{"$ref":"1M6YBY3G00015HG"}]},"id":"1M6YBY3G0001XB2","instance":["1M6YBY3G000001E"],"name":"Many owners, felt","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"The author asks for a sparring partner who reasons enough and does not rush to settle, answering again as if its last answer had not been read.","raised":[{"$ref":"1M6YBY3G000066N"}],"stands":"settled","touches":[{"$ref":"1M6YBY3G00010Y0"}]},"id":"1M6YBY3G0001XB3","instance":["1M6YBY3G000001E"],"name":"A sparring partner, not settling early","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"An interface is to support the multidimensionality of holons standing in many wholes, rather than choosing one for them.","raised":[{"$ref":"1M6YBY3G00009JC"}],"stands":"open","touches":[{"$ref":"1M6YBY3G0001CX3"}]},"id":"1M6YBY3G0001XB4","instance":["1M6YBY3G000001E"],"name":"An interface for many dimensions","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"The other way around from selection: components say what they take, consume it from the shared everything, and everything composes by itself; a strange idea, and whether it holds without ownership.","raised":[{"$ref":"1M6YBY3G0000MK7"}],"stands":"open","touches":[{"$ref":"1M6YBY3G0001CX3"}]},"id":"1M6YBY3G0001XB5","instance":["1M6YBY3G000001E"],"name":"Components that consume from everything","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"Thinking of stores can be static, but in real life things are processes: a store of the future where any namespace can be a store, in real time and between peers.","raised":[{"$ref":"1M6YBY3G0000QYP"}],"stands":"open","touches":[{"$ref":"1M6YBY3G000138F"}]},"id":"1M6YBY3G0001XB6","instance":["1M6YBY3G000001E"],"name":"The store as a process","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"Whether a dimension is practically a virtual store, one that can be made a store to export, and whether dimensions are still wanted at all; the briefs settled them as brief schema.","raised":[{"$ref":"1M6YBY3G0000R5M"}],"stands":"open","touches":[{"$ref":"1M6YBY3G0001JZ7"}]},"id":"1M6YBY3G0001XB7","instance":["1M6YBY3G000001E"],"name":"Dimensions as virtual stores","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"It is the theme that decides whether space or borders are used, and some elements make sense as cards and some do not; a parent drawing the card would be a problem.","raised":[{"$ref":"1M6YBY3G0000FC1"}],"stands":"open","touches":[{"$ref":"1M6YBY3G0000DJ7"}]},"id":"1M6YBY3G0001XB8","instance":["1M6YBY3G000001E"],"name":"The theme decides borders and space","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"A program such as Group by, usable anywhere, may need a typed holon for what it returns, named for what it is as an open-ended thing.","raised":[{"$ref":"1M6YBY3G0000P5T"}],"stands":"open","touches":[{"$ref":"1M6YBY3G0001CX3"}]},"id":"1M6YBY3G0001XB9","instance":["1M6YBY3G000001E"],"name":"A type for what a grouping gives","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"Editing from the context menu does not edit the slot one was on, which makes its search strange; the author wanted it WYSIWYG, and the briefs made the menu change nothing of the place.","raised":[{"$ref":"1M6YBY3G0000MHW"}],"stands":"open","touches":[{"$ref":"1M6YBY3G0001CX3"}]},"id":"1M6YBY3G0001XBA","instance":["1M6YBY3G000001E"],"name":"The menu edits the slot one is on","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"The interface needs only to be good enough to move around on; the work moves on from readers soon, to make a site.","raised":[{"$ref":"1M6YBY3G0000K2G"}],"stands":"settled","touches":[{"$ref":"1M6YBY3G0001MTE"}]},"id":"1M6YBY3G0001XBB","instance":["1M6YBY3G000001E"],"name":"The reader as a means","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"Less is more: finding the less that actually takes you further, the composition simple relative to its ontological purpose.","raised":[{"$ref":"1M6YBY3G0000GW8"},{"$ref":"1M6YBY3G0000GW2"}],"stands":"settled","touches":[{"$ref":"1M6YBY3G00010Y0"}]},"id":"1M6YBY3G0001XBC","instance":["1M6YBY3G000001E"],"name":"The less that takes you further","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"The grant's order: safety first, its boundaries the first thing built, then local first, then the field cached as close to the hardware as possible.","raised":[{"$ref":"1M6YBY3G0000Z4D"}],"stands":"settled","touches":[{"$ref":"1M6YBY3G00010Y0"},{"$ref":"1M6YBY3G0001MTE"}]},"id":"1M6YBY3G0001XBD","instance":["1M6YBY3G000001E"],"name":"Safety first, then local, then the hardware","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"Ontology is not kinds: it is the respect of one thing for what it is; there is honesty to things, and doing right by it builds well.","raised":[{"$ref":"1M6YBY3G00010MG"},{"$ref":"1M6YBY3G00010MY"},{"$ref":"1M6YBY3G00010N4"}],"stands":"settled","touches":[{"$ref":"1M6YBY3G00010Y0"}]},"id":"1M6YBY3G0001XBE","instance":["1M6YBY3G000001E"],"name":"Ontology as respect","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"People building, people to build with and people deciding what to invest in, with no separation between them; open to play and collaboration.","raised":[{"$ref":"1M6YBY3G00010Q5"}],"stands":"settled","touches":[{"$ref":"1M6YBY3G00010Y0"}]},"id":"1M6YBY3G0001XBF","instance":["1M6YBY3G000001E"],"name":"Building and investing as one","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"The layout as data is the foundation of doing something beautiful; less is more.","raised":[{"$ref":"1M6YBY3G00010HF"},{"$ref":"1M6YBY3G00010HX"}],"stands":"settled","touches":[{"$ref":"1M6YBY3G0001CX3"}]},"id":"1M6YBY3G0001XBG","instance":["1M6YBY3G000001E"],"name":"Layout as data, for beauty","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"The author's website and CV are made from the same unit of open data: the site is an online presence, not a CV.","raised":[{"$ref":"1M6YBY3G00010GW"}],"stands":"settled","touches":[{"$ref":"1M6YBY3G0001PSQ"}]},"id":"1M6YBY3G0001XBH","instance":["1M6YBY3G000001E"],"name":"The site and the CV, one unit of data","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"The relations were agreed as a way to proceed and find out, not settled with the author; the briefs call them settled.","raised":[{"$ref":"1M6YBY3G0000SHH"}],"stands":"leaning","touches":[{"$ref":"1M6YBY3G00015HG"}]},"id":"1M6YBY3G0001XBJ","instance":["1M6YBY3G000001E"],"name":"The relations, agreed tentatively","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"Once part and whole are read from the whole, is a holon still whole, or does cutting make it directional; the author was not sure, and the briefs answered from Koestler.","raised":[{"$ref":"1M6YBY3G0000TKH"}],"stands":"open","touches":[{"$ref":"1M6YBY3G00011HF"}]},"id":"1M6YBY3G0001XBK","instance":["1M6YBY3G000001E"],"name":"Is a holon directional","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"Perhaps what data really is and what the field really is are underexplored, as when one only wants to place something on a dimension.","raised":[{"$ref":"1M6YBY3G0000T3Z"}],"stands":"open","touches":[{"$ref":"1M6YBY3G00015HG"}]},"id":"1M6YBY3G0001XBM","instance":["1M6YBY3G000001E"],"name":"What data and the field really are","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"Whether a measure varies, and how: as something said stands to the structure, not integrated, thinned, distorted or held, and as the words themselves are to be kept, verbatim; or whether marked is enough. The author does not know.","raised":[{"$ref":"1M6YBY3G00023TZ"},{"$ref":"1M6YBY3G00023VG"}],"stands":"open","touches":[{"$ref":"1M6YBY3G000001D"}]},"id":"1M6YBY3G0001XBN","instance":["1M6YBY3G000001E"],"name":"The variances of a measure","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"The days of the record could become sessions, marked as constructed afterwards since they are not sessions in the same regard, and could be mapped to the actual sessions from Claude's own transcripts. Worth doing only if it simplifies; left as it is until there is an interface to see it in.","raised":[{"$ref":"1M6YBY3G0002417"},{"$ref":"1M6YBY3G000241B"},{"$ref":"1M6YBY3G000244B"}],"stands":"open"},"id":"1M6YBY3G0001XBP","instance":["1M6YBY3G000001E"],"name":"Said as sessions, honestly","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"asks":"A session spanning days has no one date, so perhaps the text inside it has the date and not the session; a session's single day already says too little of this one.","raised":[{"$ref":"1M6YBY3G000242N"},{"$ref":"1M6YBY3G000243S"}],"stands":"open"},"id":"1M6YBY3G0001XBQ","instance":["1M6YBY3G000001E"],"name":"Where a date belongs","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"measures":[{"$ref":"1M6YBY3G0001XBS"},{"$ref":"1M6YBY3G0001XBT"},{"$ref":"1M6YBY3G0001XBV"},{"$ref":"1M6YBY3G0001XBW"},{"$ref":"1M6YBY3G0001XBX"},{"$ref":"1M6YBY3G0001XBY"},{"$ref":"1M6YBY3G0001XBZ"},{"$ref":"1M6YBY3G0001XC0"},{"$ref":"1M6YBY3G0001XC1"},{"$ref":"1M6YBY3G0001XC2"},{"$ref":"1M6YBY3G0001XC3"},{"$ref":"1M6YBY3G0001XC4"},{"$ref":"1M6YBY3G0001XC5"},{"$ref":"1M6YBY3G0001XC6"},{"$ref":"1M6YBY3G0001XC7"},{"$ref":"1M6YBY3G0001XC8"},{"$ref":"1M6YBY3G0001XC9"},{"$ref":"1M6YBY3G0001XCA"},{"$ref":"1M6YBY3G0001XCB"},{"$ref":"1M6YBY3G0001XCC"},{"$ref":"1M6YBY3G0001XCD"},{"$ref":"1M6YBY3G0001XCE"},{"$ref":"1M6YBY3G0001XCF"},{"$ref":"1M6YBY3G0001XCG"},{"$ref":"1M6YBY3G0001XCH"},{"$ref":"1M6YBY3G0001XCJ"},{"$ref":"1M6YBY3G0001XCK"},{"$ref":"1M6YBY3G0001XCM"},{"$ref":"1M6YBY3G0001XCN"},{"$ref":"1M6YBY3G0001XCP"},{"$ref":"1M6YBY3G0001XCQ"},{"$ref":"1M6YBY3G0001XCR"},{"$ref":"1M6YBY3G0001XCS"},{"$ref":"1M6YBY3G0001XCT"},{"$ref":"1M6YBY3G0001XCV"},{"$ref":"1M6YBY3G0001XCW"},{"$ref":"1M6YBY3G0001XCX"},{"$ref":"1M6YBY3G0001XCY"},{"$ref":"1M6YBY3G0001XCZ"},{"$ref":"1M6YBY3G0001XD0"},{"$ref":"1M6YBY3G0001XD1"},{"$ref":"1M6YBY3G0001XD2"},{"$ref":"1M6YBY3G0001XD3"},{"$ref":"1M6YBY3G0001XD4"},{"$ref":"1M6YBY3G0001XD5"},{"$ref":"1M6YBY3G0001XD6"},{"$ref":"1M6YBY3G0001XD7"},{"$ref":"1M6YBY3G0001XD8"},{"$ref":"1M6YBY3G0001XD9"},{"$ref":"1M6YBY3G0001XDA"},{"$ref":"1M6YBY3G0001XDB"},{"$ref":"1M6YBY3G0001XDC"},{"$ref":"1M6YBY3G0001XDD"},{"$ref":"1M6YBY3G0001XDE"},{"$ref":"1M6YBY3G0001XDF"},{"$ref":"1M6YBY3G0001XDG"},{"$ref":"1M6YBY3G0001XDH"},{"$ref":"1M6YBY3G0001XDJ"},{"$ref":"1M6YBY3G0001XDK"},{"$ref":"1M6YBY3G0001XDM"},{"$ref":"1M6YBY3G0001XDN"},{"$ref":"1M6YBY3G0001XDP"},{"$ref":"1M6YBY3G0001XDQ"},{"$ref":"1M6YBY3G0001XDR"},{"$ref":"1M6YBY3G0001XDS"},{"$ref":"1M6YBY3G0001XDT"},{"$ref":"1M6YBY3G0001XDV"},{"$ref":"1M6YBY3G0001XDW"},{"$ref":"1M6YBY3G0001XDX"},{"$ref":"1M6YBY3G0001XDY"},{"$ref":"1M6YBY3G0001XDZ"},{"$ref":"1M6YBY3G0001XE0"},{"$ref":"1M6YBY3G0001XE1"}]},"id":"1M6YBY3G0001XBR","instance":["1M6YBY3G000001B"],"name":"measured","prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"as":"verbatim","by":{"$ref":"1M6YBY3G000249D"},"of":[{"$ref":"1M6YBY3G00023JF"}],"value":3},"id":"1M6YBY3G0001XBS","instance":["1M6YBY3G000001D"],"prev":null}
+{"body":{"as":"complementary","by":{"$ref":"1M6YBY3G000249D"},"note":"The measure he holds every primitive to: open-ended, in harmony with the others and with the system's values.","of":[{"$ref":"1M6YBY3G00000G6"}],"range":{"from":{"$ref":"1M6YBY3G000011B"},"to":{"$ref":"1M6YBY3G0000127"}},"value":3},"id":"1M6YBY3G0001XBT","instance":["1M6YBY3G000001D"],"prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"as":"complementary","by":{"$ref":"1M6YBY3G000249D"},"note":"Honesty over completeness: a pointer may lead nowhere, and that is the nature of stores.","of":[{"$ref":"1M6YBY3G000014Y"}],"range":{"from":{"$ref":"1M6YBY3G000018G"},"to":{"$ref":"1M6YBY3G00001CT"}},"value":3},"id":"1M6YBY3G0001XBV","instance":["1M6YBY3G000001D"],"prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"as":"complementary","by":{"$ref":"1M6YBY3G000249D"},"note":"New mechanics met with the wish for simple purity, never a convoluted solution.","of":[{"$ref":"1M6YBY3G00001WF"}],"value":3},"id":"1M6YBY3G0001XBW","instance":["1M6YBY3G000001D"],"prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"as":"complementary","by":{"$ref":"1M6YBY3G000249D"},"note":"A stream is typed by what it is when read whole: audio cannot be a string, a buffer of chars can.","of":[{"$ref":"1M6YBY3G0000202"}],"value":3},"id":"1M6YBY3G0001XBX","instance":["1M6YBY3G000001D"],"prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"as":"complementary","by":{"$ref":"1M6YBY3G000249D"},"note":"Lifetime is a contract: what is declared to die may be made again.","of":[{"$ref":"1M6YBY3G0000350"}],"value":3},"id":"1M6YBY3G0001XBY","instance":["1M6YBY3G000001D"],"prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"as":"complementary","by":{"$ref":"1M6YBY3G000249D"},"note":"A possibility, not a solution, offered to be grounded: the act kept at its fidelity, internals simplified by their namespace.","of":[{"$ref":"1M6YBY3G000052B"}],"range":{"from":{"$ref":"1M6YBY3G00005JC"},"to":{"$ref":"1M6YBY3G00005NV"}},"value":3},"id":"1M6YBY3G0001XBZ","instance":["1M6YBY3G000001D"],"prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"as":"complementary","by":{"$ref":"1M6YBY3G000249D"},"note":"Prose, typed holons and data as lattices making one space; not yet seen, and not to be shied away from.","of":[{"$ref":"1M6YBY3G00009WA"}],"range":{"from":{"$ref":"1M6YBY3G00009WX"},"to":{"$ref":"1M6YBY3G0000A00"}},"value":3},"id":"1M6YBY3G0001XC0","instance":["1M6YBY3G000001D"],"prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"as":"complementary","by":{"$ref":"1M6YBY3G000249D"},"note":"Composition simple relative to its ontological purpose; the less that takes you further.","of":[{"$ref":"1M6YBY3G0000GTA"}],"range":{"from":{"$ref":"1M6YBY3G0000GTX"},"to":{"$ref":"1M6YBY3G0000GW8"}},"value":3},"id":"1M6YBY3G0001XC1","instance":["1M6YBY3G000001D"],"prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"as":"complementary","by":{"$ref":"1M6YBY3G000249D"},"note":"The work is to clean out the convoluted for the pure; convoluted details are disembodied work.","of":[{"$ref":"1M6YBY3G0000HPX"}],"range":{"from":{"$ref":"1M6YBY3G0000HQK"},"to":{"$ref":"1M6YBY3G0000HT9"}},"value":3},"id":"1M6YBY3G0001XC2","instance":["1M6YBY3G000001D"],"prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"as":"complementary","by":{"$ref":"1M6YBY3G000249D"},"note":"Why open-endedness: the creativity it unleashes when done right is the power.","of":[{"$ref":"1M6YBY3G0000JYR"}],"value":3},"id":"1M6YBY3G0001XC3","instance":["1M6YBY3G000001D"],"prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"as":"complementary","by":{"$ref":"1M6YBY3G000249D"},"note":"Whether the experience needs ownership at all, asked and left unknown.","of":[{"$ref":"1M6YBY3G0000MS3"}],"range":{"from":{"$ref":"1M6YBY3G0000MV9"},"to":{"$ref":"1M6YBY3G0000MW3"}},"value":3},"id":"1M6YBY3G0001XC4","instance":["1M6YBY3G000001D"],"prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"as":"complementary","by":{"$ref":"1M6YBY3G000249D"},"note":"The store of the future: any namespace a store, because in real life things are processes.","of":[{"$ref":"1M6YBY3G0000QRS"}],"range":{"from":{"$ref":"1M6YBY3G0000QRT"},"to":{"$ref":"1M6YBY3G0000QYP"}},"value":3},"id":"1M6YBY3G0001XC5","instance":["1M6YBY3G000001D"],"prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"as":"complementary","by":{"$ref":"1M6YBY3G000249D"},"note":"Do we still want dimensions; is a dimension a virtual store one can extract. A critical question.","of":[{"$ref":"1M6YBY3G0000QRS"}],"range":{"from":{"$ref":"1M6YBY3G0000R4X"},"to":{"$ref":"1M6YBY3G0000R87"}},"value":3},"id":"1M6YBY3G0001XC6","instance":["1M6YBY3G000001D"],"prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"as":"complementary","by":{"$ref":"1M6YBY3G000249D"},"note":"What any making is for: the best possible human experience, and how one is welcomed to it.","of":[{"$ref":"1M6YBY3G0000YBF"}],"range":{"from":{"$ref":"1M6YBY3G0000YHN"},"to":{"$ref":"1M6YBY3G0000YJZ"}},"value":3},"id":"1M6YBY3G0001XC7","instance":["1M6YBY3G000001D"],"prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"as":"complementary","by":{"$ref":"1M6YBY3G000249D"},"note":"The diagnosis glass answers: harnesses making up for primitives that are missing.","of":[{"$ref":"1M6YBY3G0000Z1D"}],"value":3},"id":"1M6YBY3G0001XC8","instance":["1M6YBY3G000001D"],"prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"as":"complementary","by":{"$ref":"1M6YBY3G000249D"},"note":"Sessions dissolve into the field, cached toward the hardware; safety made structural, local-first first.","of":[{"$ref":"1M6YBY3G0000Z76"}],"value":3},"id":"1M6YBY3G0001XC9","instance":["1M6YBY3G000001D"],"prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"as":"complementary","by":{"$ref":"1M6YBY3G000249D"},"note":"Not lean, but real.","of":[{"$ref":"1M6YBY3G0000ZVR"}],"value":3},"id":"1M6YBY3G0001XCA","instance":["1M6YBY3G000001D"],"prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"as":"complementary","by":{"$ref":"1M6YBY3G000249D"},"note":"The purpose under everything: a new world, and care for those who build it.","of":[{"$ref":"1M6YBY3G00010AH"}],"value":3},"id":"1M6YBY3G0001XCB","instance":["1M6YBY3G000001D"],"prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"as":"complementary","by":{"$ref":"1M6YBY3G000249D"},"note":"Layout as data, the foundation of beauty; site and CV one unit of open data.","of":[{"$ref":"1M6YBY3G00010GV"}],"value":3},"id":"1M6YBY3G0001XCC","instance":["1M6YBY3G000001D"],"prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"as":"complementary","by":{"$ref":"1M6YBY3G000249D"},"note":"Conviction realized as proof: making himself open source.","of":[{"$ref":"1M6YBY3G00010D8"}],"value":3},"id":"1M6YBY3G0001XCD","instance":["1M6YBY3G000001D"],"prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"as":"complementary","by":{"$ref":"1M6YBY3G000249D"},"note":"Ontology is not kinds but respect for what a thing is; the word reframed.","of":[{"$ref":"1M6YBY3G00010MA"}],"value":3},"id":"1M6YBY3G0001XCE","instance":["1M6YBY3G000001D"],"prev":"81bfe0af51628fb969c5addf2aaf2ac002f1925e572638cb3abe7773a7607375"}
+{"body":{"as":"marked","by":{"$ref":"1M6YBY3G000249D"},"note":"The newest direction: packs, counted names, addresses by position, a glass for the human. Its paths say it shortest; its utterances are their ground.","of":[{"$ref":"1M6YBY3G0001XEJ"}],"value":3},"id":"1M6YBY3G0001XCF","instance":["1M6YBY3G000001D"],"prev":null}
+{"body":{"as":"marked","by":{"$ref":"1M6YBY3G000249D"},"note":"Selection as a reach into the field, layers by lifetime. Short, and nothing builds it yet.","of":[{"$ref":"1M6YBY3G000212S"}],"value":2},"id":"1M6YBY3G0001XCG","instance":["1M6YBY3G000001D"],"prev":null}
+{"body":{"as":"marked","by":{"$ref":"1M6YBY3G000249D"},"note":"What the paper's licence allows, and blockchaining as a mode of the store. What the store does now already answers most of it.","of":[{"$ref":"1M6YBY3G00021AK"}],"value":1},"id":"1M6YBY3G0001XCH","instance":["1M6YBY3G000001D"],"prev":null}

@@ -6,19 +6,20 @@ The repository holds two things: `store/`, the holons, and `src/`, the code, wit
 
 ## The store
 
-Everything is a holon: an `id` (a ULID given at birth), the type it is an `instance` of, an optional `name`, an optional `mould`, and a `body`. A name is also its title, with no slug beside it, and is unique only among what one whole holds, so two wholes can each hold a "What is open". A type is a holon with a mould, which says what its instances hold, field by field, each in prose. Inside a body, `{"$ref": id}` is a reference to another holon. A reference holds (makes the other a part) or only points, as the mould says, or as `$holds` on the reference itself says.
+Everything is a holon: an `id` (a name of 15 characters given at birth, unique across stores), the type it is an `instance` of, an optional `name`, an optional `mould`, and a `body`. A name is also its title, with no slug beside it, and is unique only among what one whole holds, so two wholes can each hold a "What is open". A type is a holon with a mould, which says what its instances hold, field by field, each in prose. Inside a body, `{"$ref": id}` is a reference to another holon. A reference holds (makes the other a part) or only points, as the mould says, or as `$holds` on the reference itself says.
 
 A brief is a flow and its sections. Its `prose` is a flow of mounts in any order, a paragraph, a statistic, a brief, each reference saying whether it holds or points. Its `parts` are read through after the flow, and nothing follows them. A brief mounted in another's flow is a break, what starting a new file was, and placing it there is the deliberate act.
 
-The store is packs: no other copy of it exists.
+The store is blocks and a log: no other copy of it exists.
 
 ```
-store/refs/main             "<commit> <pack>": the one line that ever changes
-store/packs/<hash>.pack     the objects one commit adds, one canonical JSON per line
-store/packs/<hash>.idx      each object's name -> [byte offset, length] in that pack
+store/refs/main             "<hash of the last log line> <open volume>": written last
+store/log/<n>.jsonl         the commits; each volume opens with the whole latest table
+store/blocks/<hash>.jsonl   the versions, about 64 KB to a block, never touched again
+store/conversion/ids.json   each old ULID's name, written once
 ```
 
-A version is `{kind, id, prev, instance, name?, mould?, body}`. An index is `{kind, names, holons}`, its tree of leaves keyed by the start of each id, its moment of birth. A commit is `{kind, parent, parentPack, at, index, says}`. From the ref alone, any object is reached by byte range, and checked by its name.
+A version is `{id, prev, instance, name?, mould?, body}`, with `prev` the hash of the block holding the version before. A commit is `{at, blocks, gone, parent, says}`: it names which holons it changed and holds none of their contents. From the ref and the open volume alone, the latest version of any holon is one block away, checked by its hash; older versions and older commits are fetched only when asked for. `src/tools/vectors/README.md` is the format in full.
 
 What the store holds:
 - the types;
@@ -32,7 +33,7 @@ What the store holds:
 
 Almost nothing stands loose. The main store has nine roots: the lexicon, what was said, the wiki, its markdown forms, the threads, the measures, a whole for statistics and functions, one for the sessions, and the author's voice, which speaks across them. A session holds its own, and a source what stands upon it.
 
-Its first 81 commits are its birth, a slice each in the order things came. Each commit after them is a diff-pack.
+Its first 81 commits are its birth, a slice each in the order things came. The conversion to blocks came after 117; each old commit is still in the log, with its old hash, what it held and what it took out, and the field at any of them can be drawn again.
 
 Beside the main store stand two more, each a whole in its own folder. `store/paper/` is the work: a paper on holonic systems as published (`paper.pdf`), its licence (CC BY-NC-ND 4.0, read as a holon), and the paper as holons, one to one, in its own order and word. `store/paper-readings/` holds the 17 readings built upon it, each in its readers' own words, holding the paper's paragraphs by reference. The licence says why both may be public: a change of format is no adaptation, and holons built upon a work do not rework it.
 
@@ -66,15 +67,14 @@ The text is drawn from the holons each time; none is stored. A word is `before +
 
 ## The code
 
-`src/` holds the store, the engine, the interface, the birth, the field it shipped (`src/field/`), the store's test vectors (`src/store/vectors/`), the page (`src/site/`) and the tools. Its tooling lives with it: run `bun install`, `bun test`, `bun run check` and `bun run build` from inside `src/`. The build writes the site into `site/` at the root, which is output only and never kept. The tools can be run from anywhere, as `bun src/tools/read.ts` from the root.
+`src/` holds the store, the engine, the interface, the birth, the field it shipped (`src/field/`), the store's test vectors (`src/tools/vectors/`; those in `src/store/vectors/` pin the old loose form), the page (`src/site/`) and the tools. Its tooling lives with it: run `bun install`, `bun test`, `bun run check` and `bun run build` from inside `src/`. The build writes the site into `site/` at the root, which is output only and never kept. The tools can be run from anywhere, as `bun src/tools/read.ts` from the root.
 
 ## Where it stands
 
-- **The store is the packs.** The JSON that came before them, and the scripts that served it, are in git's history only. The birth from markdown has ended.
-- **The code is older than the store.** The engine and the client still read loose objects, keep a type's fields and a holon's name inside the body, key the index tree by the end of each id, read every reference as holding, and expect a brief's prose as markdown and its title in its body. The tests pass, but they and the store's vectors speak of that old form: none touches `src/tools/packs.ts`.
-- **The pack format is not final.** The last two paths of the second session say how it may change: "Names counted in locality, unified where stores meet", and "Addresses by position, one fingerprint per commit". Under them, holons are counted within their store, objects are addressed by where they sit, there are segments per publish in place of a pack and an index per commit, and one hash per commit is the proof. Both still stand as noted, not settled. Read them in full by `bun src/tools/probe.ts 9.1.21-22 --without paper,paper-readings --text`.
-- **What comes next is here, not in the plan**, whose brief stops at the first mark and is measured stale. In order: show everything specified since the code was last brought to it, as the thread "The spec settles before the code" asks; settle the format, with vectors first; bring the engine and the client to it; then a glass for the human, born from this store.
-- **Two questions the format has to answer.** With one hash per commit, how is one holon read by range checked, when today each object is checked by its name? And counted names and dropped hashes rewrite every holon once: is that accepted, against nothing written before being touched?
+- **The store is blocks.** The packs before them, and the JSON before those, are in git's history only. The birth from markdown has ended.
+- **The code is older than the store.** The engine and the client still read loose objects, keep a type's fields and a holon's name inside the body, key the index tree by the end of each id, read every reference as holding, and expect a brief's prose as markdown and its title in its body. The tests pass, but they and the vectors in `src/store/vectors/` speak of that old form: only `src/tools/` reads the store as it is.
+- **The format is settled for now,** with its vectors. The second session's two noted paths, read by `bun src/tools/probe.ts 9.1.21-22 --without paper,paper-readings --text`, were tried on 2026-11-08: one hash per commit and addresses by position gave way to a hash per block, and counted names to short unique ones, so a store can be taken away, changed, and brought back. What is left open is at the end of `src/tools/vectors/README.md`.
+- **What comes next is here, not in the plan**, whose brief stops at the first mark and is measured stale. In order: show everything specified since the code was last brought to it, as the thread "The spec settles before the code" asks; bring the engine and the client to the format; then a glass for the human, born from this store.
 - **Parts of the wiki are stale**, and marked so: see How to read.
-- **No session starts on local changes.** What a session did is committed before it ends, the store's ref and packs above all, since no other copy of them exists.
+- **No session starts on local changes.** What a session did is committed before it ends, the store's ref, log and blocks above all, since no other copy of them exists.
 - **Memory is off** for every session (`.claude/settings.json`). What a session knows is in the field.

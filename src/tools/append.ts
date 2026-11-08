@@ -1,11 +1,10 @@
 // Appends one utterance of the author's to the session, as one commit on the
-// store's packs: only the holons it adds or changes are written, as new
+// store: only the holons it adds or changes are written, as new
 // versions, and nothing written before is touched.
 // Usage: bun src/tools/append.ts <utterance.txt> <typed|spoken> [paths.json]
 // {typed|meant} marks a fix; _ inside it stands for a space.
 
-import { newId } from "../store/id.ts";
-import { commit, open, storeDir } from "./packs.ts";
+import { commit, open, storeDir } from "./blocks.ts";
 
 const [file, as, patchFile] = process.argv.slice(2);
 const store = await open(storeDir);
@@ -15,7 +14,7 @@ const T = Object.fromEntries(holons.filter((h) => h.mould).map((h) => [h.name, h
 const ref = (to: string) => ({ $ref: to });
 type H = { id: string; instance: string[]; name?: string; body: Record<string, unknown> };
 const born: H[] = [];
-const put = (h: Omit<H, "id">) => { const x = { id: newId(), ...h }; born.push(x); return x.id; };
+const put = (h: Omit<H, "id">) => { const x = { id: store.mint(), ...h }; born.push(x); return x.id; };
 const changed = new Set<any>();
 const lexicon = holons.filter((h) => h.instance[0] === T.lexeme || (h.name === "lexicon" && h.instance[0] === T.lexicon));
 const session = holons.filter((h) => h.instance[0] === T.session && (h.name ?? "").startsWith("A second session"));
@@ -26,7 +25,7 @@ const newLexemes: H[] = [];
 const lexeme = (t: string) => {
   const k = t.toLowerCase();
   if (!byText.has(k)) {
-    const h = { id: newId(), instance: [T.lexeme], body: { text: k } };
+    const h = { id: store.mint(), instance: [T.lexeme], body: { text: k } };
     newLexemes.push(h); byText.set(k, h.id);
     (lexiconHolon.body.lexemes as unknown[]).push(ref(h.id));
   }
@@ -85,4 +84,4 @@ if (patchFile) {
 
 if (newLexemes.length) changed.add(lexiconHolon);
 const done = await commit(store, [...changed, ...born, ...newLexemes], `The second session, utterance ${order}`);
-console.log({ utterance: order, holons: born.length + changed.size + newLexemes.length, newLexemes: newLexemes.length, objects: done.objects, packBytes: done.bytes });
+console.log({ utterance: order, holons: born.length + changed.size + newLexemes.length, newLexemes: newLexemes.length, blocks: done.blocks, bytes: done.bytes });

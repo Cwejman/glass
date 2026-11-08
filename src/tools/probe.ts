@@ -29,7 +29,7 @@
 
 import { readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { open, storeDir } from "./packs.ts";
+import { open, storeDir } from "./blocks.ts";
 
 const args = process.argv.slice(2);
 const flag = (k: string) => { const i = args.indexOf(k); return i < 0 ? undefined : args[i + 1]; };

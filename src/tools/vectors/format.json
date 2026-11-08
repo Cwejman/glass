@@ -1,0 +1,157 @@
+{
+ "steps": [
+  {
+   "says": "first",
+   "at": "2026-11-08T00:00:00.000Z",
+   "gone": [],
+   "holons": [
+    {
+     "id": "1M6XGF6G0000100",
+     "instance": [],
+     "name": "word",
+     "mould": {
+      "text": {}
+     },
+     "body": {
+      "text": "type"
+     }
+    },
+    {
+     "id": "1M6XGF6G0000101",
+     "instance": [
+      "1M6XGF6G0000100"
+     ],
+     "body": {
+      "text": "one"
+     }
+    },
+    {
+     "id": "1M6XGF6G0000102",
+     "instance": [
+      "1M6XGF6G0000100"
+     ],
+     "body": {
+      "text": "two"
+     }
+    }
+   ],
+   "blocks": {
+    "e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce": "{\"body\":{\"text\":\"type\"},\"id\":\"1M6XGF6G0000100\",\"instance\":[],\"mould\":{\"text\":{}},\"name\":\"word\",\"prev\":null}\n{\"body\":{\"text\":\"one\"},\"id\":\"1M6XGF6G0000101\",\"instance\":[\"1M6XGF6G0000100\"],\"prev\":null}\n{\"body\":{\"text\":\"two\"},\"id\":\"1M6XGF6G0000102\",\"instance\":[\"1M6XGF6G0000100\"],\"prev\":null}\n"
+   },
+   "log": [
+    "{\"at\":\"2026-11-08T00:00:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF6G0000100\",\"hash\":\"e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce\",\"moved\":[],\"new\":3}],\"checkpoint\":{\"blocks\":[[\"e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce\",\"1M6XGF6G0000100\"]],\"gone\":[],\"moved\":[]},\"gone\":[],\"parent\":null,\"says\":\"first\"}"
+   ],
+   "ref": "312028f59331163b3ea561568f700fdc38a6116573e2334c4c59d3d482a0e090 0\n",
+   "field": {
+    "1M6XGF6G0000100": "type",
+    "1M6XGF6G0000101": "one",
+    "1M6XGF6G0000102": "two"
+   }
+  },
+  {
+   "says": "second",
+   "at": "2026-11-08T00:01:00.000Z",
+   "gone": [
+    "1M6XGF6G0000102"
+   ],
+   "holons": [
+    {
+     "id": "1M6XGF7H0000200",
+     "instance": [
+      "1M6XGF6G0000100"
+     ],
+     "body": {
+      "next": {
+       "$ref": "1M6XGF6G0000101"
+      },
+      "text": "three"
+     }
+    },
+    {
+     "id": "1M6XGF6G0000101",
+     "instance": [
+      "1M6XGF6G0000100"
+     ],
+     "body": {
+      "text": "one, edited"
+     }
+    }
+   ],
+   "blocks": {
+    "83310cc881970f42fc2050309389dd764bec6f898feea2604b2c251db11454fa": "{\"body\":{\"next\":{\"$ref\":\"1M6XGF6G0000101\"},\"text\":\"three\"},\"id\":\"1M6XGF7H0000200\",\"instance\":[\"1M6XGF6G0000100\"],\"prev\":null}\n{\"body\":{\"text\":\"one, edited\"},\"id\":\"1M6XGF6G0000101\",\"instance\":[\"1M6XGF6G0000100\"],\"prev\":\"e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce\"}\n"
+   },
+   "log": [
+    "{\"at\":\"2026-11-08T00:00:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF6G0000100\",\"hash\":\"e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce\",\"moved\":[],\"new\":3}],\"checkpoint\":{\"blocks\":[[\"e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce\",\"1M6XGF6G0000100\"]],\"gone\":[],\"moved\":[]},\"gone\":[],\"parent\":null,\"says\":\"first\"}",
+    "{\"at\":\"2026-11-08T00:01:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF7H0000200\",\"hash\":\"83310cc881970f42fc2050309389dd764bec6f898feea2604b2c251db11454fa\",\"moved\":[\"1M6XGF6G0000101\"],\"new\":1}],\"gone\":[\"1M6XGF6G0000102\"],\"parent\":\"312028f59331163b3ea561568f700fdc38a6116573e2334c4c59d3d482a0e090\",\"says\":\"second\"}"
+   ],
+   "ref": "c6890d95609210d561de93c40d3ef90031880cbd99700b64b951b8935baab48e 0\n",
+   "field": {
+    "1M6XGF6G0000100": "type",
+    "1M6XGF6G0000101": "one, edited",
+    "1M6XGF7H0000200": "three"
+   }
+  }
+ ],
+ "land": {
+  "from": 1,
+  "says": "third, written apart",
+  "at": "2026-11-08T00:02:00.000Z",
+  "holons": [
+   {
+    "id": "1M6XGF8J0000000",
+    "instance": [
+     "1M6XGF6G0000100"
+    ],
+    "body": {
+     "text": "four"
+    }
+   }
+  ],
+  "block": {
+   "3fbdd571503ad22da9f13cf604e998e86eef8e43e621465103c6b077238b036b": "{\"body\":{\"text\":\"four\"},\"id\":\"1M6XGF8J0000000\",\"instance\":[\"1M6XGF6G0000100\"],\"prev\":null}\n"
+  },
+  "log": [
+   "{\"at\":\"2026-11-08T00:00:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF6G0000100\",\"hash\":\"e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce\",\"moved\":[],\"new\":3}],\"checkpoint\":{\"blocks\":[[\"e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce\",\"1M6XGF6G0000100\"]],\"gone\":[],\"moved\":[]},\"gone\":[],\"parent\":null,\"says\":\"first\"}",
+   "{\"at\":\"2026-11-08T00:01:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF7H0000200\",\"hash\":\"83310cc881970f42fc2050309389dd764bec6f898feea2604b2c251db11454fa\",\"moved\":[\"1M6XGF6G0000101\"],\"new\":1}],\"gone\":[\"1M6XGF6G0000102\"],\"parent\":\"312028f59331163b3ea561568f700fdc38a6116573e2334c4c59d3d482a0e090\",\"says\":\"second\"}",
+   "{\"at\":\"2026-11-08T00:02:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF8J0000000\",\"hash\":\"3fbdd571503ad22da9f13cf604e998e86eef8e43e621465103c6b077238b036b\",\"moved\":[],\"new\":1}],\"gone\":[],\"parent\":\"c6890d95609210d561de93c40d3ef90031880cbd99700b64b951b8935baab48e\",\"says\":\"third, written apart\"}"
+  ],
+  "ref": "c05356f24aeffb431dc17a375f1718e4c6ffc44803d15156012d3ae03f15c73e 0\n",
+  "field": {
+   "1M6XGF6G0000100": "type",
+   "1M6XGF6G0000101": "one, edited",
+   "1M6XGF7H0000200": "three",
+   "1M6XGF8J0000000": "four"
+  }
+ },
+ "history": {
+  "0": {
+   "1M6XGF6G0000100": "type",
+   "1M6XGF6G0000101": "one",
+   "1M6XGF6G0000102": "two"
+  },
+  "1": {
+   "1M6XGF6G0000100": "type",
+   "1M6XGF6G0000101": "one, edited",
+   "1M6XGF7H0000200": "three"
+  }
+ },
+ "versions": {
+  "id": "1M6XGF6G0000101",
+  "texts": [
+   "one, edited",
+   "one"
+  ]
+ },
+ "names": {
+  "next": [
+   [
+    "1M6XGF6G000000V",
+    "1M6XGF6G000000W"
+   ],
+   [
+    "1M6XGF6G00000ZZ",
+    "1M6XGF6G0000100"
+   ]
+  ]
+ }
+}

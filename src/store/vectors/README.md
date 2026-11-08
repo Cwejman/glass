@@ -5,7 +5,7 @@ kind: brief
 
 # The store's vectors
 
-*Stale: these pin the loose format the old code reads. The store in `store/` is packs, and answers to none of them.*
+*Stale: these pin the loose format the old code reads. The store in `store/` is blocks, and answers to none of them: its format is in `src/tools/vectors/`.*
 
 What a store is, written as cases any implementation must pass, in any language. An implementation that writes these objects, gives them these names and reads them back is writing glass's store; nothing else about it matters.
 

@@ -1,7 +1,7 @@
 // Reads any holon of the field back as text: a brief with its prose, a
 // session with its utterances, a branch with its understandings, down to the
 // words. Nothing is stored; the text is drawn from the holons each time.
-// It reads from the packs: store/, and store/paper/ where it is present.
+// It reads from the blocks: store/, and every store under it.
 // Usage: bun src/tools/read.ts <name | id | wiki path> [depth]
 //   bun src/tools/read.ts README.md 1      the wiki's entry, its parts by title
 //   bun src/tools/read.ts "A second session" the session, by the start of its name
@@ -10,7 +10,7 @@
 
 const [what, depthArg] = process.argv.slice(2);
 const depth = Number(depthArg ?? 0);
-import { field } from "./packs.ts";
+import { field } from "./blocks.ts";
 const all: Map<string, any> = await field();
 const typeName = (h: any) => all.get(h?.instance?.[0])?.name ?? (h?.mould ? "type" : "");
 const get = (r: any) => all.get(r?.$ref);
