@@ -1,9 +1,8 @@
-// Reads any holon of the union back as text: a brief with its prose, a
+// Reads any holon of the field back as text: a brief with its prose, a
 // session with its utterances, a branch with its understandings, down to the
 // words. Nothing is stored; the text is drawn from the holons each time.
 // It reads from the packs: store/, and store/paper/ where it is present.
 // Usage: bun src/tools/read.ts <name | id | wiki path> [depth]
-//   bun src/tools/read.ts union            what stores there are
 //   bun src/tools/read.ts README.md 1      the wiki's entry, its parts by title
 //   bun src/tools/read.ts "A second session" the session, by the start of its name
 // A name is unique only within a whole, so one that several holons carry lists
@@ -60,7 +59,6 @@ function block(h: any, d: number, indent = ""): string[] {
     case "path": return [`## ${named(h)} (${b.stands})`, b.opens, "Rests on: " + (b.restsOn ?? []).join("; ")];
     case "branch": return [`# ${h.name} (${b.model}, seed from ${b.seedFrom})`, ...block(get(b.top), d + 4)];
     case "understanding": return [`${indent}${named(h)}: ${b.prose} [matters: ${b.matters}]`, ...(d > 0 ? many(b.parts).filter((p: any) => typeName(p) === "understanding").flatMap((p: any) => block(p, d - 1, indent + "  ")) : [])];
-    case "union": return ["# The union", ...b.stores.map((s: any) => `- ${s.name}: ${s.roots.length} root(s)${s.keeps ? ", " + s.keeps : ""}`)];
     case "type": return [`# ${h.name}`, b.says ?? "", ...Object.entries(h.mould ?? {}).map(([k, f]: any) => `- ${k}: ${f.says}${f.holds === true ? " (holds)" : f.holds === false ? " (points)" : ""}`)];
     case "statistic": return [`## ${named(h)}`, b.says, "Gives: " + JSON.stringify(b.gives)];
     case "measures": return [...many(b.measures)].sort((x: any, y: any) => y.body.value - x.body.value).flatMap((m: any) => block(m, d));

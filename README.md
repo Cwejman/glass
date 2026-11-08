@@ -23,14 +23,14 @@ A version is `{kind, id, prev, instance, name?, mould?, body}`. An index is `{ki
 What the store holds:
 - the types;
 - one lexicon of every word;
-- the wiki that was markdown, to the word, with its links as references and markdown's surface kept apart. The author's words before the store are among it, a day to a brief, under `said/2026-10-30.md` to `said/2026-11-06.md`;
-- the second session of 2026-11-06, utterance by utterance, with its paths of evolution, and the forks that met it; the third session, of 2026-11-07 and 2026-11-08;
+- the wiki that was markdown, to the word, with its links as references and markdown's surface kept apart;
+- the author's words before the store, a day to a brief, under `said/2026-10-30.md` to `said/2026-11-06.md`: "As it was said", a root of its own, whose face the wiki's flow shows by pointing;
+- the second session of 2026-11-06, utterance by utterance, with its paths of evolution, and the forks that met it; the third session, of 2026-11-07 and 2026-11-08; a fourth, of 2026-11-08, kept in brief;
 - statistics declared as prose and expression, never stored;
 - measures on what was said, sessions and passages graded with a note, none of them a conclusion: read them to reason about what to read. Briefs the work has overtaken are measured too, as stale;
-- threads raised from what was said that no brief owns yet;
-- the union that reads it all.
+- threads raised from what was said that no brief owns yet.
 
-Almost nothing stands loose. The main store has ten roots: the lexicon, the union, the wiki, its markdown forms, the threads, the measures, a whole for statistics and functions, one for the sessions, and two voices no session holds. A session holds its own, and a source what stands upon it.
+Almost nothing stands loose. The main store has nine roots: the lexicon, what was said, the wiki, its markdown forms, the threads, the measures, a whole for statistics and functions, one for the sessions, and the author's voice, which speaks across them. A session holds its own, and a source what stands upon it.
 
 Its first 81 commits are its birth, a slice each in the order things came. Each commit after them is a diff-pack.
 
@@ -43,14 +43,13 @@ Chart before reading. `src/tools/probe.ts` shows the field from its roots, measu
 ```
 bun src/tools/probe.ts --without paper,paper-readings                the roots, measured
 bun src/tools/probe.ts --without paper,paper-readings --digest 4000  pieces to read, in order
-bun src/tools/probe.ts 10.1.33-40 --without paper,paper-readings --text one piece, as prose
+bun src/tools/probe.ts 9.1.33-40 --without paper,paper-readings --text one piece, as prose
 bun src/tools/probe.ts 4 --without paper,paper-readings --depths      a whole, layer by layer
 ```
 
-Or start at the union, then read whatever its roots lead to:
+Or read any holon by its name, id or wiki path:
 
 ```
-bun src/tools/read.ts union
 bun src/tools/read.ts README.md 1          the old wiki's entry, a level down
 bun src/tools/read.ts primitives.md        the primitives in prose
 bun src/tools/read.ts said/2026-11-05.md 9 a day of the author's words
@@ -73,7 +72,7 @@ The text is drawn from the holons each time; none is stored. A word is `before +
 
 - **The store is the packs.** The JSON that came before them, and the scripts that served it, are in git's history only. The birth from markdown has ended.
 - **The code is older than the store.** The engine and the client still read loose objects, keep a type's fields and a holon's name inside the body, key the index tree by the end of each id, read every reference as holding, and expect a brief's prose as markdown and its title in its body. The tests pass, but they and the store's vectors speak of that old form: none touches `src/tools/packs.ts`.
-- **The pack format is not final.** The last two paths of the second session say how it may change: "Names counted in locality, unified where stores meet", and "Addresses by position, one fingerprint per commit". Under them, holons are counted within their store, objects are addressed by where they sit, there are segments per publish in place of a pack and an index per commit, and one hash per commit is the proof. Both still stand as noted, not settled. Read them in full by `bun src/tools/probe.ts 10.1.21-22 --without paper,paper-readings --text`.
+- **The pack format is not final.** The last two paths of the second session say how it may change: "Names counted in locality, unified where stores meet", and "Addresses by position, one fingerprint per commit". Under them, holons are counted within their store, objects are addressed by where they sit, there are segments per publish in place of a pack and an index per commit, and one hash per commit is the proof. Both still stand as noted, not settled. Read them in full by `bun src/tools/probe.ts 9.1.21-22 --without paper,paper-readings --text`.
 - **What comes next is here, not in the plan**, whose brief stops at the first mark and is measured stale. In order: show everything specified since the code was last brought to it, as the thread "The spec settles before the code" asks; settle the format, with vectors first; bring the engine and the client to it; then a glass for the human, born from this store.
 - **Two questions the format has to answer.** With one hash per commit, how is one holon read by range checked, when today each object is checked by its name? And counted names and dropped hashes rewrite every holon once: is that accepted, against nothing written before being touched?
 - **Parts of the wiki are stale**, and marked so: see How to read.
