@@ -24,7 +24,7 @@ What the store holds:
 - the wiki that was markdown, to the word, with its links as references and markdown's surface kept apart. The author's words before the store are among it, a day to a brief, under `said/2026-10-30.md` to `said/2026-11-06.md`;
 - the second session of 2026-11-06, utterance by utterance, with its paths of evolution, and the forks that met it; the third session, of 2026-11-07 and 2026-11-08;
 - statistics declared as prose and expression, never stored;
-- measures on what was said, sessions and passages graded with a note, none of them a conclusion: read them to reason about what to read;
+- measures on what was said, sessions and passages graded with a note, none of them a conclusion: read them to reason about what to read. Briefs the work has overtaken are measured too, as stale;
 - threads raised from what was said that no brief owns yet;
 - the union that reads it all.
 
@@ -54,7 +54,10 @@ bun src/tools/read.ts 2026-11-06-second    the latest session and its paths
 bun src/tools/read.ts session              any type, by its name
 bun src/tools/read.ts measured             what was said, measured: each a grade and a note, and the id to read it by
 bun src/tools/read.ts raised               the threads raised from what was said, and where each stands
+bun src/tools/read.ts measured | grep -A1 stale   the briefs the work has overtaken, and what still holds in each
 ```
+
+A brief does not show its own stale mark when read, so read those marks before trusting the wiki. They are marked rather than rewritten, because working in prose takes more effort; what was said stands as it was, and is never measured stale.
 
 The text is drawn from the holons each time; none is stored. A word is `before + text + after`, a sentence is its words, and a paragraph is its sentences. `src/tools/append.ts` adds to the store, as one commit; `src/tools/README.md` says how.
 
@@ -65,6 +68,10 @@ The text is drawn from the holons each time; none is stored. A word is `before +
 ## Where it stands
 
 - **The store is the packs.** The JSON that came before them, and the scripts that served it, are in git's history only. The birth from markdown has ended.
-- **The code is older than the store.** The engine and the client still read loose objects, keep a type's fields and a holon's name inside the body, and key the index tree by the end of each id. Bringing them to the packs as `src/tools/packs.ts` reads and writes them is the next build. The new interface comes after that: a glass for the human, born from this store.
-- **The pack format is not final.** The last two paths of the session say how it is to change, before the code is brought to it: "Names counted in locality, unified where stores meet", and "Addresses by position, one fingerprint per commit". Under them, holons are counted within their store, objects are addressed by where they sit, there are segments per publish in place of a pack and an index per commit, and one hash per commit is the proof. Read them with `bun src/tools/read.ts 2026-11-06-second`, and the paths in full by their titles.
+- **The code is older than the store.** The engine and the client still read loose objects, keep a type's fields and a holon's name inside the body, key the index tree by the end of each id, and read every reference as holding. The tests pass, but they and the store's vectors speak of that old form: none touches `src/tools/packs.ts`.
+- **The pack format is not final.** The last two paths of the second session say how it may change: "Names counted in locality, unified where stores meet", and "Addresses by position, one fingerprint per commit". Under them, holons are counted within their store, objects are addressed by where they sit, there are segments per publish in place of a pack and an index per commit, and one hash per commit is the proof. Both still stand as noted, not settled. Read them with `bun src/tools/read.ts 2026-11-06-second`, and the paths in full by `bun src/tools/probe.ts 1.21-22 --without paper,paper-readings --text`.
+- **What comes next is here, not in the plan**, whose brief stops at the first mark and is measured stale. In order: show everything specified since the code was last brought to it, as the thread "The spec settles before the code" asks; settle the format, with vectors first; bring the engine and the client to it; then a glass for the human, born from this store.
+- **Two questions the format has to answer.** With one hash per commit, how is one holon read by range checked, when today each object is checked by its name? And counted names and dropped hashes rewrite every holon once: is that accepted, against nothing written before being touched?
+- **Parts of the wiki are stale**, and marked so: see How to read.
+- **No session starts on local changes.** What a session did is committed before it ends, the store's ref and packs above all, since no other copy of them exists.
 - **Memory is off** for every session (`.claude/settings.json`). What a session knows is in the field.

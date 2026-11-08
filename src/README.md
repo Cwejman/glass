@@ -34,10 +34,10 @@ The knowledge is no longer here: since 2026-11-06 it is holons in `store/`, and 
 Everything runs with [Bun](https://bun.sh).
 
 - `bun test` runs every test, the store's vectors among them; `bun run check` checks the types, and `bun run format` lays every file in the one form the code is kept in.
-- `bun run birth` births the wiki and the field into `site/store/` as a commit, when anything changed.
+- `bun run birth` is the old way in: it read the wiki's markdown, whose files are gone, and the field into `site/store/` for the old client. The real store is `store/`, added to through `src/tools/`.
 - `bun run build` declares the bodies of the field's types for the components, and builds the chassis and the engine into `site/`.
 - `bun run serve` serves `site/` on this machine, at `http://127.0.0.1:4330/`.
 
-After changing the wiki or a component, birth it; after changing the engine or the interface, build. The built client is not kept in git; the store is.
+After changing the engine or the interface, build. The built client is not kept in git; the store is. All of this speaks of the old form of the store until the code is brought to the packs, as the root README tells.
 
 *The session's, 2026-11-03.*
