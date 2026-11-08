@@ -1,6 +1,5 @@
-import type { Id } from "../../store/id.ts";
-import type { Declaration, Given, Space } from "../../interface/component.ts";
-import type { TypeBody } from "./bodies.ts";
+import type { Mould, Shape } from "../../engine/moulds.ts";
+import type { Given, Space } from "../../interface/component.ts";
 import { h } from "./jsx.ts";
 
 // A type: what an instance of it is, each field it declares with what the
@@ -8,12 +7,12 @@ import { h } from "./jsx.ts";
 // above, its title, what it says and how many instances it has.
 
 export const declared = {
-  title: "Type",
+  name: "Type",
   says: "A type: what its instances are, each field it declares with what it means and its shape, and its instances.",
   takes: ["type"],
   kinds: ["full", "face"],
   reads: ["instances"],
-} satisfies Declaration;
+};
 
 export const style = `
 .type-fields {
@@ -37,42 +36,39 @@ export const style = `
 }
 `;
 
-interface Connector {
-  says: string;
-  shape: unknown;
-  optional?: boolean;
-}
-
-export default async function draw(given: Given<TypeBody>, space: Space) {
+export default async function draw(given: Given, space: Space) {
   const type = given.holon!;
-  const { title, says, fields: declared } = type.body;
+  const says = type.body.says as string | undefined;
   const instances = await space.read({ instances: type.id });
 
-  if (given.kind === "face")
+  if (given.kind === "face") {
     return (
       <div class="card">
-        <strong>{title}</strong>
+        <strong>{type.name}</strong>
         <span class="meta">{[says, counted(instances.length, "instance")].filter(Boolean).join(" · ")}</span>
       </div>
     );
+  }
 
-  const fields = Object.entries(declared as unknown as Record<string, Connector>);
+  const fields = Object.entries((type.mould ?? {}) as Mould);
+
   return (
     <article class="place type">
-      <h1>{title}</h1>
+      <h1>{type.name}</h1>
       {says && <p>{says}</p>}
 
       <h2>Its fields</h2>
       <dl class="type-fields">
-        {fields.map(([key, connector]) => [
+        {fields.map(([key, field]) => [
           <dt>
             {key}
             <span class="shape">
-              {shapeOf(connector.shape)}
-              {connector.optional && ", optional"}
+              {shapeOf(field.shape)}
+              {field.holds && ", holds"}
+              {field.optional && ", optional"}
             </span>
           </dt>,
-          <dd>{connector.says}</dd>,
+          <dd>{field.says}</dd>,
         ])}
       </dl>
 
@@ -84,8 +80,9 @@ export default async function draw(given: Given<TypeBody>, space: Space) {
 
 const counted = (n: number, what: string) => `${n} ${what}${n === 1 ? "" : "s"}`;
 
-function shapeOf(shape: unknown): string {
+function shapeOf(shape: Shape): string {
   if (typeof shape === "string") return shape;
-  if (shape && typeof shape === "object" && "list" in shape) return `list of ${shapeOf(shape.list)}`;
+  if ("list" in shape) return `list of ${shapeOf(shape.list as Shape)}`;
+  if ("set" in shape) return `set of ${shapeOf(shape.set as Shape)}`;
   return "fields";
 }

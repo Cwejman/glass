@@ -4,7 +4,8 @@
 // Usage: bun src/tools/append.ts <utterance.txt> <typed|spoken> [paths.json]
 // In the text, {typed|meant} marks a fix, and _ inside it stands for a space.
 
-import { commit, open, storeDir, type Holon } from "./blocks.ts";
+import { commit } from "../store/store.ts";
+import { holonsOf, open, storeDir, type Holon } from "./stores.ts";
 import { proseWriter } from "./prose.ts";
 
 type Patch = {
@@ -16,12 +17,14 @@ const ref = (to: string) => ({ $ref: to });
 
 const [file, as, patchFile] = process.argv.slice(2);
 const store = await open(storeDir);
-const holons = [...(await store.holons()).values()].map((x) => x.holon);
+const holons = await holonsOf(store);
 
-const writer = proseWriter(holons, store.mint);
+const writer = proseWriter(holons, store.minter());
 const { types, put, flow } = writer;
 
-const session = holons.find((h) => h.instance[0] === types.session && (h.name ?? "").startsWith("A second session"))!;
+const session = holons.find(
+  (h) => h.instance[0] === types.session && (h.name ?? "").startsWith("A second session"),
+)!;
 const changed = new Set<Holon>([session]);
 
 const text = await Bun.file(file!).text();
@@ -49,5 +52,13 @@ if (patchFile) {
 
 if (writer.lexiconGrew()) changed.add(writer.lexicon);
 
-const done = await commit(store, [...changed, ...writer.born], `The second session, utterance ${order}`);
-console.log({ utterance: order, holons: done.holons, blocks: done.blocks, bytes: done.bytes });
+const done = await commit(store, {
+  holons: [...changed, ...writer.born],
+  says: `The second session, utterance ${order}`,
+});
+console.log({
+  utterance: order,
+  holons: changed.size + writer.born.length,
+  blocks: done.blocks,
+  bytes: done.bytes,
+});

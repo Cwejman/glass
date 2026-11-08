@@ -1,209 +1,94 @@
-// Writes the store's test vectors. It shares no code with glass: objects are
-// built by hand here, written canonically by the small writer below, and named
-// by the system's own `shasum`, so an implementation that passes them agrees
-// with something other than itself.
+// Writes format.json: a small store, byte for byte, made apart from the code it
+// tests. It imports nothing of Glass's: the lines are written out by hand here,
+// in canonical form, and hashed with the platform's SHA-256.
+// Usage: bun src/store/vectors/make.ts
 
-import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const here = import.meta.dir;
+const sha = (t: string) => createHash("sha256").update(t).digest("hex");
+const A = "1M6XGF6G0",
+  B = "1M6XGF7H0",
+  C = "1M6XGF8J0";
+const T = `${A}000100`,
+  word = `${A}000101`,
+  gone = `${A}000102`;
+const W2 = `${B}000200`,
+  W3 = `${C}000000`;
 
-function canonical(value: unknown): string {
-  if (value === null || typeof value !== "object") return JSON.stringify(value);
-  if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
-  const record = value as Record<string, unknown>;
-  return `{${Object.keys(record)
-    .sort()
-    .map((key) => `${JSON.stringify(key)}:${canonical(record[key])}`)
-    .join(",")}}`;
-}
+// First commit: a type and two holons.
+const block1 =
+  `{"body":{"text":"type"},"id":"${T}","instance":[],"mould":{"text":{}},"name":"word","prev":null}\n` +
+  `{"body":{"text":"one"},"id":"${word}","instance":["${T}"],"prev":null}\n` +
+  `{"body":{"text":"two"},"id":"${gone}","instance":["${T}"],"prev":null}\n`;
+const h1 = sha(block1);
+const line1 = `{"at":"2026-11-08T00:00:00.000Z","blocks":[{"first":"${T}","hash":"${h1}","moved":[],"new":3}],"checkpoint":{"blocks":[["${h1}","${T}"]],"gone":[],"moved":[]},"gone":[],"parent":null,"says":"first"}`;
+const r1 = sha(line1);
 
-function name(text: string) {
-  const result = spawnSync("shasum", ["-a", "256"], { input: text });
-  return `sha256-${result.stdout.toString().split(" ")[0]}`;
-}
+// Second commit: one new holon that points at an old one, one edit, one taken out.
+const block2 =
+  `{"body":{"next":{"$ref":"${word}"},"text":"three"},"id":"${W2}","instance":["${T}"],"prev":null}\n` +
+  `{"body":{"text":"one, edited"},"id":"${word}","instance":["${T}"],"prev":"${h1}"}\n`;
+const h2 = sha(block2);
+const line2 = `{"at":"2026-11-08T00:01:00.000Z","blocks":[{"first":"${W2}","hash":"${h2}","moved":["${word}"],"new":1}],"gone":["${gone}"],"parent":"${r1}","says":"second"}`;
+const r2 = sha(line2);
 
-const canonicalCases = [
+const steps = [
   {
-    about: "RFC 8785, section 3.2.2: literals, numbers and strings",
-    json: '{"numbers":[333333333.33333329,1E30,4.50,2e-3,0.000000000000000000000000001],"string":"\\u20ac$\\u000F\\u000aA\'\\u0042\\u0022\\u005c\\\\\\"\\/","literals":[null,true,false]}',
-    canonical:
-      '{"literals":[null,true,false],"numbers":[333333333.3333333,1e+30,4.5,0.002,1e-27],"string":"€$\\u000f\\nA\'B\\"\\\\\\\\\\"/"}',
+    says: "first",
+    at: "2026-11-08T00:00:00.000Z",
+    gone: [],
+    holons: [
+      { id: T, instance: [], name: "word", mould: { text: {} }, body: { text: "type" } },
+      { id: word, instance: [T], body: { text: "one" } },
+      { id: gone, instance: [T], body: { text: "two" } },
+    ],
+    blocks: { [h1]: block1 },
+    log: [line1],
+    ref: `${r1} 0\n`,
+    field: { [T]: "type", [word]: "one", [gone]: "two" },
   },
   {
-    about: "RFC 8785, section 3.2.3: keys sorted by UTF-16 code units",
-    json: '{"\\u20ac":"Euro Sign","\\r":"Carriage Return","\\ufb33":"Hebrew Letter Dalet With Dagesh","1":"One","\\ud83d\\ude00":"Emoji: Grinning Face","\\u0080":"Control","\\u00f6":"Latin Small Letter O With Diaeresis"}',
-    canonical:
-      '{"\\r":"Carriage Return","1":"One","\u0080":"Control","ö":"Latin Small Letter O With Diaeresis","€":"Euro Sign","😀":"Emoji: Grinning Face","דּ":"Hebrew Letter Dalet With Dagesh"}',
+    says: "second",
+    at: "2026-11-08T00:01:00.000Z",
+    gone: [gone],
+    holons: [
+      { id: W2, instance: [T], body: { next: { $ref: word }, text: "three" } },
+      { id: word, instance: [T], body: { text: "one, edited" } },
+    ],
+    blocks: { [h2]: block2 },
+    log: [line1, line2],
+    ref: `${r2} 0\n`,
+    field: { [T]: "type", [word]: "one, edited", [W2]: "three" },
   },
-  {
-    about: "nesting and whitespace",
-    json: '{ "b" : [ 1 , { "z" : null , "a" : "x" } ] , "a" : { } }',
-    canonical: '{"a":{},"b":[1,{"a":"x","z":null}]}',
-  },
-].map((c) => ({ ...c, name: name(c.canonical) }));
+];
 
-// Commits on one store, each listing every object it adds. The tree is built
-// here from scratch, from the whole set of ids at each commit, by its rule: a
-// leaf holds at most 64; past that it is a branch over the next character
-// from the end. The store under test grows its tree commit by commit instead.
+// A second copy that started from the first commit lands on the first copy's second.
+const landBlock = `{"body":{"text":"four"},"id":"${W3}","instance":["${T}"],"prev":null}\n`;
+const lh = sha(landBlock);
+const landed = `{"at":"2026-11-08T00:02:00.000Z","blocks":[{"first":"${W3}","hash":"${lh}","moved":[],"new":1}],"gone":[],"parent":"${r2}","says":"third, written apart"}`;
 
-const alphabet = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
-const id = (group: string, n: number, end: string) => {
-  let digits = "";
-  for (let rest = n, i = 0; i < 22 - end.length; i++, rest = Math.floor(rest / 32))
-    digits = alphabet[rest % 32] + digits;
-  const made = `01J${group}${digits}${end}`;
-  if (made.length !== 26) throw new Error(`a bad id ${made}`);
-  return made;
-};
-
-const TYPE = "01JB0000000000000000000000";
-const A = "01JB0000000000000000000001";
-const B = "01JB0000000000000000000002";
-
-type Named = readonly [string, unknown];
-const named = (object: unknown): Named => [name(canonical(object)), object];
-
-const versions = new Map<string, Named>();
-let names: Record<string, string> = {};
-let head: string | null = null;
-const written = new Set<string>();
-
-function tree(entries: [string, string][], depth: number, out: Named[]): string {
-  if (entries.length <= 64) {
-    const leaf = named({ kind: "index-leaf", depth, versions: Object.fromEntries(entries) });
-    out.push(leaf);
-    return leaf[0];
-  }
-  const groups = new Map<string, [string, string][]>();
-  for (const entry of entries) {
-    const char = entry[0][entry[0].length - 1 - depth]!;
-    groups.set(char, [...(groups.get(char) ?? []), entry]);
-  }
-  const branches: Record<string, string> = {};
-  for (const [char, group] of groups) branches[char] = tree(group, depth + 1, out);
-  const branch = named({ kind: "index-branch", depth, branches });
-  out.push(branch);
-  return branch[0];
-}
-
-type Holon = { id: string; instance: string[]; body: Record<string, unknown> };
-const steps: { about: string; change: unknown; ref: string | null; objects: Record<string, unknown> }[] = [];
-
-function step(
-  about: string,
-  at: string,
-  holons: Holon[],
-  givenNames?: Record<string, string | null>,
-  gone: string[] = [],
-) {
-  const made: Named[] = [];
-  for (const holon of holons) {
-    const prev = versions.get(holon.id);
-    const old = prev?.[1] as Holon | undefined;
-    if (old && canonical([old.instance, old.body]) === canonical([holon.instance, holon.body])) continue;
-    const version = named({
-      kind: "version",
-      id: holon.id,
-      prev: prev?.[0] ?? null,
-      instance: holon.instance,
-      body: holon.body,
-    });
-    versions.set(holon.id, version);
-    made.push(version);
-  }
-  const nextNames = { ...names };
-  for (const [key, value] of Object.entries(givenNames ?? {})) {
-    if (value === null) delete nextNames[key];
-    else nextNames[key] = value;
-  }
-  const namesChanged = canonical(nextNames) !== canonical(names);
-  const taken = gone.filter((id) => versions.has(id));
-  for (const id of taken) versions.delete(id);
-  const change = {
-    at,
-    holons,
-    ...(givenNames ? { names: givenNames } : {}),
-    ...(gone.length ? { gone } : {}),
-  };
-  if (made.length === 0 && !namesChanged && taken.length === 0) {
-    steps.push({ about, change, ref: head, objects: {} });
-    return;
-  }
-  names = nextNames;
-  tree(
-    [...versions].map(([key, version]) => [key, version[0]]),
-    0,
-    made,
-  );
-  const holonsRoot = made.at(-1)![0];
-  const index = named({ kind: "index", names, holons: holonsRoot });
-  const commit = named({ kind: "commit", parent: head, at, index: index[0] });
-  made.push(index, commit);
-  head = commit[0];
-  const objects: Record<string, unknown> = {};
-  for (const [key, object] of made) if (!written.has(key)) objects[key] = object;
-  for (const key of Object.keys(objects)) written.add(key);
-  steps.push({ about, change, ref: head, objects });
-}
-
-const note = (holonId: string, title: string, extra: Record<string, unknown> = {}): Holon => ({
-  id: holonId,
-  instance: [TYPE],
-  body: { title, ...extra },
-});
-
-step(
-  "a first commit: three holons born, one name given",
-  "2026-11-03T09:00:00Z",
-  [note(TYPE, "Note"), note(A, "First"), note(B, "Second", { about: { $ref: A } })],
-  { note: TYPE },
-);
-step("one holon changed, one left as it was: only the changed one gets a version", "2026-11-03T09:01:00Z", [
-  note(A, "First, again"),
-  note(B, "Second", { about: { $ref: A } }),
-]);
-step(
-  "61 more make 64 holons, which one leaf still holds",
-  "2026-11-03T09:02:00Z",
-  Array.from({ length: 61 }, (_, i) => note(id("C", i, alphabet[i % 32]!), `Note ${i}`)),
-);
-step(
-  "one more makes 65, and the leaf becomes a branch over the last character of the ids",
-  "2026-11-03T09:03:00Z",
-  [note(id("C", 61, "Q"), "Note 61")],
-);
-step(
-  "65 holons whose ids all end in Z: that leaf passes 64 and branches over the second character from the end",
-  "2026-11-03T09:04:00Z",
-  Array.from({ length: 65 }, (_, i) => note(id("D", i, alphabet[i % 32]! + "Z"), `Zed ${i}`)),
-);
-step("only names change: one taken away, one given; the tree is shared whole", "2026-11-03T09:05:00Z", [], {
-  note: null,
-  type: TYPE,
-});
-step("only what a holon is an instance of changes", "2026-11-03T09:06:00Z", [
-  { id: B, instance: [TYPE, A], body: { title: "Second", about: { $ref: A } } },
-]);
-step("a change that changes nothing makes no commit, and the ref stays", "2026-11-03T09:07:00Z", [
-  note(A, "First, again"),
-]);
-step(
-  "three holons taken out: the 66 ending in Z fall to 64, and their branch becomes a leaf again, as if the others had never been",
-  "2026-11-03T09:08:00Z",
-  [],
-  undefined,
-  [id("D", 0, "0Z"), id("D", 1, "1Z"), A],
-);
-
-const store = {
-  about:
-    "Changes applied in order to an empty store. After each, the ref main names the step's ref, and the store has gained exactly the objects listed, each at its name. A step that adds nothing makes no commit.",
+const vectors = {
   steps,
+  land: {
+    from: 1,
+    says: "third, written apart",
+    at: "2026-11-08T00:02:00.000Z",
+    holons: [{ id: W3, instance: [T], body: { text: "four" } }],
+    block: { [lh]: landBlock },
+    log: [line1, line2, landed],
+    ref: `${sha(landed)} 0\n`,
+    field: { [T]: "type", [word]: "one, edited", [W2]: "three", [W3]: "four" },
+  },
+  history: { "0": { [T]: "type", [word]: "one", [gone]: "two" }, "1": steps[1]!.field },
+  versions: { id: word, texts: ["one, edited", "one"] },
+  names: {
+    next: [
+      ["1M6XGF6G000000V", "1M6XGF6G000000W"],
+      ["1M6XGF6G00000ZZ", "1M6XGF6G0000100"],
+    ],
+  },
 };
-
-writeFileSync(join(here, "canonical.json"), JSON.stringify(canonicalCases, null, 2) + "\n");
-writeFileSync(join(here, "store.json"), JSON.stringify(store, null, 2) + "\n");
-console.log(`${canonicalCases.length} canonical cases, ${steps.length} store steps, ${written.size} objects`);
+writeFileSync(join(import.meta.dir, "format.json"), JSON.stringify(vectors, null, 1) + "\n");
+console.log(`format.json: ${steps.length} steps, heads ${r1.slice(0, 8)} ${r2.slice(0, 8)}`);

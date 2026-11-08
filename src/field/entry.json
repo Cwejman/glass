@@ -1,9 +1,6 @@
 {
-  "title": "The root",
+  "name": "entry",
   "component": "Reader",
-  "gathers": {
-    "call": "group",
-    "with": [{ "call": "not", "with": [{ "call": "children", "with": [{ "call": "everything" }] }] }, "type"]
-  },
+  "argument": ["1M6YBY3G00010TX"],
   "offer": { "search": "Search" }
 }

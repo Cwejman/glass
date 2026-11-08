@@ -6,7 +6,7 @@
 
 let standing: (() => void) | undefined;
 
-export function overlay(x: number, y: number, content: HTMLElement, from: HTMLElement) {
+export function overlay(x: number, y: number, content: HTMLElement, from: HTMLElement, closed: () => void) {
   standing?.();
   const returnTo = (document.activeElement as HTMLElement | null) ?? from;
 
@@ -35,6 +35,7 @@ export function overlay(x: number, y: number, content: HTMLElement, from: HTMLEl
     removeEventListener("pointerdown", outside, true);
     removeEventListener("keydown", keys, true);
     if (standing === close) standing = undefined;
+    closed();
     if (!menu.isConnected) return;
     menu.remove();
     returnTo.focus?.();

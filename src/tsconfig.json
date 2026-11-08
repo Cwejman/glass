@@ -3,28 +3,15 @@
     "target": "ES2024",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "lib": [
-      "ES2024",
-      "DOM",
-      "DOM.Iterable",
-      "WebWorker"
-    ],
-    "types": [
-      "bun"
-    ],
+    "lib": ["ES2024", "DOM", "DOM.Iterable", "WebWorker"],
+    "types": ["bun"],
     "strict": true,
     "noEmit": true,
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
     "jsx": "react",
-    "jsxFactory": "h",
-    "jsxFragmentFactory": "Fragment"
+    "jsxFactory": "h"
   },
-  "include": [
-    "."
-  ],
-  "exclude": [
-    "tools",
-    "node_modules"
-  ]
+  "include": ["."],
+  "exclude": ["tools", "node_modules"]
 }

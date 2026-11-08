@@ -1,4 +1,3 @@
 store/vectors/*.json
 node_modules/
 *.md
-field/components/bodies.ts

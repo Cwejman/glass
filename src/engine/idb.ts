@@ -1,56 +1,40 @@
-import type { Backend } from "../store/backend.ts";
-import type { Name } from "../store/name.ts";
+// The browser's own storage, as a store's files: the home lives here, so a reload
+// loses nothing, and blocks pulled from a host are kept here by their hash.
 
-// The home kept in the browser's own storage, so a reload loses nothing.
+import { encoded, joined, type Files } from "../store/files.ts";
 
-export async function idbBackend(name: string): Promise<Backend> {
+const request = <T>(asked: IDBRequest<T>) =>
+  new Promise<T>((resolve, reject) => {
+    asked.onsuccess = () => resolve(asked.result);
+    asked.onerror = () => reject(asked.error);
+  });
+
+export async function idbFiles(name: string): Promise<Files> {
   const opening = indexedDB.open(name, 1);
-  opening.onupgradeneeded = () => {
-    opening.result.createObjectStore("objects");
-    opening.result.createObjectStore("refs");
-  };
-  const db = await done(opening);
+  opening.onupgradeneeded = () => opening.result.createObjectStore("files");
+
+  const db = await request(opening);
+  const files = () => db.transaction("files", "readwrite").objectStore("files");
 
   return {
-    writable: true,
-    get: (object) => done<string | undefined>(db.transaction("objects").objectStore("objects").get(object)),
-    // An object is written once its transaction completes, so a ref never
-    // names an object that might yet be lost.
-    put: (object, text) =>
-      settled(
-        db.transaction("objects", "readwrite"),
-        (transaction) => void transaction.objectStore("objects").put(text, object),
-      ),
-    ref: (ref) => done<Name | undefined>(db.transaction("refs").objectStore("refs").get(ref)),
-    // The compare and the move happen in one transaction, so nothing moves the
-    // ref between them.
-    moveRef: async (ref, to, from) => {
-      let moved = false;
-      await settled(db.transaction("refs", "readwrite"), (transaction) => {
-        const refs = transaction.objectStore("refs");
-        refs.get(ref).onsuccess = (event) => {
-          if ((event.target as IDBRequest).result !== from) return;
-          refs.put(to, ref);
-          moved = true;
+    read: async (path) =>
+      (await request<Uint8Array | undefined>(db.transaction("files").objectStore("files").get(path))) ?? null,
+
+    write: async (path, content) => void (await request(files().put(encoded(content), path))),
+
+    // The read and the write stand in one transaction, so nothing comes between them.
+    append: (path, text) =>
+      new Promise((resolve, reject) => {
+        const transaction = db.transaction("files", "readwrite");
+        const held = transaction.objectStore("files");
+
+        held.get(path).onsuccess = (event) => {
+          const before = (event.target as IDBRequest<Uint8Array | undefined>).result ?? null;
+          held.put(joined(before, encoded(text)), path);
         };
-      });
-      return moved;
-    },
+
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = transaction.onabort = () => reject(transaction.error);
+      }),
   };
-}
-
-function settled(transaction: IDBTransaction, work: (transaction: IDBTransaction) => void) {
-  return new Promise<void>((resolve, reject) => {
-    work(transaction);
-    transaction.oncomplete = () => resolve();
-    transaction.onerror = transaction.onabort = () =>
-      reject(transaction.error ?? new Error("the transaction was aborted"));
-  });
-}
-
-function done<T>(request: IDBRequest<T>): Promise<T> {
-  return new Promise((resolve, reject) => {
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
 }

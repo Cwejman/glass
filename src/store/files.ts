@@ -1,53 +1,81 @@
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
-import { canonical } from "./canonical.ts";
-import { asRef, path, type Backend } from "./backend.ts";
-import type { Name } from "./name.ts";
-import type { Store } from "./store.ts";
+// Where a store's files live. A store only asks for three things, so anything
+// that can do them can hold one: a folder, a static host, the browser's storage.
 
-// A store as a directory on disk: refs/main, objects/ab/cdef….json, and an
-// optional bundle per commit.
+export interface Files {
+  read(path: string): Promise<Uint8Array | null>;
+  write(path: string, content: string | Uint8Array): Promise<void>;
+  append(path: string, text: string): Promise<void>;
+}
 
-export function fileBackend(dir: string): Backend {
-  const ref = async (name: string) => {
-    const text = await read(join(dir, "refs", name));
-    return text === undefined ? undefined : asRef(text);
-  };
+export const encoded = (content: string | Uint8Array) =>
+  typeof content === "string" ? new TextEncoder().encode(content) : content;
+
+export async function sha(content: string | Uint8Array) {
+  const digest = await crypto.subtle.digest("SHA-256", encoded(content) as BufferSource);
+
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+export function joined(first: Uint8Array | null, second: Uint8Array) {
+  if (!first) return second;
+
+  const out = new Uint8Array(first.length + second.length);
+  out.set(first);
+  out.set(second, first.length);
+
+  return out;
+}
+
+// A store held in memory, for tests and for what never needs to last.
+export function memoryFiles(held = new Map<string, Uint8Array>()): Files & { held: Map<string, Uint8Array> } {
   return {
-    writable: true,
-    get: (name) => read(join(dir, "objects", path(name))),
-    async put(name, text) {
-      const file = join(dir, "objects", path(name));
-      if ((await read(file)) !== undefined) return;
-      await mkdir(dirname(file), { recursive: true });
-      await writeFile(file, text);
-    },
-    ref,
-    // Written beside and renamed into place, so a ref is never half written.
-    async moveRef(name, to, from) {
-      const file = join(dir, "refs", name);
-      if ((await ref(name)) !== from) return false;
-      await mkdir(dirname(file), { recursive: true });
-      await writeFile(`${file}.next`, `${to}\n`);
-      await rename(`${file}.next`, file);
-      return true;
-    },
+    held,
+    read: async (path) => held.get(path) ?? null,
+    write: async (path, content) => void held.set(path, encoded(content)),
+    append: async (path, text) => void held.set(path, joined(held.get(path) ?? null, encoded(text))),
   };
 }
 
-// Everything one commit reaches, in one file, for a first visit.
-export async function writeBundle(store: Store, dir: string, commit: Name) {
-  const objects = await store.reach(commit);
-  const file = join(dir, "bundles", `${commit}.json`);
-  await mkdir(dirname(file), { recursive: true });
-  await writeFile(file, canonical({ kind: "bundle", commit, objects: Object.fromEntries(objects) }));
-}
+// What changes on a host is the ref and the open log; everything else is named
+// by its hash, or written once. Only what changes is asked to be checked again.
+const changes = (path: string) => path.startsWith("refs/") || path.startsWith("log/");
 
-async function read(file: string) {
-  try {
-    return await readFile(file, "utf8");
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
-    throw error;
+const readOnly = async (): Promise<never> => {
+  throw new Error("a served store is read only");
+};
+
+// A store served as files over HTTP. A block is fetched whole, so a host can gzip it.
+// What is kept is shared by every store served, since a block is only ever its hash.
+export function servedFiles(base: string, kept?: Files): Files {
+  const root = base.endsWith("/") ? base : `${base}/`;
+
+  async function fetched(path: string) {
+    const response = await fetch(`${root}${path}`, changes(path) ? { cache: "no-cache" } : {});
+
+    if (response.status === 404) return null;
+    if (!response.ok) throw new Error(`fetching ${path}: ${response.status}`);
+
+    return new Uint8Array(await response.arrayBuffer());
   }
+
+  return {
+    // A host may give every file a new tag at each publish, so a block is kept
+    // by its hash, which never changes.
+    async read(path) {
+      if (changes(path) || !kept) return fetched(path);
+
+      const held = await kept.read(path);
+      if (held) return held;
+
+      const bytes = await fetched(path);
+
+      // Only what is truly that block is kept, so a bad answer does not outlast itself.
+      if (bytes && path === `blocks/${await sha(bytes)}.jsonl`) await kept.write(path, bytes);
+
+      return bytes;
+    },
+
+    write: readOnly,
+    append: readOnly,
+  };
 }

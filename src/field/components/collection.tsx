@@ -1,4 +1,4 @@
-import type { Declaration, Given, Space } from "../../interface/component.ts";
+import type { Given, Space } from "../../interface/component.ts";
 import { h } from "./jsx.ts";
 import { partSaid, partsOf, functionsIn } from "./parts.ts";
 
@@ -10,12 +10,12 @@ import { partSaid, partsOf, functionsIn } from "./parts.ts";
 // counted; each name a place to go.
 
 export const declared = {
-  title: "Collection",
+  name: "Collection",
   says: "A way of looking as a face: closed, the value it narrows to and how many it holds; open, that name and the holons it holds named beneath it.",
   takes: [],
   kinds: ["face"],
   argument: "expression",
-  reads: ["holon", "name", "instances"],
+  reads: ["holon", "named", "instances"],
   settings: {
     open: {
       says: "Whether it stands open, its name and the holons it holds named beneath it, rather than closed as a card with how many it holds.",
@@ -23,20 +23,15 @@ export const declared = {
       optional: true,
     },
   },
-} satisfies Declaration;
+};
 
 // How many holons an open collection names before it only counts.
 const named = 12;
 
 export default async function draw(given: Given<never, { open?: boolean }>, space: Space) {
-  const functions = await functionsIn({
-    name: () => space.read({ name: "function" }),
-    instances: (type) => space.read({ instances: type }),
-    holon: (id) => space.holon(id),
-  });
+  const functions = await functionsIn(space);
   const last = partsOf(functions, given.gathers!).parts.at(-1);
-  const titled = async (id: string) =>
-    String((await space.holon(id))?.body.title ?? "what is no longer in the field");
+  const titled = async (id: string) => (await space.holon(id))?.name ?? "what is no longer in the field";
   const said = last ? (await partSaid(functions, last, titled)).value : "Everything";
   const holds = given.list ?? [];
   const count = holds.length === 1 ? "1 holon" : `${holds.length} holons`;

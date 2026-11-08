@@ -1,11 +1,7 @@
 {
-  "title": "Function",
+  "name": "function",
   "says": "Something pure that gathers from the field, given what it takes: glass's own, evaluated by the engine, or one's own, an expression over what it is given. An expression calls a function, and is evaluated wherever it is used, as in what is drawn, so nothing it gives is kept; a function kept as a favorite is a way of looking one can return to.",
-  "fields": {
-    "title": {
-      "says": "What the function is called, as it is offered to be called.",
-      "shape": "string"
-    },
+  "mould": {
     "says": {
       "says": "What it gathers, in a sentence.",
       "shape": "string",
@@ -26,11 +22,6 @@
     "gives": {
       "says": "For a function of one's own, the expression it gives, each argument it was given named as { arg: i }.",
       "shape": "expression",
-      "optional": true
-    },
-    "from": {
-      "says": "Where the holon was born from, as a path in the files it arrived from.",
-      "shape": "string",
       "optional": true
     }
   }

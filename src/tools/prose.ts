@@ -4,7 +4,7 @@
 // In the text, {typed|meant} marks a correction, and _ inside the braces stands
 // for a space. Marks and spaces around a word are kept on the word.
 
-import type { Holon } from "./blocks.ts";
+import type { Holon } from "../store/store.ts";
 
 const ref = (to: string) => ({ $ref: to });
 
@@ -50,7 +50,9 @@ const splitSentences = (paragraph: string) => paragraph.split(/(?<=[.?!])\s+(?=\
 export function proseWriter(holons: Holon[], mint: () => string) {
   const types = typeIds(holons);
   const lexicon = holons.find((h) => h.name === "lexicon" && h.instance[0] === types.lexicon)!;
-  const lexemes = new Map(holons.filter((h) => h.instance[0] === types.lexeme).map((h) => [h.body.text as string, h.id]));
+  const lexemes = new Map(
+    holons.filter((h) => h.instance[0] === types.lexeme).map((h) => [h.body.text as string, h.id]),
+  );
   const born: Holon[] = [];
   let lexiconGrew = false;
 
@@ -96,7 +98,8 @@ export function proseWriter(holons: Holon[], mint: () => string) {
 
   const sentence = (text: string) => put("sentence", { words: tokens(text).map(word).map(ref) });
 
-  const paragraph = (text: string) => put("paragraph", { sentences: splitSentences(text).map(sentence).map(ref) });
+  const paragraph = (text: string) =>
+    put("paragraph", { sentences: splitSentences(text).map(sentence).map(ref) });
 
   // An utterance's flow: its paragraphs, and a line of dashes or stars as a break.
   const flow = (text: string) =>

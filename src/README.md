@@ -13,19 +13,17 @@ Glass's code is laid out as its primitives stand: the store, the engine on it, t
 
 The code, in `src/`:
 
-- `src/store/`: canonical JSON, names, ids and the objects; objects checked before they are trusted; the index tree; and the store over a backend, in memory, as files, or served over HTTP. The store's format is fixed by `vectors/`, made apart from this code.
-- `src/engine/`: the field as a value and what reads and judges it, the engine that keeps it, the references it finds in bodies, the types it judges by, pulling a served store, the home in the browser's storage, the protocol, and the worker it runs in.
-- `src/interface/`: the contract every component draws against, the interface's end of the protocol, the materials laid on the page, the drawing of holons into hosts, by code or by template, the root drawn where the page's address says, the syntax that says an expression as text and reads it back, and the chassis that starts it all.
-- `src/birth/`: reading the wiki's files under the rule, what the field's holons are made from what the files hold, and committing them into `site/store/`.
+- `src/store/`: the store's format, one implementation over plain files, whether a folder, a static host or the browser's storage. Canonical JSON, names, the log and its checkpoints, blocks, commits and landing. The format is fixed by `vectors/`, made apart from this code.
+- `src/engine/`: the field as a value and what reads and judges it. References and whether they hold, moulds and what they check, expressions over everything, the engine that keeps the home, the protocol, and the worker it runs in.
+- `src/interface/`: the contract every component draws against, the interface's end of the protocol, finding a component, drawing slots, the syntax and the address that say where one looks, the root, and the chassis that starts it all.
 
 Beside it, also in `src/`:
 
-- `src/field/`: the field glass shipped, as the birth read it: types as JSON, components as modules or templates, the entry and the materials.
-- `src/store/vectors/`: the store's contract, in no language, which any implementation answers to.
-- `src/site/`: the page; the build writes it, with the built client, into `site/`, which is output only.
-- `src/tools/`: reading the store from its blocks and adding commits to it, and the format's vectors.
+- `src/field/`: what glass ships, as sources: types as JSON, components as modules, functions, kinds and the material. `make.ts` makes them into `store/glass/`.
+- `src/site/`: the page; the build writes it, with the built client and the stores, into `site/`, which is output only.
+- `src/tools/`: reading the stores from this machine and adding to them.
 
-The knowledge is no longer here: since 2026-11-06 it is holons in `store/`, and the birth that read it from markdown has ended.
+The knowledge is not here: since 2026-11-06 it is holons in `store/`.
 
 *The session's, 2026-11-03.*
 
@@ -34,10 +32,10 @@ The knowledge is no longer here: since 2026-11-06 it is holons in `store/`, and 
 Everything runs with [Bun](https://bun.sh).
 
 - `bun test` runs every test, the store's vectors among them; `bun run check` checks the types, and `bun run format` lays every file in the one form the code is kept in.
-- `bun run birth` is the old way in: it read the wiki's markdown, whose files are gone, and the field into `site/store/` for the old client. The real store is `store/`, added to through `src/tools/`.
-- `bun run build` declares the bodies of the field's types for the components, and builds the chassis and the engine into `site/`.
+- `bun run field` makes `store/glass/` from `src/field/`. A holon that has not changed is not written again.
+- `bun run build` builds the chassis and the engine, and copies the stores, into `site/`.
 - `bun run serve` serves `site/` on this machine, at `http://127.0.0.1:4330/`.
 
-After changing the engine or the interface, build. The built client is not kept in git; the store is. All of this speaks of the old form of the store until the code is brought to the blocks, as the root README tells.
+After changing a component, make the field. After changing the engine or the interface, build. The built client is not kept in git; the store is.
 
 *The session's, 2026-11-03.*

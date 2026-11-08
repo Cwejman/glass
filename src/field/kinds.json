@@ -1,12 +1,10 @@
 [
   {
     "name": "full",
-    "title": "Full",
     "says": "Drawn whole, as the place one stands in."
   },
   {
     "name": "face",
-    "title": "Face",
     "says": "Seen from outside, by what it is at a glance, and entered to go in."
   }
 ]

@@ -1,30 +1,68 @@
----
-under: the rule
-kind: brief
----
+# The store's format
 
-# The store's vectors
+What a store is, in no language. `format.json` is a small store written out byte for byte by `make.ts`, which imports nothing of Glass's. An implementation that writes these bytes and reads them back is writing glass's store. `store.test.ts` holds `store.ts` to them. The stores were proved into this form on 2026-11-08, by the conversion in commit `830ad46`, kept in git's history with the packs it read.
 
-*Stale: these pin the loose format the old code reads. The store in `store/` is blocks, and answers to none of them: its format is in `src/tools/vectors/`.*
+Text is canonical JSON (RFC 8785), and a hash is the SHA-256 of a text, in hex.
 
-What a store is, written as cases any implementation must pass, in any language. An implementation that writes these objects, gives them these names and reads them back is writing glass's store; nothing else about it matters.
+## Files
 
-*The session's, 2026-11-03, on the author's wish that the store be built tests first and stand apart from any code.*
+```
+store/refs/main             "<hash of the last log line> <open volume>"; written last
+store/log/<n>.jsonl         commits, one per line; each volume opens with a checkpoint
+store/blocks/<hash>.jsonl   version lines, about 64 KB each, never touched again
+store/conversion/ids.json   old ULID -> name; written once; no reader needs it
+```
 
-## 1. Canonical text
+Only the ref changes, and only the open volume grows. Each store is such a folder: the main one at `store/`, others beside its files, each standing alone.
 
-`canonical.json` holds JSON texts, the one canonical text each must become, as [RFC 8785](https://www.rfc-editor.org/rfc/rfc8785) defines it, and the name of that text: `sha256-` and its SHA-256 in hex. Two cases are the RFC's own examples.
+`canonical.json` holds the texts of RFC 8785's examples, and the name of each.
 
-*The RFC's examples copied from its sections 3.2.2 and 3.2.3.*
+## Objects
 
-## 2. Commits on a store
+- **Name:** 15 characters of the alphabet `0-9A-HJKMNP-TV-Z`, so names sort as text. Nine are the commit's moment in milliseconds. Six are a count, which starts at a chance multiple of 32,768 in each commit and goes up by one. So a commit's new holons are its first name and how many there are.
+- **Version:** `{"body":…,"id":name,"instance":[name],"mould"?:…,"name"?:…,"prev":hash|null}`, one per line. `prev` is the hash of the block holding the version before. A block holds at most one version of an id, and lists a commit's new holons first, in name order.
+- **Reference:** `{"$ref":name}`, optionally with `$holds`. A name is unique across stores, so a reference into another store has the same form.
+- **Commit:** `{"at","blocks":[{"first":name|null,"hash","moved":[names],"new":n}],"gone":[names],"parent":hash|null,"says"}`. `new` counts the block's new holons, from `first`. `moved` lists the holons it holds a new version of. `parent` is the hash of the line before, across volumes.
+- **Checkpoint:** the first line of every volume adds `"checkpoint":{"blocks":[[hash,first]],"gone":[names],"moved":[[name,hash]]}`, the whole latest table after that line. A new volume opens when the lines after the open one's checkpoint reach 64 KB.
 
-`store.json` holds changes applied in order to an empty store. After each, the ref `main` names the commit, and the store has gained exactly the objects listed, each at its name: the first commit births three holons and gives a name; the second changes one holon and leaves another as it was, which gains no version; the third passes 64 holons, and the index's leaf becomes a branch.
+## Reading
 
-*The session's, 2026-11-03.*
+1. Read the ref.
+2. Read the open volume. Check that each line's `parent` is the hash of the line before, up to the line whose hash is the ref. The ref moves last, so a line past it is a commit that never finished: it is ignored, and the next commit writes over it.
+3. Take the first line's checkpoint and apply the lines after it: a block with a `first` joins the table, `moved` points those holons at that block, and `gone` takes holons out of the field.
+4. To read a holon: use its `moved` block if it has one, else the block whose `first` is the greatest at or below its name. Fetch the whole block, check it against its hash, and find the line by `id`.
 
-## 3. How they are made
+These are read only when asked for:
 
-`make.ts` builds every object by hand and names it with the system's `shasum`, sharing no code with glass, so passing the vectors means agreeing with something other than oneself. Run it with `bun vectors/make.ts`.
+- **An older version:** follow `prev`.
+- **The whole log:** every volume from 0, chained up to the ref.
+- **The field at a commit:** the latest checkpoint at or before it, and the lines after, up to it.
 
-*The session's, 2026-11-03.*
+A cold read costs the ref and one volume. Over HTTP a block is fetched whole, so a host can gzip it. A range request that asks for gzip gets a range of the gzipped bytes, so a range asks for `identity`. The client should keep blocks by hash, and should ask the host to revalidate the ref rather than add a query. GitHub Pages was measured doing this on 2026-11-08: every extension gzipped, `max-age=600`, a weak ETag and 304, any origin allowed, a query ignored by its cache, and a publish giving every file a new ETag.
+
+## Writing
+
+1. Mint names for the new holons.
+2. Write the blocks.
+3. Append the log line.
+4. Write the ref.
+
+A commit is refused if the ref has moved since the store was read.
+
+## Landing
+
+A copy written apart lands on another by chaining its log lines on again, with its blocks copied as they are, so no name or reference changes. `land()` stops if both copies changed one holon, or if both minted in one moment.
+
+## The conversion
+
+The volumes before the conversion line hold the old commits, each `{"at","blocks":[],"gone":[names],"held":[[name,place]],"oldHash","parent","says"}`. `held` is what that commit's index held anew, and `place` is a position in the conversion line's `"conversion":{"blocks":[hashes],"ids":hash,"names":{…}}`, which lists every block, the hash of `ids.json`, and the old index's map of names.
+
+At conversion, names follow place order: the types, then each root down its parts, the lexemes, then what was taken out. Roots keep the order their ULIDs gave them, so routes within a store stand. History comes first in its own blocks, oldest generation first.
+
+## What is not settled
+
+- **The lexicon:** it is still one holon, so a new word rewrites about 100 KB of text. It should grow by its parts. That is an ordinary commit, and no format change.
+- **Growth:** past about 5,000 commits the table's block hashes are what grow. Folding small blocks together or checkpointing less often would answer it, and changes no name.
+- **Scatter:** edits spread a whole across blocks, and an old version stays beside its neighbours. Re-placing a whole is an ordinary commit.
+- **Other hosts:** only GitHub Pages was measured, with synthetic files, from one place. A host that doesn't gzip costs the field's full 11.5 MB.
+- **A hostile host:** a client with no memory of an earlier head can't catch a forged store or a rollback. One that remembers its last head can.

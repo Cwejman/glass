@@ -1,29 +1,78 @@
 [
-  { "native": "everything", "title": "Everything", "says": "Every holon in the field." },
-  { "native": "type", "title": "Type", "says": "The instances of the types given.", "takes": ["set"] },
+  {
+    "native": "everything",
+    "says": "Every holon in the field.",
+    "name": "Everything"
+  },
+  {
+    "native": "type",
+    "says": "The instances of the types given.",
+    "takes": ["set"],
+    "name": "Type"
+  },
   {
     "native": "children",
-    "title": "Children of",
-    "says": "What the holons given point to.",
-    "takes": ["set"]
+    "says": "What the holons given hold, as parts.",
+    "takes": ["set"],
+    "name": "Children of"
   },
   {
     "native": "parents",
-    "title": "Parents of",
-    "says": "What points to the holons given.",
+    "says": "What holds the holons given.",
+    "takes": ["set"],
+    "name": "Parents of"
+  },
+  {
+    "native": "points-to",
+    "name": "Points to",
+    "says": "What the holons given point at, without holding.",
     "takes": ["set"]
   },
-  { "native": "text", "title": "Text", "says": "What contains each of the words given.", "takes": ["words"] },
-  { "native": "store", "title": "Store", "says": "What the store given holds.", "takes": ["store"] },
-  { "native": "named", "title": "Has a name", "says": "What a store gives a name." },
-  { "native": "types", "title": "Is a type", "says": "Every type." },
-  { "native": "and", "title": "And", "says": "What every set given holds.", "takes": ["set", "sets"] },
-  { "native": "or", "title": "Or", "says": "What any set given holds.", "takes": ["set", "sets"] },
-  { "native": "not", "title": "Not", "says": "Everything but the set given.", "takes": ["set"] },
+  {
+    "native": "pointed-from",
+    "name": "Pointed from",
+    "says": "What points at the holons given, without holding.",
+    "takes": ["set"]
+  },
+  {
+    "native": "text",
+    "says": "What contains each of the words given.",
+    "takes": ["words"],
+    "name": "Text"
+  },
+  {
+    "native": "store",
+    "says": "What the store given holds.",
+    "takes": ["store"],
+    "name": "Store"
+  },
+  {
+    "native": "types",
+    "says": "Every type.",
+    "name": "Is a type"
+  },
+  {
+    "native": "and",
+    "says": "What every set given holds.",
+    "takes": ["set", "sets"],
+    "name": "And"
+  },
+  {
+    "native": "or",
+    "says": "What any set given holds.",
+    "takes": ["set", "sets"],
+    "name": "Or"
+  },
+  {
+    "native": "not",
+    "says": "Everything but the set given.",
+    "takes": ["set"],
+    "name": "Not"
+  },
   {
     "native": "group",
-    "title": "Group by",
     "says": "The set given, in collections along an axis: type, parent, store, or auto, whichever splits it best.",
-    "takes": ["set", "axis"]
+    "takes": ["set", "axis"],
+    "name": "Group by"
   }
 ]

@@ -1,17 +1,14 @@
 {
-  "title": "Material",
+  "name": "material",
   "says": "What everything drawn is made of: the colours, the type, the measure and the spacing, named once so every component draws with the same material.",
-  "fields": {
-    "title": { "says": "What the material is called.", "shape": "string" },
-    "says": { "says": "What the material is, in a sentence.", "shape": "string" },
-    "css": {
-      "says": "The style sheet it lays: the names every component draws with, and the page's own ground and type.",
+  "mould": {
+    "says": {
+      "says": "What the material is, in a sentence.",
       "shape": "string"
     },
-    "from": {
-      "says": "Where the holon was born from, as a path in the files it arrived from.",
-      "shape": "string",
-      "optional": true
+    "css": {
+      "says": "The style sheet it lays: the names every component draws with, and the page's own ground and type.",
+      "shape": "code"
     }
   }
 }

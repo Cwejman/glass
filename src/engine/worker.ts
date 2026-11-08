@@ -1,57 +1,82 @@
 /// <reference lib="webworker" />
-import type { Json } from "../store/canonical.ts";
+
+// The engine on its own thread in the browser, so it never holds up the drawing.
+// Its home lives in the browser's storage, and so do the blocks it has pulled.
+
 import { canonical } from "../store/canonical.ts";
+import { servedFiles } from "../store/files.ts";
 import { openStore } from "../store/store.ts";
 import { startEngine, type Read } from "./engine.ts";
-import { idbBackend } from "./idb.ts";
+import { idbFiles } from "./idb.ts";
 import type { Message, Reply } from "./protocol.ts";
-import { pull } from "./pull.ts";
-
-// The engine on its own thread in the browser, so it never holds up the
-// drawing. Its home lives in the browser's storage.
 
 declare const self: DedicatedWorkerGlobalScope;
 
-const started = idbBackend("glass-home").then((home) => startEngine(openStore(home)));
+const pulled = idbFiles("glass-pulled-blocks");
+const started = idbFiles("glass-home").then(openStore).then(startEngine);
 
 const subscriptions = new Map<number, { read: Read; last: string }>();
+let changes = 0;
+
 const send = (reply: Reply) => self.postMessage(reply);
 
-async function answer(message: Message): Promise<Json> {
+async function answer(message: Message) {
   const engine = await started;
+
   switch (message.op) {
-    case "attach":
-      await engine.attach(message.key, await pull(new URL(message.url, self.location.href).href));
+    case "attach": {
+      const url = new URL(message.url, self.location.href).href;
+      await engine.attach(message.key, await openStore(servedFiles(url, await pulled)));
       return null;
+    }
+
     case "read":
       return engine.read(message.read);
+
     case "commit":
-      return (await engine.commit(message.change)) ?? null;
+      return engine.commit(message.change);
+
+    // A change while it reads is read again, so what it starts from is never already old.
     case "subscribe": {
-      const value = await engine.read(message.read);
+      let value: unknown;
+      let seen: number;
+
+      do {
+        seen = changes;
+        value = await engine.read(message.read);
+      } while (seen !== changes);
+
       subscriptions.set(message.id, { read: message.read, last: canonical(value) });
       return { subscription: message.id, value };
     }
+
     case "unsubscribe":
       subscriptions.delete(message.subscription);
       return null;
   }
 }
 
-// After every change to the field, each subscription is read again, and told
-// only if what it reads has changed.
+// After every change to the field, each subscription is read again, and told only
+// if what it reads has changed.
+function tellSubscribers(read: (query: Read) => Promise<unknown>) {
+  for (const [subscription, entry] of subscriptions) {
+    read(entry.read).then(
+      (value) => {
+        const text = canonical(value);
+        if (text === entry.last || !subscriptions.has(subscription)) return;
+
+        entry.last = text;
+        send({ subscription, value });
+      },
+      (error) => console.error(`subscription ${subscription}:`, error),
+    );
+  }
+}
+
 started.then((engine) =>
   engine.onChange(() => {
-    for (const [subscription, entry] of subscriptions)
-      engine.read(entry.read).then(
-        (value) => {
-          const text = canonical(value);
-          if (text === entry.last || !subscriptions.has(subscription)) return;
-          entry.last = text;
-          send({ subscription, value });
-        },
-        (error) => console.error(`subscription ${subscription}:`, error),
-      );
+    changes++;
+    tellSubscribers(engine.read);
   }),
 );
 

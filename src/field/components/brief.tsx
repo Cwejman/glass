@@ -1,65 +1,40 @@
-import type { Id } from "../../store/id.ts";
-import type { Declaration, Given, HolonOf, Space } from "../../interface/component.ts";
-import type { BriefBody, BriefSettings } from "./bodies.ts";
-import { h } from "./jsx.ts";
-import { faceOf, isConfidence, markdown, placed, slotOf } from "./prose.ts";
-import { Way } from "./way.tsx";
+// A brief, in either kind of slot. In full: the way down to it, its name, its flow,
+// and its sections read through after it, each with the flow of its own. What stands
+// in a flow that is not prose, a brief mounted there among them, shows its face in a
+// slot of its own. As a face: its name and its first paragraph.
 
-// A brief, in either kind of slot. In full: the way down to it, its title
-// and prose, each part its prose places a slot where it stands, and its
-// parts beneath, a slot of them all; its own values it draws, and what they
-// point at it opens as slots, offering them a face, so a brief in full
-// never trickles its fullness into what it holds. As a face: its number,
-// title and first paragraph, and how many briefs stand beneath it. A
-// brief's parts are numbered by where they stand, unless it keeps them by
-// time, as a day's words are.
+import type { HolonRead } from "../../engine/reads.ts";
+import type { Given, Space } from "../../interface/component.ts";
+import { h, type Child } from "./jsx.ts";
+import { block, refsOf } from "./prose.tsx";
 
 export const declared = {
-  title: "Brief",
-  says: "A brief: in full, the way down to it, its title and prose, the parts its prose places and its parts beneath, each a slot; as a face, its number, title and first paragraph.",
+  name: "Brief",
+  says: "A brief: in full, the way down to it, its name and flow, and its sections read through after it; as a face, its name and first paragraph.",
   takes: ["brief"],
   kinds: ["full", "face"],
-  settings: {
-    number: {
-      says: "Its number where it stands among its whole's parts, as 2.3, drawn before its title as a face.",
-      shape: "string",
-      optional: true,
-    },
-  },
-  reads: ["holders", "holon"],
-} satisfies Declaration;
+  reads: ["whole", "holders", "holon"],
+};
 
 export const style = `
-.reader h1 .number {
-  color: var(--quiet);
-  font-weight: 400;
-  margin-right: 0.4em;
+.reader section {
+  margin-top: calc(var(--gap) * 2);
 }
 
-.reader .status {
-  font: var(--smaller) / 1 var(--sans);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--quiet);
-  border: var(--hairline) solid var(--line);
-  border-radius: var(--pill);
-  padding: 0.3em 0.7em;
-  vertical-align: middle;
-  margin-left: 0.6em;
+.reader h2,
+.reader h3,
+.reader h4 {
+  line-height: var(--leading-tight);
+  font-weight: 600;
 }
 
-.reader .prose > .block:first-child > p {
-  font-size: var(--lead);
+.reader .section-link {
+  color: inherit;
+  text-decoration: none;
 }
 
-.reader .confidence > p {
-  color: var(--quiet);
-  font-size: var(--aside);
-}
-
-
-.reader :not(pre) > code {
-  font-size: var(--aside);
+.reader .section-link:hover {
+  text-decoration: underline;
 }
 
 .reader blockquote {
@@ -78,21 +53,11 @@ export const style = `
   margin: calc(var(--gap) * 1.25) 0;
 }
 
-.reader > .slot.full {
-  margin-top: calc(var(--gap) * 2.5);
-}
-
 .face-card h2 {
   font-size: var(--heading);
   line-height: var(--leading-tight);
   margin: 0 0 0.35em;
   font-weight: 600;
-}
-
-.face-card h2 .number {
-  color: var(--quiet);
-  font-weight: 400;
-  margin-right: 0.45em;
 }
 
 .face-card p {
@@ -103,125 +68,112 @@ export const style = `
 }
 `;
 
-type Drawn = Given<BriefBody, BriefSettings>;
-
-export default function draw(given: Drawn, space: Space) {
-  return given.kind === "face" ? face(given) : full(given, space);
+export default function draw(given: Given, space: Space) {
+  return given.kind === "face" ? face(given, space) : full(given, space);
 }
 
-// A level on the way down: a brief, its title, and its number where it has one.
-interface Level {
-  id: Id;
-  title: string;
-  number: string;
-}
+const untilBriefs = (space: Space, id: string) => space.read({ whole: id, stop: ["brief"] });
 
-async function full(given: Drawn, space: Space) {
-  const holon = given.holon!;
-  const brief = holon.body;
-  const numbers = (whole: HolonOf<BriefBody>) => whole.body.kept !== "time";
+async function full(given: Given, space: Space) {
+  const brief = given.holon as HolonRead;
+  const way = (<nav aria-label="Where this stands" />) as HTMLElement;
 
-  const levels = await wayDown(holon, space, numbers);
-  const number = levels.at(-1)?.number ?? "";
-  const steps = levels
-    .slice(0, -1)
-    .map(({ id, title, number }) => ({ to: id, label: number ? `${number} ${title}` : title }));
+  // The way down asks about everything, so the words do not wait for it.
+  wayDown(brief, space).then(
+    (steps) =>
+      way.replaceChildren(
+        ...steps.map(
+          ({ id, name }) =>
+            (
+              <a href="#" data-location={JSON.stringify([id])}>
+                {name}
+              </a>
+            ) as Node,
+        ),
+      ),
+    () => undefined,
+  );
 
   return (
     <article class="place reader">
-      <Way steps={steps} />
-      <h1>
-        {number && <span class="number">{number}</span>}
-        {brief.title}
-        {brief.status && <span class="status">{brief.status}</span>}
-      </h1>
-      <div class="prose">{proseOf(holon, space)}</div>
-      {(brief.parts?.length ?? 0) > 0 &&
-        space.open(
-          brief.parts!.map(({ $ref }) => $ref),
-          { offer: { kind: "face" }, settings: { numbered: numbers(holon), number } },
-        )}
+      {way}
+      <h1>{brief.name}</h1>
+      {await flowAndSections(brief, space, 2, new Set([brief.id]))}
     </article>
   );
 }
 
-function face(given: Drawn) {
-  const holon = given.holon!;
-  const brief = holon.body;
-  const { number } = given.settings;
-  const first = faceOf(brief.prose);
-  const beneath = brief.parts?.length ?? 0;
+// A brief's flow, what is not prose shown by its face, and its sections read through.
+async function flowAndSections(
+  brief: HolonRead,
+  space: Space,
+  depth: number,
+  seen: Set<string>,
+): Promise<Child> {
+  const { holons } = await untilBriefs(space, brief.id);
+
+  const flow = refsOf(brief.body.prose).map(
+    (id) => block(holons, id) ?? space.open(id, { offer: { kind: "face" } }),
+  );
+
+  const sections = await Promise.all(
+    refsOf(brief.body.parts).flatMap((id) => {
+      const section = holons[id];
+
+      // A brief that holds itself is read through once.
+      if (!section || seen.has(id)) return [];
+      seen.add(id);
+
+      return [sectionOf(section, space, depth, seen)];
+    }),
+  );
+
+  return [flow, sections];
+}
+
+async function sectionOf(section: HolonRead, space: Space, depth: number, seen: Set<string>) {
+  const Heading = `h${Math.min(depth, 6)}`;
+
+  return (
+    <section>
+      <Heading>
+        <a href="#" class="section-link" data-location={JSON.stringify([section.id])}>
+          {section.name}
+        </a>
+      </Heading>
+      {await flowAndSections(section, space, depth + 1, seen)}
+    </section>
+  );
+}
+
+async function face({ holon }: Given, space: Space) {
+  const brief = holon as HolonRead;
+  const firstId = refsOf(brief.body.prose)[0];
+  const first = firstId ? (await space.read({ whole: firstId })).holons : {};
 
   return (
     <div class="card face-card">
-      <h2>
-        {number && <span class="number">{number}</span>}
-        {brief.title}
-      </h2>
-      {first && <p html={first} />}
-      {beneath > 0 && <span class="meta">{beneath} beneath</span>}
+      <h2>{brief.name}</h2>
+      {firstId && first[firstId]?.types.includes("paragraph") && block(first, firstId)}
     </div>
   );
 }
 
-// The prose, block by block; a block that is nothing but a link into the
-// field is a slot, the holon it places mounted there, offered a face, or
-// in full where the link itself says so.
-function proseOf(holon: HolonOf<BriefBody>, space: Space) {
-  return markdown.lexer(holon.body.prose).map((token) => {
-    const slot = slotOf(token);
-    if (slot)
-      return space.open(slot.id, {
-        offer: { kind: "face" },
-        ...(slot.kind === "full" ? { kind: "full" } : {}),
-      });
+// From the top of its holarchy down to this brief, by what holds each.
+async function wayDown(brief: HolonRead, space: Space) {
+  const steps: { id: string; name: string }[] = [];
+  const seen = new Set([brief.id]);
 
-    const kind = isConfidence(token) ? "block confidence" : "block";
-    return <div class={kind} html={markdown.parser([token]) as string} />;
-  });
-}
+  for (let id = brief.id; ; ) {
+    const holder = (await space.read({ holders: id })).find(({ holds }) => holds);
 
-// What holds a brief, and where: the whole that lists it among its parts, at
-// its place there, or the whole whose prose places it by a lone link.
-interface Holder {
-  whole: HolonOf<BriefBody>;
-  place?: number;
-}
+    if (!holder || seen.has(holder.from)) return steps;
 
-async function holderOf(holon: HolonOf<BriefBody>, space: Space): Promise<Holder | undefined> {
-  for (const { id, key } of await space.read({ holders: holon.id })) {
-    const whole = await space.holon<BriefBody>(id);
-    if (!whole) continue;
-    if (key === "parts")
-      return { whole, place: (whole.body.parts ?? []).findIndex(({ $ref }) => $ref === holon.id) };
-    if (key === "prose" && markdown.lexer(whole.body.prose).some((token) => placed(token) === holon.id))
-      return { whole };
+    const whole = await space.holon(holder.from);
+    if (!whole) return steps;
+
+    steps.unshift({ id: whole.id, name: whole.name ?? "…" });
+    seen.add(whole.id);
+    id = whole.id;
   }
-  return undefined;
-}
-
-// From the root down to this brief, each step numbered as the rule numbers
-// it: by its place among its whole's parts, running on from the whole's own
-// number while the whole is a part too, and starting again across a file.
-async function wayDown(
-  holon: HolonOf<BriefBody>,
-  space: Space,
-  numbers: (whole: HolonOf<BriefBody>) => boolean,
-): Promise<Level[]> {
-  const up: { holon: HolonOf<BriefBody>; place?: number }[] = [];
-  const seen = new Set<Id>();
-  for (let at: Holder | undefined = { whole: holon }; at && !seen.has(at.whole.id); ) {
-    seen.add(at.whole.id);
-    const holder = await holderOf(at.whole, space);
-    up.push({
-      holon: at.whole,
-      place: holder && holder.place !== undefined && numbers(holder.whole) ? holder.place : undefined,
-    });
-    at = holder;
-  }
-  return up.reverse().reduce<Level[]>((way, { holon, place }) => {
-    const above = way.at(-1)?.number;
-    const number = place === undefined ? "" : above ? `${above}.${place + 1}` : `${place + 1}`;
-    return [...way, { id: holon.id, title: holon.body.title, number }];
-  }, []);
 }
