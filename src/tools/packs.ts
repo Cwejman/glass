@@ -97,7 +97,10 @@ export async function commit(store: Store, holons: Holon[], says: string, at = n
   for (const h of holons) {
     const version = { kind: "version", id: h.id, prev: before.get(h.id)?.version ?? null, instance: h.instance, ...(h.name ? { name: h.name } : {}), ...(h.mould ? { mould: h.mould } : {}), body: h.body };
     updates.set(h.id, await put(version));
-    if (h.name && !names[h.name]) names[h.name] = h.id;
+    // A name is unique only among what one whole holds, so the index's one map
+    // names types alone; any other name is found through the wholes.
+    for (const [n, i] of Object.entries(names)) if (i === h.id && n !== h.name) delete names[n];
+    if (h.mould && h.name && !names[h.name]) names[h.name] = h.id;
   }
   // What the commit takes out of the field: gone from its index from then on,
   // every version it had still in the packs before.

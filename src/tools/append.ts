@@ -18,7 +18,7 @@ const born: H[] = [];
 const put = (h: Omit<H, "id">) => { const x = { id: newId(), ...h }; born.push(x); return x.id; };
 const changed = new Set<any>();
 const lexicon = holons.filter((h) => h.instance[0] === T.lexeme || (h.name === "lexicon" && h.instance[0] === T.lexicon));
-const session = holons.filter((h) => h.instance[0] === T.session && h.name === "2026-11-06-second");
+const session = holons.filter((h) => h.instance[0] === T.session && (h.name ?? "").startsWith("A second session"));
 const lexiconHolon = lexicon.find((h: any) => h.name === "lexicon");
 
 const byText = new Map<string, string>(lexicon.filter((h: any) => h.instance[0] === T.lexeme).map((h: any) => [h.body.text, h.id]));
@@ -75,9 +75,9 @@ const u = put({ instance: [T.utterance], body: { as, order, flow: flow.map(ref) 
 // A path patch: new paths, or a path's body changed in place by its title.
 if (patchFile) {
   const patch: { add?: { title: string; opens: string; restsOn: string[] }[]; edit?: { title: string; opens: string }[] } = await Bun.file(patchFile).json();
-  for (const p of patch.add ?? []) (s0.body.paths as unknown[]).push(ref(put({ instance: [T.path], body: { ...p, stands: "noted", from: [ref(u)] } })));
+  for (const { title, ...p } of patch.add ?? []) (s0.body.paths as unknown[]).push(ref(put({ instance: [T.path], name: title, body: { ...p, stands: "noted", from: [ref(u)] } })));
   for (const e of patch.edit ?? []) {
-    const h = holons.find((x: any) => x.instance[0] === T.path && x.body.title === e.title);
+    const h = holons.find((x: any) => x.instance[0] === T.path && x.name === e.title);
     if (!h) throw new Error(`no path titled ${e.title}`);
     h.body.opens = e.opens; h.body.from.push(ref(u)); changed.add(h);
   }

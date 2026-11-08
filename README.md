@@ -6,7 +6,9 @@ The repository holds two things: `store/`, the holons, and `src/`, the code, wit
 
 ## The store
 
-Everything is a holon: an `id` (a ULID given at birth), the type it is an `instance` of, an optional `name`, an optional `mould`, and a `body`. A type is a holon with a mould, which says what its instances hold, field by field, each in prose. Inside a body, `{"$ref": id}` is a reference to another holon. A reference holds (makes the other a part) or only points, as the mould says, or as `$holds` on the reference itself says.
+Everything is a holon: an `id` (a ULID given at birth), the type it is an `instance` of, an optional `name`, an optional `mould`, and a `body`. A name is also its title, with no slug beside it, and is unique only among what one whole holds, so two wholes can each hold a "What is open". A type is a holon with a mould, which says what its instances hold, field by field, each in prose. Inside a body, `{"$ref": id}` is a reference to another holon. A reference holds (makes the other a part) or only points, as the mould says, or as `$holds` on the reference itself says.
+
+A brief is a flow and its sections. Its `prose` is a flow of mounts in any order, a paragraph, a statistic, a brief, each reference saying whether it holds or points. Its `parts` are read through after the flow, and nothing follows them. A brief mounted in another's flow is a break, what starting a new file was, and placing it there is the deliberate act.
 
 The store is packs: no other copy of it exists.
 
@@ -50,7 +52,7 @@ bun src/tools/read.ts union
 bun src/tools/read.ts README.md 1          the old wiki's entry, a level down
 bun src/tools/read.ts primitives.md        the primitives in prose
 bun src/tools/read.ts said/2026-11-05.md 9 a day of the author's words
-bun src/tools/read.ts 2026-11-06-second    the latest session and its paths
+bun src/tools/read.ts "A second session"   a session and its paths, by the start of its name
 bun src/tools/read.ts session              any type, by its name
 bun src/tools/read.ts measured             what was said, measured: each a grade and a note, and the id to read it by
 bun src/tools/read.ts raised               the threads raised from what was said, and where each stands
@@ -68,8 +70,8 @@ The text is drawn from the holons each time; none is stored. A word is `before +
 ## Where it stands
 
 - **The store is the packs.** The JSON that came before them, and the scripts that served it, are in git's history only. The birth from markdown has ended.
-- **The code is older than the store.** The engine and the client still read loose objects, keep a type's fields and a holon's name inside the body, key the index tree by the end of each id, and read every reference as holding. The tests pass, but they and the store's vectors speak of that old form: none touches `src/tools/packs.ts`.
-- **The pack format is not final.** The last two paths of the second session say how it may change: "Names counted in locality, unified where stores meet", and "Addresses by position, one fingerprint per commit". Under them, holons are counted within their store, objects are addressed by where they sit, there are segments per publish in place of a pack and an index per commit, and one hash per commit is the proof. Both still stand as noted, not settled. Read them with `bun src/tools/read.ts 2026-11-06-second`, and the paths in full by `bun src/tools/probe.ts 1.21-22 --without paper,paper-readings --text`.
+- **The code is older than the store.** The engine and the client still read loose objects, keep a type's fields and a holon's name inside the body, key the index tree by the end of each id, read every reference as holding, and expect a brief's prose as markdown and its title in its body. The stores beside the main one, the paper and its readings, also keep their titles in the body. The tests pass, but they and the store's vectors speak of that old form: none touches `src/tools/packs.ts`.
+- **The pack format is not final.** The last two paths of the second session say how it may change: "Names counted in locality, unified where stores meet", and "Addresses by position, one fingerprint per commit". Under them, holons are counted within their store, objects are addressed by where they sit, there are segments per publish in place of a pack and an index per commit, and one hash per commit is the proof. Both still stand as noted, not settled. Read them in full by `bun src/tools/probe.ts 1.21-22 --without paper,paper-readings --text`.
 - **What comes next is here, not in the plan**, whose brief stops at the first mark and is measured stale. In order: show everything specified since the code was last brought to it, as the thread "The spec settles before the code" asks; settle the format, with vectors first; bring the engine and the client to it; then a glass for the human, born from this store.
 - **Two questions the format has to answer.** With one hash per commit, how is one holon read by range checked, when today each object is checked by its name? And counted names and dropped hashes rewrite every holon once: is that accepted, against nothing written before being touched?
 - **Parts of the wiki are stale**, and marked so: see How to read.

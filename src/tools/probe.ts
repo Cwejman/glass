@@ -68,7 +68,8 @@ for (const [id, h] of all) {
     }
     for (const x of Object.values(v)) walk(x, k);
   };
-  for (const [k, v] of Object.entries(h.body ?? {})) walk(v, k);
+  // A whole's flow comes before its parts, whatever order its keys are kept in.
+  for (const [k, v] of Object.entries(h.body ?? {}).sort(([x], [y]) => +(x === "parts") - +(y === "parts"))) walk(v, k);
   down.set(id, d); across.set(id, a);
 }
 const parts = (id: string) => down.get(id) ?? [];
@@ -121,7 +122,7 @@ function text(id: string, lvl: number): string[] {
   if (t === "drawing") return ["```", ...(b.lines ?? []), "```"];
   if (t === "break") return [b.mark ?? "---"];
   if (t === "type") return [`${"#".repeat(Math.min(6, lvl))} type ${h.name}`, b.says ?? "", ...Object.entries(h.mould ?? {}).map(([k, f]: any) => `- ${k}: ${f.says}`)];
-  const head = b.title ?? (b.order != null ? `${b.order}. ${b.as ?? ""}` : h.name);
+  const head = h.name ?? b.title ?? (b.order != null ? `${b.order}. ${b.as ?? ""}` : undefined);
   const out: string[] = head ? [`${"#".repeat(Math.min(6, lvl))} ${head}${t !== "brief" ? ` (${t})` : ""}`] : [];
   for (const [k, v] of Object.entries(b)) if (!SHOWN.has(k) && (typeof v === "string" || typeof v === "number")) out.push(`${k}: ${v}`);
   const ps = parts(id);
@@ -131,7 +132,7 @@ function text(id: string, lvl: number): string[] {
 }
 
 // ---- show
-const name = (id: string) => { const h = all.get(id), b = h.body ?? {}; const s = b.title ?? h.name ?? b.path ?? (b.order != null ? `${b.order}. ${b.as ?? ""}` : ""); return String(s || inline(id).slice(0, 60) || Object.values(b).find((v) => typeof v === "string" && !skip.test(v)) || "").replace(/\s+/g, " ").slice(0, 56); };
+const name = (id: string) => { const h = all.get(id), b = h.body ?? {}; const s = h.name ?? b.title ?? b.path ?? (b.order != null ? `${b.order}. ${b.as ?? ""}` : ""); return String(s || inline(id).slice(0, 60) || Object.values(b).find((v) => typeof v === "string" && !skip.test(v)) || "").replace(/\s+/g, " ").slice(0, 56); };
 const top = (ts: Map<string, number>, n = 3) => [...ts].filter(([k]) => k !== "word").sort((a, b) => b[1] - a[1]).slice(0, n).map(([k, c]) => `${k} ${c}`).join(", ");
 const bar = (w: number, max: number, width = 12) => "█".repeat(Math.round((w / Math.max(1, max)) * width)).padEnd(width);
 const row = (r: string, id: string, max: number, ind = "") => { const m = measure(id); return `${ind}${r.padEnd(10)} ${String(tokens(m)).padStart(7)} ${bar(tokens(m), max)} ${tn(all.get(id))} "${name(id)}"${m.holons > 1 ? ` · ${m.holons}: ${top(m.types)}` : ""}`; };
