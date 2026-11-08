@@ -22,8 +22,10 @@ What the store holds:
 - the types;
 - one lexicon of every word;
 - the wiki that was markdown, to the word, with its links as references and markdown's surface kept apart. The author's words before the store are among it, a day to a brief, under `said/2026-10-30.md` to `said/2026-11-06.md`;
-- the second session of 2026-11-06, utterance by utterance, with its paths of evolution, and the two forks that met it;
+- the second session of 2026-11-06, utterance by utterance, with its paths of evolution, and the forks that met it; the third session, of 2026-11-07 and 2026-11-08;
 - statistics declared as prose and expression, never stored;
+- measures on what was said, sessions and passages graded with a note, none of them a conclusion: read them to reason about what to read;
+- threads raised from what was said that no brief owns yet;
 - the union that reads it all.
 
 Its first 81 commits are its birth, a slice each in the order things came. Each commit after them is a diff-pack.
@@ -32,7 +34,16 @@ Beside the main store stand two more, each a whole in its own folder. `store/pap
 
 ## How to read
 
-Start at the union, then read whatever its roots lead to:
+Chart before reading. `src/tools/probe.ts` shows the field from its roots, measured in tokens, and cuts any part of it into pieces that fit what a reader can take at once; each piece is a route, read with `--text`. Routes are counted within the scope they were charted in, so a route is read with the same scope:
+
+```
+bun src/tools/probe.ts --without paper,paper-readings                the roots, measured
+bun src/tools/probe.ts --without paper,paper-readings --digest 4000  pieces to read, in order
+bun src/tools/probe.ts 1.33-40 --without paper,paper-readings --text one piece, as prose
+bun src/tools/probe.ts 58 --without paper,paper-readings --depths    a whole, layer by layer
+```
+
+Or start at the union, then read whatever its roots lead to:
 
 ```
 bun src/tools/read.ts union
@@ -41,6 +52,8 @@ bun src/tools/read.ts primitives.md        the primitives in prose
 bun src/tools/read.ts said/2026-11-05.md 9 a day of the author's words
 bun src/tools/read.ts 2026-11-06-second    the latest session and its paths
 bun src/tools/read.ts session              any type, by its name
+bun src/tools/read.ts measured             what was said, measured: each a grade and a note, and the id to read it by
+bun src/tools/read.ts raised               the threads raised from what was said, and where each stands
 ```
 
 The text is drawn from the holons each time; none is stored. A word is `before + text + after`, a sentence is its words, and a paragraph is its sentences. `src/tools/append.ts` adds to the store, as one commit; `src/tools/README.md` says how.

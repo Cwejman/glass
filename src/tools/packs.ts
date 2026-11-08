@@ -10,7 +10,8 @@
 // {kind, names, holons}; a commit: {kind, parent, parentPack, at, index, says}.
 // The index tree is keyed by the start of each id, its moment of birth.
 
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { existsSync, readFileSync } from "node:fs";
+import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { canonical } from "../store/canonical.ts";
 import { nameOfText, type Name } from "../store/name.ts";
@@ -21,51 +22,60 @@ export const storeDir = join(import.meta.dir, "../../store");
 export type Holon = { id: string; instance: string[]; name?: string; mould?: any; body: any };
 export type Store = Awaited<ReturnType<typeof open>>;
 
+// Reading is plain arithmetic over bytes: each pack is mapped into memory once,
+// an object is the slice its index names, and the slice is checked against its
+// name before it is parsed. Nothing in the read path waits; the async surface
+// is kept for the callers.
 export async function open(dir: string) {
   // A store with no ref yet is empty: its first commit has no parent.
-  const ref = Bun.file(join(dir, "refs/main"));
-  const [head, headPack] = ((await ref.exists()) ? (await readFile(join(dir, "refs/main"), "utf8")).trim().split(" ") : [null, null]) as [Name | null, Name | null];
-  const where = new Map<string, [string, number, number]>();
+  const refPath = join(dir, "refs/main");
+  const [head, headPack] = (existsSync(refPath) ? readFileSync(refPath, "utf8").trim().split(" ") : [null, null]) as [Name | null, Name | null];
+  const where = new Map<string, [Uint8Array, number, number]>();
   const written = new Map<string, string>();
-  const learn = async (pack: string) => {
+  const packs = new Map<string, Uint8Array>();
+  const bytesOf = (hex: string) => packs.get(hex) ?? packs.set(hex, Bun.mmap(join(dir, "packs", `${hex}.pack`))).get(hex)!;
+  const learn = (pack: string) => {
     const hex = pack.slice("sha256-".length);
-    const idx = await Bun.file(join(dir, "packs", `${hex}.idx`)).json();
-    for (const [n, [o, l]] of Object.entries(idx.objects) as [string, [number, number]][]) if (!where.has(n)) where.set(n, [hex, o, l]);
+    const bytes = bytesOf(hex);
+    const idx = JSON.parse(readFileSync(join(dir, "packs", `${hex}.idx`), "utf8"));
+    for (const [n, [o, l]] of Object.entries(idx.objects) as [string, [number, number]][]) if (!where.has(n)) where.set(n, [bytes, o, l]);
   };
-  async function get(name: string): Promise<any> {
+  const hasher = new Bun.CryptoHasher("sha256");
+  const decoder = new TextDecoder();
+  function read(name: string): any {
     const fresh = written.get(name);
     if (fresh) return JSON.parse(fresh);
     const at = where.get(name);
     if (!at) throw new Error(`${name} is in no pack of ${dir}`);
-    const text = await Bun.file(join(dir, "packs", `${at[0]}.pack`)).slice(at[1], at[1] + at[2]).text();
-    if ((await nameOfText(text)) !== name) throw new Error(`${name} does not match its bytes`);
-    return JSON.parse(text);
+    const bytes = at[0].subarray(at[1], at[1] + at[2]);
+    if ("sha256-" + hasher.update(bytes).digest("hex") !== name) throw new Error(`${name} does not match its bytes`);
+    return JSON.parse(decoder.decode(bytes));
   }
+  const get = async (name: string): Promise<any> => read(name);
   const log: { commit: Name; pack: Name; at: string; says: string }[] = [];
   for (let c: string | null = head, p: string | null = headPack; c; ) {
-    await learn(p!);
-    const commit = await get(c);
+    learn(p!);
+    const commit = read(c);
     log.push({ commit: c as Name, pack: p as Name, at: commit.at, says: commit.says });
     c = commit.parent; p = commit.parentPack;
   }
-  const index = head ? await get((await get(head)).index) : { kind: "index", names: {}, holons: null };
+  const index = head ? read(read(head).index) : { kind: "index", names: {}, holons: null };
   // The versions one pack holds, in the order written: what that commit added.
   async function added(pack: string) {
-    const hex = pack.slice("sha256-".length);
-    const text = await Bun.file(join(dir, "packs", `${hex}.pack`)).text();
+    const text = decoder.decode(bytesOf(pack.slice("sha256-".length)));
     return text.split("\n").filter(Boolean).map((l) => JSON.parse(l)).filter((o) => o.kind === "version");
   }
   // Every holon the head holds: its id, its version's name, and the holon.
   async function holons() {
     const out = new Map<string, { version: Name; holon: Holon }>();
-    const walk = async (name: string) => {
-      const node = await get(name);
+    const walk = (name: string) => {
+      const node = read(name);
       if (node.kind === "index-leaf") for (const [id, v] of Object.entries(node.versions) as [string, Name][]) {
-        const { id: _, kind, prev, ...rest } = await get(v);
+        const { id: _, kind, prev, ...rest } = read(v);
         out.set(id, { version: v, holon: { id, ...rest } as Holon });
-      } else for (const child of Object.values(node.branches)) await walk(child as string);
+      } else for (const child of Object.values(node.branches)) walk(child as string);
     };
-    if (index.holons) await walk(index.holons);
+    if (index.holons) walk(index.holons);
     return out;
   }
   return { dir, head, headPack, index, log: log.reverse(), get, holons, written, added };

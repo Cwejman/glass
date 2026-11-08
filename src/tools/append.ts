@@ -49,6 +49,8 @@ function word(token: string) {
 }
 function tokens(s: string) {
   const out: string[] = []; let carry = "";
+  // A mark written with spaces inside it is still one word: its spaces become _.
+  s = s.replace(/\{[^{}|]*\|[^{}]*\}/g, (m) => m.replace(/\s+/g, "_"));
   for (const t of s.split(/\s+/).filter(Boolean)) {
     if (!/[\p{L}\p{N}\p{S}{]/u.test(t)) { if (out.length && !carry) out[out.length - 1] += t; else carry += t; continue; }
     out.push(carry + t); carry = "";
