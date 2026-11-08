@@ -24,7 +24,8 @@
 // the mould of the field. Everything else points. Depth is first reach from
 // the roots, so a part held in several wholes stands at its shallowest. Words
 // are word holons; prose kept as plain strings counts apart. Tokens are
-// estimated as 1.3 per word.
+// estimated as 1.85 per word, what the wiki was measured to cost a reading
+// session on 2026-11-08, marks and spacing in its text included.
 
 import { readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
@@ -102,7 +103,8 @@ function measure(id: string): M {
   }
   memo.set(id, m); return m;
 }
-const tokens = (m: { words: number; strings: number }) => Math.round((m.words + m.strings) * 1.3);
+const tokensPerWord = 1.85;
+const tokens = (m: { words: number; strings: number }) => Math.round((m.words + m.strings) * tokensPerWord);
 
 // ---- draw prose
 const INLINE = new Set(["word", "sentence", "emphasis", "strong", "link", "codespan", "closed"]);
@@ -194,7 +196,7 @@ if (has("--text")) {
   // budget; a whole over the budget is opened and its parts packed in turn.
   const budget = Number(flag("--digest"));
   const covered = new Set<string>();
-  const fresh = (id: string) => { const seen = new Set([id]), st = [id]; let w = 0; while (st.length) { const x = st.pop()!; if (covered.has(x)) continue; if (tn(all.get(x)) === "word") w++; w += stringWords(x); for (const p of parts(x)) if (!seen.has(p)) { seen.add(p); st.push(p); } } return Math.round(w * 1.3); };
+  const fresh = (id: string) => { const seen = new Set([id]), st = [id]; let w = 0; while (st.length) { const x = st.pop()!; if (covered.has(x)) continue; if (tn(all.get(x)) === "word") w++; w += stringWords(x); for (const p of parts(x)) if (!seen.has(p)) { seen.add(p); st.push(p); } } return Math.round(w * tokensPerWord); };
   const cover = (id: string) => { const st = [id]; while (st.length) { const x = st.pop()!; if (covered.has(x)) continue; covered.add(x); st.push(...parts(x)); } };
   const pieces: { from: string; to: string; ids: string[]; t: number; within: string }[] = [];
   const pack = (ids: string[], prefix: string, within: string) => {
