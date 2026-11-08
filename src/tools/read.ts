@@ -16,8 +16,7 @@ const all: Map<string, any> = await field();
 const typeName = (h: any) => all.get(h?.instance?.[0])?.name ?? (h?.mould ? "type" : "");
 const get = (r: any) => all.get(r?.$ref);
 const many = (v: any) => (Array.isArray(v) ? v : v ? [v] : []).map(get).filter(Boolean);
-// The stores beside the main one, the paper and its readings, still keep a title in the body.
-const named = (h: any): string => h?.name ?? h?.body?.title ?? "";
+const named = (h: any): string => h?.name ?? "";
 
 function inline(h: any): string {
   const t = typeName(h);
@@ -60,7 +59,7 @@ function block(h: any, d: number, indent = ""): string[] {
     }
     case "path": return [`## ${named(h)} (${b.stands})`, b.opens, "Rests on: " + (b.restsOn ?? []).join("; ")];
     case "branch": return [`# ${h.name} (${b.model}, seed from ${b.seedFrom})`, ...block(get(b.top), d + 4)];
-    case "understanding": return [`${indent}${b.title}: ${b.prose} [matters: ${b.matters}]`, ...(d > 0 ? many(b.parts).filter((p: any) => typeName(p) === "understanding").flatMap((p: any) => block(p, d - 1, indent + "  ")) : [])];
+    case "understanding": return [`${indent}${named(h)}: ${b.prose} [matters: ${b.matters}]`, ...(d > 0 ? many(b.parts).filter((p: any) => typeName(p) === "understanding").flatMap((p: any) => block(p, d - 1, indent + "  ")) : [])];
     case "union": return ["# The union", ...b.stores.map((s: any) => `- ${s.name}: ${s.roots.length} root(s)${s.keeps ? ", " + s.keeps : ""}`)];
     case "type": return [`# ${h.name}`, b.says ?? "", ...Object.entries(h.mould ?? {}).map(([k, f]: any) => `- ${k}: ${f.says}${f.holds === true ? " (holds)" : f.holds === false ? " (points)" : ""}`)];
     case "statistic": return [`## ${named(h)}`, b.says, "Gives: " + JSON.stringify(b.gives)];
@@ -76,13 +75,14 @@ function block(h: any, d: number, indent = ""): string[] {
   }
 }
 
-// By id, by whole name or path, then by the start of a name. A type of that name
-// comes first, since each store beside the main one keeps its own copies.
+// By id, by whole name or path, then by the start of a name. The one holon of a
+// name comes before a type of that name; among several, the type does.
 const holons = [...all.values()];
 const exact = holons.filter((h) => named(h) === what || h.body?.path === what);
 const start = holons.filter((h) => named(h).toLowerCase().startsWith(what!.toLowerCase()));
 const hits = exact.length ? exact : start;
-const found = all.get(what!) ?? hits.find((h) => h.mould) ?? (hits.length === 1 ? hits[0] : undefined);
+const plain = hits.filter((h) => !h.mould);
+const found = all.get(what!) ?? (plain.length === 1 ? plain[0] : hits.find((h) => h.mould));
 if (!found) {
   if (!hits.length) { console.error(`nothing named ${what}`); process.exit(1); }
   console.error(`${hits.length} holons are named so; read one by its id:`);
