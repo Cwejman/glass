@@ -69,6 +69,9 @@ function block(h: any, d: number, indent = ""): string[] {
       const what = typeName(of) === "session" ? named(of) : b.range ? `${inline(get(b.range.from)).slice(0, 60)} … ${inline(get(b.range.to)).slice(-60)}` : inline(first ?? of).slice(0, 110);
       return [`- ${b.value} ${b.as}${b.note ? ": " + b.note : ""}`, `    ${typeName(of)} ${of?.id}: ${what}`];
     }
+    case "sessions": return [`# ${named(h)}`, ...many(b.sessions).map((s: any) => `- ${named(s)} (${s.id})`)];
+    case "statistics": return [`# ${named(h)}`, "Statistics:", ...many(b.statistics).map((s: any) => `- ${named(s)}: ${s.body.says}`), "Functions:", ...many(b.functions).map((s: any) => `- ${named(s)}: ${s.body.says}`)];
+    case "licence": return [`# ${named(h)}`, b.licence, b.work, ...b.says.map((s: string) => "- " + s), `Decided: ${b.decided}`];
     case "threads": return many(b.threads).flatMap((x: any) => block(x, d));
     case "thread": return [`- ${named(h)} (${b.stands}): ${b.asks}`];
     default: return [indent + (inline(h) || JSON.stringify(b).slice(0, 300))];
