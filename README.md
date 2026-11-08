@@ -26,7 +26,7 @@ What the store holds:
 - one lexicon of every word;
 - the wiki that was markdown, to the word, with its links as references and markdown's surface kept apart;
 - the author's words before the store, a day to a brief, under `said/2026-10-30.md` to `said/2026-11-06.md`: "As it was said", a root of its own, whose face the wiki's flow shows by pointing;
-- the second session of 2026-11-06, utterance by utterance, with its paths of evolution, and the forks that met it; the third session, of 2026-11-07 and 2026-11-08; a fourth, of 2026-11-08, kept in brief;
+- the second session of 2026-11-06, utterance by utterance, with its paths of evolution, and the forks that met it; the third session, of 2026-11-07 and 2026-11-08; a fourth and a fifth, of 2026-11-08, kept in brief;
 - statistics declared as prose and expression, never stored;
 - measures on what was said, sessions and passages graded with a note, none of them a conclusion: read them to reason about what to read. Briefs the work has overtaken are measured too, as stale;
 - threads raised from what was said that no brief owns yet.

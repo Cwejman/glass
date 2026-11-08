@@ -11,6 +11,8 @@ The store is blocks and a log, and these read from it and add to it. `vectors/RE
 - `read.ts`: draws any holon as text from the blocks.
   `bun src/tools/read.ts <name | id | wiki path> [depth]`. A name may be given by its start; one that several holons carry lists them, each with its id.
 - `convert.ts`: the one conversion from packs, kept to show how it was proved. It reads packs itself, so it needs a checkout from before it.
+- `prose.ts`: text into holons: a paragraph, its sentences, its words and their lexemes. `append.ts` and `session.ts` write through it.
+- `session.ts`: adds a session kept in brief, as one commit, from a file of its utterances and paths.
 - `append.ts`: adds one utterance of the author's to the session as one commit. New words bring new lexemes; paths are added or edited from an optional patch file.
   `bun src/tools/append.ts <utterance.txt> <typed|spoken> [paths.json]`
   In the text, `{typed|meant}` marks a correction, and `_` inside the braces stands for a space.
