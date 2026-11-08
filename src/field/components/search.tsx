@@ -3,6 +3,7 @@ import { candidates } from "../../interface/finding.ts";
 import type { Argument, By, Expression } from "../../engine/expression.ts";
 import type { HolonRead } from "../../engine/reads.ts";
 import { canonical } from "../../store/canonical.ts";
+import { begins, changedPart, fits, hasEnough, needs, same, settled, type Frame } from "./building.ts";
 import { h } from "./jsx.ts";
 import {
   call,
@@ -100,13 +101,7 @@ interface Found {
   step?: () => void;
 }
 
-// A function being given what it takes, one argument after another; Open
-// is taken as one, given a holon to go to.
-interface Frame {
-  fn: Called;
-  given: Argument[];
-}
-
+// Open is taken as a function, given a holon to go to.
 const opening: Called = { id: "", title: "Open", takes: ["holon"] };
 
 const shown = 8;
@@ -130,27 +125,6 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
   let changing: number | undefined;
 
   const toward = (parts: Parts): Lead => ({ expression: together(functions, parts) });
-  const same = (a: Argument, b: Argument) => canonical(a) === canonical(b);
-
-  // A part changed to another: the same function given one holon more, or
-  // one fewer, where both are given holons; let go when none is left; else
-  // the other part instead.
-  const changed = (was: Expression, part: Expression): Expression[] => {
-    const before =
-      "call" in was && "call" in part && was.call.$ref === part.call.$ref ? (was.with ?? []) : [];
-    const had = before.length === 1 ? holonsOf(functions, before[0]) : undefined;
-    const now = "call" in part && part.with?.length === 1 ? holonsOf(functions, part.with[0]) : undefined;
-    if (!had || now?.length !== 1) return [part];
-
-    const kept = had.some((each) => same(each, now[0]!))
-      ? had.filter((each) => !same(each, now[0]!))
-      : [...had, now[0]!];
-    if (kept.length === 0) return [];
-
-    const fn = functions.get((part as { call: { $ref: string } }).call.$ref)!;
-    return [call(fn, kept.length === 1 ? kept[0]! : call(is("or"), ...kept))];
-  };
-
   // Whether a value is one the part being changed is given already.
   const holds = (value: Argument) => {
     const was = changing !== undefined ? standing?.parts[changing] : undefined;
@@ -170,7 +144,7 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
 
     const parts =
       changing !== undefined
-        ? standing.parts.flatMap((each, i) => (i === changing ? changed(each, part) : [each]))
+        ? standing.parts.flatMap((each, i) => (i === changing ? changedPart(functions, each, part) : [each]))
         : [...standing.parts, part];
     return toward({ ...standing, parts });
   };
@@ -180,41 +154,6 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
   const base = (): Expression => {
     if (!standing) return call(is("everything"));
     return together(functions, { parts: standing.parts.filter((_, i) => i !== changing) });
-  };
-
-  // The kind of argument the function being built takes next.
-  const needs = (): string | undefined => {
-    const frame = frames.at(-1);
-    if (!frame) return undefined;
-
-    const { takes } = frame.fn;
-    return takes[Math.min(frame.given.length, takes.length - 1)];
-  };
-
-  const complete = ({ fn, given }: Frame) => given.length >= fn.takes.length && fn.takes.at(-1) !== "sets";
-
-  // What is built once a value is given: the frames as they would stand,
-  // and, where every function taken has all it takes, the part made.
-  const settled = (value: Argument | undefined, within = frames): { frames: Frame[]; part?: Expression } => {
-    // With nothing being built, what is given is the part itself.
-    if (!within.length) return { frames: within, ...(value ? { part: value as Expression } : {}) };
-
-    const next = within.map((frame) => ({ ...frame, given: [...frame.given] }));
-
-    // Nothing given closes the function built last, as Done does.
-    let giving = value;
-    for (;;) {
-      const top = next.at(-1)!;
-      if (giving !== undefined) {
-        top.given.push(giving);
-        if (!complete(top)) return { frames: next };
-      }
-
-      next.pop();
-      const made = call(top.fn, ...top.given);
-      if (!next.length) return { frames: next, part: made };
-      giving = made;
-    }
   };
 
   // A value offered to what is being built, or nothing, which closes the
@@ -277,32 +216,21 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     });
   };
 
-  // The holons whose name says the words, those it begins first; else
-  // those whose body says them.
+  // The holons whose name says the words, those it begins first; and, where those are
+  // few, those whose words say them.
   const holonsSaying = async (text: string) => {
     const words = text.trim();
     if (!words) return [];
 
-    const saying = await space.read({ gather: call(is("text"), words) });
-    const read = (await Promise.all(saying.slice(0, 60).map((id) => space.holon(id)))).filter(
-      (holon) => holon !== null,
-    );
+    const naming = await space.read({ gather: call(is("named"), words) });
+    const saying = naming.length >= shown ? [] : await space.read({ gather: call(is("text"), words) });
+    const ids = [...new Set([...naming, ...saying])].slice(0, 60);
+    const read = (await Promise.all(ids.map((id) => space.holon(id)))).filter((holon) => holon !== null);
 
     const rank = ({ name = "" }: { name?: string }) => (begins(words, name) ? 0 : fits(words, name) ? 1 : 2);
 
     return read.sort((a, b) => rank(a) - rank(b)).slice(0, shown);
   };
-
-  const fits = (text: string, label: string) =>
-    text
-      .trim()
-      .toLocaleLowerCase()
-      .split(/\s+/)
-      .every((word) => label.toLocaleLowerCase().includes(word));
-
-  // Whether a name begins with what is typed, so it is found first.
-  const begins = (text: string, label: string) =>
-    label.toLocaleLowerCase().startsWith(text.trim().toLocaleLowerCase());
 
   // The bricks: every function the field holds, glass's own first, as the
   // field orders them. At the top, the parts stand side by side, which is
@@ -341,7 +269,7 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
   // it: by the kind of argument the function takes next.
   const choices = async (text: string): Promise<Found[]> => {
     const frame = frames.at(-1)!;
-    const kind = needs();
+    const kind = needs(frames);
 
     if (kind === "holon")
       return (await holonsSaying(text)).map((holon) => ({
@@ -376,7 +304,6 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
               offered({ $ref: holon.id }, nameOf(holon), holon.types.join(", ")),
             );
 
-    const enough = frame.fn.takes.at(-1) === "sets" && frame.given.length >= frame.fn.takes.length;
     // The bricks the words name come first, so a brick is built rather
     // than its own holon chosen.
     const named = bricks()
@@ -385,7 +312,7 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
 
     // Done, where enough sets are given, first while nothing is typed, else
     // after what the words find.
-    const done = enough ? [offered(undefined, "Done", "with the sets given")] : [];
+    const done = hasEnough(frame) ? [offered(undefined, "Done", "with the sets given")] : [];
 
     return text.trim() ? [...named, ...values, ...done] : [...done, ...values, ...named];
   };
@@ -556,9 +483,9 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     ) as HolonOf<ComponentBody>[];
   };
 
-  // What the words find, with nothing taken: the holons they name, the
-  // bricks they name, those they begin first; the values in view they name;
-  // what near they name; and, always, the words themselves as Text.
+  // What the words find, with nothing taken: the holons they begin, the bricks they
+  // name, the holons they name; the values in view they name; what near they name; and,
+  // always, the words themselves as Text.
   const search = async (text: string): Promise<Found[]> => {
     const said = text.trim();
     const values = async (axis: "type" | "parent", fn: Called) =>
@@ -586,9 +513,9 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
       ...bricks()
         .filter(({ label }) => fits(said, label))
         .sort((a, b) => Number(begins(said, b.label)) - Number(begins(said, a.label))),
+      ...holons.filter(({ first }) => !first).slice(0, 3),
       ...types,
       ...parents,
-      ...holons.filter(({ first }) => !first).slice(0, 3),
       ...(await near()).filter(({ label }) => fits(said, label)),
       {
         label: `${is("text").title}: ${said}`,
@@ -639,12 +566,12 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     axis: "an axis",
   };
 
-  const said = () => {
+  const sayWhatIsBuilt = () => {
     pending.textContent = frames.map(({ fn }) => fn.title).join(" ▸ ");
     pending.hidden = !pending.textContent;
 
     const frame = frames.at(-1);
-    const kind = needs();
+    const kind = needs(frames);
     input.placeholder = !frame
       ? ""
       : kind === "set"
@@ -685,7 +612,7 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
               onClick={() => {
                 input.value = "";
                 row.step!();
-                said();
+                sayWhatIsBuilt();
                 input.focus();
               }}
             >
@@ -730,7 +657,7 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     }
 
     frames = [...frames, { fn, given }];
-    said();
+    sayWhatIsBuilt();
     again();
     input.focus();
   }
@@ -746,7 +673,7 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
   const back = () => {
     frames = frames.slice(0, -1);
     if (!frames.length) changing = undefined;
-    said();
+    sayWhatIsBuilt();
     again();
   };
 
@@ -761,7 +688,7 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     frames = [];
     changing = undefined;
     input.value = "";
-    said();
+    sayWhatIsBuilt();
     again();
   });
 
@@ -815,7 +742,7 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     }
   });
 
-  said();
+  sayWhatIsBuilt();
   await ask();
 
   if (settings.pressed) setTimeout(() => input.focus());

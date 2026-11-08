@@ -4,10 +4,10 @@
 // before, and tells whoever listens that the field has changed.
 //
 // A commit may bring holons into being under handles of its own, "~1" for one, and
-// use them wherever a name goes. The engine gives them their names as it lands, so
+// use them wherever an id goes. The engine gives them their ids as it lands, so
 // whoever asks need not wait to refer to what it is making.
 
-import { commit as commitTo, isName, type Holon, type Store } from "../store/store.ts";
+import { commit as commitTo, isId, type Holon, type Store } from "../store/store.ts";
 import { fieldOf, holonOf, read, type Field } from "./field.ts";
 import { bodyProblem, mouldProblem, type Mould } from "./moulds.ts";
 import type { Answer, HolonRead, Read, Whole } from "./reads.ts";
@@ -17,7 +17,7 @@ export type { HolonRead, Read, Whole };
 
 export type Change = { holons: Holon[]; gone?: string[]; says?: string };
 
-export type Committed = { commit: string; names: Record<string, string> };
+export type Committed = { commit: string; ids: Record<string, string> };
 
 export type Engine = {
   attach(key: string, store: Store): Promise<void>;
@@ -28,14 +28,14 @@ export type Engine = {
 
 const isHandle = (value: unknown): value is string => typeof value === "string" && value.startsWith("~");
 
-// A holon with every handle in it given its name: its own, its types, and what it
+// A holon with every handle in it given its id: its own, its types, and what it
 // refers to. Nothing else in it is touched, so text may begin as it likes.
-function named(holon: Holon, names: ReadonlyMap<string, string>): Holon {
-  const nameOf = (handle: string) => {
-    const name = names.get(handle);
-    if (!name) throw new Error(`the handle ${handle} names nothing this commit brings into being`);
+function withIds(holon: Holon, ids: ReadonlyMap<string, string>): Holon {
+  const idOf = (handle: string) => {
+    const id = ids.get(handle);
+    if (!id) throw new Error(`the handle ${handle} names nothing this commit brings into being`);
 
-    return name;
+    return id;
   };
 
   const inBody = (value: unknown): any => {
@@ -45,15 +45,15 @@ function named(holon: Holon, names: ReadonlyMap<string, string>): Holon {
     return Object.fromEntries(
       Object.entries(value).map(([key, inner]) => [
         key,
-        key === "$ref" && isHandle(inner) ? nameOf(inner) : inBody(inner),
+        key === "$ref" && isHandle(inner) ? idOf(inner) : inBody(inner),
       ]),
     );
   };
 
   return {
     ...holon,
-    id: isHandle(holon.id) ? nameOf(holon.id) : holon.id,
-    instance: holon.instance.map((type) => (isHandle(type) ? nameOf(type) : type)),
+    id: isHandle(holon.id) ? idOf(holon.id) : holon.id,
+    instance: holon.instance.map((type) => (isHandle(type) ? idOf(type) : type)),
     body: inBody(holon.body),
   };
 }
@@ -99,7 +99,7 @@ async function changeProblem(field: Field, home: Store, holons: Holon[], gone: s
   if (landing.size !== holons.length) return "one holon is changed twice in one commit";
 
   for (const id of [...landing.keys(), ...gone]) {
-    if (!isName(id)) return `${id} is not a name`;
+    if (!isId(id)) return `${id} is not an id`;
 
     const owner = field.stores.find(({ store }) => store.mayHold(id));
     if (owner && owner.store !== home) return `${id} belongs to ${owner.key}, which is only read`;
@@ -158,8 +158,8 @@ export function startEngine(homeStore: Store): Engine {
     commit: ({ holons, gone = [], says = "A change in the home" }) =>
       inTurn(async () => {
         const mint = home.minter();
-        const names = new Map(holons.filter(({ id }) => isHandle(id)).map(({ id }) => [id, mint()]));
-        const landing = holons.map((holon) => named(holon, names));
+        const ids = new Map(holons.filter(({ id }) => isHandle(id)).map(({ id }) => [id, mint()]));
+        const landing = holons.map((holon) => withIds(holon, ids));
 
         const problem = await changeProblem(field, home, landing, gone);
         if (problem) throw new Error(problem);
@@ -169,7 +169,7 @@ export function startEngine(homeStore: Store): Engine {
         home = done.store;
         become(fieldOf([{ key: "home", store: home }, ...field.stores.slice(1)], field));
 
-        return { commit: done.commit, names: Object.fromEntries(names) };
+        return { commit: done.commit, ids: Object.fromEntries(ids) };
       }),
 
     onChange(listener) {

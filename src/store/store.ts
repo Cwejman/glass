@@ -30,7 +30,7 @@ type BlockEntry = { first: string | null; hash: string; moved: string[]; new: nu
 type Checkpoint = {
   blocks: [hash: string, first: string][];
   gone: string[];
-  moved: [name: string, hash: string][];
+  moved: [id: string, hash: string][];
 };
 
 type Line = {
@@ -41,7 +41,7 @@ type Line = {
   says: string;
   checkpoint?: Checkpoint;
   conversion?: { blocks: string[] };
-  held?: [name: string, place: number][];
+  held?: [id: string, place: number][];
   oldHash?: string;
 };
 
@@ -65,11 +65,12 @@ const blockSize = 64 * 1024;
 
 export { sha };
 
-// ---- Names
+// ---- Ids
 
-// A name is nine characters of a commit's moment and six of a count. The count
-// starts at a chance place in each commit and only goes up, so a commit's new
-// holons are its first name and how many, and their names sort as they sit.
+// An id is nine characters of a commit's moment and six of a count. The count starts
+// at a chance place in each commit and only goes up, so a commit's new holons are its
+// first id and how many, and their ids sort as they sit. A holon's name is another
+// thing: what it is called, beside its id.
 
 const alphabet = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 
@@ -86,14 +87,14 @@ function encode(n: number, width: number) {
 
 const decode = (text: string) => [...text].reduce((n, char) => n * 32 + alphabet.indexOf(char), 0);
 
-export const nameAt = (ms: number, count = 0) => encode(ms, 9) + encode(count, 6);
+export const idAt = (ms: number, count = 0) => encode(ms, 9) + encode(count, 6);
 
-export const nextName = (name: string) => name.slice(0, 9) + encode(decode(name.slice(9)) + 1, 6);
+export const nextId = (id: string) => id.slice(0, 9) + encode(decode(id.slice(9)) + 1, 6);
 
-export const isName = (value: unknown): value is string =>
+export const isId = (value: unknown): value is string =>
   typeof value === "string" && /^[0-9A-HJKMNP-TV-Z]{15}$/.test(value);
 
-const momentOf = (name: string) => name.slice(0, 9);
+const momentOf = (id: string) => id.slice(0, 9);
 
 const chanceStart = () => (crypto.getRandomValues(new Uint32Array(1))[0]! % 32768) * 32768;
 
@@ -119,27 +120,27 @@ function apply(table: Table, line: Pick<Line, "blocks" | "gone">) {
   for (const block of line.blocks) {
     if (block.first) table.blocks.push([block.hash, block.first]);
 
-    for (const name of block.moved) {
-      table.moved.set(name, block.hash);
-      table.gone.delete(name);
+    for (const id of block.moved) {
+      table.moved.set(id, block.hash);
+      table.gone.delete(id);
     }
   }
 
-  for (const name of line.gone) table.gone.add(name);
+  for (const id of line.gone) table.gone.add(id);
 }
 
-const byName =
-  <T>(nameOf: (item: T) => string) =>
+const byId =
+  <T>(idOf: (item: T) => string) =>
   (a: T, b: T) =>
-    nameOf(a) < nameOf(b) ? -1 : 1;
+    idOf(a) < idOf(b) ? -1 : 1;
 
 const sortBlocks = (table: Table) => {
-  table.blocks.sort(byName(([, first]) => first));
+  table.blocks.sort(byId(([, first]) => first));
   return table;
 };
 
-// The block whose first name is the greatest at or below this one.
-function floor(table: Table, name: string) {
+// The block whose first id is the greatest at or below this one.
+function floor(table: Table, id: string) {
   let low = 0;
   let high = table.blocks.length - 1;
   let found: [string, string] | undefined;
@@ -147,7 +148,7 @@ function floor(table: Table, name: string) {
   while (low <= high) {
     const middle = (low + high) >> 1;
 
-    if (table.blocks[middle]![1] <= name) {
+    if (table.blocks[middle]![1] <= id) {
       found = table.blocks[middle];
       low = middle + 1;
     } else {
@@ -158,13 +159,13 @@ function floor(table: Table, name: string) {
   return found;
 }
 
-// Whether this head can hold a name at all, known without fetching anything:
-// a name was minted in the moment of the block that holds it.
-function mayHold(table: Table, name: string) {
-  if (table.moved.has(name)) return true;
+// Whether this head can hold an id at all, known without fetching anything: an id was
+// minted in the moment of the block that holds it.
+function mayHold(table: Table, id: string) {
+  if (table.moved.has(id)) return true;
 
-  const block = floor(table, name);
-  return block !== undefined && momentOf(block[1]) === momentOf(name);
+  const block = floor(table, id);
+  return block !== undefined && momentOf(block[1]) === momentOf(id);
 }
 
 // ---- Reading
@@ -256,22 +257,22 @@ export async function openStore(files: Files, blocks = new Map<string, Promise<M
     return versions;
   }
 
-  const blockOf = (state: Table, name: string) => state.moved.get(name) ?? floor(state, name)?.[0];
+  const blockOf = (state: Table, id: string) => state.moved.get(id) ?? floor(state, id)?.[0];
 
-  async function latestIn(state: Table, name: string): Promise<Latest | null> {
-    const hash = blockOf(state, name);
+  async function latestIn(state: Table, id: string): Promise<Latest | null> {
+    const hash = blockOf(state, id);
     if (!hash) return null;
 
-    const version = (await block(hash)).get(name);
+    const version = (await block(hash)).get(id);
     return version ? { block: hash, version } : null;
   }
 
   // The latest of a holon this head holds. One taken out reads as nothing, though
   // lastVersion still finds it.
-  async function read(name: string) {
-    if (table.gone.has(name) || !mayHold(table, name)) return null;
+  async function read(id: string) {
+    if (table.gone.has(id) || !mayHold(table, id)) return null;
 
-    return latestIn(table, name);
+    return latestIn(table, id);
   }
 
   async function allIn(state: Table) {
@@ -280,13 +281,13 @@ export async function openStore(files: Files, blocks = new Map<string, Promise<M
 
     await Promise.all(
       [...hashes].map(async (hash) => {
-        for (const [name, version] of await block(hash)) {
-          if (!state.gone.has(name) && blockOf(state, name) === hash) out.set(name, { block: hash, version });
+        for (const [id, version] of await block(hash)) {
+          if (!state.gone.has(id) && blockOf(state, id) === hash) out.set(id, { block: hash, version });
         }
       }),
     );
 
-    return new Map([...out].sort(byName(([name]) => name)));
+    return new Map([...out].sort(byId(([id]) => id)));
   }
 
   // Every holon this head holds. It fetches every block, so only a question
@@ -320,13 +321,13 @@ export async function openStore(files: Files, blocks = new Map<string, Promise<M
     (await fullLog()).map(({ hash, line: { at, says } }) => ({ hash, at, says }));
 
   // Every version of a holon, newest first, following prev. Only when asked.
-  async function versions(name: string) {
-    const latest = await latestIn(table, name);
+  async function versions(id: string) {
+    const latest = await latestIn(table, id);
     const out: Version[] = [];
 
     for (let at = latest?.version ?? null; at; ) {
       out.push(at);
-      at = at.prev ? ((await block(at.prev)).get(name) ?? null) : null;
+      at = at.prev ? ((await block(at.prev)).get(id) ?? null) : null;
     }
 
     return out;
@@ -339,13 +340,13 @@ export async function openStore(files: Files, blocks = new Map<string, Promise<M
     const held = new Map<string, string>();
 
     for (const { line } of entries.slice(0, index + 1)) {
-      for (const [name, place] of line.held!) held.set(name, placed[place]!);
-      for (const name of line.gone) held.delete(name);
+      for (const [id, place] of line.held!) held.set(id, placed[place]!);
+      for (const id of line.gone) held.delete(id);
     }
 
     const out = new Map<string, Latest>();
 
-    for (const [name, hash] of held) out.set(name, { block: hash, version: (await block(hash)).get(name)! });
+    for (const [id, hash] of held) out.set(id, { block: hash, version: (await block(hash)).get(id)! });
 
     return out;
   }
@@ -367,7 +368,7 @@ export async function openStore(files: Files, blocks = new Map<string, Promise<M
     return allIn(sortBlocks(state));
   }
 
-  // The names of one commit, in order. Everything named from it belongs in that commit.
+  // The ids of one commit, in order. Everything given one belongs in that commit.
   // A commit's moment is after every one this head holds, so two commits made within
   // one tick of the clock are still apart.
   function minter() {
@@ -375,12 +376,12 @@ export async function openStore(files: Files, blocks = new Map<string, Promise<M
       (greatest, [, first]) => Math.max(greatest, decode(momentOf(first))),
       0,
     );
-    let next = nameAt(Math.max(Date.now(), latest + 1), chanceStart());
+    let next = idAt(Math.max(Date.now(), latest + 1), chanceStart());
 
     return () => {
-      const name = next;
-      next = nextName(name);
-      return name;
+      const id = next;
+      next = nextId(id);
+      return id;
     };
   }
 
@@ -391,9 +392,9 @@ export async function openStore(files: Files, blocks = new Map<string, Promise<M
     volume: ref?.volume ?? 0,
     openLines,
     table,
-    mayHold: (name: string) => mayHold(table, name),
+    mayHold: (id: string) => mayHold(table, id),
     read,
-    lastVersion: (name: string) => latestIn(table, name),
+    lastVersion: (id: string) => latestIn(table, id),
     all,
     log,
     fullLog,
@@ -428,7 +429,7 @@ async function appendLine(store: Store, fields: Pick<Line, "at" | "blocks" | "go
     line.checkpoint = {
       blocks: sortBlocks(state).blocks,
       gone: [...state.gone].sort(),
-      moved: [...state.moved].sort(byName(([name]) => name)),
+      moved: [...state.moved].sort(byId(([id]) => id)),
     };
   }
 
@@ -485,12 +486,12 @@ export async function commit(
   const born = places
     .filter(({ was }) => !was)
     .map(({ holon }) => holon)
-    .sort(byName(({ id }) => id));
+    .sort(byId(({ id }) => id));
   const edited = places.filter(({ was }) => was);
 
   born.forEach(({ id }, i) => {
-    if (i > 0 && id !== nextName(born[i - 1]!.id)) {
-      throw new Error(`new names are not one run: ${born[i - 1]!.id} then ${id}`);
+    if (i > 0 && id !== nextId(born[i - 1]!.id)) {
+      throw new Error(`new ids are not one run: ${born[i - 1]!.id} then ${id}`);
     }
   });
 
@@ -527,8 +528,8 @@ export async function commit(
     });
   }
 
-  const taken = (await Promise.all(gone.map(async (name) => ((await store.read(name)) ? name : null))))
-    .filter((name): name is string => name !== null)
+  const taken = (await Promise.all(gone.map(async (id) => ((await store.read(id)) ? id : null))))
+    .filter((id): id is string => id !== null)
     .sort();
 
   const next = await appendLine(store, { at, blocks: entries, gone: taken, says });
@@ -540,7 +541,7 @@ export async function commit(
 const sayingOf = ({ at, blocks, gone, says }: Line) => canonical({ at, blocks, gone, says });
 
 // Lands another copy's commits on this store: its blocks copied as they are, its log
-// lines chained on again. Nothing in a block changes, so no name or reference does. A
+// lines chained on again. Nothing in a block changes, so no id or reference does. A
 // commit already landed here is known by what it says. Two copies that changed one
 // holon stop here and ask.
 export async function land(store: Store, other: Store) {
@@ -573,7 +574,7 @@ export async function land(store: Store, other: Store) {
   const minted = new Set(onlyOurs.flatMap(moments));
 
   for (const line of incoming) {
-    for (const name of changes(line)) if (touched.has(name)) throw new Error(`both copies changed ${name}`);
+    for (const id of changes(line)) if (touched.has(id)) throw new Error(`both copies changed ${id}`);
     for (const moment of moments(line))
       if (minted.has(moment)) throw new Error(`both copies minted in the moment ${moment}`);
   }

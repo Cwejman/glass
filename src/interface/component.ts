@@ -53,7 +53,7 @@ export type Opening = {
 export type Settings = Record<string, unknown>;
 
 // A holon a write brings into being beside it, under a handle such as "~1", which
-// stands for its name anywhere in what is written.
+// stands for its id anywhere in what is written.
 export type Made = { id: string; instance: string[]; name?: string; body: Holon["body"] };
 
 // What a component works with: slots to open and let go of, reads answered as their

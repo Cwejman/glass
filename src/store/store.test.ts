@@ -4,7 +4,7 @@
 import { expect, test } from "bun:test";
 import { canonical } from "./canonical.ts";
 import { memoryFiles, servedFiles } from "./files.ts";
-import { commit, isName, land, nextName, openStore, sha, type Holon, type Store } from "./store.ts";
+import { commit, isId, land, nextId, openStore, sha, type Holon, type Store } from "./store.ts";
 
 const vectors = await Bun.file(new URL("./vectors/format.json", import.meta.url)).json();
 const canonicalCases = await Bun.file(new URL("./vectors/canonical.json", import.meta.url)).json();
@@ -57,12 +57,12 @@ test("each step writes these bytes and reads back as this field", async () => {
   }
 });
 
-test("a name counts up, carrying across its last characters", () => {
-  for (const [name, next] of vectors.names.next) expect(nextName(name)).toBe(next);
+test("an id counts up, carrying across its last characters", () => {
+  for (const [name, next] of vectors.ids.next) expect(nextId(name)).toBe(next);
 
-  expect(isName("1M6XGF6G0000100")).toBe(true);
-  expect(isName("1m6xgf6g0000100")).toBe(false);
-  expect(isName("too short")).toBe(false);
+  expect(isId("1M6XGF6G0000100")).toBe(true);
+  expect(isId("1m6xgf6g0000100")).toBe(false);
+  expect(isId("too short")).toBe(false);
 });
 
 test("a store says what it may hold without fetching anything", async () => {
@@ -172,10 +172,10 @@ test("a commit refuses a stale store and new names that are not one run", async 
   await expect(commit(stale, { holons: [], says: "stale" })).rejects.toThrow("the store moved");
 
   const current = await openStore(stale.files);
-  const names = current.minter();
-  const first = names();
-  names();
-  const third = names();
+  const mint2 = current.minter();
+  const first = mint2();
+  mint2();
+  const third = mint2();
 
   await expect(
     commit(current, {
@@ -380,7 +380,7 @@ test("past a block's size the log opens a volume, and its checkpoint alone reads
   expect(await sha(log.at(-1)!.text)).toBe(store.head!);
 });
 
-test("a commit larger than a block is cut, its new names still found", async () => {
+test("a commit larger than a block is cut, its new ids still found", async () => {
   const store = await fresh();
   const mint = store.minter();
   const holons: Holon[] = Array.from({ length: 400 }, (_, i) => ({

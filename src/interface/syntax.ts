@@ -3,7 +3,7 @@
 // written can change without anything that holds expressions changing.
 //
 // A call is said by the title of the function it calls, its arguments in parentheses
-// after it, none needing none, set apart by commas; a holon by its name after @; an
+// after it, none needing none, set apart by commas; a holon by its id after @; an
 // argument within a function of one's own by its place after $; words after :, up to
 // the comma or parenthesis that ends them, a backslash keeping one within them.
 //
@@ -12,9 +12,9 @@
 //   Text(:what is said)
 //
 // A title two functions share, or one an address could misread, is said and read by
-// the function's name instead: @name(…).
+// the function's id instead: @id(…).
 
-import { isName } from "../store/store.ts";
+import { isId } from "../store/store.ts";
 import type { Argument, Expression } from "../engine/expression.ts";
 
 export function print(expression: Expression, titles: ReadonlyMap<string, string>): string {
@@ -30,8 +30,8 @@ export function print(expression: Expression, titles: ReadonlyMap<string, string
     const byTitle = title && !shared.has(title) && title === title.trim() && !/[(),@$:\\]/.test(title);
     const given = value.with ?? [];
 
-    // A call by name is always said with its parentheses, so it is never read back
-    // as the holon of that name.
+    // A call by id is always said with its parentheses, so it is never read back
+    // as the holon of that id.
     if (!byTitle) return `@${value.call.$ref}(${given.map(said).join(",")})`;
 
     return given.length ? `${title}(${given.map(said).join(",")})` : title;
@@ -103,7 +103,7 @@ export function parse(text: string, functions: ReadonlyMap<string, string[]>): E
       const said = /^[0-9A-HJKMNP-TV-Z]*/.exec(text.slice(at))![0];
       at += said.length;
 
-      if (!isName(said)) fail("@ is followed by a holon's name");
+      if (!isId(said)) fail("@ is followed by a holon's id");
       skipSpace();
 
       return text[at] === "(" ? called(said) : { $ref: said };
@@ -125,7 +125,7 @@ export function parse(text: string, functions: ReadonlyMap<string, string[]>): E
 
     const found = functions.get(title) ?? [];
     if (found.length === 0) fail(`there is no function ${title}`);
-    if (found.length > 1) fail(`${title} names more than one function; say which by @name`);
+    if (found.length > 1) fail(`${title} names more than one function; say which by @id`);
 
     return called(found[0]!);
   }

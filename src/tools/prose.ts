@@ -39,7 +39,11 @@ function tokens(sentence: string) {
     }
   }
 
-  if (carry && out.length) out[out.length - 1] += carry;
+  if (carry) {
+    if (out.length) out[out.length - 1] += carry;
+    else out.push(carry);
+  }
+
   return out;
 }
 
@@ -110,5 +114,55 @@ export function proseWriter(holons: Holon[], mint: () => string) {
       .filter(Boolean)
       .map((line) => (/^[-*]{2,}$/.test(line) ? put("break", { mark: line }) : paragraph(line)));
 
-  return { types, born, put, flow, lexicon, lexiconGrew: () => lexiconGrew };
+  return { types, born, put, word, flow, lexicon, lexiconGrew: () => lexiconGrew };
+}
+
+// The marks written prose carries: a link, whose target is an id or an address; code;
+// strong; emphasis. What a mark holds is read the same way, so marks nest.
+const marks = /\[[^\]]*\]\([^)]*\)|`[^`]*`|\*\*[^*]+\*\*|\*[^*]+\*/g;
+
+// A writer of marked prose over the same writer, for rewriting what is already marked.
+export function markedWriter({ put, word }: Pick<ReturnType<typeof proseWriter>, "put" | "word">) {
+  // Spaces inside a mark are kept from what splits sentences and words.
+  const hold = (text: string) => text.replace(marks, (mark) => mark.replace(/\s/g, "\u0001"));
+  const release = (text: string) => text.replace(/\u0001/g, " ");
+
+  function inlineOf(text: string): string[] {
+    const out: string[] = [];
+    let at = 0;
+
+    const plain = (part: string) => out.push(...tokens(part).map(word));
+
+    for (const match of text.matchAll(marks)) {
+      plain(text.slice(at, match.index));
+      at = match.index + match[0].length;
+
+      const mark = match[0];
+      const link = /^\[([^\]]*)\]\(([^)]*)\)$/.exec(mark);
+
+      if (link) {
+        const leads = /^[0-9A-HJKMNP-TV-Z]{15}$/.test(link[2]!) ? { leads: ref(link[2]!) } : { to: link[2]! };
+        out.push(put("link", { words: inlineOf(link[1]!).map(ref), ...leads }));
+      } else if (mark.startsWith("`")) {
+        out.push(put("codespan", { text: mark.slice(1, -1) }));
+      } else if (mark.startsWith("**")) {
+        out.push(put("strong", { words: inlineOf(mark.slice(2, -2)).map(ref) }));
+      } else {
+        out.push(put("emphasis", { words: inlineOf(mark.slice(1, -1)).map(ref) }));
+      }
+    }
+
+    plain(text.slice(at));
+
+    return out;
+  }
+
+  const sentence = (text: string) => put("sentence", { words: inlineOf(release(text)).map(ref) });
+
+  const sentencesOf = (text: string) => splitSentences(hold(text)).map(sentence).map(ref);
+
+  return {
+    paragraph: (text: string) => put("paragraph", { sentences: sentencesOf(text) }),
+    item: (text: string) => put("item", { sentences: sentencesOf(text) }),
+  };
 }

@@ -12,7 +12,7 @@
 // A grouping gives what it gathers in collections besides, one for each value
 // along an axis, each itself an expression, so it opens as a place of its own.
 
-import { isName, type Holon } from "../store/store.ts";
+import { isId, type Holon } from "../store/store.ts";
 import { mouldOf, type Mould } from "./moulds.ts";
 import { references } from "./references.ts";
 
@@ -143,6 +143,15 @@ const natives: Record<string, Native> = {
 
       const said = saying(all, holon);
       return wanted.every((word) => said.includes(word));
+    });
+  },
+
+  named: (all, [words]) => {
+    const wanted = asWords(words as string);
+
+    return keep(all, (id) => {
+      const name = all.known.get(id)!.holon.name?.toLocaleLowerCase();
+      return name !== undefined && wanted.every((word) => name.includes(word));
     });
   },
 
@@ -405,7 +414,7 @@ export function expressionProblem(value: unknown, nested = 0): string | undefine
   const keys = Object.keys(record);
 
   if ("$ref" in record)
-    return keys.length === 1 && isName(record.$ref) ? undefined : "a holon is given as { $ref: name }";
+    return keys.length === 1 && isId(record.$ref) ? undefined : "a holon is given as { $ref: name }";
 
   if ("arg" in record) {
     return keys.length === 1 && Number.isInteger(record.arg) && (record.arg as number) >= 0
@@ -416,7 +425,7 @@ export function expressionProblem(value: unknown, nested = 0): string | undefine
   if (!("call" in record) || keys.some((key) => key !== "call" && key !== "with")) return form;
 
   const call = record.call as { $ref?: unknown } | null;
-  if (typeof call !== "object" || call === null || Object.keys(call).length !== 1 || !isName(call.$ref))
+  if (typeof call !== "object" || call === null || Object.keys(call).length !== 1 || !isId(call.$ref))
     return "a call names its function as { $ref: name }";
 
   if (record.with === undefined) return undefined;

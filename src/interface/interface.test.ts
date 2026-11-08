@@ -243,6 +243,97 @@ async function settledHistory(engine: Engine) {
   return [];
 }
 
+describe("the search", () => {
+  const input = (page: HTMLElement) => page.querySelector<HTMLInputElement>(".search-input")!;
+
+  const type = (page: HTMLElement, text: string) => {
+    input(page).value = text;
+    input(page).dispatchEvent(new Event("input", { bubbles: true }));
+  };
+
+  const row = (page: HTMLElement, text: string) =>
+    [...page.querySelectorAll(".search-found .found")].find((found) =>
+      found.querySelector(".found-label")?.textContent?.startsWith(text),
+    );
+
+  const take = async (page: HTMLElement, text: string) => {
+    await settled(() => row(page, text));
+    press(row(page, text)!.querySelector("button")!);
+  };
+
+  test("it says where one stands, by what it is and what it is called", async () => {
+    const { page } = await open(`https://glass.test/?look=@${primitives}`);
+
+    await settled(() => page.querySelector(".search .part"));
+
+    expect(page.querySelector(".search-field")?.textContent).toContain("brief");
+    expect(page.querySelector(".search-field")?.textContent).toContain("The primitives");
+  });
+
+  test("typing a name finds it, and pressing goes there", async () => {
+    const { page } = await open(`https://glass.test/?look=@${glassBrief}`);
+
+    await settled(() => input(page));
+    type(page, "primitives");
+
+    await take(page, "The primitives");
+    await settled(() => heading(page) === "The primitives");
+  });
+
+  test("words are offered as Text, gathering what says them", async () => {
+    const { page } = await open(`https://glass.test/?look=@${glassBrief}`);
+
+    await settled(() => input(page));
+    type(page, "mount reader");
+
+    await take(page, "Text: mount reader");
+    await settled(() => location.search.includes("Text(:mount+reader)"));
+    await settled(() => page.querySelector(".list li"));
+  });
+
+  test("a brick is built as it reads, what it takes chosen in turn", async () => {
+    const { page } = await open(`https://glass.test/?look=@${glassBrief}`);
+
+    await settled(() => row(page, "Not"));
+    await take(page, "Not");
+
+    await settled(() => page.querySelector(".part.pending")?.textContent === "Not");
+
+    type(page, "Is a type");
+    await take(page, "Is a type");
+
+    await settled(
+      () =>
+        decodeURIComponent(location.search).includes("Not(Is a type)") ||
+        location.search.includes("Not(Is+a+type)"),
+    );
+  });
+
+  test("a part is let go with its ×, and all let go is everything", async () => {
+    const { page } = await open("https://glass.test/?look=Group+by(Everything,:store)");
+
+    await settled(() => page.querySelector(".let-go"));
+    press(page.querySelector(".let-go")!);
+
+    await settled(() => page.querySelector(".let-go") === null || location.search.includes("Everything"));
+  });
+
+  test("laid where something was pressed, it says the place and lets go of nothing", async () => {
+    const { page } = await open("https://glass.test/?look=Group+by(Everything,:store)");
+
+    await settled(() => page.querySelector(".list"));
+
+    page
+      .querySelector(".list")!
+      .dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }));
+
+    await settled(() => page.querySelector(".menu .search"));
+    await settled(() => row(page.querySelector(".menu") as HTMLElement, "Look here"));
+
+    expect(page.querySelector(".menu .let-go")).toBe(null);
+  });
+});
+
 describe("the home", () => {
   async function keepAFavorite(page: HTMLElement) {
     await settled(() => page.querySelector(".section-link"));

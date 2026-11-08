@@ -6,7 +6,7 @@ The repository holds two things: `store/`, the holons, and `src/`, the code, wit
 
 ## The store
 
-Everything is a holon: an `id` (a name of 15 characters given at birth, unique across stores), the type it is an `instance` of, an optional `name`, an optional `mould`, and a `body`. A name is also its title, with no slug beside it, and is unique only among what one whole holds, so two wholes can each hold a "What is open". A type is a holon with a mould, which says what its instances hold, field by field, each in prose. Inside a body, `{"$ref": id}` is a reference to another holon. A reference holds (makes the other a part) or only points, as the mould says, or as `$holds` on the reference itself says.
+Everything is a holon: an `id` (15 characters given at birth, unique across stores), the type it is an `instance` of, an optional `name`, an optional `mould`, and a `body`. A name is also its title, with no slug beside it, and is unique only among what one whole holds, so two wholes can each hold a "What is open". A type is a holon with a mould, which says what its instances hold, field by field, each in prose. Inside a body, `{"$ref": id}` is a reference to another holon. A reference holds (makes the other a part) or only points, as the mould says, or as `$holds` on the reference itself says.
 
 A brief is a flow and its sections. Its `prose` is a flow of mounts in any order, a paragraph, a statistic, a brief, each reference saying whether it holds or points. Its `parts` are read through after the flow, and nothing follows them. A brief mounted in another's flow is a break, what starting a new file was, and placing it there is the deliberate act.
 
@@ -61,7 +61,7 @@ bun src/tools/read.ts raised               the threads raised from what was said
 bun src/tools/read.ts measured | grep -A1 ' stale:'   the briefs the work has overtaken, and what still holds in each
 ```
 
-A brief does not show its own stale mark when read, so read those marks before trusting the wiki. They are marked rather than rewritten, because working in prose takes more effort; what was said stands as it was, and is never measured stale.
+A brief does not show its own stale mark when read, so read those marks before trusting the wiki. A brief the work overtakes is marked first and rewritten when the work settles, as `src/tools/rewrite.ts` does; what was said stands as it was, and is never measured stale.
 
 The text is drawn from the holons each time; none is stored. A word is `before + text + after`, a sentence is its words, and a paragraph is its sentences. `src/tools/append.ts` adds to the store, as one commit; `src/tools/README.md` says how.
 
@@ -75,6 +75,6 @@ The text is drawn from the holons each time; none is stored. A word is `before +
 - **The code is brought to the store.** One implementation of the format, in `src/store/`, serves the tools, the browser and the home. The engine reads holons by their moulds, holding apart from pointing, and fetches only what a read needs; the interface reads prose from its holons. Not yet built: running programs, a reader's own branches of a pulled store, and a home that says what is attached. The page says what is attached for now.
 - **The format is settled for now,** with its vectors. The second session's two noted paths, read by `bun src/tools/probe.ts 9.1.21-22 --only main --text`, were tried on 2026-11-08: one hash per commit and addresses by position gave way to a hash per block, and counted names to short unique ones, so a store can be taken away, changed, and brought back. What is left open is at the end of `src/store/vectors/README.md`.
 - **What comes next is here, not in the plan**, whose brief stops at the first mark and is measured stale. Next is a glass for the human, born from this store.
-- **Parts of the wiki are stale**, and marked so: see How to read.
+- **The wiki was brought to what stands on 2026-11-08.** Its stale marks are resolved, its old prose kept in each brief's history. Its plan is a record; what comes next is here.
 - **No session starts on local changes.** What a session did is committed before it ends, the store's ref, log and blocks above all, since no other copy of them exists.
 - **Memory is off** for every session (`.claude/settings.json`). What a session knows is in the field.

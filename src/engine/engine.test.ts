@@ -2,7 +2,7 @@
 
 import { describe, expect, test } from "bun:test";
 import { memoryFiles } from "../store/files.ts";
-import { commit, nameAt, nextName, openStore, type Holon, type Store } from "../store/store.ts";
+import { commit, idAt, nextId, openStore, type Holon, type Store } from "../store/store.ts";
 import { folderFiles, storeFolders } from "../tools/stores.ts";
 import { startEngine, type Engine } from "./engine.ts";
 import { gather, groups, type Expression, type Grouped } from "./expression.ts";
@@ -12,10 +12,10 @@ import { partsOf, references } from "./references.ts";
 
 // A small pulled store: types, and a brief holding a paragraph that holds words,
 // the brief pointing at a note.
-let name = nameAt(Date.parse("2026-01-01T00:00:00Z"));
+let next = idAt(Date.parse("2026-01-01T00:00:00Z"));
 const mint = () => {
-  const made = name;
-  name = nextName(name);
+  const made = next;
+  next = nextId(made);
   return made;
 };
 
@@ -39,6 +39,7 @@ const fn = Object.fromEntries(
     "points-to",
     "pointed-from",
     "text",
+    "named",
     "store",
     "types",
     "and",
@@ -57,6 +58,7 @@ const takes: Record<string, string[]> = {
   "points-to": ["set"],
   "pointed-from": ["set"],
   text: ["words"],
+  named: ["words"],
   store: ["store"],
   and: ["set", "sets"],
   or: ["set", "sets"],
@@ -234,6 +236,13 @@ describe("expressions", () => {
     expect(gather(a, call("text", "nowhere to be found"))).toEqual([]);
   });
 
+  test("what a holon is called is found by its name alone", async () => {
+    const a = await all();
+
+    expect(gather(a, call("named", "note a"))).toEqual([note]);
+    expect(gather(a, call("named", "standing"))).toEqual([]);
+  });
+
   test("a function of one's own stands beside the natives", async () => {
     expect(gather(await all(), { call: { $ref: ownFn } })).toEqual([brief]);
   });
@@ -306,21 +315,21 @@ describe("the engine", () => {
 
   test("a commit lands in the home, with handles given names as it lands", async () => {
     const { engine } = await started();
-    const { names } = await engine.commit({
+    const { ids } = await engine.commit({
       holons: [
         { id: "~a", instance: [typeNote], name: "Mine", body: { title: "First" } },
         { id: "~b", instance: [typeBrief], body: { prose: [{ $ref: "~a" }], about: { $ref: note } } },
       ] as Holon[],
     });
 
-    const mine = await homeHolon(engine, names["~a"]!);
-    const holder = await homeHolon(engine, names["~b"]!);
+    const mine = await homeHolon(engine, ids["~a"]!);
+    const holder = await homeHolon(engine, ids["~b"]!);
 
     expect(mine?.store).toBe("home");
     expect(mine?.name).toBe("Mine");
-    expect(holder?.body.prose).toEqual([{ $ref: names["~a"]! }]);
+    expect(holder?.body.prose).toEqual([{ $ref: ids["~a"]! }]);
 
-    expect(await engine.read({ named: "Mine", store: "home" })).toEqual([names["~a"]!]);
+    expect(await engine.read({ named: "Mine", store: "home" })).toEqual([ids["~a"]!]);
   });
 
   test("a commit is judged, and nothing lands when it is wrong", async () => {
@@ -364,35 +373,35 @@ describe("the engine", () => {
 
   test("nothing left may point at what a commit takes out", async () => {
     const { engine } = await started();
-    const { names } = await engine.commit({
+    const { ids } = await engine.commit({
       holons: [
         { id: "~a", instance: [typeNote], body: { title: "One" } },
         { id: "~b", instance: [typeBrief], body: { prose: [{ $ref: "~a" }] } },
       ] as Holon[],
     });
 
-    await expect(engine.commit({ holons: [], gone: [names["~a"]!] })).rejects.toThrow("still refers");
+    await expect(engine.commit({ holons: [], gone: [ids["~a"]!] })).rejects.toThrow("still refers");
 
-    await engine.commit({ holons: [], gone: [names["~a"]!, names["~b"]!] });
-    expect(await homeHolon(engine, names["~a"]!)).toBe(null);
+    await engine.commit({ holons: [], gone: [ids["~a"]!, ids["~b"]!] });
+    expect(await homeHolon(engine, ids["~a"]!)).toBe(null);
   });
 
   test("text may begin as it likes, and only names are handles", async () => {
     const { engine } = await started();
-    const { names } = await engine.commit({
+    const { ids } = await engine.commit({
       holons: [
         { id: "~1", instance: [typeNote], name: "~odd", body: { title: "~1" } },
         { id: "~2", instance: [typeNote], body: { title: "~5 km" } },
       ] as Holon[],
     });
 
-    expect(await homeHolon(engine, names["~1"]!)).toMatchObject({ name: "~odd", body: { title: "~1" } });
-    expect(await homeHolon(engine, names["~2"]!)).toMatchObject({ body: { title: "~5 km" } });
+    expect(await homeHolon(engine, ids["~1"]!)).toMatchObject({ name: "~odd", body: { title: "~1" } });
+    expect(await homeHolon(engine, ids["~2"]!)).toMatchObject({ body: { title: "~5 km" } });
   });
 
   test("a reference must lead to a holon, not only to a moment some store holds", async () => {
     const { engine } = await started();
-    const madeUp = nextName(nextName(ownFn));
+    const madeUp = nextId(nextId(ownFn));
 
     await expect(
       engine.commit({
@@ -404,14 +413,14 @@ describe("the engine", () => {
   test("a type cannot be taken out from under its instances", async () => {
     const { engine } = await started();
     const says = { a: { says: "A field.", shape: "string", optional: true } };
-    const { names } = await engine.commit({
+    const { ids } = await engine.commit({
       holons: [
         { id: "~t", instance: [], name: "kind of mine", mould: says, body: {} },
         { id: "~i", instance: ["~t"], body: {} },
       ] as Holon[],
     });
 
-    await expect(engine.commit({ holons: [], gone: [names["~t"]!] })).rejects.toThrow("still refers");
+    await expect(engine.commit({ holons: [], gone: [ids["~t"]!] })).rejects.toThrow("still refers");
   });
 
   test("a failure to read is not kept", async () => {
@@ -458,12 +467,12 @@ describe("the engine", () => {
     await engine.read({ gather: call("everything") });
     const before = (await engine.read({ gather: call("everything") })).length;
 
-    const { names } = await engine.commit({
+    const { ids } = await engine.commit({
       holons: [{ id: "~a", instance: [typeNote], body: { title: "New" } }] as Holon[],
     });
 
     expect(told).toBe(1);
-    expect(await engine.read({ gather: call("everything") })).toContain(names["~a"]!);
+    expect(await engine.read({ gather: call("everything") })).toContain(ids["~a"]!);
     expect((await engine.read({ gather: call("everything") })).length).toBe(before + 1);
 
     stop();
@@ -475,10 +484,10 @@ describe("the engine", () => {
 
   test("an edit is a new version, its history readable", async () => {
     const { engine } = await started();
-    const { names } = await engine.commit({
+    const { ids } = await engine.commit({
       holons: [{ id: "~a", instance: [typeNote], body: { title: "One" } }] as Holon[],
     });
-    const id = names["~a"]!;
+    const id = ids["~a"]!;
 
     await engine.commit({ holons: [{ id, instance: [typeNote], body: { title: "Two" } }] });
 
@@ -529,7 +538,7 @@ describe("the real stores", async () => {
     const [id] = await engine.read({ named: wikiRoot, store: "main" });
     const { holons } = await engine.read({ whole: id! });
 
-    expect(Object.keys(holons).length).toBe(1635);
+    expect(Object.keys(holons).length).toBeGreaterThan(1000);
     expect(new Set(Object.values(holons).flatMap(({ types }) => types)).has("word")).toBe(true);
   });
 

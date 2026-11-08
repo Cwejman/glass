@@ -3,17 +3,17 @@ import type { Expression } from "../engine/expression.ts";
 import { addressOf, placeAt, readable, said, samePlace, type Titles } from "./address.ts";
 import { parse, print } from "./syntax.ts";
 
-const name = (end: string) => `1M6YBY3G00${end.padStart(5, "0")}`;
+const id = (end: string) => `1M6YBY3G00${end.padStart(5, "0")}`;
 
-const group = name("1");
-const not = name("2");
-const children = name("3");
-const everything = name("4");
-const type = name("5");
-const or = name("6");
-const text = name("7");
-const brief = name("A");
-const note = name("B");
+const group = id("1");
+const not = id("2");
+const children = id("3");
+const everything = id("4");
+const type = id("5");
+const or = id("6");
+const text = id("7");
+const brief = id("A");
+const note = id("B");
 
 const titles = new Map([
   [group, "Group by"],
@@ -44,7 +44,7 @@ describe("the syntax", () => {
     expect(parse(text, byTitle)).toEqual(roots);
   });
 
-  test("a holon is said by its name, an argument by its place, words after a colon", () => {
+  test("a holon is said by its id, an argument by its place, words after a colon", () => {
     const typed = { call: { $ref: type }, with: [{ $ref: brief }] };
 
     expect(print(typed, titles)).toBe(`Type(@${brief})`);
@@ -60,7 +60,7 @@ describe("the syntax", () => {
     expect(parse(said, byTitle)).toEqual(search);
   });
 
-  test("a function whose title is shared is said by its name", () => {
+  test("a function whose title is shared is said by its id", () => {
     const shared = new Map([...titles, [note, "Type"]]);
     const call = { call: { $ref: note }, with: [{ $ref: brief }] };
     const said = print(call, shared);
@@ -74,7 +74,7 @@ describe("the syntax", () => {
     expect(() => parse("Nothing", byTitle)).toThrow("no function Nothing");
     expect(() => parse("Type(", byTitle)).toThrow();
     expect(() => parse("Everything Everything(", byTitle)).toThrow();
-    expect(() => parse("@short", byTitle)).toThrow("a holon's name");
+    expect(() => parse("@short", byTitle)).toThrow("a holon's id");
     expect(() => parse("Everything,", byTitle)).toThrow("not part of it");
     expect(() => parse("", byTitle)).toThrow("a function, a holon or an argument");
   });

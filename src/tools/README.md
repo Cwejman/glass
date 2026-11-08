@@ -12,6 +12,7 @@ The store is blocks and a log, and these read from it and add to it. `src/store/
   `bun src/tools/read.ts <name | id | wiki path> [depth]`. A name may be given by its start; one that several holons carry lists them, each with its id.
 - `prose.ts`: text into holons: a paragraph, its sentences, its words and their lexemes. `append.ts` and `session.ts` write through it.
 - `session.ts`: adds a session kept in brief, as one commit, from a file of its utterances and paths.
+- `rewrite.ts`: rewrites briefs from a patch file, as one commit: each flow said anew or kept by place, what it stops holding taken out of the field with its versions kept, and the stale marks it resolves. Ids stay, so links still lead there.
 - `append.ts`: adds one utterance of the author's to the session as one commit. New words bring new lexemes; paths are added or edited from an optional patch file.
   `bun src/tools/append.ts <utterance.txt> <typed|spoken> [paths.json]`
   In the text, `{typed|meant}` marks a correction, and `_` inside the braces stands for a space.

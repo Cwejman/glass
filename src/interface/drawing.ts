@@ -10,7 +10,7 @@
 import type { Holon } from "../store/store.ts";
 import type { Expression } from "../engine/expression.ts";
 import { bodyProblem, type Mould } from "../engine/moulds.ts";
-import { askedOf, formOf, namesIn, type HolonRead, type Read } from "../engine/reads.ts";
+import { askedOf, formOf, idsIn, type HolonRead, type Read } from "../engine/reads.ts";
 import { references } from "../engine/references.ts";
 import type { Place } from "./address.ts";
 import type {
@@ -198,7 +198,7 @@ export function drawing(
     // it was handed, what that names, and what its own declared reads give back.
     function spaceFor(current: () => boolean, call: Call, component: HolonRead, handed: string[]): Space {
       const declared = new Set((component.body.reads ?? []) as string[]);
-      const reached = new Set([...handed, ...namesIn(call.offered), ...namesIn(call.settings)]);
+      const reached = new Set([...handed, ...idsIn(call.offered), ...idsIn(call.settings)]);
 
       const refuse = (what: string): never => {
         throw new Error(`${component.name} ${what}`);
@@ -236,7 +236,7 @@ export function drawing(
         else subscription.close();
 
         // Only a declared read reaches further.
-        if (isDeclared) namesIn(subscription.value).forEach((id) => reached.add(id));
+        if (isDeclared) idsIn(subscription.value).forEach((id) => reached.add(id));
 
         return subscription.value;
       }) as Space["read"];
@@ -250,8 +250,8 @@ export function drawing(
         const { offer, settings, kind, component: named } = copied(opening);
 
         if (named) within([named], "calls");
-        within(namesIn(offer), "offers");
-        within(namesIn(settings), "gives");
+        within(idsIn(offer), "offers");
+        within(idsIn(settings), "gives");
 
         return {
           reads,
@@ -279,7 +279,7 @@ export function drawing(
             return openSlot(opened({ list: asked }, opening));
           }
 
-          within(namesIn(asked.gather), "opens a way of looking at");
+          within(idsIn(asked.gather), "opens a way of looking at");
           return openSlot(opened({ gather: asked.gather }, opening));
         },
 
@@ -314,7 +314,7 @@ export function drawing(
 
       const handed = holon
         ? [holon.id, ...holon.instance, ...references(holon.body).map(({ id }) => id)]
-        : [...list!, ...("gather" in call.reads ? namesIn(call.reads.gather) : [])];
+        : [...list!, ...("gather" in call.reads ? idsIn(call.reads.gather) : [])];
 
       const given: Given = {
         ...(holon ? { holon } : {}),

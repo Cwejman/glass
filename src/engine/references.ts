@@ -4,14 +4,14 @@
 // A reference holds, making the other a part, or only points. It says so itself
 // with $holds, or else its key's place in the type's mould says.
 
-import { isName, type Holon } from "../store/store.ts";
+import { isId, type Holon } from "../store/store.ts";
 
 export type Reference = { id: string; key: string; holds: boolean };
 
 type Holdings = Readonly<Record<string, { holds?: boolean } | undefined>>;
 
 export const isRef = (value: unknown): value is { $ref: string; $holds?: boolean } =>
-  typeof value === "object" && value !== null && isName((value as { $ref?: unknown }).$ref);
+  typeof value === "object" && value !== null && isId((value as { $ref?: unknown }).$ref);
 
 // Every reference in a body, in the order the body holds them, under its top key.
 export function references(body: Holon["body"], mould: Holdings = {}): Reference[] {

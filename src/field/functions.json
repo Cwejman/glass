@@ -41,6 +41,12 @@
     "name": "Text"
   },
   {
+    "native": "named",
+    "name": "Named",
+    "says": "What is called by each of the words given.",
+    "takes": ["words"]
+  },
+  {
     "native": "store",
     "says": "What the store given holds.",
     "takes": ["store"],

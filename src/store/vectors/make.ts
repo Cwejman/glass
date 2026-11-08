@@ -83,7 +83,7 @@ const vectors = {
   },
   history: { "0": { [T]: "type", [word]: "one", [gone]: "two" }, "1": steps[1]!.field },
   versions: { id: word, texts: ["one, edited", "one"] },
-  names: {
+  ids: {
     next: [
       ["1M6XGF6G000000V", "1M6XGF6G000000W"],
       ["1M6XGF6G00000ZZ", "1M6XGF6G0000100"],

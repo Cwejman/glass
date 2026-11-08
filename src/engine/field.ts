@@ -62,7 +62,7 @@ export function fieldOf(stores: readonly Attached[], before?: Field): Field {
   return { stores, everything, storeHolons };
 }
 
-// The store that holds a name, known without fetching anything.
+// The store that holds an id, known without fetching anything.
 const standing = (field: Field, id: string) => field.stores.find(({ store }) => store.mayHold(id));
 
 async function find(field: Field, id: string) {
