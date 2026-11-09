@@ -8,6 +8,8 @@
 //   { "new": "its name", "under": "the whole's id", "flow": [ ... ] }
 // and the stale marks it resolves:
 //   { "resolves": ["id of a brief marked stale"] }
+// and what the commit says of itself:
+//   { "says": "..." }
 //
 // A flow lists, in order: a string, a new paragraph in marked prose; { "keep": i }, what
 // stood at place i of the old flow; { "keep": i, "change": [[from, to]] }, that paragraph
@@ -28,7 +30,8 @@ type FlowItem =
 type Edit =
   | { id: string; name?: string; flow?: FlowItem[] }
   | { new: string; under: string; flow: FlowItem[] }
-  | { resolves: string[] };
+  | { resolves: string[] }
+  | { says: string };
 
 const held = (id: string) => ({ $ref: id, $holds: true });
 
@@ -80,7 +83,8 @@ function flowOf(before: { $ref: string }[], flow: FlowItem[], name: string) {
     for (const [from, to] of item.change) {
       if (!text.includes(from))
         throw new Error(`${name}, place ${item.keep}: no “${from.slice(0, 60)}” in “${text.slice(0, 120)}”`);
-      text = text.replace(from, to);
+      // A function, for a string here would read a `$ in the text as a pattern.
+      text = text.replace(from, () => to);
     }
 
     return held(marked.paragraph(text));
@@ -88,6 +92,8 @@ function flowOf(before: { $ref: string }[], flow: FlowItem[], name: string) {
 }
 
 for (const edit of patch) {
+  if ("says" in edit) continue;
+
   if ("resolves" in edit) {
     const measures = holons.filter(
       (holon) => byId.get(holon.instance[0]!)?.name === "measure" && holon.body.as === "stale",
@@ -189,7 +195,7 @@ const born = writer.born.sort((a, b) => (a.id < b.id ? -1 : 1));
 const { blocks, bytes } = await commit(store, {
   holons: [...changed, ...born],
   gone,
-  says: "The wiki brought to what stands: its briefs on the store, the client and the interface rewritten, their stale marks resolved",
+  says: patch.flatMap((edit) => ("says" in edit ? [edit.says] : [])).join(" ") || "Briefs rewritten",
 });
 
 console.log({ changed: changed.size, born: born.length, gone: gone.length, blocks, bytes });

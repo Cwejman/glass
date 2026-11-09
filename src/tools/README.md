@@ -2,7 +2,7 @@
 
 The store is blocks and a log, and these read from it and add to it. `src/store/vectors/README.md` is the format. Run them from the repository root.
 
-- `probe.ts`: charts the field before any of it is read, so a session or the author can choose what to digest. It starts at the roots, the holons nothing holds, and goes down by holdings only, as declared on the reference or by the mould; everything else is a pointing, charted across. A route is a path from the roots, `4.1.7`, and may end in a run of siblings, `9.1.33-40`; it is counted within its scope, so it is read with the scope it was charted in. The scope is stated by store: `--only main` or `--only main`. Measures are in tokens, estimated from words and from prose kept as strings, each holon counted once.
+- `probe.ts`: charts the field before any of it is read, so a session or the author can choose what to digest. It starts at the roots, the holons nothing holds, and goes down by holdings only, as declared on the reference or by the mould; everything else is a pointing, charted across. A route is a path from the roots, `4.1.7`, and may end in a run of siblings, `9.1.33-40`; it is counted within its scope, so it is read with the scope it was charted in. The scope is stated by store: `--only main` or `--only glass`. Measures are in tokens, estimated from words and from prose kept as strings, each holon counted once.
   `bun src/tools/probe.ts --only main` the roots, measured
   `bun src/tools/probe.ts --only main --digest 4000` the field cut into pieces to read, each a route
   `bun src/tools/probe.ts 9.1.33-40 --only main --text` one piece, as prose
