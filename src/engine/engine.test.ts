@@ -198,6 +198,18 @@ describe("moulds", () => {
     expect(bodyProblem({ title: "x", items: ["no"] }, [mould])).toContain("items[0] is not ref");
   });
 
+  test("a list may hold one item twice, a set may not", () => {
+    const both: Mould = {
+      order: { says: "In order.", shape: { list: "ref" } },
+      among: { says: "Each once.", shape: { set: "ref" } },
+    };
+    const twice = [{ $ref: note }, { $ref: note }];
+
+    expect(bodyProblem({ order: twice, among: [{ $ref: note }] }, [both])).toBeUndefined();
+    expect(bodyProblem({ order: [], among: twice }, [both])).toContain("among[1] is already in the set");
+    expect(bodyProblem({ order: [], among: "no" }, [both])).toContain("among is not a set");
+  });
+
   test("a mould says each field in prose, with a shape there is", () => {
     expect(mouldProblem(mould)).toBeUndefined();
     expect(mouldProblem({ a: { shape: "string" } })).toContain("says nothing");

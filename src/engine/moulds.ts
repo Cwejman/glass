@@ -5,6 +5,7 @@
 // These are pure judgements: what is wrong with a mould, and with a body held
 // against the moulds of its types. They answer in words, or with nothing.
 
+import { canonical } from "../store/canonical.ts";
 import { expressionProblem } from "./expression.ts";
 import { isRef } from "./references.ts";
 
@@ -83,13 +84,24 @@ export function mouldProblem(mould: unknown): string | undefined {
 function valueProblem(value: unknown, shape: Shape, at: string): string | undefined {
   if (typeof shape === "string") return fits[shape]!(value) ? undefined : `${at} is not ${shape}`;
 
+  // A list and a set are both written as an array. A list holds its items in order, and
+  // may hold one twice; a set holds each once, and its order says nothing.
   if ("list" in shape || "set" in shape) {
-    const inner = ("list" in shape ? shape.list : shape.set) as Shape;
-    if (!Array.isArray(value)) return `${at} is not a list`;
+    const isSet = "set" in shape;
+    const inner = (isSet ? shape.set : shape.list) as Shape;
+    if (!Array.isArray(value)) return `${at} is not a ${isSet ? "set" : "list"}`;
+
+    const seen = new Set<string>();
 
     for (const [i, item] of value.entries()) {
       const problem = valueProblem(item, inner, `${at}[${i}]`);
       if (problem) return problem;
+
+      if (isSet) {
+        const text = canonical(item);
+        if (seen.has(text)) return `${at}[${i}] is already in the set`;
+        seen.add(text);
+      }
     }
 
     return undefined;
