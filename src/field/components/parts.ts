@@ -1,18 +1,19 @@
 // An expression, taken apart into what it means: the parts it narrows by, each a
 // function and what it is given, said as a field and a value, as Type: Brief; and the
-// axis it is grouped by, if it is grouped. Put together again, the parts stand side by
-// side under And, grouped by Group by, and no part at all is Everything. The words are
-// the functions' own names, so a function of one's own reads as glass's do.
+// axis it is grouped by, if it is; and whether it is looked at Flat. Put together again,
+// the parts stand side by side under And, within Group by or Flat, and no part at all is
+// Everything. The words are the functions' own names, so a function of one's own reads
+// as glass's do.
 
-import type { Argument, By, Expression } from "../../engine/expression.ts";
-import { ownStores, type Space } from "../../interface/component.ts";
+import type { Argument, Axis, Expression } from "../../engine/expression.ts";
+import type { Offer, Space } from "../../interface/component.ts";
 
 // A function as a part reads it.
-export type Called = { id: string; title: string; takes: string[]; native?: string };
+export type Called = { id: string; title: string; takes: string[]; native?: string; type?: string };
 
 export type Functions = Map<string, Called>;
 
-export type Parts = { parts: Expression[]; by?: By };
+export type Parts = { parts: Expression[]; by?: Axis; flat?: boolean };
 
 export const native = (functions: Functions, name: string) =>
   [...functions.values()].find((fn) => fn.native === name)!;
@@ -43,8 +44,9 @@ export function holonsOf(functions: Functions, set: Argument | undefined): { $re
 
 export function partsOf(functions: Functions, gathers: Expression): Parts {
   const grouped = calls(functions, gathers, "group");
-  const by = grouped ? (gathers.with![1] as By) : undefined;
-  const inner = grouped ? (gathers.with![0] as Expression) : gathers;
+  const flat = calls(functions, gathers, "flat");
+  const by = grouped ? (gathers.with![1] as Axis) : undefined;
+  const inner = grouped || flat ? (gathers.with![0] as Expression) : gathers;
 
   const parts = calls(functions, inner, "and")
     ? (inner.with as Expression[])
@@ -52,10 +54,10 @@ export function partsOf(functions: Functions, gathers: Expression): Parts {
       ? []
       : [inner];
 
-  return { parts, ...(by ? { by } : {}) };
+  return { parts, ...(by ? { by } : {}), ...(flat ? { flat } : {}) };
 }
 
-export function together(functions: Functions, { parts, by }: Parts): Expression {
+export function together(functions: Functions, { parts, by, flat }: Parts): Expression {
   const whole =
     parts.length === 0
       ? call(native(functions, "everything"))
@@ -63,7 +65,9 @@ export function together(functions: Functions, { parts, by }: Parts): Expression
         ? parts[0]!
         : call(native(functions, "and"), ...parts);
 
-  return by ? call(native(functions, "group"), whole, by) : whole;
+  if (by) return call(native(functions, "group"), whole, by);
+
+  return flat ? call(native(functions, "flat"), whole) : whole;
 }
 
 export type Said = { field: string; value: string; native?: string };
@@ -103,24 +107,36 @@ const inTitle = ({ field, value, native }: Said) =>
 
 // An expression, said by its parts, as a title for it.
 export async function titleOf(functions: Functions, gathers: Expression, titleOfHolon: TitleOf) {
-  const { parts, by } = partsOf(functions, gathers);
+  const { parts, by, flat } = partsOf(functions, gathers);
   const each = await Promise.all(parts.map((part) => partSaid(functions, part, titleOfHolon)));
   const title = each.length ? each.map(inTitle).join(", ") : "Everything";
-  const grouped = by === "auto" ? "grouped automatically" : by ? `grouped by ${by}` : "";
 
-  return [title, grouped].filter(Boolean).join(", ");
+  return [title, by ? `grouped by ${by}` : "", flat ? "flat" : ""].filter(Boolean).join(", ");
 }
 
-// The functions that can be called: glass's own, and the reader's.
-export async function functionsIn(space: Space): Promise<Functions> {
-  const [type] = await space.read({ named: "function", store: "glass" });
+type Ref = { $ref: string };
+
+// What a whole offered holds, read by reference: the whole, then each it holds.
+export async function heldBy(space: Pick<Space, "holon">, whole: unknown) {
+  const held = whole ? await space.holon((whole as Ref).$ref) : null;
+  const ids = ((held?.body.holds ?? []) as Ref[]).map(({ $ref }) => $ref);
+
+  return (await Promise.all(ids.map((id) => space.holon(id)))).filter((holon) => holon !== null);
+}
+
+// The functions that can be called: those the entry offers, and the reader's own in the
+// home, of the same type.
+export async function functionsIn(space: Space, offered: Offer): Promise<Functions> {
+  const offeredHere = await heldBy(space, offered.functions);
+  const type = offeredHere[0]?.instance[0];
   if (!type) return new Map();
 
-  const ids = (await Promise.all(ownStores.map((store) => space.read({ instances: type, store })))).flat();
-  const found = await Promise.all(ids.map((id) => space.holon(id)));
+  const own = await Promise.all(
+    (await space.read({ instances: type, store: "home" })).map((id) => space.holon(id)),
+  );
 
   return new Map(
-    found
+    [...offeredHere, ...own]
       .filter((holon) => holon !== null)
       .map(({ id, name, body }) => [
         id,
@@ -128,6 +144,7 @@ export async function functionsIn(space: Space): Promise<Functions> {
           id,
           title: name ?? id,
           takes: (body.takes as string[] | undefined) ?? [],
+          type,
           ...(typeof body.native === "string" ? { native: body.native } : {}),
         },
       ]),

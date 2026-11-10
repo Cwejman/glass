@@ -14,7 +14,7 @@ export const declared = {
   takes: [],
   kinds: ["full", "face"],
   argument: "list",
-  reads: ["groups", "gather"],
+  reads: ["groups", "gather", "level"],
   settings: {
     cards: {
       says: "Whether its items stand as cards side by side, where there is room, rather than one under another.",
@@ -24,6 +24,10 @@ export const declared = {
   },
 };
 
+// How many places a list draws: what stands beyond them is counted, for a page
+// cannot hold every holon of a field, and no one reads them flat.
+const drawnAtOnce = 200;
+
 export default async function draw(
   { list, gathers, kind, settings }: Given<never, { cards?: boolean }>,
   space: Space,
@@ -32,22 +36,33 @@ export default async function draw(
   // opens layer after layer inside itself.
   const grouped = gathers && kind === "full" ? await space.read({ groups: gathers }) : null;
 
-  const places: Where[] = grouped?.groups.length
-    ? [
-        ...(await Promise.all(
-          grouped.groups.map(async ({ count, gathers }) =>
-            count === 1 ? (await space.read({ gather: gathers }))[0]! : { gather: gathers },
-          ),
-        )),
-        ...grouped.rest,
-      ]
-    : (list ?? []);
+  const collections = grouped?.groups.slice(0, drawnAtOnce) ?? [];
+  const holons = grouped
+    ? grouped.rest
+    : gathers && kind === "full"
+      ? await space.read({ level: gathers })
+      : (list ?? []);
+  const room = drawnAtOnce - collections.length;
+
+  const places: Where[] = [
+    ...(await Promise.all(
+      collections.map(async ({ count, gathers }) =>
+        count === 1 ? (await space.read({ gather: gathers }))[0]! : { gather: gathers },
+      ),
+    )),
+    ...holons.slice(0, room),
+  ];
+
+  const total = (grouped?.groups.length ?? 0) + holons.length;
 
   return (
     <ol class={settings.cards ? "list cards" : "list"}>
       {places.map((place) => (
         <li>{space.open(place, { offer: { kind: "face" } })}</li>
       ))}
+      {total > places.length && (
+        <li class="meta">{total - places.length} more not drawn. Narrow what is looked at to reach them.</li>
+      )}
     </ol>
   );
 }

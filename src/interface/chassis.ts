@@ -1,5 +1,6 @@
 // The chassis is the page itself, and decides nothing. It starts the engine on its
-// own thread, attaches the stores the page names, and hands the interface its root.
+// own thread, attaches the stores the page names, and hands the interface the entry the
+// page names, saying what it attached. The entry reaches everything else by reference.
 // Which components draw, and what, is all field data.
 
 import { connect } from "./connection.ts";
@@ -14,12 +15,17 @@ const stores = (document.documentElement.dataset.stores ?? "").split(/\s+/).filt
 const added = new URL(location.href).searchParams.getAll("attach");
 
 try {
-  for (const store of [...stores, ...added]) {
-    const [key, url] = store.split("=");
-    await engine.attach(key!, url!);
-  }
+  const attached = [...stores, ...added].map((store) => {
+    const [key, from] = store.split("=");
+    return { key: key!, from: from! };
+  });
 
-  await mount(engine, page);
+  for (const { key, from } of attached) await engine.attach(key, from);
+
+  const entry = document.documentElement.dataset.entry;
+  if (!entry) throw new Error("the page names no entry to boot into");
+
+  await mount(engine, page, { entry, attached });
 } catch (error) {
   page.replaceChildren(
     note(`Glass could not start: ${error instanceof Error ? error.message : String(error)}`),

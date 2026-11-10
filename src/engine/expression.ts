@@ -9,8 +9,10 @@
 // A function is a holon. A few are native, the table below. Any other gives an
 // expression over what it takes, so it stands beside them and reads as they do.
 //
-// A grouping gives what it gathers in collections besides, one for each value
-// along an axis, each itself an expression, so it opens as a place of its own.
+// Worked out, a set is flat, so that sets compose. Looked at, it is seen at its level:
+// what nothing in it holds, each opened to go down. Flat is the deliberate way to see
+// all of it. A grouping gives it in collections instead, one for each value along an
+// axis chosen, each itself an expression, so it opens as a place of its own.
 
 import { isId, type Holon } from "../store/store.ts";
 import { mouldOf, type Mould } from "./moulds.ts";
@@ -21,7 +23,6 @@ export type Argument = Expression | string;
 
 export const axes = ["type", "parent", "store"] as const;
 export type Axis = (typeof axes)[number];
-export type By = Axis | "auto";
 
 export type Takes = "set" | "sets" | "words" | "store" | "axis";
 
@@ -175,6 +176,8 @@ const natives: Record<string, Native> = {
   },
 
   group: (_all, [grouped], set) => set(grouped!),
+
+  flat: (_all, [given], set) => set(given!),
 };
 
 // ---- Evaluating
@@ -211,8 +214,7 @@ function argumentsProblem(takes: Takes[], given: Argument[]) {
 
     if (takesSet === (typeof argument === "string"))
       return `takes ${takesSet ? "a set" : `a ${kind}`} as its argument ${i + 1}`;
-    if (kind === "axis" && argument !== "auto" && !axes.includes(argument as Axis))
-      return `groups by ${[...axes, "auto"].join(", ")}`;
+    if (kind === "axis" && !axes.includes(argument as Axis)) return `groups by ${axes.join(", ")}`;
   }
 
   return undefined;
@@ -323,69 +325,35 @@ function splitBy(all: Everything, gathered: string[], axis: Axis) {
   return { values, rest: gathered.filter((id) => !valued.has(id)) };
 }
 
-// How well an axis splits a set: into a few groups, three to a dozen, covering
-// most of it, the more evenly the better. Evenness counts for half, since a field
-// is rarely even.
-function strength({ values, rest }: ReturnType<typeof splitBy>, total: number) {
-  const counts = [...values.values()].map((members) => members.length);
-  if (counts.length < 2 || total === 0) return 0;
+const nativeCall = (all: Everything, name: string, ...given: Argument[]): Expression => ({
+  call: { $ref: nativeIds(all).get(name)! },
+  with: given,
+});
 
-  const sum = counts.reduce((a, b) => a + b, 0);
-  const entropy = -counts.reduce((h, count) => h + (count / sum) * Math.log2(count / sum), 0);
-  const evenness = entropy / Math.log2(counts.length);
-  const coverage = (total - rest.length) / total;
-  const few = counts.length === 2 ? 0.6 : Math.min(1, (12 / counts.length) ** 2);
-
-  return coverage * few * (0.5 + 0.5 * evenness);
-}
-
-// A collection: what the grouping gathers narrowed to one value, grouped again.
+// A collection: what the grouping gathers narrowed to one value.
 function narrowed(all: Everything, inner: Expression, by: Axis, value: string): Expression {
-  const native = nativeIds(all);
-
-  const call = (name: string, ...given: Argument[]): Expression => ({
-    call: { $ref: native.get(name)! },
-    with: given,
-  });
   const calls = (expression: Expression, name: string) =>
-    "call" in expression && expression.call.$ref === native.get(name);
+    "call" in expression && expression.call.$ref === nativeIds(all).get(name);
 
   const narrow =
     by === "type"
-      ? call("type", { $ref: value })
+      ? nativeCall(all, "type", { $ref: value })
       : by === "parent"
-        ? call("children", { $ref: value })
-        : call("store", value);
+        ? nativeCall(all, "children", { $ref: value })
+        : nativeCall(all, "store", value);
 
-  const both = calls(inner, "everything")
-    ? narrow
-    : call("and", ...(calls(inner, "and") ? (inner as { with: Argument[] }).with : [inner]), narrow);
+  if (calls(inner, "everything")) return narrow;
 
-  return call("group", both, "auto");
+  return nativeCall(
+    all,
+    "and",
+    ...(calls(inner, "and") ? (inner as { with: Argument[] }).with : [inner]),
+    narrow,
+  );
 }
 
-// A grouping's collections, the larger first, and what has no value on its axis.
-// What is not a grouping has none, and a function of one's own is looked through.
-export function groups(all: Everything, expression: Expression, nested = 0): Grouped | null {
-  if (!("call" in expression) || nested >= nesting) return null;
-
-  const { fn, given } = called(all, expression);
-
-  if (fn.gives) return groups(all, substituted(fn.gives, given), nested + 1);
-  if (fn.native !== "group") return null;
-
-  const [inner, asked] = given as [Expression, By];
-  const gathered = gather(all, inner);
-  const splits = new Map(
-    (asked === "auto" ? axes : [asked]).map((axis) => [axis, splitBy(all, gathered, axis)]),
-  );
-  const strong = (axis: Axis) => strength(splits.get(axis)!, gathered.length);
-  const by =
-    asked === "auto" ? axes.reduce((best, axis) => (strong(axis) > strong(best) ? axis : best)) : asked;
-  const { values, rest } = splits.get(by)!;
-
-  // Where nothing splits it, what is gathered is given as it is.
-  if (asked === "auto" && values.size < 2) return { by, groups: [], rest: gathered };
+function collected(all: Everything, inner: Expression, by: Axis): Grouped {
+  const { values, rest } = splitBy(all, gather(all, inner), by);
 
   return {
     by,
@@ -398,6 +366,47 @@ export function groups(all: Everything, expression: Expression, nested = 0): Gro
       })),
     rest,
   };
+}
+
+// A set's collections, the larger first, and what has no value on its axis. What is
+// not a grouping has none, and a function of one's own is looked through.
+export function groups(all: Everything, expression: Expression, nested = 0): Grouped | null {
+  if (!("call" in expression) || nested >= nesting) return null;
+
+  const { fn, given } = called(all, expression);
+
+  if (fn.gives) return groups(all, substituted(fn.gives, given), nested + 1);
+
+  if (fn.native !== "group") return null;
+
+  const [inner, by] = given as [Expression, Axis];
+
+  return collected(all, inner, by);
+}
+
+// ---- Levels
+
+// What nothing in the set holds. A set that holds itself round has no top, and is
+// given as it is.
+function topOf(all: Everything, gathered: string[]): string[] {
+  const members = new Set(gathered);
+  const tops = gathered.filter(
+    (id) => !(all.holders.get(id) ?? []).some(({ from, holds }) => holds && members.has(from)),
+  );
+
+  return tops.length ? tops : gathered;
+}
+
+// What an expression shows when looked at: its top, or, where it says Flat, all of it.
+export function level(all: Everything, expression: Expression, nested = 0): string[] {
+  if ("call" in expression && nested < nesting) {
+    const { fn, given } = called(all, expression);
+
+    if (fn.gives) return level(all, substituted(fn.gives, given), nested + 1);
+    if (fn.native === "flat") return gather(all, expression);
+  }
+
+  return topOf(all, gather(all, expression));
 }
 
 // ---- Shape

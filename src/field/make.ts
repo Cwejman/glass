@@ -20,7 +20,11 @@ const mint = store.minter();
 // A holon is known by what it is and what it is called: a function and a component
 // may share a title, as Type does.
 const whatItIs = (holon: Holon) =>
-  holon.mould ? "type" : before.find(({ id }) => id === holon.instance[0])?.name;
+  holon.mould
+    ? "type"
+    : holon.instance.length
+      ? before.find(({ id }) => id === holon.instance[0])?.name
+      : "whole";
 
 const nameOf = new Map(before.map((holon) => [`${whatItIs(holon)}: ${holon.name}`, holon.id]));
 
@@ -41,7 +45,7 @@ const made: Holon[] = [];
 function make(type: string, name: string, body: Holon["body"], mould?: Holon["mould"]) {
   made.push({
     id: named(type, name),
-    instance: type === "type" ? [] : [named("type", type)],
+    instance: type === "type" || type === "whole" ? [] : [named("type", type)],
     name,
     ...(mould ? { mould } : {}),
     body,
@@ -99,13 +103,42 @@ make("component", readerName, {
   ),
 });
 
-const { name: entryName, component, argument, offer } = json("entry.json");
+// The mount the client boots into names no content: it looks at what is attached,
+// the stores the field is. A site that wants to open on its own words ships its own entry.
+const { name: entryName, component, gathers, offer } = json("entry.json");
 
 make("mount", entryName, {
   component: refTo(component),
-  argument: argument.map(($ref: string) => ({ $ref })),
-  offer: Object.fromEntries(Object.entries(offer).map(([key, value]) => [key, refTo(value as string)])),
+  gathers: {
+    call: { $ref: named("function", gathers.function) },
+    with: gathers.types.map((type: string) => ({ $ref: named("type", type) })),
+  },
+  // What the entry offers is what everything beneath it looks for: the search, and the
+  // functions, components, types and material glass ships, each by reference.
+  offer: Object.fromEntries(
+    Object.entries(offer as Record<string, [string, string]>).map(([key, [type, name]]) => [
+      key,
+      { $ref: named(type, name) },
+    ]),
+  ),
 });
+
+// Holons of a kind stand together in a whole made for it, so the store's top is few,
+// and an address can go through them. Each reference says for itself that it holds.
+for (const [name, kind] of [
+  ["types", "type"],
+  ["functions", "function"],
+  ["kinds", "kind"],
+  ["components", "component"],
+] as const) {
+  const holds = made
+    .filter(({ mould, instance }) =>
+      kind === "type" ? mould !== undefined : instance[0] === nameOf.get(`type: ${kind}`),
+    )
+    .map(({ id }) => ({ $ref: id, $holds: true }));
+
+  make("whole", name, { holds });
+}
 
 const beforeById = new Map(before.map((holon) => [holon.id, canonical(holon)]));
 const changed = made.filter((holon) => beforeById.get(holon.id) !== canonical(holon));

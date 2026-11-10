@@ -31,7 +31,7 @@ What the store holds:
 - measures on what was said, sessions and passages graded with a note, none of them a conclusion: read them to reason about what to read. Briefs the work has overtaken are measured too, as stale;
 - threads raised from what was said that no brief owns yet.
 
-Almost nothing stands loose. The main store has nine roots: the lexicon, what was said, the wiki, its markdown forms, the threads, the measures, a whole for statistics and functions, one for the sessions, and the author's voice, which speaks across them. A session holds its own, and a source what stands upon it.
+Almost nothing stands loose. The main store has ten roots: the lexicon, what was said, the wiki, its markdown forms, the threads, the measures, a whole for statistics and functions, one for the sessions, one for the types, and the author's voice, which speaks across them. A session holds its own, and a source what stands upon it.
 
 Its first 81 commits are its birth, a slice each in the order things came. The conversion to blocks came after 117; each old commit is still in the log, with its old hash, what it held and what it took out, and the field at any of them can be drawn again.
 
@@ -73,6 +73,7 @@ The text is drawn from the holons each time; none is stored. A word is `before +
 
 - **The store is blocks.** The packs before them, and the JSON before those, are in git's history only. The birth from markdown has ended.
 - **The code is brought to the store.** One implementation of the format, in `src/store/`, serves the tools, the browser and the home. The engine reads holons by their moulds, holding apart from pointing, and fetches only what a read needs; the interface reads prose from its holons. Not yet built: running programs, a reader's own branches of a pulled store, and a home that says what is attached. The page says what is attached for now.
+- **What one looks at is a level of the holarchy.** A way of looking shows what nothing in it holds, `Flat` shows all of it, and `Group by` takes an axis chosen. The root gives what is attached, kept in the home; the page names the entry, and everything else is reached from what it offers. The expressions themselves, their natives and their names, are next to be thought through.
 - **The format is settled for now,** with its vectors. The second session's two noted paths, read by `bun src/tools/probe.ts 9.1.21-22 --only main --text`, were tried on 2026-11-08: one hash per commit and addresses by position gave way to a hash per block, and counted names to short unique ones, so a store can be taken away, changed, and brought back. What is left open is at the end of `src/store/vectors/README.md`.
 - **What comes next is here, not in the plan**, whose brief stops at the first mark and is measured stale. Next is a glass for the human, born from this store.
 - **The wiki was brought to what stands on 2026-11-08.** Its stale marks are resolved, its old prose kept in each brief's history. Its plan is a record; what comes next is here.

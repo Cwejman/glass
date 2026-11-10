@@ -59,7 +59,8 @@ for (const s of Object.keys(stores)) {
   }
 }
 const typeOf = (id: string) => all.get(id) ?? types.get(id);
-const tn = (h: any) => (h?.mould || !h?.instance?.length ? "type" : (typeOf(h.instance[0])?.name ?? "?"));
+const tn = (h: any) =>
+  h?.mould ? "type" : h?.instance?.length ? (typeOf(h.instance[0])?.name ?? "?") : "whole";
 
 // ---- compose: holdings down, pointings across
 const down = new Map<string, string[]>(),

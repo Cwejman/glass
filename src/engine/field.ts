@@ -3,7 +3,7 @@
 // a few blocks. Only a question about everything fetches everything, and then once.
 
 import type { Holon, Store } from "../store/store.ts";
-import { everythingOf, gather, groups, type Everything, type Known } from "./expression.ts";
+import { everythingOf, gather, groups, level, type Everything, type Known } from "./expression.ts";
 import { mouldOf, type Mould } from "./moulds.ts";
 import type { Answer, HolonRead, Read, Whole } from "./reads.ts";
 import { partsOf } from "./references.ts";
@@ -96,8 +96,14 @@ async function readHolon(field: Field, id: string) {
 
 // A holon and everything it holds, layer by layer, so a brief drawn by its words is
 // one read, however many holons it is. Holons of the types it is told to stop at are
-// read, and not gone into, so a whole can show what it holds without fetching all of it.
-async function readWhole(field: Field, root: string, stop: string[] = []): Promise<Whole> {
+// read, and not gone into, so a whole can show what it holds without fetching all of it;
+// a depth stops it as many layers down, so one level of the holarchy is one read.
+async function readWhole(
+  field: Field,
+  root: string,
+  stop: string[] = [],
+  depth = Number.POSITIVE_INFINITY,
+): Promise<Whole> {
   const holons: Whole["holons"] = {};
   const moulds = new Map<string, Promise<Holon | null>>();
 
@@ -106,7 +112,7 @@ async function readWhole(field: Field, root: string, stop: string[] = []): Promi
     return moulds.get(type)!;
   };
 
-  for (let layer = [root]; layer.length; ) {
+  for (let layer = [root], down = 0; layer.length && down <= depth; down++) {
     const fresh = [...new Set(layer)].filter((id) => !holons[id]);
     const read = await Promise.all(fresh.map((id) => find(field, id)));
     const next: string[] = [];
@@ -134,7 +140,7 @@ async function readWhole(field: Field, root: string, stop: string[] = []): Promi
 
 async function answer(field: Field, query: Read): Promise<unknown> {
   if ("holon" in query) return readHolon(field, query.holon);
-  if ("whole" in query) return readWhole(field, query.whole, query.stop);
+  if ("whole" in query) return readWhole(field, query.whole, query.stop, query.depth);
 
   if ("log" in query) {
     const attached = field.stores.find(({ key }) => key === query.log);
@@ -159,6 +165,7 @@ async function answer(field: Field, query: Read): Promise<unknown> {
   const all = await field.everything();
 
   if ("gather" in query) return gather(all, query.gather);
+  if ("level" in query) return level(all, query.level);
   if ("groups" in query) return groups(all, query.groups);
 
   return all.holders.get(query.holders) ?? [];

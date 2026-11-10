@@ -15,7 +15,7 @@ export const declared = {
   takes: [],
   kinds: ["face"],
   argument: "expression",
-  reads: ["holon", "named", "instances"],
+  reads: ["holon", "instances"],
   settings: {
     open: {
       says: "Whether it stands open, its name and the holons it holds named beneath it, rather than closed as a card with how many it holds.",
@@ -29,10 +29,16 @@ export const declared = {
 const named = 12;
 
 export default async function draw(given: Given<never, { open?: boolean }>, space: Space) {
-  const functions = await functionsIn(space);
+  const functions = await functionsIn(space, given.offered);
   const last = partsOf(functions, given.gathers!).parts.at(-1);
-  const titled = async (id: string) => (await space.holon(id))?.name ?? "what is no longer in the field";
-  const said = last ? (await partSaid(functions, last, titled)).value : "Everything";
+  const titled = async (id: string) => {
+    const holon = await space.holon(id);
+    return holon ? (holon.name ?? holon.id) : "what is no longer in the field";
+  };
+  const part = last && (await partSaid(functions, last, titled));
+
+  // A function given nothing, as Is a type, has no value to say, so it says itself.
+  const said = part ? part.value || part.field : "Everything";
   const holds = given.list ?? [];
   const count = holds.length === 1 ? "1 holon" : `${holds.length} holons`;
 

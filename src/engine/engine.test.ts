@@ -5,7 +5,7 @@ import { memoryFiles } from "../store/files.ts";
 import { commit, idAt, nextId, openStore, type Holon, type Store } from "../store/store.ts";
 import { folderFiles, storeFolders } from "../tools/stores.ts";
 import { startEngine, type Engine } from "./engine.ts";
-import { gather, groups, type Expression, type Grouped } from "./expression.ts";
+import { gather, groups, level, type Expression, type Grouped } from "./expression.ts";
 import { fieldOf } from "./field.ts";
 import { bodyProblem, mouldProblem, type Mould } from "./moulds.ts";
 import { partsOf, references } from "./references.ts";
@@ -46,6 +46,7 @@ const fn = Object.fromEntries(
     "or",
     "not",
     "group",
+    "flat",
   ].map((native) => [native, mint()]),
 );
 const ownFn = mint();
@@ -64,6 +65,7 @@ const takes: Record<string, string[]> = {
   or: ["set", "sets"],
   not: ["set"],
   group: ["set", "axis"],
+  flat: ["set"],
 };
 
 const pulledHolons: Holon[] = [
@@ -272,6 +274,54 @@ describe("expressions", () => {
     expect(gather(a, notes.gathers)).toEqual([note]);
     expect(groups(a, { $ref: note })).toBe(null);
   });
+
+  test("a set looked at is seen at its level, what nothing in it holds", async () => {
+    const a = await all();
+    const set = call("or", ...[brief, paragraph, wordA, note].map(($ref) => ({ $ref })));
+
+    expect(level(a, set).sort()).toEqual([brief, note].sort());
+    expect(gather(a, set)).toContain(wordA);
+  });
+
+  test("Flat is the deliberate way to see all of a set", async () => {
+    const a = await all();
+    const set = call("or", ...[brief, paragraph, wordA, note].map(($ref) => ({ $ref })));
+
+    expect(level(a, call("flat", set)).sort()).toEqual([brief, paragraph, wordA, note].sort());
+  });
+
+  test("a set with nothing held within it is all its own level", async () => {
+    const a = await all();
+    const words = call("type", { $ref: typeWord });
+
+    expect(level(a, words).sort()).toEqual(gather(a, words).sort());
+  });
+
+  test("a store looked at is seen at its level", async () => {
+    const a = await fieldOf([
+      { key: "pulled", store: await pulledStore() },
+      { key: "other", store: await openStore(memoryFiles()) },
+    ]).everything();
+
+    expect(groups(a, call("everything"))).toBe(null);
+
+    const pulled = call("store", "pulled");
+
+    expect(gather(a, pulled)).toContain(wordA);
+    expect(level(a, pulled)).toContain(brief);
+    expect(level(a, pulled)).not.toContain(wordA);
+  });
+
+  test("a grouping takes an axis chosen; none is chosen for it", async () => {
+    const a = await all();
+
+    expect(() => gather(a, call("group", call("types"), "auto"))).toThrow("groups by");
+    expect(
+      (groups(a, call("group", call("store", "pulled"), "parent")) as Grouped).groups.some(
+        ({ value }) => value === paragraph,
+      ),
+    ).toBe(true);
+  });
 });
 
 describe("the engine", () => {
@@ -291,6 +341,13 @@ describe("the engine", () => {
 
     expect(root).toBe(brief);
     expect(Object.keys(holons).sort()).toEqual([brief, paragraph, wordA, wordB].sort());
+  });
+
+  test("a whole read to a depth is one level of the holarchy", async () => {
+    const { engine } = await started();
+    const { holons } = await engine.read({ whole: brief, depth: 1 });
+
+    expect(Object.keys(holons).sort()).toEqual([brief, paragraph].sort());
   });
 
   test("a whole can stop at what it is told, read but not gone into", async () => {

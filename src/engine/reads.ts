@@ -12,13 +12,14 @@ export type Whole = { root: string; holons: Record<string, HolonRead> };
 
 export type Read =
   | { holon: string }
-  | { whole: string; stop?: string[] }
+  | { whole: string; stop?: string[]; depth?: number }
   | { named: string; store?: string }
   | { instances: string; store?: string }
   | { holders: string }
   | { log: string }
   | { versions: string }
   | { gather: Expression }
+  | { level: Expression }
   | { groups: Expression };
 
 export type Answer<R extends Read> = R extends { holon: string }
@@ -36,7 +37,8 @@ export type Answer<R extends Read> = R extends { holon: string }
             : string[];
 
 // The word a read goes by: what it asks, apart from what narrows it.
-export const formOf = (query: Read) => Object.keys(query).find((key) => key !== "store" && key !== "stop")!;
+export const formOf = (query: Read) =>
+  Object.keys(query).find((key) => !["store", "stop", "depth"].includes(key))!;
 
 // The holons a value names: ids standing alone or as references.
 export function idsIn(value: unknown): string[] {
@@ -54,6 +56,7 @@ export function askedOf(query: Read) {
   if ("holders" in query) return [query.holders];
   if ("instances" in query) return [query.instances];
   if ("gather" in query) return idsIn(query.gather);
+  if ("level" in query) return idsIn(query.level);
   if ("groups" in query) return idsIn(query.groups);
 
   return [];

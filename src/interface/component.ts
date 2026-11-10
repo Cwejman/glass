@@ -7,10 +7,6 @@ import type { Answer, HolonRead, Read } from "../engine/reads.ts";
 import type { Holon } from "../store/store.ts";
 import type { Place } from "./address.ts";
 
-// The stores whose components are run, and whose functions can be called: glass's
-// own and the reader's. Another store's code waits until it can run apart.
-export const ownStores = ["glass", "home"];
-
 export type Component = {
   default: (given: Given<never, never>, space: Space) => Node | Promise<Node>;
   style?: string;

@@ -7,28 +7,47 @@
 // visit added to the reader's history in the field, which is only ever added to. Back
 // and forward are only the address changing: nothing is written to go back.
 //
+// The page names the entry, and everything else is reached from it by reference: what
+// it offers is what everything beneath it looks for, the functions, components, types
+// and material glass ships. Names are looked up only within a whole that holds them.
+//
 // A component is code, and code runs in the page with all it can reach, so only the
-// components of glass's own store and of the home are run.
+// components the entry offers and those of the home are run.
 
 import type { HolonRead } from "../engine/reads.ts";
 import type { Holon } from "../store/store.ts";
 import { addressOf, placeAt, said, samePlace, type Place, type Titles } from "./address.ts";
-import { ownStores, type Made } from "./component.ts";
+import type { Made } from "./component.ts";
 import type { Connection } from "./connection.ts";
 import { drawing, type Options } from "./drawing.ts";
 
-const firstNamed = async (engine: Connection, named: string, store = "glass") =>
-  (await engine.read({ named, store }))[0];
+type Ref = { $ref: string };
 
-async function holonsOfType(engine: Connection, type: string) {
-  const ids = (await Promise.all(ownStores.map((store) => engine.read({ instances: type, store })))).flat();
-  const holons = await Promise.all(ids.map((id) => engine.holon(id)));
+const firstNamedInHome = async (engine: Connection, named: string) =>
+  (await engine.read({ named, store: "home" }))[0];
 
-  return holons.filter((holon) => holon !== null);
+// What a whole holds, read by reference.
+async function heldBy(engine: Connection, whole: Ref | undefined) {
+  const held = whole ? await engine.holon(whole.$ref) : null;
+  const ids = ((held?.body.holds ?? []) as Ref[]).map(({ $ref }) => $ref);
+
+  return (await Promise.all(ids.map((id) => engine.holon(id)))).filter((holon) => holon !== null);
 }
 
-async function functionsNow(engine: Connection, type: string): Promise<Titles> {
-  const functions = await holonsOfType(engine, type);
+// What a whole offers, and the home's own holons of the same type beside them.
+async function offeredAndOwn(engine: Connection, whole: Ref | undefined) {
+  const offered = await heldBy(engine, whole);
+  const type = offered[0]?.instance[0];
+  if (!type) return offered;
+
+  const own = await Promise.all(
+    (await engine.read({ instances: type, store: "home" })).map((id) => engine.holon(id)),
+  );
+
+  return [...offered, ...own.filter((holon) => holon !== null)];
+}
+
+async function titlesOf(functions: HolonRead[]): Promise<Titles> {
   const titles = new Map(functions.map(({ id, name }) => [id, name ?? id]));
   const byTitle = new Map<string, string[]>();
 
@@ -37,31 +56,62 @@ async function functionsNow(engine: Connection, type: string): Promise<Titles> {
   return { titles, byTitle, or: functions.find(({ body }) => body.native === "or")?.id };
 }
 
-// Every material laid on the page, so everything drawn is made of what the field says.
-async function layMaterials(engine: Connection, type: string) {
-  for (const material of await holonsOfType(engine, type)) {
-    const style = document.createElement("style");
+// The material laid on the page, so everything drawn is made of what the field says.
+function lay(material: HolonRead | null) {
+  if (!material) return;
 
-    style.dataset.material = material.id;
-    style.textContent = String(material.body.css ?? "");
-    document.head.prepend(style);
-  }
+  const style = document.createElement("style");
+
+  style.dataset.material = material.id;
+  style.textContent = String(material.body.css ?? "");
+  document.head.prepend(style);
 }
 
-export async function mount(engine: Connection, page: HTMLElement, load?: Options["load"]) {
-  const [entry, componentType, functionType, materialType, historyType] = await Promise.all(
-    ["entry", "component", "function", "material", "history"].map((name) => firstNamed(engine, name)),
+// What the chassis attached, each store by what it is called here and where it comes from.
+export type Attached = { key: string; from: string };
+
+// Each store attached, kept in the home as an attachment, the first time it is attached.
+async function keepAttached(engine: Connection, type: string | undefined, attached: Attached[]) {
+  if (!type) return;
+
+  const kept = await Promise.all(
+    (await engine.read({ instances: type, store: "home" })).map((id) => engine.holon(id)),
   );
+  const keys = new Set(kept.map((holon) => holon?.body.key));
+  const fresh = attached.filter(({ key }) => !keys.has(key));
 
-  if (!entry || !componentType || !functionType)
-    throw new Error("the glass store holds no entry, components or functions");
+  if (fresh.length)
+    await engine.commit({
+      holons: fresh.map((body, i) => ({ id: `~${i}`, instance: [type], name: body.key, body })),
+      says: "What is attached",
+    });
+}
 
-  const entered = (await engine.holon(entry))!;
-  const components = await holonsOfType(engine, componentType);
+export async function mount(
+  engine: Connection,
+  page: HTMLElement,
+  { entry, load, attached = [] }: { entry: string; load?: Options["load"]; attached?: Attached[] },
+) {
+  const found = await engine.holon(entry);
+  if (!found) throw new Error(`the entry ${entry} is not in the field`);
 
-  if (materialType) await layMaterials(engine, materialType);
+  const entered: HolonRead = found;
 
-  const rootOf = async () => (await firstNamed(engine, "root", "home")) ?? entry;
+  const offer = (entered.body.offer ?? {}) as Record<string, Ref | undefined>;
+  const types = new Map((await heldBy(engine, offer.types)).map((type) => [type.name, type.id]));
+  const typeNamed = (name: string) => types.get(name);
+
+  await keepAttached(engine, typeNamed("attachment"), attached);
+
+  const components = await offeredAndOwn(engine, offer.components);
+  const functionsNow = async () => titlesOf(await offeredAndOwn(engine, offer.functions));
+
+  if (!components.length) throw new Error("the entry offers no components");
+
+  lay(offer.material ? await engine.holon(offer.material.$ref) : null);
+
+  const historyType = typeNamed("history");
+  const rootOf = async () => (await firstNamedInHome(engine, "root")) ?? entry;
 
   let drawnRoot = await rootOf();
   let place: Place | undefined;
@@ -86,7 +136,7 @@ export async function mount(engine: Connection, page: HTMLElement, load?: Option
       ...((held?.body.visits as unknown[] | undefined) ?? []),
       {
         at: new Date().toISOString(),
-        looked: said(at, await functionsNow(engine, functionType!)),
+        looked: said(at, await functionsNow()),
         ...(at.component ? { with: at.component.$ref } : {}),
       },
     ];
@@ -101,11 +151,7 @@ export async function mount(engine: Connection, page: HTMLElement, load?: Option
     if (samePlace(place, next)) return;
 
     place = next;
-    history.pushState(
-      null,
-      "",
-      addressOf(location.pathname, next, await functionsNow(engine, functionType!)),
-    );
+    history.pushState(null, "", await addressFor(next));
 
     await draw();
     scrollTo(0, 0);
@@ -117,12 +163,14 @@ export async function mount(engine: Connection, page: HTMLElement, load?: Option
   const may = (holon: HolonRead) => holon.store === "home" || (holon.id === entry && drawnRoot === entry);
 
   // A place that names the component the entry calls names none: it is the plain way to look.
+  // A move to nowhere in particular is a move to the root.
   const move = (next: Place) =>
     inTurn(async () => {
       const plain = next.component?.$ref === entered.body.component?.$ref;
       const { component, ...where } = next;
+      const somewhere = where.gathers || where.argument?.length;
 
-      await moveTo(component && !plain ? next : where);
+      await moveTo(!somewhere ? atRoot() : component && !plain ? next : where);
     });
 
   // A write of the entry is the reader's first of their own, which makes them a root.
@@ -150,7 +198,7 @@ export async function mount(engine: Connection, page: HTMLElement, load?: Option
     });
 
   async function ownRoot() {
-    const id = await firstNamed(engine, "root", "home");
+    const id = await firstNamedInHome(engine, "root");
     return id ? engine.holon(id) : null;
   }
 
@@ -160,16 +208,32 @@ export async function mount(engine: Connection, page: HTMLElement, load?: Option
   async function draw() {
     drawnRoot = await rootOf();
 
-    await drawn.draw(page, { reads: { holon: drawnRoot }, offered: { kind: "full" }, settings: { place } });
+    await drawn.draw(page, {
+      reads: { holon: drawnRoot },
+      offered: { kind: "full" },
+      settings: { place, entry: entered.body },
+    });
   }
 
-  // The place the address names, or, where it names none that can be read, where the
-  // entry looks, which the address is then made to say.
-  async function settle() {
-    const functions = await functionsNow(engine, functionType!);
+  // Where the entry looks: the root, which the address says by saying nothing.
+  function atRoot(): Place {
+    return {
+      ...(entered.body.gathers ? { gathers: entered.body.gathers } : {}),
+      ...(entered.body.argument?.length ? { argument: entered.body.argument } : {}),
+    };
+  }
 
+  async function addressFor(at: Place) {
+    if (samePlace(at, atRoot())) return location.pathname;
+
+    return addressOf(location.pathname, at, await functionsNow());
+  }
+
+  // The place the address names, or, where it names none that can be read, the root,
+  // and the address is then made to say nothing.
+  async function settle() {
     try {
-      place = placeAt(location.href, functions);
+      place = placeAt(location.href, await functionsNow());
     } catch (error) {
       console.error(error);
       place = undefined;
@@ -177,11 +241,8 @@ export async function mount(engine: Connection, page: HTMLElement, load?: Option
 
     if (place) return;
 
-    place = {
-      ...(entered.body.gathers ? { gathers: entered.body.gathers } : {}),
-      ...(entered.body.argument?.length ? { argument: entered.body.argument } : {}),
-    };
-    history.replaceState(null, "", addressOf(location.pathname, place, functions));
+    place = atRoot();
+    history.replaceState(null, "", location.pathname);
   }
 
   addEventListener("popstate", () => void inTurn(async () => (await settle(), await draw())));

@@ -1,3 +1,4 @@
+import { readdirSync } from "node:fs";
 // The interface as a reader meets it: the real components and the real stores, in a
 // page of its own, with the home held in memory across reloads.
 
@@ -46,20 +47,18 @@ function connected(engine: Engine): Connection {
   } as unknown as Connection;
 }
 
-const componentFiles: Record<string, string> = {
-  Brief: "brief",
-  Holon: "holon",
-  List: "list",
-  Collection: "collection",
-  Mount: "mount",
-  Search: "search",
-  Type: "type",
-};
+// Each component module, by the name it declares, as the field makes them.
+const componentDir = join(import.meta.dir, "../field/components");
+const modules = new Map<string, string>();
 
-const load = (component: HolonRead) =>
-  import(
-    join(import.meta.dir, `../field/components/${componentFiles[component.name!]}.tsx`)
-  ) as Promise<Component>;
+for (const file of readdirSync(componentDir).filter(
+  (name) => name.endsWith(".tsx") && !name.includes(".test."),
+)) {
+  const { declared } = await import(join(componentDir, file));
+  if (declared) modules.set(declared.name, join(componentDir, file));
+}
+
+const load = (component: HolonRead) => import(modules.get(component.name!)!) as Promise<Component>;
 
 const settled = async (test: () => unknown, within = 4000) => {
   const start = performance.now();
@@ -84,7 +83,13 @@ async function open(address: string, homeFiles = memoryFiles()) {
   const page = document.createElement("main");
   document.body.replaceChildren(page);
 
-  await mount(connected(engine), page, load);
+  const [entry] = await engine.read({ named: "entry", store: "glass" });
+
+  await mount(connected(engine), page, {
+    entry: entry!,
+    load,
+    attached: stores.map(([key]) => ({ key, from: `./${key}/` })),
+  });
 
   return { page, engine, homeFiles };
 }
@@ -105,12 +110,53 @@ const backTo = (address: string) => {
 afterEach(() => document.body.replaceChildren());
 
 describe("reading", () => {
-  test("a bare address opens the entry, and the address comes to say so", async () => {
+  const storesShown = (page: HTMLElement) =>
+    [...page.querySelectorAll(".card strong")].map((name) => name.textContent);
+
+  test("a bare address opens the root, what is attached, and says nothing", async () => {
     const { page } = await open("https://glass.test/");
+
+    await settled(() => storesShown(page).includes("main"));
+
+    expect(location.search).toBe("");
+    expect(storesShown(page)).toContain("glass");
+    expect(page.querySelector(".reader p")).toBeNull();
+  });
+
+  test("what is attached is kept in the home once, and a store's face leads to its level", async () => {
+    const { page, engine } = await open("https://glass.test/");
+
+    await settled(() => storesShown(page).includes("main"));
+
+    const [type] = await engine.read({ named: "attachment", store: "glass" });
+    const kept = await engine.read({ instances: type!, store: "home" });
+
+    expect(kept.length).toBe(stores.length);
+
+    const main = [...page.querySelectorAll<HTMLElement>(".card")].find(
+      (card) => card.querySelector("strong")?.textContent === "main",
+    )!;
+    main.click();
+
+    await settled(() => location.search === "?look=Store(:main)");
+    await settled(() => faceNamed(page, "The wiki"));
+  });
+
+  test("letting go of the last part is the root again", async () => {
+    const { page } = await open(`https://glass.test/?look=@${glassBrief}`);
+
+    await settled(() => heading(page) === "Glass");
+    page.querySelector<HTMLElement>(".part .let-go")!.click();
+
+    await settled(() => location.search === "");
+    await settled(() => storesShown(page).includes("main"));
+  });
+
+  test("a brief is opened by going to it", async () => {
+    const { page } = await open(`https://glass.test/?look=@${glassBrief}`);
 
     await settled(() => heading(page) === "Glass");
 
-    expect(location.search).toBe(`?look=@${glassBrief}`);
     expect(page.querySelectorAll(".reader p").length).toBeGreaterThan(5);
     expect(faceNamed(page, "The primitives")).toBeTruthy();
   });
@@ -118,7 +164,7 @@ describe("reading", () => {
   test("an address that cannot be read falls back to the entry", async () => {
     const { page } = await open("https://glass.test/?look=Nonsense(((");
 
-    await settled(() => heading(page) === "Glass");
+    await settled(() => storesShown(page).includes("main"));
   });
 
   test("a brief reads its sections through, under their names", async () => {

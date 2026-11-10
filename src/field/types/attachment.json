@@ -1,0 +1,14 @@
+{
+  "name": "attachment",
+  "says": "A store the engine has attached, kept in the home: what it is called here and where it is fetched from. The field is the stores an engine holds, so what is attached is the first thing one looks upon.",
+  "mould": {
+    "key": {
+      "says": "What the store is called in this field, as a read narrows to it.",
+      "shape": "string"
+    },
+    "from": {
+      "says": "Where the store is fetched from, as an address.",
+      "shape": "string"
+    }
+  }
+}

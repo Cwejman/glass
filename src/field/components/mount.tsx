@@ -29,10 +29,15 @@ export const declared = {
   says: "A mount: what it gives, holons or a way of looking, drawn by the component it calls, offered what it offers; where it may be written, a press inside it moves it.",
   takes: ["mount"],
   kinds: ["full", "face"],
-  reads: ["named", "holon", "gather", "instances"],
+  reads: ["holon", "gather", "instances"],
   settings: {
     place: {
       says: "Where it looks, as the page's address says. A mount given no place is one found within what another draws, and is shown rather than run.",
+      shape: "json",
+      optional: true,
+    },
+    entry: {
+      says: "The body of the entry the page boots into, whose component looks where nothing else is named, and whose offer everything beneath it looks for.",
       shape: "json",
       optional: true,
     },
@@ -50,7 +55,7 @@ const mountCard = (name: string | undefined, gathers: Expression | undefined, gi
 
 // A mount within a view is shown, not run: what it is called, the component it calls,
 // and what it gives.
-async function shown(mount: Given<MountBody>["holon"], space: Space) {
+async function shown(mount: Given<MountBody>["holon"], space: Space, offered: Offer) {
   const { name, body } = mount!;
   const { component, gathers, argument = [] } = body;
   const titled = async (id: string) => (await space.holon(id))?.name ?? id;
@@ -68,7 +73,7 @@ async function shown(mount: Given<MountBody>["holon"], space: Space) {
           data-expression={JSON.stringify(gathers)}
           {...(component ? { "data-calls": component.$ref } : {})}
         >
-          {await titleOf(await functionsIn(space), gathers, titled)}
+          {await titleOf(await functionsIn(space, offered), gathers, titled)}
         </button>
       ) : (
         space.open(
@@ -80,23 +85,26 @@ async function shown(mount: Given<MountBody>["holon"], space: Space) {
   );
 }
 
-export default async function draw(given: Given<MountBody, { place?: Place }>, space: Space) {
+export default async function draw(
+  given: Given<MountBody, { place?: Place; entry?: MountBody }>,
+  space: Space,
+) {
   const mount = given.holon!;
   const { place } = given.settings;
   const { argument = [], gathers } = place ?? mount.body;
   const giving = argument.map(({ $ref }) => $ref);
 
   if (given.kind === "face") return mountCard(mount.name, gathers, giving);
-  if (!place) return shown(mount, space);
+  if (!place) return shown(mount, space, given.offered);
 
-  const [entryId] = await space.read({ named: "entry", store: "glass" });
-  const entry = entryId === mount.id || !entryId ? mount : (await space.holon<MountBody>(entryId))!;
+  // The entry the page boots into, as the interface gives it to the root.
+  const entry = given.settings.entry ?? mount.body;
 
   // A place that names no component is looked at with the one the entry calls.
-  const component = place.component ?? entry.body.component;
+  const component = place.component ?? entry.component;
 
   const offerOf = (body?: MountBody) => body?.offer ?? {};
-  const offer = { ...offerOf(entry.body), ...offerOf(mount.body) };
+  const offer = { ...offerOf(entry), ...offerOf(mount.body) };
   const offering: Offer = { ...offer, kind: "full" };
 
   const where = gathers ? { gather: gathers } : giving.length === 1 ? giving[0]! : giving;
@@ -119,8 +127,8 @@ export default async function draw(given: Given<MountBody, { place?: Place }>, s
   // A way of looking kept, as a function of one's own that takes nothing and gives it,
   // born in the home and placed on the favorites.
   async function keep(gives: Expression, title: string) {
-    const [functionType] = await space.read({ named: "function", store: "glass" });
-    if (!functionType) throw new Error("the field holds no type for functions");
+    const functionType = [...(await functionsIn(space, offer)).values()][0]?.type;
+    if (!functionType) throw new Error("the entry offers no functions");
 
     const favorites = [...((offer.favorites ?? []) as Ref[]), { $ref: "~kept" }];
 
@@ -154,7 +162,8 @@ export default async function draw(given: Given<MountBody, { place?: Place }>, s
     // A press landing where one already stands moves nowhere, and changes nothing of how one looks.
     if (!calls && !gathers && JSON.stringify(ids) === JSON.stringify(giving)) return undefined;
 
-    return ids.length ? space.move({ argument: ids.map(($ref) => ({ $ref })), ...component }) : undefined;
+    // Nowhere in particular is the root.
+    return space.move(ids.length ? { argument: ids.map(($ref) => ({ $ref })), ...component } : {});
   }
 
   function press(event: Event) {

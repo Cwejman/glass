@@ -77,8 +77,14 @@
   },
   {
     "native": "group",
-    "says": "The set given, in collections along an axis: type, parent, store, or auto, whichever splits it best.",
+    "says": "The set given, in collections along the axis chosen: type, parent or store.",
     "takes": ["set", "axis"],
     "name": "Group by"
+  },
+  {
+    "native": "flat",
+    "name": "Flat",
+    "says": "All of the set given, looked at as it is, where a set is otherwise seen at its level: what nothing in it holds.",
+    "takes": ["set"]
   }
 ]
