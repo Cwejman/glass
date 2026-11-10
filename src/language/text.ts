@@ -8,7 +8,8 @@
 //
 // A call is a function's name and what it is given in parentheses. A holon is @ and
 // its id, its name, or a route of names through the wholes that hold it. A variable is
-// a lambda's own word, `m => …`, and `m.value` is what m holds under value. `a | f(b)`
+// a lambda's own word, `m => …`, and `m.value` is what m holds under value; ?x is a
+// variable of a pattern, within find. `a | f(b)`
 // is f(a, b), read left to right. Lists are [ … ] and records { key: … }. Words in
 // double quotes are a string, as JSON writes one. A line's rest after // is a remark.
 //
@@ -46,6 +47,7 @@ type Token =
   | { at: number; kind: "number"; value: number }
   | { at: number; kind: "string"; value: string }
   | { at: number; kind: "word"; value: string }
+  | { at: number; kind: "variable"; value: string }
   | { at: number; kind: "mark"; value: string }
   | { at: number; kind: "end" };
 
@@ -73,8 +75,13 @@ function tokensOf(text: string): Token[] {
       /^[\p{L}_][\p{L}\p{N}_]*/u.exec(rest);
     const mark = marks.find((each) => rest.startsWith(each));
 
-    if (rest[0] === "?")
-      throw new Error(`?, as in ?x, is kept for the variables of patterns, at ${where(text, at)}`);
+    // A pattern's variable, ?x, stands only within find.
+    const variable = /^\?([\p{L}_][\p{L}\p{N}_]*)/u.exec(rest);
+    if (variable) {
+      out.push({ at, kind: "variable", value: variable[1]! });
+      at += variable[0].length;
+      continue;
+    }
 
     if (string) {
       out.push({ at, kind: "string", value: JSON.parse(string[0]) });
@@ -248,6 +255,11 @@ export function parse(text: string, names: Names): Expr {
       return token.value;
     }
 
+    if (token.kind === "variable") {
+      next++;
+      return { "?": token.value };
+    }
+
     if (take("@")) {
       const id = holon();
       return isMark("(") ? (next++, call(id, listed(")"))) : { $ref: id };
@@ -397,6 +409,7 @@ export function print(expression: Expr, names: Names): string {
 
     if ("$ref" in form) return names.isFunction(form.$ref) ? named(form.$ref) : `@${form.$ref}`;
     if ("var" in form) return form.var;
+    if ("?" in form) return `?${form["?"]}`;
     if ("list" in form) return `[${form.list.map(said).join(", ")}]`;
 
     if ("record" in form)

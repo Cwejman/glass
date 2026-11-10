@@ -23,7 +23,9 @@
 import { canonical } from "../store/canonical.ts";
 import type { LogEntry } from "../store/store.ts";
 import type { Everything } from "./expression.ts";
+import { answeringAll, indexOf, mouldIn as mouldsIn, type Answering, type FactValue } from "./facts.ts";
 import { mouldOf, type Mould } from "./moulds.ts";
+import { bindable, isVar, orProblem, solve, usedBeside, type Clause, type Step } from "./pattern.ts";
 import { isRef, references } from "./references.ts";
 
 export type Value = null | boolean | number | string | Value[] | { [key: string]: Value };
@@ -165,6 +167,7 @@ type Lazy = (given: Deferred[]) => Value;
 export function kernel(context: Context) {
   const { all } = context;
   const { known } = all;
+  const answering = () => answeringOf(all);
 
   const holonOf = (value: unknown) => (isRef(value) ? known.get(value.$ref)?.holon : undefined);
 
@@ -451,6 +454,113 @@ export function kernel(context: Context) {
 
   const natives = { ...values, ...field };
 
+  // ---- Patterns
+
+  // A function whose arguments are clauses, read as they are written, not worked out.
+  const nativeOf = (expression: unknown) => {
+    const id = (expression as { call?: Ref })?.call?.$ref;
+    return id ? (known.get(id)?.holon.body as { native?: string } | undefined)?.native : undefined;
+  };
+
+  // One clause of a pattern, as written: a fact [e, a, v], whose values are worked out
+  // where they stand; not(…); or(…), each branch one clause or and(…) of several; or a
+  // test, a lambda given the variables its words name.
+  function clauseOf(expression: unknown, scope: Scope, depth: number): Clause {
+    const form = expression as Record<string, unknown>;
+    const given = (form?.with ?? []) as unknown[];
+    const term = (each: unknown) => (isVar(each) ? each : evaluate(each, scope, depth));
+
+    if (Array.isArray(form?.list) && form.list.length === 3)
+      return { fact: (form.list as unknown[]).map(term) as [unknown, unknown, unknown] };
+
+    if (nativeOf(form) === "not") return { not: given.map((each) => clauseOf(each, scope, depth)) };
+
+    if (nativeOf(form) === "or") {
+      const branches = given.map((branch) =>
+        nativeOf(branch) === "and"
+          ? ((branch as { with?: unknown[] }).with ?? []).map((each) => clauseOf(each, scope, depth))
+          : [clauseOf(branch, scope, depth)],
+      );
+      return { or: branches };
+    }
+
+    if (Array.isArray(form?.fn)) return { test: evaluate(form, scope, depth), names: form.fn as string[] };
+
+    throw new Error(
+      "a clause is a fact [e, a, v], not(…), or(…), or a test, a lambda of the variables it reads",
+    );
+  }
+
+  // What a pattern finds, and how: one variable's values, or a record of several, each
+  // distinct, for every way its clauses hold.
+  function find(given: unknown[], scope: Scope, depth: number, steps?: Step[]): Value {
+    const [spec, ...clauses] = given;
+    const shape = isVar(spec)
+      ? spec["?"]
+      : Object.fromEntries(
+          Object.entries(((spec as { record?: Record<string, unknown> })?.record ?? {}) as object).map(
+            ([key, each]) => {
+              if (!isVar(each)) throw new Error("what a pattern finds is ?x, or a record of them, {x: ?x}");
+              return [key, each["?"]];
+            },
+          ),
+        );
+
+    const where = clauses.map((each) => clauseOf(each, scope, depth));
+    const found = bindable(where);
+
+    for (const name of typeof shape === "string" ? [shape] : Object.values(shape))
+      if (!found.has(name)) throw new Error(`the pattern finds ?${name}, which no fact of it binds`);
+
+    for (const clause of where) {
+      const outside = new Set([
+        ...usedBeside(where, clause),
+        ...(typeof shape === "string" ? [shape] : Object.values(shape)),
+      ]);
+      const problem = "or" in clause ? orProblem(clause.or, outside) : undefined;
+      if (problem) throw new Error(problem);
+    }
+
+    const bindings = solve(
+      where,
+      answering(),
+      { test: (fn, values) => truly(apply(fn, values as Value[], depth)) },
+      steps,
+    );
+
+    const seen = new Set<string>();
+    const out: Value[] = [];
+
+    for (const binding of bindings) {
+      const value: Value =
+        typeof shape === "string"
+          ? ((binding[shape] as Value) ?? null)
+          : Object.fromEntries(
+              Object.entries(shape).map(([key, name]) => [key, (binding[name] as Value) ?? null]),
+            );
+
+      if (!seen.has(keyOf(value))) {
+        seen.add(keyOf(value));
+        out.push(value);
+      }
+    }
+
+    return out;
+  }
+
+  // Natives that read their arguments as written: a pattern, and the plan of one.
+  const structural: Record<string, (given: unknown[], scope: Scope, depth: number) => Value> = {
+    find,
+    explain([pattern], scope, depth) {
+      if (nativeOf(pattern) !== "find") throw new Error("explain is given a pattern, find(…)");
+
+      const steps: Step[] = [];
+      const found = find((pattern as { with?: unknown[] }).with ?? [], scope, depth, steps);
+
+      return { found: Array.isArray(found) ? found.length : 0, steps: steps as unknown as Value };
+    },
+  };
+
   // ---- Working out
 
   // A function kept as a holon, given values: natively, or by what it gives.
@@ -459,6 +569,10 @@ export function kernel(context: Context) {
     const body = (holon?.body ?? {}) as { native?: string; gives?: Expr };
 
     if (body.native && natives[body.native]) return natives[body.native]!(given, depth);
+    if (body.native && structural[body.native])
+      throw new Error(
+        `${holon?.name} reads what it is given as written, so it is called, not given to another`,
+      );
 
     // A lazy act handed values already worked out, as when it is given to map.
     if (body.native && lazy[body.native]) return lazy[body.native]!(given.map((each) => valued(each)));
@@ -508,6 +622,7 @@ export function kernel(context: Context) {
 
     if ("$ref" in form) return ref(form.$ref as string);
     if ("var" in form) return lookUp(scope, form.var as string);
+    if ("?" in form) throw new Error(`?${form["?"]} is a pattern's variable, and stands only within find`);
     if ("arg" in form) return argument(scope, form.arg as number);
     if ("fn" in form) return closure(form.fn as string[], form.gives, scope);
     if ("list" in form) return (form.list as Expr[]).map((each) => evaluate(each, scope, depth));
@@ -524,6 +639,7 @@ export function kernel(context: Context) {
       const given = (form.with ?? []) as Expr[];
       const native = (holon.body as { native?: string }).native;
 
+      if (native && structural[native]) return structural[native]!(given, scope, depth + 1);
       if (native && lazy[native]) return lazy[native]!(given.map((each) => deferred(each, scope, depth + 1)));
 
       return called(
@@ -540,6 +656,28 @@ export function kernel(context: Context) {
     evaluate: (expression: Expr) => evaluate(expression),
     natives: [...Object.keys(natives), ...Object.keys(lazy)],
   };
+}
+
+// What the field's stores answer a pattern's facts from: each store's index, built once
+// for everything the field holds, the stores asked as one.
+const indexes = new WeakMap<Everything, Answering>();
+
+export function answeringOf(all: Everything): Answering {
+  let made = indexes.get(all);
+
+  if (!made) {
+    const byStore = new Map<string, Everything["known"] extends ReadonlyMap<string, infer K> ? K[] : never>();
+    for (const each of all.known.values()) {
+      const held = byStore.get(each.store);
+      if (held) held.push(each);
+      else byStore.set(each.store, [each]);
+    }
+
+    made = answeringAll([...byStore.values()].map((held) => indexOf(held, mouldsIn(all.known))));
+    indexes.set(all, made);
+  }
+
+  return made;
 }
 
 // The kernel over everything a field holds, made once, so what it has worked out of the

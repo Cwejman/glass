@@ -314,8 +314,8 @@ export function level(all: Everything, expression: Expression, nested = 0): stri
 // ---- Shape
 
 // What is wrong with a value meant as an expression, in its shape, if anything: a value
-// standing for itself, a holon, a call, a lambda and its words, a place given, or a list
-// or record of expressions. What each function takes is judged as it is called.
+// standing for itself, a holon, a call, a lambda and its words, a place given, a pattern's
+// variable, or a list or record of expressions. What each function takes is judged as it is called.
 export function expressionProblem(value: unknown, nested = 0): string | undefined {
   if (nested >= nesting) return `an expression nests at most ${nesting} deep`;
   if (value === null || typeof value !== "object") return undefined;
@@ -333,6 +333,11 @@ export function expressionProblem(value: unknown, nested = 0): string | undefine
     return only("arg") && Number.isInteger(record.arg) && (record.arg as number) >= 0
       ? undefined
       : "an argument is given as { arg: i }, counted from 0";
+
+  if ("?" in record)
+    return only("?") && typeof record["?"] === "string"
+      ? undefined
+      : "a pattern's variable is given as { ?: word }";
 
   if ("var" in record)
     return only("var") && typeof record.var === "string"

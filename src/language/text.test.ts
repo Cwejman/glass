@@ -140,7 +140,8 @@ describe("saying, and reading back", () => {
     expect(() => read(`size(\n  1,\n  )`)).toThrow("line 3, column 3");
   });
 
-  test("?, for the variables of patterns, is kept", () => {
-    expect(() => read(`?x`)).toThrow("kept for the variables of patterns");
+  test("?x is a pattern's variable, said and read back", () => {
+    expect(read(`?x`)).toEqual({ "?": "x" });
+    expect(print(read(`[?x, "said", ?y]`), names)).toBe(`[?x, "said", ?y]`);
   });
 });

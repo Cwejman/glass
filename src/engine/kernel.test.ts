@@ -346,3 +346,99 @@ describe("the interface's ways of looking, through functions written as lambdas"
     expect(groups(all, expression)).toBe(null);
   });
 });
+
+describe("patterns, each answered apart", () => {
+  const typeOf = (name: string) => at(typeNamed(name));
+
+  test("a fact clause joined to another by a variable: measures graded three", () => {
+    const found = ask`find(?m, [?m, "instance", ${typeOf("measure")}], [?m, "value", 3])`;
+    sameSet(
+      ids(found),
+      holons.filter((h) => h.instance.includes(typeNamed("measure")) && h.body.value === 3).map((h) => h.id),
+    );
+  });
+
+  test("a value joined across holons: a session's utterances in the author's voice", () => {
+    const sixth = holons.find((h) => h.name?.startsWith("A sixth session"))!;
+    const found = ask`find(?u, [${at(sixth.id)}, "said", ?u], [?u, "voice", @"The author"])`;
+
+    const author = named("The author", "voice").id;
+    const truth = (sixth.body.said as { $ref: string }[])
+      .filter(({ $ref }) => all.known.get($ref)!.holon.body.voice?.$ref === author)
+      .map(({ $ref }) => $ref);
+    sameSet(ids(found), truth);
+  });
+
+  test("not, with a variable of its own: a store's level", () => {
+    const found = ask`find(?h, [?h, "store", "main"], not([?w, "$holds", ?h], [?w, "store", "main"]))`;
+    sameSet(ids(found), ids(ask`level(store("main"))`));
+  });
+
+  test("or, each branch binding the same variables, and a test of a value", () => {
+    const found = ask`
+      find(?u, [?u, "instance", ${typeOf("utterance")}], or([?u, "as", "typed"], [?u, "as", "spoken"]),
+        [?u, "order", ?n], n => lt(n, 3))
+    `;
+    const truth = holons
+      .filter((h) => h.instance.includes(typeNamed("utterance")))
+      .filter((h) => ["typed", "spoken"].includes(h.body.as) && h.body.order < 3)
+      .map((h) => h.id);
+    sameSet(ids(found), truth);
+  });
+
+  test("several variables found as a record, each way distinct", () => {
+    const found = ask`find({s: ?s, on: ?on}, [?s, "instance", ${typeOf("session")}], [?s, "on", ?on])` as {
+      s: { $ref: string };
+      on: string;
+    }[];
+    const truth = holons.filter((h) => h.instance.includes(typeNamed("session")));
+
+    expect(found.length).toBe(truth.length);
+    for (const { s, on } of found) expect(all.known.get(s.$ref)!.holon.body.on).toBe(on);
+  });
+
+  test("holding is a fact of its own: what a whole holds", () => {
+    const wiki = named("The wiki", "brief").id;
+    sameSet(ids(ask`find(?p, [${at(wiki)}, "$holds", ?p])`), partsOfHolon(wiki));
+  });
+
+  test("a plan says which order answered each step, the narrowest first", () => {
+    const plan = ask`explain(find(?m, [?m, "instance", ${typeOf("measure")}], [?m, "value", 3]))` as {
+      steps: { served: string }[];
+    };
+    expect(plan.steps[0]!.served).toBe("by key and value");
+  });
+
+  test("what stands for a holon or a key and cannot be one matches nothing", () => {
+    expect(ask`find(?n, ["zzz", "name", ?n])`).toEqual([]);
+    expect(ask`find(?n, [3, "name", ?n])`).toEqual([]);
+  });
+
+  test("an or waits for what its branches read from outside, and compares only what is used outside", () => {
+    const found = ask`
+      find(?m, [?m, "value", 3], [?m, "instance", ?t],
+        or(and([?t, "name", "measure"], m => true), and([?t, "name", "measure"], m => true)))
+    `;
+    expect(ids(found).length).toBe(
+      ids(ask`find(?m, [?m, "value", 3], [?m, "instance", ${typeOf("measure")}])`).length,
+    );
+    expect(
+      () => ask`find(?m, or([?m, "value", 3], and([?m, "value", ?v], not([?m, "name", ?z]))))`,
+    ).not.toThrow();
+  });
+
+  test("the planner joins by what is bound before what stands apart", () => {
+    const plan = ask`explain(find(?m, [?m, "instance", ?t], [?t, "name", "measure"], [?m, "value", 3]))` as {
+      steps: { step: string; bindings: number }[];
+    };
+    expect(Math.max(...plan.steps.map(({ bindings }) => bindings))).toBeLessThan(100);
+  });
+
+  test("what cannot be a pattern says why", () => {
+    expect(() => ask`find(?y, [?m, "value", 3])`).toThrow("finds ?y, which no fact of it binds");
+    expect(() => ask`map([1], find)`).toThrow("called, not given");
+    expect(() => ask`find(?u, [?u, "as", "typed"], n => eq(n, 1))`).toThrow("a test reads n");
+    expect(() => ask`find(?u, or([?u, "as", "typed"], [?v, "as", "spoken"]))`).toThrow("same variables");
+    expect(() => ask`[?u]`).toThrow("stands only within find");
+  });
+});

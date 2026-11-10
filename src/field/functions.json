@@ -328,6 +328,18 @@
     "written": "digest.expr"
   },
   {
+    "name": "find",
+    "native": "find",
+    "says": "What a pattern finds: ?x, or a record of variables, {x: ?x}, for every way its clauses hold, each distinct. A clause is a fact [e, a, v], any of the three a variable; not(…), clauses that must not hold; or(…), branches of which any may, each one clause or and(…); or a test, a lambda of the variables its words name.",
+    "takes": ["value", "clauses"]
+  },
+  {
+    "name": "explain",
+    "native": "explain",
+    "says": "The plan a pattern was answered by: each step in the order taken, which of the store's orders served it, how many facts it read and how many ways held after it.",
+    "takes": ["value"]
+  },
+  {
     "name": "level",
     "says": "A set seen at its level: what nothing in it holds. The roots of a store are its level.",
     "takes": ["set"],
