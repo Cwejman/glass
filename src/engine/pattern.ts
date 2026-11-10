@@ -13,7 +13,7 @@
 // those is found, and in what shape, the one asking says.
 
 import type { Answering, Asked, Fact, FactValue } from "./facts.ts";
-import { valueKey } from "./facts.ts";
+import { keyOfFact, valueKey } from "./facts.ts";
 import { isRef } from "./references.ts";
 
 export type Var = { "?": string };
@@ -85,21 +85,42 @@ function askedOf([e, a, v]: [unknown, unknown, unknown], binding: Binding): Aske
   };
 }
 
+// What stands in each place of a fact, and its key.
+const placeOf = (fact: Fact, i: number): FactValue =>
+  i === 0 ? { $ref: fact.e } : i === 1 ? fact.a : fact.v;
+const placeKey = (fact: Fact, i: number) => (i === 0 ? fact.e : i === 1 ? valueKey(fact.a) : keyOfFact(fact));
+
 // A binding made larger by one fact, or nothing where the fact disagrees with it.
 function bindFact(terms: unknown[], fact: Fact, binding: Binding): Binding | undefined {
   const made = { ...binding };
-  const places: FactValue[] = [{ $ref: fact.e }, fact.a, fact.v];
 
   for (const [i, term] of terms.entries()) {
     if (!isVar(term)) continue;
 
     const name = term["?"];
-    if (name in made && valueKey(made[name]!) !== valueKey(places[i]!)) return undefined;
-    made[name] = places[i]!;
+    if (name in made) {
+      if (valueKey(made[name]!) !== placeKey(fact, i)) return undefined;
+    } else made[name] = placeOf(fact, i);
   }
 
   return made;
 }
+
+// The variables of a fact already bound, each with the first place it stands in.
+function sharedPlaces(terms: unknown[], bound: Set<string>): [string, number][] {
+  const shared = new Map<string, number>();
+
+  terms.forEach((term, i) => {
+    if (isVar(term) && bound.has(term["?"]) && !shared.has(term["?"])) shared.set(term["?"], i);
+  });
+
+  return [...shared];
+}
+
+// Asking a store costs something of its own, beside what it gives; it is weighed as four
+// facts given. A judgement, not a measure: on glass's own store 85,000 asks of one fact
+// each took about 75 ms, where a fact joined from what was asked once costs far less.
+const asking = 4;
 
 // The ways a pattern's clauses hold, from the bindings it starts with: one empty one, or,
 // for a not or a branch of an or, the binding it is held against.
@@ -145,7 +166,9 @@ export function solve(
 
     const outer = [...varsOf(guard)].filter((name) => bound.has(name));
     const keyOf = (binding: Binding) => outer.map((name) => valueKey(binding[name]!)).join("\u0000");
-    const held = new Set(solve(guard.not, stores, working, undefined, given).map(keyOf));
+    const within: Step[] = [];
+    const held = new Set(solve(guard.not, stores, working, within, given).map(keyOf));
+    steps?.push(...within.map((step) => ({ ...step, step: `within not: ${step.step}` })));
 
     return given.filter((binding) => !held.has(keyOf(binding)));
   }
@@ -173,14 +196,27 @@ export function solve(
         })
       : [];
 
-  // What a step would cost, judged by one binding: for a fact, how many facts answer it,
-  // as many times over as there are bindings where it shares no variable with them; for
-  // an or, its branches' cheapest facts together, once what it reads is bound.
-  const cost = (clause: Clause, binding: Binding): number => {
-    const connected = !bound.size || [...varsOf(clause)].some((name) => bound.has(name));
-    const times = connected ? 1 : bindings.length;
+  // How a fact is best asked, and what it would cost, judged by one binding. Bound to
+  // what came before, it is asked once for every binding, each telling the store more,
+  // or, where that costs more, once for them all, with only what it says itself, and
+  // joined here by the variables they share. Bound to nothing before it, it is asked
+  // once and joined with every binding.
+  const howAsked = (terms: [unknown, unknown, unknown], binding: Binding) => {
+    const shared = sharedPlaces(terms, bound);
+    const each = stores.count(askedOf(terms, binding));
 
-    if ("fact" in clause) return stores.count(askedOf(clause.fact, binding)) * times;
+    if (bound.size && !shared.length) return { once: false, shared, cost: each * bindings.length };
+
+    const eachTime = bindings.length * (each + asking);
+    const once = shared.length ? stores.count(askedOf(terms, {})) + asking + bindings.length : Infinity;
+
+    return once < eachTime ? { once: true, shared, cost: once } : { once: false, shared, cost: eachTime };
+  };
+
+  // What a step would cost: a fact as it is best asked; an or, its branches' cheapest
+  // facts together, once what it reads is bound.
+  const cost = (clause: Clause, binding: Binding): number => {
+    if ("fact" in clause) return howAsked(clause.fact, binding).cost;
     if ("or" in clause) {
       if (!readsOutside(clause).every((name) => bound.has(name))) return Infinity;
 
@@ -204,33 +240,64 @@ export function solve(
     binders.delete(next);
 
     let answered = 0;
+    let served = "each branch";
     const joined: Binding[] = [];
 
-    for (const binding of bindings) {
-      if ("fact" in next) {
-        const found = stores.answer(askedOf(next.fact, binding));
-        answered += found.length;
+    const join = (terms: unknown[], found: Fact[], binding: Binding) => {
+      for (const fact of found) {
+        const made = bindFact(terms, fact, binding);
+        if (made) joined.push(made);
+      }
 
+      if (joined.length > most)
+        throw new Error(
+          `the pattern holds more than ${most.toLocaleString("en")} ways after ${said(next)}; give its clauses a variable in common`,
+        );
+    };
+
+    const eachOf = (terms: [unknown, unknown, unknown], binding: Binding) => {
+      const found = stores.answer(askedOf(terms, binding));
+      answered += found.length;
+      join(terms, found, binding);
+    };
+
+    if ("fact" in next) {
+      const { once, shared } = howAsked(next.fact, sample);
+
+      if (once) {
+        const unbound = askedOf(next.fact, {});
+        const found = stores.answer(unbound);
+        answered = found.length;
+        served = `${stores.served(unbound)}, once for all, joined by ${shared.map(([name]) => `?${name}`).join(", ")}`;
+
+        const byKey = new Map<string, Fact[]>();
         for (const fact of found) {
-          const made = bindFact(next.fact, fact, binding);
-          if (made) joined.push(made);
+          const key = shared.map(([, i]) => placeKey(fact, i)).join("\u0000");
+          const list = byKey.get(key);
+          if (list) list.push(fact);
+          else byKey.set(key, [fact]);
         }
 
-        if (joined.length > most)
-          throw new Error(
-            `the pattern holds more than ${most.toLocaleString("en")} ways after ${said(next)}; give its clauses a variable in common`,
-          );
-      } else if ("or" in next) {
-        for (const branch of next.or) joined.push(...solve(branch, stores, working, undefined, [binding]));
+        // A binding an or left without one of the shared variables is asked on its own.
+        for (const binding of bindings) {
+          if (shared.every(([name]) => name in binding))
+            join(
+              next.fact,
+              byKey.get(shared.map(([name]) => valueKey(binding[name]!)).join("\u0000")) ?? [],
+              binding,
+            );
+          else eachOf(next.fact, binding);
+        }
+      } else {
+        served = stores.served(askedOf(next.fact, sample));
+        for (const binding of bindings) eachOf(next.fact, binding);
       }
+    } else if ("or" in next) {
+      for (const binding of bindings)
+        for (const branch of next.or) joined.push(...solve(branch, stores, working, undefined, [binding]));
     }
 
-    steps?.push({
-      step: said(next),
-      served: "fact" in next ? stores.served(askedOf(next.fact, sample)) : "each branch",
-      facts: answered,
-      bindings: joined.length,
-    });
+    steps?.push({ step: said(next), served, facts: answered, bindings: joined.length });
 
     bindings = joined;
     bindsOf(next).forEach((name) => bound.add(name));

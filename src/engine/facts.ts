@@ -21,7 +21,9 @@ import { isRef, references } from "./references.ts";
 
 export type Scalar = string | number | boolean;
 export type FactValue = Scalar | { $ref: string };
-export type Fact = { e: string; a: string; v: FactValue };
+// A fact may carry its value's key, k, where the store keeps it, so the engine need not
+// say it again for every join; where it does not, the engine says it.
+export type Fact = { e: string; a: string; v: FactValue; k?: string };
 
 // What a clause knows before it is answered: a holon, a key, a value, any or none; or
 // that it can match nothing, as when what stands for a holon is not one.
@@ -42,25 +44,28 @@ const isScalar = (value: unknown): value is Scalar =>
 // A value's key in an index: a holon by its id, anything else by its kind and text.
 export const valueKey = (value: FactValue) => (isRef(value) ? value.$ref : `${typeof value}:${value}`);
 
+// A fact's value's key, kept or said.
+export const keyOfFact = (fact: Fact) => fact.k ?? valueKey(fact.v);
+
 // The facts one holon says, given the moulds of what it is.
 export function factsOf(holon: Holon, store: string, mould: Mould): Fact[] {
   const e = holon.id;
   const facts: Fact[] = [
-    ...holon.instance.map((type) => ({ e, a: "instance", v: { $ref: type } })),
-    ...(holon.name !== undefined ? [{ e, a: "name", v: holon.name }] : []),
-    { e, a: "store", v: store },
+    ...holon.instance.map((type) => ({ e, a: "instance", v: { $ref: type }, k: type })),
+    ...(holon.name !== undefined ? [{ e, a: "name", v: holon.name, k: valueKey(holon.name) }] : []),
+    { e, a: "store", v: store, k: valueKey(store) },
   ];
 
   for (const { id, key, holds } of references(holon.body, mould)) {
-    facts.push({ e, a: key, v: { $ref: id } });
-    if (holds) facts.push({ e, a: "$holds", v: { $ref: id } });
+    facts.push({ e, a: key, v: { $ref: id }, k: id });
+    if (holds) facts.push({ e, a: "$holds", v: { $ref: id }, k: id });
   }
 
   for (const [key, value] of Object.entries(holon.body)) {
     if (key.startsWith("$")) continue;
 
     for (const item of Array.isArray(value) ? value : [value]) {
-      if (isScalar(item)) facts.push({ e, a: key, v: item });
+      if (isScalar(item)) facts.push({ e, a: key, v: item, k: valueKey(item) });
     }
   }
 
@@ -73,10 +78,12 @@ const pushed = <K, V>(map: Map<K, V[]>, key: K, value: V) => {
   else map.set(key, [value]);
 };
 
-// A store's index of its facts, in four orders.
+// A store's index of its facts, in four orders; by holon, both as the holon says them
+// and each key apart, so what a holon says under one key is counted as it is.
 export function indexOf(held: readonly Known[], mouldFor: (holon: Holon) => Mould): Answering {
   const all: Fact[] = [];
   const byHolon = new Map<string, Fact[]>();
+  const byHolonKey = new Map<string, Map<string, Fact[]>>();
   const byKey = new Map<string, Fact[]>();
   const byKeyValue = new Map<string, Fact[]>();
   const byRef = new Map<string, Fact[]>();
@@ -85,22 +92,29 @@ export function indexOf(held: readonly Known[], mouldFor: (holon: Holon) => Moul
     for (const fact of factsOf(holon, store, mouldFor(holon))) {
       all.push(fact);
       pushed(byHolon, fact.e, fact);
+      let said = byHolonKey.get(fact.e);
+      if (!said) byHolonKey.set(fact.e, (said = new Map()));
+      pushed(said, fact.a, fact);
       pushed(byKey, fact.a, fact);
-      pushed(byKeyValue, `${fact.a}\u0000${valueKey(fact.v)}`, fact);
+      pushed(byKeyValue, `${fact.a}\u0000${keyOfFact(fact)}`, fact);
       if (isRef(fact.v)) pushed(byRef, fact.v.$ref, fact);
     }
   }
 
-  const matches =
-    ({ e, a, v }: Asked) =>
-    (fact: Fact) =>
+  // What is asked is said once, and each fact held to it.
+  const matches = ({ e, a, v }: Asked) => {
+    const k = v === undefined ? undefined : valueKey(v);
+
+    return (fact: Fact) =>
       (e === undefined || fact.e === e) &&
       (a === undefined || fact.a === a) &&
-      (v === undefined || valueKey(fact.v) === valueKey(v));
+      (k === undefined || keyOfFact(fact) === k);
+  };
 
   // The order that answers a clause most narrowly, and what it finds before the rest is held to.
   function order({ e, a, v, nothing }: Asked): [string, Fact[]] {
     if (nothing) return ["nothing, as it can match none", []];
+    if (e !== undefined && a !== undefined) return ["by holon and key", byHolonKey.get(e)?.get(a) ?? []];
     if (e !== undefined) return ["by holon", byHolon.get(e) ?? []];
     if (a !== undefined && v !== undefined)
       return ["by key and value", byKeyValue.get(`${a}\u0000${valueKey(v)}`) ?? []];

@@ -427,11 +427,18 @@ describe("patterns, each answered apart", () => {
     ).not.toThrow();
   });
 
-  test("the planner joins by what is bound before what stands apart", () => {
+  // Whether a small set apart is joined with what is bound, or what is bound is asked
+  // first, the plan reads few facts and makes few ways.
+  test("the planner weighs a join by what it reads in all", () => {
     const plan = ask`explain(find(?m, [?m, "instance", ?t], [?t, "name", "measure"], [?m, "value", 3]))` as {
-      steps: { step: string; bindings: number }[];
+      found: number;
+      steps: { step: string; facts: number; bindings: number }[];
     };
-    expect(Math.max(...plan.steps.map(({ bindings }) => bindings))).toBeLessThan(100);
+    const sum = (key: "facts" | "bindings") => plan.steps.reduce((n, step) => n + step[key], 0);
+
+    expect(plan.found).toBe(51);
+    expect(sum("facts")).toBeLessThan(300);
+    expect(sum("bindings")).toBeLessThan(300);
   });
 
   test("what cannot be a pattern says why", () => {
