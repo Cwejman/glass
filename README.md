@@ -80,7 +80,7 @@ The text is drawn from the holons each time; none is stored. A word is `before +
   1. **Patterns, each store answering.** A store's integration answers a pattern's clauses, glass's from an index of arrays, grounded by what `ask` and the search are actually asked. Order rides on values: a body's lists are read in order, patterns find sets. The next session begins here.
   2. **Glass's store ships its index,** and the lexicon becomes a function.
 
-  Beside them, as wanted: the main store's types held twice, `word`, `lexeme`, `lexicon`, `paragraph` and `sentence`, made one; the statistics the main store declared in an older form said again in the language. Pinned: time and `at`, streams, programs. The wiki's own plan is a record of the first mark.
+  Postponed until how the store is split into packages is discussed: the main store's prose types held twice, `word`, `lexeme`, `lexicon`, `paragraph` and `sentence`, the paper's set born apart; the lean is that such primitives come from one source package that anything holding prose depends on. Beside them, as wanted: the statistics the main store declared in an older form said again in the language. Pinned: time and `at`, streams, programs. The wiki's own plan is a record of the first mark.
 - **The wiki was brought to what stands on 2026-11-08.** Its stale marks are resolved, its old prose kept in each brief's history. Its plan is a record; what comes next is here.
 - **No session starts on local changes.** What a session did is committed before it ends, the store's ref, log and blocks above all, since no other copy of them exists.
 - **Memory is off** for every session (`.claude/settings.json`). What a session knows is in the field.
