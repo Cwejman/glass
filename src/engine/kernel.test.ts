@@ -1,11 +1,14 @@
 // The kernel grounded in real cases over the real stores. Each case is a question one
-// would ask of the field, written in the kernel, and answered a second time apart from
-// it, in plain code over the holons, so the kernel has to earn every answer.
+// would ask of the field, written in the language as code writes it, and answered a
+// second time apart from it, in plain code over the holons, so the kernel has to earn
+// every answer.
 
 import { describe, expect, test } from "bun:test";
+import { namesIn } from "../language/names.ts";
+import { template } from "../language/text.ts";
 import { openStore, type Store } from "../store/store.ts";
 import { folderFiles, storeFolders } from "../tools/stores.ts";
-import { gather } from "./expression.ts";
+import { gather, groups, level } from "./expression.ts";
 import { fieldOf } from "./field.ts";
 import { kernel, type Value } from "./kernel.ts";
 import { partsOf } from "./references.ts";
@@ -19,14 +22,10 @@ const logs = new Map(
 );
 const { evaluate } = kernel({ all, logs });
 
-// Writing the kernel.
-const c = (act: string, ...given: unknown[]) => ({ call: act, with: given });
-const fn = (body: unknown) => ({ fn: body });
-const x = { arg: 0 };
-const y = { arg: 1 };
+// Asking, in the language.
+const written = template(namesIn(all));
+const ask = (parts: TemplateStringsArray, ...given: unknown[]) => evaluate(written(parts, ...given));
 const at = (id: string) => ({ $ref: id });
-const rec = (record: Record<string, unknown>) => ({ record });
-const get = (value: unknown, key: string) => c("get", value, key);
 const ids = (value: Value) => (value as { $ref: string }[]).map(({ $ref }) => $ref);
 
 // Answering apart: the holons as they are.
@@ -43,19 +42,13 @@ const partsOfHolon = (id: string) => {
 const instancesOf = (type: string) => holons.filter((h) => h.instance.includes(type)).map((h) => h.id);
 const sameSet = (a: string[], b: string[]) => expect([...new Set(a)].sort()).toEqual([...new Set(b)].sort());
 
-// Steps the cases share, written once in the kernel.
-const holding = fn(c("map", c("filter", c("out", x), fn(get(x, "holds"))), fn(get(x, "to"))));
-const holders = fn(
-  c("map", c("filter", c("in", x), fn(get(x, "holds"))), fn(rec({ to: get(x, "from"), key: get(x, "key") }))),
-);
-const ofType = (type: string) => c("filter", c("all"), fn(c("has", get(x, "instance"), at(type))));
-
 describe("cases from OpenLight, in glass's field", () => {
   test("a thread: the line a fork came from, followed by its link", () => {
     const fork = named("A fork on the paper's licence, ended by the author");
-    const line = evaluate(
-      c("follow", at(fork.id), fn(c("filter", c("out", x), fn(c("eq", get(x, "key"), "forkedFrom"))))),
-    ) as { to: { $ref: string }; depth: number; key: string }[];
+    const line = ask`follow(${at(fork.id)}, x => out(x) | filter(e => eq(e.key, "forkedFrom")))` as {
+      to: { $ref: string };
+      key: string;
+    }[];
 
     const truth: string[] = [];
     for (let at = fork.body.forkedFrom; at; at = all.known.get(at.$ref)?.holon.body.forkedFrom)
@@ -66,18 +59,17 @@ describe("cases from OpenLight, in glass's field", () => {
   });
 
   test("a capped walk: the work tree one level down only", () => {
-    const sessions = named("Sessions");
-    const walked = evaluate(c("follow", at(sessions.id), holding, rec({ depth: 1 }))) as { depth: number }[];
+    const walked = ask`follow(@Sessions, x => out(x) | filter(e => e.holds), {depth: 1})` as {
+      depth: number;
+    }[];
 
-    expect(walked.length).toBe(partsOfHolon(sessions.id).length);
+    expect(walked.length).toBe(partsOfHolon(named("Sessions").id).length);
     expect(walked.every(({ depth }) => depth === 1)).toBe(true);
   });
 
   test("a review queue: what is measured and not yet resolved", () => {
     const measured = named("measured");
-    const open = evaluate(
-      c("filter", get(at(measured.id), "measures"), fn(c("not", c("eq", get(x, "as"), "resolved")))),
-    );
+    const open = ask`@measured.measures | filter(m => not(eq(m.as, "resolved")))`;
 
     const truth = (measured.body.measures as { $ref: string }[]).filter(
       ({ $ref }) => all.known.get($ref)!.holon.body.as !== "resolved",
@@ -88,9 +80,7 @@ describe("cases from OpenLight, in glass's field", () => {
   test("the prompts only: a session's utterances in the author's voice", () => {
     const sixth = holons.find((h) => h.name?.startsWith("A sixth session"))!;
     const author = named("The author", "voice");
-    const theirs = evaluate(
-      c("filter", get(at(sixth.id), "said"), fn(c("eq", get(x, "voice"), at(author.id)))),
-    );
+    const theirs = ask`${at(sixth.id)}.said | filter(u => eq(u.voice, @"The author"))`;
 
     const truth = (sixth.body.said as { $ref: string }[])
       .map(({ $ref }) => all.known.get($ref)!.holon)
@@ -99,7 +89,7 @@ describe("cases from OpenLight, in glass's field", () => {
   });
 
   test("intersection: what is both a brief and a step", () => {
-    const both = evaluate(c("common", ofType(typeNamed("brief")), ofType(typeNamed("step"))));
+    const both = ask`and(type(@types/brief), type(@types/step))`;
     sameSet(
       ids(both),
       instancesOf(typeNamed("brief")).filter((id) => instancesOf(typeNamed("step")).includes(id)),
@@ -107,17 +97,14 @@ describe("cases from OpenLight, in glass's field", () => {
   });
 
   test("search: what says a word, the index's case", () => {
-    const found = ids(evaluate(c("match", "holarchy")));
+    const found = ids(ask`search("holarchy")`);
     expect(found.length).toBeGreaterThan(0);
-    for (const id of found.slice(0, 20))
-      expect(JSON.stringify(all.known.get(id)!.holon).toLowerCase()).toContain("holarchy");
+    for (const id of found.slice(0, 20)) expect(ask`says(${at(id)})` as string).toContain("holarchy");
   });
 
   test("order and a window: the two latest sessions", () => {
     const sessions = named("Sessions");
-    const latest = evaluate(
-      c("take", c("reverse", c("sort", get(at(sessions.id), "sessions"), fn(get(x, "on")))), 2),
-    );
+    const latest = ask`@Sessions.sessions | sort(s => s.on) | reverse | take(2)`;
 
     const truth = [...(sessions.body.sessions as { $ref: string }[])]
       .map(({ $ref }) => all.known.get($ref)!.holon)
@@ -128,37 +115,16 @@ describe("cases from OpenLight, in glass's field", () => {
   });
 
   test("history as values: what the store's last commit says", () => {
-    const last = evaluate(get(c("first", c("reverse", c("log", "main"))), "says"));
-    expect(last).toBe(logs.get("main")!.at(-1)!.says);
+    expect(ask`log("main") | last | get("says")`).toBe(logs.get("main")!.at(-1)!.says);
   });
 });
 
 describe("cases from glass", () => {
   test("a store at its level: what nothing in it holds", () => {
-    const level = evaluate(
-      c(
-        "filter",
-        c("all"),
-        fn(
-          c(
-            "and",
-            c("eq", get(x, "store"), "main"),
-            c(
-              "eq",
-              c(
-                "size",
-                c(
-                  "filter",
-                  c("in", x),
-                  fn(c("and", get(x, "holds"), c("eq", get(get(x, "from"), "store"), "main"))),
-                ),
-              ),
-              0,
-            ),
-          ),
-        ),
-      ),
-    );
+    const level = ask`
+      store("main")
+        | filter(h => eq(size(filter(in(h), e => and(e.holds, eq(e.from.store, "main")))), 0))
+    `;
 
     const truth = holons
       .filter((h) => h.store === "main")
@@ -175,19 +141,13 @@ describe("cases from glass", () => {
 
   test("count: the words beneath a brief", () => {
     const grounds = named("The grounds", "brief");
-    const count = evaluate(
-      c(
-        "size",
-        c(
-          "distinct",
-          c(
-            "filter",
-            c("map", c("follow", at(grounds.id), holding), fn(get(x, "to"))),
-            fn(c("has", get(x, "instance"), at(typeNamed("word")))),
-          ),
-        ),
-      ),
-    );
+    const count = ask`
+      follow(${at(grounds.id)}, x => out(x) | filter(e => e.holds) | map(e => e.to))
+        | map(e => e.to)
+        | distinct
+        | filter(x => has(x.instance, ${at(typeNamed("word"))}))
+        | size
+    `;
 
     const seen = new Set<string>();
     const walk = (id: string) => partsOfHolon(id).forEach((p) => !seen.has(p) && (seen.add(p), walk(p)));
@@ -196,34 +156,33 @@ describe("cases from glass", () => {
     expect(count).toBe(truth.length);
   });
 
-  test("measure: a token estimate as the probe makes it, words times 1.85", () => {
-    const grounds = named("The grounds", "brief");
-    const words = c(
-      "filter",
-      c("map", c("follow", at(grounds.id), holding), fn(get(x, "to"))),
-      fn(c("has", get(x, "instance"), at(typeNamed("word")))),
-    );
-    const tokens = evaluate(c("mul", c("size", words), 1.85)) as number;
-    expect(tokens).toBeGreaterThan(500);
+  test("measure: a token estimate, words beneath and words kept as strings, at 1.85", () => {
+    const wiki = named("The wiki", "brief").id;
+    const seen = new Set([wiki]);
+    const walk = (id: string) => partsOfHolon(id).forEach((p) => !seen.has(p) && (seen.add(p), walk(p)));
+    walk(wiki);
+
+    const wordsOf = (id: string) => {
+      const { holon } = all.known.get(id)!;
+      if (holon.instance.includes(typeNamed("word"))) return 1;
+
+      return Object.values(holon.body)
+        .filter((value) => typeof value === "string")
+        .reduce((n, text) => n + (text as string).split(/\s+/).filter(Boolean).length, 0);
+    };
+
+    const truth = Math.round([...seen].reduce((n, id) => n + wordsOf(id), 0) * 1.85);
+    expect(ask`measure(@"The wiki")`).toBe(truth);
   });
 
   test("group: every utterance by how it came, as a fold into a record", () => {
     const sessions = named("Sessions");
-    const none = { list: [] };
-    const utterances = c(
-      "fold",
-      c("map", get(at(sessions.id), "sessions"), fn(c("else", get(x, "said"), none))),
-      none,
-      fn(c("union", x, y)),
-    );
-    const grouped = evaluate(
-      c(
-        "fold",
-        utterances,
-        rec({}),
-        fn(c("put", x, get(y, "as"), c("union", c("else", c("get", x, get(y, "as")), none), { list: [y] }))),
-      ),
-    ) as Record<string, unknown[]>;
+    const grouped = ask`
+      @Sessions.sessions
+        | map(s => else(s.said, []))
+        | fold([], (all, said) => concat(all, said))
+        | fold({}, (by, u) => put(by, u.as, concat(else(get(by, u.as), []), [u])))
+    ` as Record<string, unknown[]>;
 
     const truth: Record<string, number> = {};
     for (const s of sessions.body.sessions as { $ref: string }[])
@@ -239,7 +198,9 @@ describe("cases from glass", () => {
   test("where one is: the routes up from a paragraph to the roots", () => {
     const glass = partsOfHolon(named("The wiki", "brief").id)[0]!;
     const paragraph = partsOfHolon(glass)[0]!;
-    const walked = evaluate(c("follow", at(paragraph), holders)) as { to: { $ref: string }; key: string }[];
+    const walked = ask`
+      follow(${at(paragraph)}, x => in(x) | filter(e => e.holds) | map(e => {to: e.from, key: e.key}))
+    ` as { to: { $ref: string } }[];
 
     const up: string[] = [];
     const climb = (id: string) =>
@@ -256,14 +217,9 @@ describe("cases from glass", () => {
 
   test("what points at a place, by the key it points from", () => {
     const primitives = named("The primitives", "brief");
-    const pointing = evaluate(
-      c(
-        "fold",
-        c("filter", c("in", at(primitives.id)), fn(c("not", get(x, "holds")))),
-        rec({}),
-        fn(c("put", x, get(y, "key"), true)),
-      ),
-    );
+    const pointing = ask`
+      in(${at(primitives.id)}) | filter(e => not(e.holds)) | fold({}, (by, e) => put(by, e.key, true))
+    `;
 
     const truth = new Set(
       (all.holders.get(primitives.id) ?? []).filter(({ holds }) => !holds).map(({ key }) => key),
@@ -272,12 +228,8 @@ describe("cases from glass", () => {
   });
 
   test("any value a holon carries is for deriving: measures graded three, and steps waiting", () => {
-    const three = evaluate(
-      c("size", c("filter", ofType(typeNamed("measure")), fn(c("eq", get(x, "value"), 3)))),
-    );
-    const waiting = evaluate(
-      c("size", c("filter", ofType(typeNamed("step")), fn(c("eq", get(x, "status"), "waiting")))),
-    );
+    const three = ask`type(@types/measure) | filter(m => eq(m.value, 3)) | size`;
+    const waiting = ask`type(@types/step) | filter(s => eq(s.status, "waiting")) | size`;
 
     expect(three).toBe(
       holons.filter((h) => h.instance.includes(typeNamed("measure")) && h.body.value === 3).length,
@@ -286,47 +238,111 @@ describe("cases from glass", () => {
       holons.filter((h) => h.instance.includes(typeNamed("step")) && h.body.status === "waiting").length,
     );
   });
+
+  test("prose as text: a word as written, a sentence its words, a whole its heading", () => {
+    const text = ask`text(@Glass/"The grounds")` as string;
+
+    expect(text.startsWith("# The grounds\n\nGlass rests on what matters most to it")).toBe(true);
+    expect(text).toContain("\n\n## Each layer stands apart\n\n");
+    expect(text).toContain("*The author's, 2026-11-02.*");
+  });
 });
 
-describe("today's natives, written in the kernel", () => {
-  const glassFn = (native: string) => holons.find((h) => h.store === "glass" && h.body.native === native)!.id;
-  const native = (name: string, ...given: unknown[]) =>
-    gather(all, { call: { $ref: glassFn(name) }, with: given as never });
+describe("the natives that gather, said again by what the kernel works with", () => {
   const wiki = named("The wiki", "brief").id;
+  const set = (parts: TemplateStringsArray, ...given: unknown[]) =>
+    gather(all, written(parts, ...given) as never);
 
   test("children and parents are holding walked one step down or up", () => {
-    sameSet(
-      ids(evaluate(c("map", c("filter", c("out", at(wiki)), fn(get(x, "holds"))), fn(get(x, "to"))))),
-      native("children", at(wiki)),
-    );
-    sameSet(
-      ids(evaluate(c("map", c("filter", c("in", at(wiki)), fn(get(x, "holds"))), fn(get(x, "from"))))),
-      native("parents", at(wiki)),
-    );
+    sameSet(ids(ask`out(${at(wiki)}) | filter(e => e.holds) | map(e => e.to)`), set`children(${at(wiki)})`);
+    sameSet(ids(ask`in(${at(wiki)}) | filter(e => e.holds) | map(e => e.from)`), set`parents(${at(wiki)})`);
   });
 
-  test("points to and pointed from are the other references, instance aside", () => {
-    const pointsTo = c(
-      "map",
-      c(
-        "filter",
-        c("out", at(wiki)),
-        fn(c("and", c("not", get(x, "holds")), c("not", c("eq", get(x, "key"), "instance")))),
+  test("points and pointers are the other references, instance aside", () => {
+    sameSet(
+      ids(
+        ask`out(${at(wiki)}) | filter(e => and(not(e.holds), not(eq(e.key, "instance")))) | map(e => e.to)`,
       ),
-      fn(get(x, "to")),
+      set`points(${at(wiki)})`,
     );
-    sameSet(ids(evaluate(pointsTo)), native("points-to", at(wiki)));
   });
 
   test("type is a filter on what a holon is an instance of", () => {
-    sameSet(ids(evaluate(ofType(typeNamed("thread")))), native("type", at(typeNamed("thread"))));
+    sameSet(ids(ask`everything() | filter(h => has(h.instance, @types/thread))`), set`type(@types/thread)`);
   });
 
   test("named and store are filters on a holon's own values", () => {
-    const byName = c("filter", c("all"), fn(c("contains", c("else", get(x, "name"), ""), "primitives")));
-    sameSet(ids(evaluate(byName)), native("named", "primitives"));
+    sameSet(
+      ids(ask`everything() | filter(h => contains(else(h.name, ""), "primitives"))`),
+      set`named("primitives")`,
+    );
+    sameSet(ids(ask`everything() | filter(h => eq(h.store, "glass"))`), set`store("glass")`);
+  });
+});
 
-    const inGlass = c("filter", c("all"), fn(c("eq", get(x, "store"), "glass")));
-    sameSet(ids(evaluate(inGlass)), native("store", "glass"));
+describe("what the language is", () => {
+  test("a lambda closes over the words around it", () => {
+    expect(ask`[1, 2, 3] | map(n => [10, 20] | map(m => add(n, m)))`).toEqual([
+      [11, 21],
+      [12, 22],
+      [13, 23],
+    ]);
+  });
+
+  test("only what is chosen is worked out, so a guard holds", () => {
+    expect(ask`if(false, measure(@"The wiki"), "kept")`).toBe("kept");
+    expect(ask`and(false, get(1, "x"))`).toBe(false);
+    expect(ask`case("b", {a: 1, b: 2}, 3)`).toBe(2);
+    expect(ask`case("z", {a: 1}, 3)`).toBe(3);
+  });
+
+  test("every act is total: what it cannot use gives null or nothing", () => {
+    expect(ask`get(1, "x")`).toBe(null);
+    expect(ask`out("not a holon")`).toEqual([]);
+    expect(ask`add("a", 1)`).toBe(null);
+    expect(ask`first([])`).toBe(null);
+  });
+
+  test("not is one lattice with and and or: a truth's opposite, a set's complement", () => {
+    expect(ask`not(true)`).toBe(false);
+    expect(ask`size(not(everything()))`).toBe(0);
+    expect(ask`size(or(@"The wiki", @Sessions))`).toBe(2);
+  });
+
+  test("a function is a value, called by map as a lambda is", () => {
+    expect(ask`[@Glass/"The grounds"] | map(text) | size`).toBe(1);
+  });
+
+  test("functions written as lambdas may be given as values, and lazy ones too", () => {
+    expect(ask`map([true, false], not)`).toEqual([false, true]);
+    expect(ask`fold([true, true], true, and)`).toBe(true);
+    expect(ask`apply(x => add(x, 1), 2)`).toBe(3);
+  });
+
+  test("what is the same does not hang on the order of a record's keys", () => {
+    expect(ask`eq({a: 1, b: 2}, {b: 2, a: 1})`).toBe(true);
+  });
+
+  test("a record that looks like a lambda is a record", () => {
+    expect(ask`put({}, "fn", ["x"]) | kind`).toBe("record");
+  });
+
+  test("words given as a list are words, and no words find nothing", () => {
+    expect(ask`named(["primitives"])`).toEqual(ask`named("primitives")`);
+    expect(ask`named([])`).toEqual([]);
+  });
+
+  test("a store's level is its roots", () => {
+    expect(ids(ask`level(store("main"))`).length).toBe(10);
+    expect([...(ask`stores()` as string[])].sort()).toEqual(Object.keys(opened).sort());
+  });
+});
+
+describe("the interface's ways of looking, through functions written as lambdas", () => {
+  test("a written function that gives a set is seen at its level, and groups as nothing", () => {
+    const expression = written`level(store("glass"))` as never;
+
+    expect(level(all, expression).length).toBeGreaterThan(0);
+    expect(groups(all, expression)).toBe(null);
   });
 });

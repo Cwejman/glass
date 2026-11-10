@@ -15,6 +15,7 @@ The code, in `src/`:
 
 - `src/store/`: the store's format, one implementation over plain files, whether a folder, a static host or the browser's storage. Canonical JSON, names, the log and its checkpoints, blocks, commits and landing. The format is fixed by `vectors/`, made apart from this code.
 - `src/engine/`: the field as a value and what reads and judges it. References and whether they hold, moulds and what they check, expressions over everything, the engine that keeps the home, the protocol, and the worker it runs in.
+- `src/language/`: the language an expression is said in, as text: read and said again, with the names it uses found in the field or asked of an engine, and a template for code.
 - `src/interface/`: the contract every component draws against, the interface's end of the protocol, finding a component, drawing slots, the syntax and the address that say where one looks, the root, and the chassis that starts it all.
 
 Beside it, also in `src/`:

@@ -3,9 +3,18 @@
 // a few blocks. Only a question about everything fetches everything, and then once.
 
 import type { Holon, Store } from "../store/store.ts";
-import { everythingOf, gather, groups, level, type Everything, type Known } from "./expression.ts";
+import {
+  everythingOf,
+  expressionProblem,
+  gather,
+  groups,
+  level,
+  type Everything,
+  type Known,
+} from "./expression.ts";
+import { kernel, kernelOf, plain, type Expr } from "./kernel.ts";
 import { mouldOf, type Mould } from "./moulds.ts";
-import type { Answer, HolonRead, Read, Whole } from "./reads.ts";
+import { idsIn, type Answer, type HolonRead, type Read, type Whole } from "./reads.ts";
 import { partsOf } from "./references.ts";
 
 export type Attached = { key: string; store: Store };
@@ -138,6 +147,24 @@ async function readWhole(
   return { root, holons };
 }
 
+// What an expression gives, worked out over everything the field holds. Each store's
+// history is fetched only for an expression that asks of it.
+async function valueOf(field: Field, all: Everything, expression: Expr) {
+  const problem = expressionProblem(expression);
+  if (problem) throw new Error(problem);
+
+  const asksOfHistory = idsIn(expression).some(
+    (id) => (all.known.get(id)?.holon.body as { native?: unknown } | undefined)?.native === "log",
+  );
+  if (!asksOfHistory) return plain(kernelOf(all).evaluate(expression));
+
+  const logs = new Map(
+    await Promise.all(field.stores.map(async ({ key, store }) => [key, await store.log()] as const)),
+  );
+
+  return plain(kernel({ all, logs }).evaluate(expression));
+}
+
 async function answer(field: Field, query: Read): Promise<unknown> {
   if ("holon" in query) return readHolon(field, query.holon);
   if ("whole" in query) return readWhole(field, query.whole, query.stop, query.depth);
@@ -167,6 +194,7 @@ async function answer(field: Field, query: Read): Promise<unknown> {
   if ("gather" in query) return gather(all, query.gather);
   if ("level" in query) return level(all, query.level);
   if ("groups" in query) return groups(all, query.groups);
+  if ("value" in query) return valueOf(field, all, query.value);
 
   return all.holders.get(query.holders) ?? [];
 }

@@ -17,7 +17,15 @@ import { markedWriter, proseWriter } from "./prose.ts";
 
 type Said = { order: number; as: "typed" | "spoken" | "answered by the session"; text: string };
 type Path = { title: string; opens: string; restsOn: string[]; from: number[] };
-type Session = { name: string; on: string; kept: string; voice: string; said: Said[]; paths: Path[]; letGo: string[] };
+type Session = {
+  name: string;
+  on: string;
+  kept: string;
+  voice: string;
+  said: Said[];
+  paths: Path[];
+  letGo: string[];
+};
 
 const ref = (to: string) => ({ $ref: to });
 
@@ -40,7 +48,10 @@ const voice = put("voice", { of: ref(sessionId) }, session.voice);
 // The author's words are plain; the session's answers carry their marks.
 const said = ({ as, text }: Said) =>
   as === "answered by the session"
-    ? text.split("\n").filter((line) => line.trim()).map(marked.paragraph)
+    ? text
+        .split("\n")
+        .filter((line) => line.trim())
+        .map(marked.paragraph)
     : flow(text);
 
 const utterances = new Map(

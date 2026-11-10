@@ -1,0 +1,1 @@
+{"body":{"native":"log","says":"The commits of the store whose key is given, each when, what it says, and its hash.","takes":["key"]},"id":"1M734SKYDXQ2003","instance":["1M6YD90YH1TJ000"],"name":"log","prev":"051f6b37680283bfaa4849e706b147deca81bf307b564551c3a235d50087875c"}

@@ -6,6 +6,7 @@
 
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { parse, type Names } from "../language/text.ts";
 import { canonical } from "../store/canonical.ts";
 import { commit, type Holon } from "../store/store.ts";
 import { holonsOf, open, storeDir } from "../tools/stores.ts";
@@ -57,7 +58,26 @@ for (const file of readdirSync(join(here, "types"))) {
   make("type", name, says ? { says } : {}, mould);
 }
 
-for (const { name, ...body } of json("functions.json")) make("function", name, body);
+// A function is native, or written in the language, in a file of its own, and read
+// here into the expression it gives; it may call itself, and any function, by name.
+const functions = json("functions.json") as { name: string; written?: string }[];
+
+for (const { name } of functions) named("function", name);
+
+const functionNames: Names = {
+  functions: (name) => (functions.some((fn) => fn.name === name) ? [named("function", name)] : []),
+  holons: () => [],
+  isFunction: () => true,
+  nameOf: (id) => functions.find(({ name }) => nameOf.get(`function: ${name}`) === id)?.name,
+};
+
+for (const { name, written, ...body } of functions) {
+  const gives = written
+    ? { gives: parse(readFileSync(join(here, "functions", written), "utf8"), functionNames) }
+    : {};
+
+  make("function", name, { ...body, ...gives });
+}
 
 for (const { name, says } of json("kinds.json")) make("kind", name, { says });
 

@@ -227,7 +227,7 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     if (!words) return [];
 
     const naming = await space.read({ gather: call(is("named"), words) });
-    const saying = naming.length >= shown ? [] : await space.read({ gather: call(is("text"), words) });
+    const saying = naming.length >= shown ? [] : await space.read({ gather: call(is("search"), words) });
     const ids = [...new Set([...naming, ...saying])].slice(0, 60);
     const read = (await Promise.all(ids.map((id) => space.holon(id)))).filter((holon) => holon !== null);
 
@@ -243,6 +243,8 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
   // a holon. Within a brick, And and Everything are functions like any
   // other.
   const unoffered = new Set(["everything", "and"]);
+  const gathers = (fn: Called) =>
+    fn.takes.every((kind) => ["set", "sets", "words", "store", "axis"].includes(kind));
   const brick = (fn: Called): Found => {
     if (fn.takes.length === 0) return offered(call(fn), fn.title, "a set of its own");
     return { label: fn.title, meta: `takes ${fn.takes.join(", ")}`, step: () => take(fn) };
@@ -251,8 +253,10 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
   const bricks = (): Found[] => {
     const within = frames.length > 0;
     const own = [...functions.values()].filter(
-      ({ native }) =>
-        !native || (native !== "group" && native !== "flat" && (within || !unoffered.has(native))),
+      (fn) =>
+        gathers(fn) &&
+        (!fn.native ||
+          (fn.native !== "group" && fn.native !== "flat" && (within || !unoffered.has(fn.native)))),
     );
 
     return [
@@ -529,9 +533,9 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
       ...parents,
       ...(await near()).filter(({ label }) => fits(said, label)),
       {
-        label: `${is("text").title}: ${said}`,
+        label: `${is("search").title}: ${said}`,
         meta: "contains each word",
-        lead: adding(call(is("text"), said)),
+        lead: adding(call(is("search"), said)),
       },
     ];
   };

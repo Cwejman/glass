@@ -1,90 +1,348 @@
 [
   {
+    "name": "everything",
     "native": "everything",
-    "says": "Every holon in the field.",
-    "name": "Everything"
+    "says": "Every holon in the field."
   },
   {
+    "name": "type",
     "native": "type",
     "says": "The instances of the types given.",
-    "takes": ["set"],
-    "name": "Type"
+    "takes": ["set"]
   },
   {
+    "name": "children",
     "native": "children",
     "says": "What the holons given hold, as parts.",
-    "takes": ["set"],
-    "name": "Children of"
+    "takes": ["set"]
   },
   {
+    "name": "parents",
     "native": "parents",
     "says": "What holds the holons given.",
-    "takes": ["set"],
-    "name": "Parents of"
+    "takes": ["set"]
   },
   {
-    "native": "points-to",
-    "name": "Points to",
+    "name": "points",
+    "native": "points",
     "says": "What the holons given point at, without holding.",
     "takes": ["set"]
   },
   {
-    "native": "pointed-from",
-    "name": "Pointed from",
+    "name": "pointers",
+    "native": "pointers",
     "says": "What points at the holons given, without holding.",
     "takes": ["set"]
   },
   {
-    "native": "text",
+    "name": "search",
+    "native": "search",
     "says": "What contains each of the words given.",
-    "takes": ["words"],
-    "name": "Text"
+    "takes": ["words"]
   },
   {
+    "name": "named",
     "native": "named",
-    "name": "Named",
     "says": "What is called by each of the words given.",
     "takes": ["words"]
   },
   {
+    "name": "store",
     "native": "store",
     "says": "What the store given holds.",
-    "takes": ["store"],
-    "name": "Store"
+    "takes": ["store"]
   },
   {
+    "name": "types",
     "native": "types",
-    "says": "Every type.",
-    "name": "Is a type"
+    "says": "Every type."
   },
   {
+    "name": "stores",
+    "native": "stores",
+    "says": "The keys of the stores the field is, each a string, as store is given one.",
+    "takes": []
+  },
+  {
+    "name": "and",
     "native": "and",
-    "says": "What every set given holds.",
-    "takes": ["set", "sets"],
-    "name": "And"
+    "says": "Of sets of holons, what every one holds; of truths, whether all are true, read no further than the first that is not.",
+    "takes": ["set", "sets"]
   },
   {
+    "name": "or",
     "native": "or",
-    "says": "What any set given holds.",
-    "takes": ["set", "sets"],
-    "name": "Or"
+    "says": "Of sets of holons, what any one holds; of truths, the first that is true, read no further.",
+    "takes": ["set", "sets"]
   },
   {
+    "name": "not",
     "native": "not",
-    "says": "Everything but the set given.",
-    "takes": ["set"],
-    "name": "Not"
+    "says": "Of a set of holons, everything but it; of a truth, its opposite.",
+    "takes": ["set"]
   },
   {
+    "name": "group",
     "native": "group",
     "says": "The set given, in collections along the axis chosen: type, parent or store.",
-    "takes": ["set", "axis"],
-    "name": "Group by"
+    "takes": ["set", "axis"]
   },
   {
+    "name": "flat",
     "native": "flat",
-    "name": "Flat",
     "says": "All of the set given, looked at as it is, where a set is otherwise seen at its level: what nothing in it holds.",
     "takes": ["set"]
+  },
+  {
+    "name": "in",
+    "native": "in",
+    "says": "The references into the holon given: each from where, under what key, and whether it holds.",
+    "takes": ["holon"]
+  },
+  {
+    "name": "out",
+    "native": "out",
+    "says": "The references out of the holon given, in the order its body holds them, what it is an instance of first: each to where, under what key, and whether it holds.",
+    "takes": ["holon"]
+  },
+  {
+    "name": "says",
+    "native": "says",
+    "says": "What may be said of the holon given as text: its name and its own strings, lower case.",
+    "takes": ["holon"]
+  },
+  {
+    "name": "log",
+    "native": "log",
+    "says": "The commits of the store whose key is given, each when, what it says, and its hash.",
+    "takes": ["key"]
+  },
+  {
+    "name": "get",
+    "native": "get",
+    "says": "What the value given holds under the key: a holon's id, name, store, instance, mould or any field of its body; a record's field; a list's place.",
+    "takes": ["value", "key"]
+  },
+  {
+    "name": "keys",
+    "native": "keys",
+    "says": "The keys of a record, or of a holon's body.",
+    "takes": ["value"]
+  },
+  {
+    "name": "kind",
+    "native": "kind",
+    "says": "What kind of value is given: null, boolean, number, string, list, record, holon or function.",
+    "takes": ["value"]
+  },
+  {
+    "name": "follow",
+    "native": "follow",
+    "says": "A walk from the holons given, each step a function from a holon to where it goes, until nothing new is reached, or the depth or the until a third record says: the edges walked, each from, to, key and depth.",
+    "takes": ["value", "function", "value"]
+  },
+  {
+    "name": "map",
+    "native": "map",
+    "says": "Each of the list given, given to the function.",
+    "takes": ["list", "function"]
+  },
+  {
+    "name": "filter",
+    "native": "filter",
+    "says": "What of the list given the function finds true.",
+    "takes": ["list", "function"]
+  },
+  {
+    "name": "fold",
+    "native": "fold",
+    "says": "The list given folded into one value, from the start, by a function of what is folded so far and the next.",
+    "takes": ["list", "value", "function"]
+  },
+  {
+    "name": "sort",
+    "native": "sort",
+    "says": "The list given in order, by what the function gives for each, or by itself.",
+    "takes": ["list", "function"]
+  },
+  {
+    "name": "reverse",
+    "native": "reverse",
+    "says": "The list given, last first.",
+    "takes": ["list"]
+  },
+  {
+    "name": "take",
+    "native": "take",
+    "says": "The first of the list given, as many as the number.",
+    "takes": ["list", "number"]
+  },
+  {
+    "name": "apply",
+    "native": "apply",
+    "says": "The function given, given what follows it.",
+    "takes": ["function", "values"]
+  },
+  {
+    "name": "skip",
+    "native": "skip",
+    "says": "The list given without its first, as many as the number.",
+    "takes": ["list", "number"]
+  },
+  {
+    "name": "first",
+    "native": "first",
+    "says": "The first of the list given.",
+    "takes": ["list"]
+  },
+  {
+    "name": "last",
+    "native": "last",
+    "says": "The last of the list given.",
+    "takes": ["list"]
+  },
+  {
+    "name": "size",
+    "native": "size",
+    "says": "How many the list given holds.",
+    "takes": ["list"]
+  },
+  {
+    "name": "has",
+    "native": "has",
+    "says": "Whether the list given holds the value.",
+    "takes": ["list", "value"]
+  },
+  {
+    "name": "distinct",
+    "native": "distinct",
+    "says": "The list given, each value once, where it first stands.",
+    "takes": ["list"]
+  },
+  {
+    "name": "concat",
+    "native": "concat",
+    "says": "The lists given, one after another.",
+    "takes": ["lists"]
+  },
+  {
+    "name": "minus",
+    "native": "minus",
+    "says": "The first list given without what the second holds.",
+    "takes": ["list", "list"]
+  },
+  {
+    "name": "put",
+    "native": "put",
+    "says": "The record given, with the key set to the value.",
+    "takes": ["value", "key", "value"]
+  },
+  {
+    "name": "else",
+    "native": "else",
+    "says": "The value given, or where it is null, the other.",
+    "takes": ["value", "value"]
+  },
+  {
+    "name": "eq",
+    "native": "eq",
+    "says": "Whether the two values given are the same.",
+    "takes": ["value", "value"]
+  },
+  {
+    "name": "lt",
+    "native": "lt",
+    "says": "Whether the first value given comes before the second, both of one kind.",
+    "takes": ["value", "value"]
+  },
+  {
+    "name": "add",
+    "native": "add",
+    "says": "The two numbers given, added.",
+    "takes": ["number", "number"]
+  },
+  {
+    "name": "mul",
+    "native": "mul",
+    "says": "The two numbers given, multiplied.",
+    "takes": ["number", "number"]
+  },
+  {
+    "name": "round",
+    "native": "round",
+    "says": "The number given, to the nearest whole.",
+    "takes": ["number"]
+  },
+  {
+    "name": "join",
+    "native": "join",
+    "says": "The strings of the list given, one after another, with what is given between them; what is null is left out.",
+    "takes": ["list", "value"]
+  },
+  {
+    "name": "words",
+    "native": "words",
+    "says": "The words of the text given, lower case.",
+    "takes": ["value"]
+  },
+  {
+    "name": "contains",
+    "native": "contains",
+    "says": "Whether the text given holds every word of the other.",
+    "takes": ["value", "value"]
+  },
+  {
+    "name": "if",
+    "native": "if",
+    "says": "The second value given, if the first is true, else the third; only what is chosen is worked out.",
+    "takes": ["value", "value", "value"]
+  },
+  {
+    "name": "case",
+    "native": "case",
+    "says": "The value of the record given under the key the first gives, else the third; only what is chosen is worked out.",
+    "takes": ["value", "value", "value"]
+  },
+  {
+    "name": "parts",
+    "says": "What a holon holds, in the order it is read: a brief's flow, then its sections; anything else in the order its body holds it.",
+    "takes": ["holon"],
+    "written": "parts.expr"
+  },
+  {
+    "name": "text",
+    "says": "A holon's prose as text, the whole of it: a word as written, a sentence its words, a whole its heading, its own words, and what it holds. The number, if given, is the depth its first heading stands at.",
+    "takes": ["holon", "number"],
+    "written": "text.expr"
+  },
+  {
+    "name": "measure",
+    "says": "A holon, or a run of them, measured in tokens, as a reader takes it whole: the words beneath it and those kept as strings, each holon once, at about 1.85 tokens to a word.",
+    "takes": ["value"],
+    "written": "measure.expr"
+  },
+  {
+    "name": "digest",
+    "says": "A holon cut into pieces a reader can take at once, in the order it is read: itself if it fits the budget of tokens, else what it holds, cut in turn, side by side packed into runs while they fit.",
+    "takes": ["holon", "number"],
+    "written": "digest.expr"
+  },
+  {
+    "name": "level",
+    "says": "A set seen at its level: what nothing in it holds. The roots of a store are its level.",
+    "takes": ["set"],
+    "written": "level.expr"
+  },
+  {
+    "name": "is",
+    "says": "Whether a holon is an instance of the type given.",
+    "takes": ["holon", "holon"],
+    "written": "is.expr"
+  },
+  {
+    "name": "outline",
+    "says": "A holon's structure without its prose, to a depth: each named whole, its measure in tokens, and what it holds beneath; below the depth, how many it holds.",
+    "takes": ["holon", "number"],
+    "written": "outline.expr"
   }
 ]

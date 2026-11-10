@@ -138,7 +138,7 @@ describe("reading", () => {
     )!;
     main.click();
 
-    await settled(() => location.search === "?look=Store(:main)");
+    await settled(() => location.search === "?look=store(:main)");
     await settled(() => faceNamed(page, "The wiki"));
   });
 
@@ -186,7 +186,7 @@ describe("reading", () => {
   });
 
   test("a way of looking lists what it gathers, in collections that open", async () => {
-    const { page } = await open("https://glass.test/?look=Group+by(Everything,:store)");
+    const { page } = await open("https://glass.test/?look=group(everything,:store)");
 
     await settled(() => faceNamed(page, "holons"));
     await settled(() => faceNamed(page, "main"));
@@ -196,7 +196,7 @@ describe("reading", () => {
     expect(main.textContent).toContain("holons");
 
     press(main);
-    await settled(() => location.search.includes("Store(:main)"));
+    await settled(() => location.search.includes("store(:main)"));
   });
 
   test("a type draws its fields and instances", async () => {
@@ -326,46 +326,42 @@ describe("the search", () => {
     await settled(() => heading(page) === "The primitives");
   });
 
-  test("words are offered as Text, gathering what says them", async () => {
+  test("words are offered as a search, gathering what says them", async () => {
     const { page } = await open(`https://glass.test/?look=@${glassBrief}`);
 
     await settled(() => input(page));
     type(page, "mount reader");
 
-    await take(page, "Text: mount reader");
-    await settled(() => location.search.includes("Text(:mount+reader)"));
+    await take(page, "search: mount reader");
+    await settled(() => location.search.includes("search(:mount+reader)"));
     await settled(() => page.querySelector(".list li"));
   });
 
   test("a brick is built as it reads, what it takes chosen in turn", async () => {
     const { page } = await open(`https://glass.test/?look=@${glassBrief}`);
 
-    await settled(() => row(page, "Not"));
-    await take(page, "Not");
+    await settled(() => row(page, "not"));
+    await take(page, "not");
 
-    await settled(() => page.querySelector(".part.pending")?.textContent === "Not");
+    await settled(() => page.querySelector(".part.pending")?.textContent === "not");
 
-    type(page, "Is a type");
-    await take(page, "Is a type");
+    type(page, "types");
+    await take(page, "types");
 
-    await settled(
-      () =>
-        decodeURIComponent(location.search).includes("Not(Is a type)") ||
-        location.search.includes("Not(Is+a+type)"),
-    );
+    await settled(() => location.search.includes("not(types)"));
   });
 
   test("a part is let go with its ×, and all let go is everything", async () => {
-    const { page } = await open("https://glass.test/?look=Group+by(Everything,:store)");
+    const { page } = await open("https://glass.test/?look=group(everything,:store)");
 
     await settled(() => page.querySelector(".let-go"));
     press(page.querySelector(".let-go")!);
 
-    await settled(() => page.querySelector(".let-go") === null || location.search.includes("Everything"));
+    await settled(() => page.querySelector(".let-go") === null || location.search.includes("everything"));
   });
 
   test("laid where something was pressed, it says the place and lets go of nothing", async () => {
-    const { page } = await open("https://glass.test/?look=Group+by(Everything,:store)");
+    const { page } = await open("https://glass.test/?look=group(everything,:store)");
 
     await settled(() => page.querySelector(".list"));
 

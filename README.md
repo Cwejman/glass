@@ -26,7 +26,7 @@ What the store holds:
 - one lexicon of every word;
 - the wiki that was markdown, to the word, with its links as references and markdown's surface kept apart;
 - the author's words before the store, a day to a brief, under `said/2026-10-30.md` to `said/2026-11-06.md`: "As it was said", a root of its own, whose face the wiki's flow shows by pointing;
-- the second session of 2026-11-06, utterance by utterance, with its paths of evolution, and the forks that met it; the third session, of 2026-11-07 and 2026-11-08; a fourth and a fifth, of 2026-11-08, kept in brief; a sixth, of 2026-11-09, kept whole; a seventh, of 2026-11-09 and 2026-11-10, kept whole in the author's words;
+- the second session of 2026-11-06, utterance by utterance, with its paths of evolution, and the forks that met it; the third session, of 2026-11-07 and 2026-11-08; a fourth and a fifth, of 2026-11-08, kept in brief; a sixth, of 2026-11-09, kept whole; a seventh, of 2026-11-09 and 2026-11-10, and an eighth, of 2026-11-10, kept whole in the author's words;
 - statistics declared as prose and expression, never stored;
 - measures on what was said, sessions and passages graded with a note, none of them a conclusion: read them to reason about what to read. Briefs the work has overtaken are measured too, as stale;
 - threads raised from what was said that no brief owns yet.
@@ -39,27 +39,26 @@ Beside the main store stand three more, each a whole in its own folder. `store/p
 
 ## How to read
 
-Chart before reading. `src/tools/probe.ts` shows the field from its roots, measured in tokens, and cuts any part of it into pieces that fit what a reader can take at once; each piece is a route, read with `--text`. Routes are counted within the scope they were charted in, the main store first, so a route is read with the same scope:
+Read through the engine, in the language. `src/tools/ask.ts` attaches every store on this machine to a local engine, as the browser does, and asks it one expression: calls of functions, a holon after `@` by its id, its name or a route of names through what holds it, a lambda `m => …`, `m.key` for what m holds under key, and `a | f(b)` for f(a, b). A string comes back as it is, so prose reads as prose, and a holon as its id, its name and what it is. The functions are listed with what each says in `src/field/functions.json`, and the language at the top of `src/language/text.ts`.
 
 ```
-bun src/tools/probe.ts --only main                the roots, measured
-bun src/tools/probe.ts --only main --digest 4000  pieces to read, in order
-bun src/tools/probe.ts 9.1.33-40 --only main --text one piece, as prose
-bun src/tools/probe.ts 4 --only main --depths      a whole, layer by layer
+bun src/tools/ask.ts 'level(store("main")) | map(h => {name: h.name, tokens: measure(h)})'
+                                                       the main store's roots, measured
+bun src/tools/ask.ts 'outline(@"The wiki", 3)'         a whole's structure, measured, without its prose
+bun src/tools/ask.ts 'text(@"The wiki")'               the wiki whole, as prose
+bun src/tools/ask.ts 'digest(@Sessions, 4000) | map(run => {first: first(run).name, tokens: measure(run)})'
+                                                       a whole cut into pieces to read, in order
+bun src/tools/ask.ts '@Sessions.sessions | sort(s => s.on) | reverse | take(2) | map(text)'
+                                                       the two latest sessions, whole
+bun src/tools/ask.ts 'type(@types/measure) | filter(m => eq(m.value, 3)) | map(m => {about: m.of, note: m.as})'
+                                                       what was said, measured three
+bun src/tools/ask.ts 'type(@types/thread) | map(t => {raised: t.raised, stands: t.stands})'
+                                                       the threads raised from what was said
 ```
 
-Or read any holon by its name, id or wiki path:
+A name a holon shares with others is refused with each holon it finds and what holds it, so the route that finds one can be said: `@Glass/"The grounds"`. `--json` gives the engine's answer as it is; `--file` reads the expression from a file.
 
-```
-bun src/tools/read.ts README.md 1          the old wiki's entry, a level down
-bun src/tools/read.ts primitives.md        the primitives in prose
-bun src/tools/read.ts said/2026-11-05.md 9 a day of the author's words
-bun src/tools/read.ts "A second session"   a session and its paths, by the start of its name
-bun src/tools/read.ts session              any type, by its name
-bun src/tools/read.ts measured             what was said, measured: each a grade and a note, and the id to read it by
-bun src/tools/read.ts raised               the threads raised from what was said, and where each stands
-bun src/tools/read.ts measured | grep -A1 ' stale:'   the briefs the work has overtaken, and what still holds in each
-```
+The probe and the read tool, which read the blocks beside the engine, were retired for it on 2026-11-10. The routes earlier sessions wrote, as `9.1.21-22`, were the probe's, and are read now by what they name.
 
 A brief does not show its own stale mark when read, so read those marks before trusting the wiki. A brief the work overtakes is marked first and rewritten when the work settles, as `src/tools/rewrite.ts` does; what was said stands as it was, and is never measured stale.
 
@@ -67,21 +66,21 @@ The text is drawn from the holons each time; none is stored. A word is `before +
 
 ## The code
 
-`src/` holds the store, the engine, the interface, the field glass ships (`src/field/`), the page (`src/site/`) and the tools. `src/README.md` says where each lives. Its tooling lives with it: run `bun install`, `bun test`, `bun run check` and `bun run build` from inside `src/`. The build writes the site into `site/` at the root, which is output only and never kept. The tools can be run from anywhere, as `bun src/tools/read.ts` from the root.
+`src/` holds the store, the engine, the interface, the field glass ships (`src/field/`), the page (`src/site/`) and the tools. `src/README.md` says where each lives. Its tooling lives with it: run `bun install`, `bun test`, `bun run check` and `bun run build` from inside `src/`. The build writes the site into `site/` at the root, which is output only and never kept. The tools can be run from anywhere, as `bun src/tools/ask.ts` from the root.
 
 ## Where it stands
 
 - **The store is blocks.** The packs before them, and the JSON before those, are in git's history only. The birth from markdown has ended.
 - **The code is brought to the store.** One implementation of the format, in `src/store/`, serves the tools, the browser and the home. The engine reads holons by their moulds, holding apart from pointing, and fetches only what a read needs; the interface reads prose from its holons. Not yet built: running programs, and a reader's own branches of a pulled store. The home keeps what is attached; the page still says what to attach at each start.
-- **What one looks at is a level of the holarchy.** A way of looking shows what nothing in it holds, `Flat` shows all of it, and `Group by` takes an axis chosen. The root gives what is attached, kept in the home; the page names the entry, and everything else is reached from what it offers. The expressions were then taken down to a kernel: an expression is calls of functions, and a function gives by an expression, a pattern of facts, or code handed only values. A prototype, `src/engine/kernel.ts`, is grounded in nineteen real cases over the real stores. The seventh session, kept whole with the essence of its answers, holds the paths: `bun src/tools/read.ts "A seventh session"`.
-- **The format is settled for now,** with its vectors. The second session's two noted paths, read by `bun src/tools/probe.ts 9.1.21-22 --only main --text`, were tried on 2026-11-08: one hash per commit and addresses by position gave way to a hash per block, and counted names to short unique ones, so a store can be taken away, changed, and brought back. What is left open is at the end of `src/store/vectors/README.md`.
-- **What comes next is The plan from here**, the first path of the seventh session: `bun src/tools/read.ts "The plan from here"`. In order:
-  1. **Agents read through the engine, by a CLI.** An agent gives an expression in the language as it stands, and a local engine over the store folders answers. A session's own bootstrap is its first use, and the probe and read tools come to stand on it, so there is one way of reading. The next session begins here.
-  2. **Patterns, each store answering.** A store's integration answers a pattern's clauses, glass's from an index of arrays, grounded by what the CLI is actually asked. Order rides on values: a body's lists are read in order, patterns find sets.
-  3. **The reader says where one is,** by the same functions.
-  4. **Glass's store ships its index,** and the lexicon becomes a function.
+- **What one looks at is a level of the holarchy.** A way of looking shows what nothing in it holds, `flat` shows all of it, and `group` takes an axis chosen. The root gives what is attached, kept in the home; the page names the entry, and everything else is reached from what it offers.
+- **One language, worked out by the kernel.** An expression is calls of functions, lambdas and values, held as data; the kernel in `src/engine/kernel.ts` works it out to a value over everything the field holds, and the interface's sets are asked of it too. Glass's functions are named each by one word, some written in the field in the language itself (`src/field/functions/`). It is said as text, read and said again by `src/language/text.ts`, and written in code by a template. Agents read the field through a local engine by `src/tools/ask.ts`, as How to read says; the probe and the read tool were retired for it. The eighth session, kept whole with the essence of its answers, holds how it came: `bun src/tools/ask.ts 'text(@"An eighth session, kept whole: one language for expressions, the kernel drawn into the engine, and the field read at the command line")'`.
+- **The format is settled for now,** with its vectors. Two paths of the second session were tried on 2026-11-08: one hash per commit and addresses by position gave way to a hash per block, and counted names to short unique ones, so a store can be taken away, changed, and brought back. What is left open is at the end of `src/store/vectors/README.md`.
+- **What comes next is The plan from here**, said anew by the eighth session: `bun src/tools/ask.ts 'type(@types/path) | filter(p => and(eq(p.name, "The plan from here"), eq(p.stands, "noted"))) | map(text)'`. In order:
+  1. **The address and the search in the one language.** A place a route of names in the path, a way of looking an expression, the old syntax of titles retired, and a route that may begin at a store; so the reader says where one is by the same functions. The next session begins here.
+  2. **Patterns, each store answering.** A store's integration answers a pattern's clauses, glass's from an index of arrays, grounded by what `ask` is actually asked. Order rides on values: a body's lists are read in order, patterns find sets.
+  3. **Glass's store ships its index,** and the lexicon becomes a function.
 
-  Pinned: time and `at`, streams, programs. The wiki's own plan is a record of the first mark.
+  Beside them, as wanted: the statistics the main store declared in an older form said again in the language. Pinned: time and `at`, streams, programs. The wiki's own plan is a record of the first mark.
 - **The wiki was brought to what stands on 2026-11-08.** Its stale marks are resolved, its old prose kept in each brief's history. Its plan is a record; what comes next is here.
 - **No session starts on local changes.** What a session did is committed before it ends, the store's ref, log and blocks above all, since no other copy of them exists.
 - **Memory is off** for every session (`.claude/settings.json`). What a session knows is in the field.

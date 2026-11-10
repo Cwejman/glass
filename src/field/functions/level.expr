@@ -1,0 +1,3 @@
+// A set seen at its level: what nothing in it holds. The roots of a store are its level.
+
+set => minus(set, children(set))

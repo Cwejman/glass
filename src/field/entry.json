@@ -1,7 +1,7 @@
 {
   "name": "entry",
   "component": "Reader",
-  "gathers": { "function": "Type", "types": ["attachment"] },
+  "gathers": { "function": "type", "types": ["attachment"] },
   "offer": {
     "search": ["component", "Search"],
     "functions": ["whole", "functions"],

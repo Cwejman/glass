@@ -3,6 +3,7 @@
 
 import { isId, type Holon, type LogEntry, type Version } from "../store/store.ts";
 import type { Expression, Grouped, Holder } from "./expression.ts";
+import type { Expr, Value } from "./kernel.ts";
 
 // A holon as an engine answers: where it stands, its version's block, and the names
 // of what it is, so a reader need not ask for them.
@@ -20,7 +21,8 @@ export type Read =
   | { versions: string }
   | { gather: Expression }
   | { level: Expression }
-  | { groups: Expression };
+  | { groups: Expression }
+  | { value: Expr };
 
 export type Answer<R extends Read> = R extends { holon: string }
   ? HolonRead | null
@@ -34,7 +36,9 @@ export type Answer<R extends Read> = R extends { holon: string }
           ? Version[]
           : R extends { groups: Expression }
             ? Grouped | null
-            : string[];
+            : R extends { value: Expr }
+              ? Value
+              : string[];
 
 // The word a read goes by: what it asks, apart from what narrows it.
 export const formOf = (query: Read) =>
@@ -58,6 +62,7 @@ export function askedOf(query: Read) {
   if ("gather" in query) return idsIn(query.gather);
   if ("level" in query) return idsIn(query.level);
   if ("groups" in query) return idsIn(query.groups);
+  if ("value" in query) return idsIn(query.value);
 
   return [];
 }

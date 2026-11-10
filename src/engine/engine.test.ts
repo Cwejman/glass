@@ -36,9 +36,9 @@ const fn = Object.fromEntries(
     "type",
     "children",
     "parents",
-    "points-to",
-    "pointed-from",
-    "text",
+    "points",
+    "pointers",
+    "search",
     "named",
     "store",
     "types",
@@ -56,9 +56,9 @@ const takes: Record<string, string[]> = {
   type: ["set"],
   children: ["set"],
   parents: ["set"],
-  "points-to": ["set"],
-  "pointed-from": ["set"],
-  text: ["words"],
+  points: ["set"],
+  pointers: ["set"],
+  search: ["words"],
   named: ["words"],
   store: ["store"],
   and: ["set", "sets"],
@@ -217,8 +217,8 @@ describe("expressions", () => {
     expect(gather(a, call("type", { $ref: typeNote }))).toEqual([note]);
     expect(gather(a, call("children", { $ref: brief }))).toEqual([paragraph]);
     expect(gather(a, call("parents", { $ref: paragraph }))).toEqual([brief]);
-    expect(gather(a, call("points-to", { $ref: brief }))).toEqual([note]);
-    expect(gather(a, call("pointed-from", { $ref: note }))).toEqual([brief]);
+    expect(gather(a, call("points", { $ref: brief }))).toEqual([note]);
+    expect(gather(a, call("pointers", { $ref: note }))).toEqual([brief]);
     expect(
       gather(
         a,
@@ -233,9 +233,9 @@ describe("expressions", () => {
   test("a search lands on what holds the words, never a word itself", async () => {
     const a = await all();
 
-    expect(gather(a, call("text", "plain words"))).toEqual([paragraph]);
-    expect(gather(a, call("text", "standing"))).toEqual([note]);
-    expect(gather(a, call("text", "nowhere to be found"))).toEqual([]);
+    expect(gather(a, call("search", "plain words"))).toEqual([paragraph]);
+    expect(gather(a, call("search", "standing"))).toEqual([note]);
+    expect(gather(a, call("search", "nowhere to be found"))).toEqual([]);
   });
 
   test("what a holon is called is found by its name alone", async () => {

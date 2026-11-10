@@ -1,22 +1,17 @@
-// An expression is a function given what it takes: data, held in a body like any
-// other value, so a holon can gather as easily as it can point. Evaluated against
-// everything the field holds, it gives the holons it gathers, in the field's order.
+// What the interface looks at: a set of holons, gathered by an expression and seen at
+// its level, what nothing in it holds, or Flat, all of it, or in collections along an
+// axis, each itself an expression, so it opens as a place of its own. The kernel works
+// every expression out; here it is asked only for the holons it gathers, and what the
+// functions that gather say they take is held to before it is.
 //
 //   { "$ref": H }                the holon H, as a set of one
 //   { "call": F, "with": [ … ] } the function F, given its arguments
 //   { "arg": i }                 within a function of one's own, what it was given
-//
-// A function is a holon. A few are native, the table below. Any other gives an
-// expression over what it takes, so it stands beside them and reads as they do.
-//
-// Worked out, a set is flat, so that sets compose. Looked at, it is seen at its level:
-// what nothing in it holds, each opened to go down. Flat is the deliberate way to see
-// all of it. A grouping gives it in collections instead, one for each value along an
-// axis chosen, each itself an expression, so it opens as a place of its own.
 
 import { isId, type Holon } from "../store/store.ts";
+import { kernelOf } from "./kernel.ts";
 import { mouldOf, type Mould } from "./moulds.ts";
-import { references } from "./references.ts";
+import { isRef, references } from "./references.ts";
 
 export type Expression = { $ref: string } | { call: { $ref: string }; with?: Argument[] } | { arg: number };
 export type Argument = Expression | string;
@@ -60,129 +55,14 @@ export function everythingOf(known: Everything["known"]): Everything {
 
 const nesting = 32;
 
-// ---- The natives
+// ---- Gathering
 
-type Native = (all: Everything, given: Argument[], set: (argument: Argument) => string[]) => string[];
-
-const ids = ({ known }: Everything) => [...known.keys()];
-
-const keep = (all: Everything, test: (id: string) => boolean) => ids(all).filter(test);
-
-const asWords = (text: string) => text.toLocaleLowerCase().split(/\s+/).filter(Boolean);
-
-// What may be said of a holon as text: its name, its own strings, and the words it
-// holds. Never what is code, nor the references it points by.
-function saying(all: Everything, holon: Holon) {
-  const mould = mouldIn(all.known, holon);
-  const said: string[] = holon.name ? [holon.name] : [];
-
-  const walk = (value: unknown, key?: string): void => {
-    if (key === "$ref") return;
-
-    if (typeof value === "string") said.push(value);
-    else if (Array.isArray(value)) value.forEach((item) => walk(item));
-    else if (typeof value === "object" && value !== null) {
-      for (const [inner, held] of Object.entries(value)) walk(held, inner);
-    }
-  };
-
-  for (const [key, value] of Object.entries(holon.body)) {
-    if (mould[key]?.shape !== "code") walk(value);
-  }
-
-  for (const { id, holds } of references(holon.body, mould)) {
-    const part = holds ? all.known.get(id)?.holon.body : undefined;
-    if (part?.lexeme) said.push(part.text);
-  }
-
-  return said.join(" ").toLocaleLowerCase();
-}
-
-// A word or a lexeme is said by what holds it, so a search lands on a sentence.
-const isWordLike = (all: Everything, holon: Holon) =>
-  holon.instance.some((type) => ["word", "lexeme"].includes(all.known.get(type)?.holon.name ?? ""));
-
-// The holons a set connects to, down what they refer to or up what refers to them,
-// by holding or by pointing.
-const along =
-  (direction: "down" | "up", holding: boolean): Native =>
-  (all, [given], set) => {
-    const across = (id: string) => {
-      if (direction === "up")
-        return (all.holders.get(id) ?? []).filter(({ holds }) => holds === holding).map(({ from }) => from);
-
-      const { holon } = all.known.get(id)!;
-      return references(holon.body, mouldIn(all.known, holon))
-        .filter(({ holds }) => holds === holding)
-        .map(({ id }) => id);
-    };
-
-    const reached = new Set(set(given!).flatMap(across));
-
-    return keep(all, (id) => reached.has(id));
-  };
-
-const natives: Record<string, Native> = {
-  everything: (all) => ids(all),
-
-  type: (all, [types], set) => {
-    const wanted = new Set(set(types!));
-    return keep(all, (id) => all.known.get(id)!.holon.instance.some((type) => wanted.has(type)));
-  },
-
-  children: along("down", true),
-  parents: along("up", true),
-  "points-to": along("down", false),
-  "pointed-from": along("up", false),
-
-  text: (all, [words]) => {
-    const wanted = asWords(words as string);
-
-    return keep(all, (id) => {
-      const { holon } = all.known.get(id)!;
-      if (isWordLike(all, holon)) return false;
-
-      const said = saying(all, holon);
-      return wanted.every((word) => said.includes(word));
-    });
-  },
-
-  named: (all, [words]) => {
-    const wanted = asWords(words as string);
-
-    return keep(all, (id) => {
-      const name = all.known.get(id)!.holon.name?.toLocaleLowerCase();
-      return name !== undefined && wanted.every((word) => name.includes(word));
-    });
-  },
-
-  store: (all, [key]) => keep(all, (id) => all.known.get(id)!.store === key),
-
-  types: (all) => keep(all, (id) => all.known.get(id)!.holon.mould !== undefined),
-
-  and: (all, given, set) => {
-    const sets = given.map((each) => new Set(set(each)));
-    return keep(all, (id) => sets.every((each) => each.has(id)));
-  },
-
-  or: (all, given, set) => {
-    const sets = given.map((each) => new Set(set(each)));
-    return keep(all, (id) => sets.some((each) => each.has(id)));
-  },
-
-  not: (all, [left], set) => {
-    const out = new Set(set(left!));
-    return keep(all, (id) => !out.has(id));
-  },
-
-  group: (_all, [grouped], set) => set(grouped!),
-
-  flat: (_all, [given], set) => set(given!),
-};
-
-// ---- Evaluating
+// A set is worked out by the kernel, like any value; here it is only asked to be a set.
+// The functions that gather say what they take, so what they are given is judged first.
 
 type Definition = { takes?: Takes[]; native?: string; gives?: Expression };
+
+const setKinds = new Set<string>(["set", "sets", "words", "store", "axis"]);
 
 function called(all: Everything, expression: { call: { $ref: string }; with?: Argument[] }) {
   const holon = all.known.get(expression.call.$ref)?.holon;
@@ -191,12 +71,15 @@ function called(all: Everything, expression: { call: { $ref: string }; with?: Ar
   const fn = holon.body as Definition;
   const title = holon.name ?? holon.id;
 
-  if (fn.native ? !natives[fn.native] : !fn.gives)
-    throw new Error(`${title} is not a function the engine can run`);
+  if (!fn.native && !fn.gives) throw new Error(`${title} is not a function the engine can run`);
 
   const given = expression.with ?? [];
-  const wrong = argumentsProblem(fn.takes ?? [], given);
-  if (wrong) throw new Error(`${title} ${wrong}`);
+  const takes = fn.takes ?? [];
+
+  if (takes.every((kind) => setKinds.has(kind))) {
+    const wrong = argumentsProblem(takes, given);
+    if (wrong) throw new Error(`${title} ${wrong}`);
+  }
 
   return { fn, given };
 }
@@ -220,6 +103,11 @@ function argumentsProblem(takes: Takes[], given: Argument[]) {
   return undefined;
 }
 
+// A function of one's own that gives an expression by its arguments' places, which a
+// way of looking can be seen through; one that gives a lambda is worked out whole.
+const byPlace = (fn: Definition) =>
+  fn.gives !== undefined && !(typeof fn.gives === "object" && fn.gives !== null && "fn" in fn.gives);
+
 // A function of one's own's expression, each argument it names given in.
 function substituted(expression: Expression, given: Argument[]): Expression {
   const inner = (value: Argument): Argument => {
@@ -240,6 +128,15 @@ function substituted(expression: Expression, given: Argument[]): Expression {
   return done;
 }
 
+// Where each holon stands in the field, so a set comes back in the field's order.
+const places = new WeakMap<Everything, Map<string, number>>();
+const placeOf = (all: Everything) => {
+  let made = places.get(all);
+  if (!made) places.set(all, (made = new Map([...all.known.keys()].map((id, i) => [id, i]))));
+
+  return made;
+};
+
 // Everything never changes, and neither does what an expression gathers from it, so
 // a set is worked out once. A place of many collections shares most of its sets.
 const gathered = new WeakMap<Everything, Map<string, string[]>>();
@@ -256,11 +153,16 @@ export function gather(all: Everything, expression: Expression, nested = 0): str
   const known = sets.get(key);
   if (known) return known;
 
-  const { fn, given } = called(all, expression);
+  called(all, expression);
 
-  const set = fn.gives
-    ? gather(all, substituted(fn.gives, given), nested + 1)
-    : natives[fn.native!]!(all, given, (argument) => gather(all, argument as Expression, nested + 1));
+  const value = kernelOf(all).evaluate(expression);
+  if (!Array.isArray(value) || !value.every(isRef))
+    throw new Error("what is looked at is a set of holons, and this gives something else");
+
+  const place = placeOf(all);
+  const set = [...new Set(value.map(({ $ref }) => $ref))]
+    .filter((id) => place.has(id))
+    .sort((a, b) => place.get(a)! - place.get(b)!);
 
   sets.set(key, set);
 
@@ -286,7 +188,7 @@ function nativeIds(all: Everything) {
 
     for (const { holon } of all.known.values()) {
       const native = (holon.body as Definition).native;
-      if (typeof native === "string" && natives[native] && !found.has(native)) found.set(native, holon.id);
+      if (typeof native === "string" && !found.has(native)) found.set(native, holon.id);
     }
   }
 
@@ -375,7 +277,7 @@ export function groups(all: Everything, expression: Expression, nested = 0): Gro
 
   const { fn, given } = called(all, expression);
 
-  if (fn.gives) return groups(all, substituted(fn.gives, given), nested + 1);
+  if (fn.gives) return byPlace(fn) ? groups(all, substituted(fn.gives, given), nested + 1) : null;
 
   if (fn.native !== "group") return null;
 
@@ -402,7 +304,7 @@ export function level(all: Everything, expression: Expression, nested = 0): stri
   if ("call" in expression && nested < nesting) {
     const { fn, given } = called(all, expression);
 
-    if (fn.gives) return level(all, substituted(fn.gives, given), nested + 1);
+    if (byPlace(fn)) return level(all, substituted(fn.gives!, given), nested + 1);
     if (fn.native === "flat") return gather(all, expression);
   }
 
@@ -411,41 +313,62 @@ export function level(all: Everything, expression: Expression, nested = 0): stri
 
 // ---- Shape
 
-// What is wrong with a value meant as an expression, in its shape, if anything.
-// What each function takes is judged as it is called.
+// What is wrong with a value meant as an expression, in its shape, if anything: a value
+// standing for itself, a holon, a call, a lambda and its words, a place given, or a list
+// or record of expressions. What each function takes is judged as it is called.
 export function expressionProblem(value: unknown, nested = 0): string | undefined {
-  const form = "an expression is a holon, a call or an argument, as { call: …, with: [ … ] }";
-
   if (nested >= nesting) return `an expression nests at most ${nesting} deep`;
-  if (typeof value !== "object" || value === null || Array.isArray(value)) return form;
+  if (value === null || typeof value !== "object") return undefined;
+  if (Array.isArray(value)) return "a list in an expression is written { list: [ … ] }";
 
   const record = value as Record<string, unknown>;
   const keys = Object.keys(record);
+  const only = (...allowed: string[]) => keys.every((key) => allowed.includes(key));
+  const inner = (each: unknown) => expressionProblem(each, nested + 1);
 
   if ("$ref" in record)
-    return keys.length === 1 && isId(record.$ref) ? undefined : "a holon is given as { $ref: name }";
+    return only("$ref") && isId(record.$ref) ? undefined : "a holon is given as { $ref: id }";
 
-  if ("arg" in record) {
-    return keys.length === 1 && Number.isInteger(record.arg) && (record.arg as number) >= 0
+  if ("arg" in record)
+    return only("arg") && Number.isInteger(record.arg) && (record.arg as number) >= 0
       ? undefined
       : "an argument is given as { arg: i }, counted from 0";
+
+  if ("var" in record)
+    return only("var") && typeof record.var === "string"
+      ? undefined
+      : "a lambda's word is given as { var: word }";
+
+  if ("fn" in record) {
+    const words = record.fn;
+    if (!only("fn", "gives") || !Array.isArray(words) || !words.every((word) => typeof word === "string"))
+      return "a lambda is { fn: [words], gives: expression }";
+
+    return inner(record.gives);
   }
 
-  if (!("call" in record) || keys.some((key) => key !== "call" && key !== "with")) return form;
+  if ("list" in record) {
+    if (!only("list") || !Array.isArray(record.list)) return "a list is { list: [ … ] }";
+    return record.list.map(inner).find(Boolean);
+  }
+
+  if ("record" in record) {
+    const fields = record.record;
+    if (!only("record") || typeof fields !== "object" || fields === null || Array.isArray(fields))
+      return "a record is { record: { … } }";
+
+    return Object.values(fields).map(inner).find(Boolean);
+  }
+
+  if (!("call" in record) || !only("call", "with"))
+    return "an expression is a value, a holon, a call, a lambda, a list or a record";
 
   const call = record.call as { $ref?: unknown } | null;
   if (typeof call !== "object" || call === null || Object.keys(call).length !== 1 || !isId(call.$ref))
-    return "a call names its function as { $ref: name }";
+    return "a call names its function as { $ref: id }";
 
   if (record.with === undefined) return undefined;
   if (!Array.isArray(record.with)) return "what a call gives is a list";
 
-  for (const argument of record.with) {
-    if (typeof argument === "string") continue;
-
-    const problem = expressionProblem(argument, nested + 1);
-    if (problem) return problem;
-  }
-
-  return undefined;
+  return record.with.map(inner).find(Boolean);
 }

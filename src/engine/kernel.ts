@@ -1,152 +1,335 @@
-// A prototype of a kernel for functions: the few acts the engine would give, upon which
-// every other function is written in the field. It stands apart from the engine and is
-// wired into nothing; it exists to be grounded in real cases (kernel.test.ts) before
-// anything is built upon it.
+// The kernel: how an expression is worked out to a value. An expression is calls of
+// functions, and a function is a holon. It gives in one of two ways: natively, by an
+// act handed what it is given, or by an expression of other functions, so a function
+// written in the field stands beside the native ones and reads as they do.
 //
-// Every value a holon holds can be used: its id, name, store, what it is an instance of,
-// and every field of its body. Values are JSON, and a holon is a reference to it.
+//   1, "words", true, null              a value, standing for itself
+//   { $ref: id }                        a holon, or, if it is a function, the function
+//   { call: { $ref: f }, with: [ … ] }  the function f, given what it takes
+//   { fn: ["m"], gives: e }             a function written in place, a lambda
+//   { var: "m" }                        what a lambda was given, by its word
+//   { arg: i }                          what a function of one's own was given, by place
+//   { list: [ … ] }, { record: { … } }  a list, or a record, each of its parts worked out
 //
-//   { $ref: id }                 a holon
-//   { call: "word", with: [ … ] } a kernel act given its arguments
-//   { fn: e }                    a function, its arguments within as { arg: i }
-//   { arg: i }                   what a function was given
-//   { list: [ … ] }              a list, each of its parts worked out
-//   { record: { k: … } }         a record, each of its values worked out
-//   a string, number, boolean or null stands for itself
+// Every value a holon holds can be used: its id, name, store, what it is an instance
+// of, and every field of its body; where a field of the body shares a name with one of
+// these, the holon's own comes first. Every act is total: given what it cannot use, it
+// gives null or nothing, never fails, so a guard can always be written. Only what is not
+// an expression fails.
 //
-// The acts fall in three costs. Walking from what one holds is cheap: get, out, follow
-// stepping out. What needs the whole field is index-backed: all, in, match. The rest
-// is working with values one already has.
+// Only null and false are false; 0, "" and [] are values like any other. A list of
+// holons is a set wherever and, or and not are given one, an empty list the empty set.
 
+import { canonical } from "../store/canonical.ts";
 import type { LogEntry } from "../store/store.ts";
 import type { Everything } from "./expression.ts";
 import { mouldOf, type Mould } from "./moulds.ts";
-import { references } from "./references.ts";
+import { isRef, references } from "./references.ts";
 
 export type Value = null | boolean | number | string | Value[] | { [key: string]: Value };
 export type Expr = unknown;
 
-type Fn = { fn: Expr; env: Value[] };
-type Ref = { $ref: string };
-
+// What the kernel works over: everything the field holds, and each store's history,
+// for what asks of it.
 export type Context = { all: Everything; logs?: ReadonlyMap<string, LogEntry[]> };
 
-const isRef = (value: unknown): value is Ref =>
-  typeof value === "object" &&
-  value !== null &&
-  !Array.isArray(value) &&
-  typeof (value as Ref).$ref === "string";
-const isFn = (value: unknown): value is Fn => typeof value === "object" && value !== null && "fn" in value;
+type Ref = { $ref: string };
+
+// What a lambda closes over: the words around it, and a function of one's own's places.
+type Scope = { words: Record<string, Value>; up?: Scope; args?: Value[] };
+
+// A lambda as a value: what it gives, and where it was written. Only the kernel makes
+// one, so no value written as data can pass for one.
+type Closure = { fn: string[]; gives: Expr; scope: Scope };
+const closures = new WeakSet<object>();
+
+const isClosure = (value: unknown): value is Closure =>
+  typeof value === "object" && value !== null && closures.has(value);
+
+const closure = (fn: string[], gives: Expr, scope: Scope) => {
+  const made = { fn, gives, scope };
+  closures.add(made);
+
+  return made as unknown as Value;
+};
+
 const ref = (id: string): Ref => ({ $ref: id });
-const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+
+const truly = (value: unknown) => value !== null && value !== undefined && value !== false;
 
 const list = (value: unknown): Value[] =>
-  Array.isArray(value) ? value : value === null ? [] : [value as Value];
+  Array.isArray(value) ? value : value === null || value === undefined ? [] : [value as Value];
 
-// A body's values as kernel values: a reference becomes the holon it names, and what
-// glass marks with $ is the store's, not the holon's.
-function valueOf(value: unknown): Value {
-  if (Array.isArray(value)) return value.map(valueOf);
-  if (isRef(value)) return ref(value.$ref);
+// A value's identity, for sameness: a holon by its id, a lambda by itself, anything
+// else by its canonical text, so records are the same whatever order their keys.
+const lambdaKeys = new WeakMap<object, string>();
+let lambdas = 0;
+
+function keyOf(value: unknown): string {
+  if (isRef(value)) return value.$ref;
+
+  if (isClosure(value)) {
+    if (!lambdaKeys.has(value)) lambdaKeys.set(value, `λ${lambdas++}`);
+    return lambdaKeys.get(value)!;
+  }
+
+  if (Array.isArray(value)) return `[${value.map(keyOf).join(",")}]`;
   if (typeof value === "object" && value !== null)
-    return Object.fromEntries(
-      Object.entries(value)
-        .filter(([key]) => !key.startsWith("$"))
-        .map(([key, inner]) => [key, valueOf(inner)]),
-    );
-  return (value ?? null) as Value;
+    return `{${Object.keys(value)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${keyOf((value as Record<string, unknown>)[key])}`)
+      .join(",")}}`;
+
+  return canonical(value ?? null);
 }
 
-export function kernel(context: Context) {
-  const { known } = context.all;
+const same = (a: unknown, b: unknown) => keyOf(a) === keyOf(b);
 
-  const holonOf = (value: unknown) => {
-    if (!isRef(value)) throw new Error(`not a holon: ${JSON.stringify(value)?.slice(0, 80)}`);
-    return known.get(value.$ref)?.holon;
-  };
+const isRecord = (value: unknown): value is Record<string, Value> =>
+  typeof value === "object" && value !== null && !Array.isArray(value) && !isRef(value) && !isClosure(value);
+
+// The words of a text, or of each text in a list of them.
+const words = (text: unknown): string[] =>
+  Array.isArray(text)
+    ? text.flatMap(words)
+    : typeof text === "string"
+      ? text.toLocaleLowerCase().split(/\s+/).filter(Boolean)
+      : [];
+
+// Which of two values comes first, where both are of one kind.
+const order = (a: unknown, b: unknown) =>
+  typeof a !== typeof b ? 0 : (a as never) < (b as never) ? -1 : (a as never) > (b as never) ? 1 : 0;
+
+// ---- Acts that need only the values they are given
+
+type Act = (given: Value[]) => Value;
+
+const values: Record<string, Act> = {
+  // Lists.
+  reverse: ([items]) => [...list(items)].reverse(),
+  take: ([items, n]) => list(items).slice(0, Number(n)),
+  skip: ([items, n]) => list(items).slice(Number(n)),
+  first: ([items]) => list(items)[0] ?? null,
+  last: ([items]) => list(items).at(-1) ?? null,
+  size: ([items]) => list(items).length,
+  has: ([items, item]) => list(items).some((each) => same(each, item)),
+  distinct: ([items]) => {
+    const seen = new Set<string>();
+    return list(items).filter((item) => !seen.has(keyOf(item)) && (seen.add(keyOf(item)), true));
+  },
+  concat: (lists) => lists.flatMap(list),
+  minus: ([from, out]) => {
+    const gone = new Set(list(out).map(keyOf));
+    return list(from).filter((item) => !gone.has(keyOf(item)));
+  },
+
+  // Records.
+  put: ([record, key, value]) => ({ ...(isRecord(record) ? record : {}), [String(key)]: value ?? null }),
+
+  // Values.
+  else: ([value, otherwise]) => value ?? otherwise ?? null,
+  eq: ([a, b]) => same(a, b),
+  lt: ([a, b]) => order(a, b) < 0,
+  add: ([a, b]) => (typeof a === "number" && typeof b === "number" ? a + b : null),
+  mul: ([a, b]) => (typeof a === "number" && typeof b === "number" ? a * b : null),
+  round: ([a]) => (typeof a === "number" ? Math.round(a) : null),
+  join: ([items, between]) =>
+    list(items)
+      .filter((item) => item !== null)
+      .map((item) => (typeof item === "string" ? item : JSON.stringify(item)))
+      .join(typeof between === "string" ? between : ""),
+  words: ([text]) => words(text),
+  contains: ([text, wanted]) => {
+    const said = typeof text === "string" ? text.toLocaleLowerCase() : "";
+    return words(wanted).every((word) => said.includes(word));
+  },
+  kind: ([value]) => {
+    if (value === null) return "null";
+    if (Array.isArray(value)) return "list";
+    if (isRef(value)) return "holon";
+    if (isClosure(value)) return "function";
+
+    return typeof value === "object" ? "record" : typeof value;
+  },
+};
+
+// ---- The kernel over a field
+
+const nesting = 4000;
+
+// What a lazy act is handed: each of what it is given, to be worked out if needed, and
+// a record's one field alone, for a case.
+type Deferred = (() => Value) & { key: (key: string) => Value | undefined };
+type Lazy = (given: Deferred[]) => Value;
+
+export function kernel(context: Context) {
+  const { all } = context;
+  const { known } = all;
+
+  const holonOf = (value: unknown) => (isRef(value) ? known.get(value.$ref)?.holon : undefined);
 
   const mouldIn = (instance: string[]) =>
     mouldOf(instance.map((type) => known.get(type)?.holon.mould as Mould | undefined));
 
-  // Edges out of a holon: every reference in its body, and what it is an instance of.
-  const edgesOut = (id: string) => {
-    const holon = known.get(id)?.holon;
+  // Edges out of a holon: what it is an instance of, and every reference in its body,
+  // in the order the body holds them.
+  const edgesOut = (value: unknown): Value[] => {
+    const holon = holonOf(value);
     if (!holon) return [];
 
     return [
-      ...holon.instance.map((type) => ({ key: "instance", to: type, holds: false })),
-      ...references(holon.body, mouldIn(holon.instance)).map(({ id: to, key, holds }) => ({
+      ...holon.instance.map((type) => ({ key: "instance", to: ref(type), holds: false })),
+      ...references(holon.body, mouldIn(holon.instance)).map(({ id, key, holds }) => ({
         key,
-        to,
+        to: ref(id),
         holds,
       })),
     ];
   };
 
-  // Edges into a holon, the one thing a holon cannot say of itself: the index.
-  let inbound: Map<string, { key: string; from: string; holds: boolean }[]> | undefined;
-  const edgesIn = (id: string) => {
-    if (!inbound) {
-      inbound = new Map();
-      for (const from of known.keys())
-        for (const { key, to, holds } of edgesOut(from)) {
-          const into = inbound.get(to) ?? [];
-          into.push({ key, from, holds });
-          inbound.set(to, into);
-        }
-    }
-    return inbound.get(id) ?? [];
-  };
+  // Edges into a holon, the one thing a holon cannot say of itself: the field's index.
+  const edgesIn = (value: unknown): Value[] =>
+    isRef(value)
+      ? (all.holders.get(value.$ref) ?? []).map(({ from, key, holds }) => ({ key, from: ref(from), holds }))
+      : [];
 
-  // What may be said of a holon as text: its name and its own strings.
-  const says = (id: string) => {
-    const holon = known.get(id)?.holon;
-    const strings: string[] = holon?.name ? [holon.name] : [];
+  const isWordLike = (instance: string[]) =>
+    instance.some((type) => ["word", "lexeme"].includes(known.get(type)?.holon.name ?? ""));
+
+  // What may be said of a holon as text: its name, its own strings but its code, and
+  // the words it holds. A word is said by what holds it, so a search lands on a sentence.
+  const saying = new Map<string, string>();
+  function says(id: string) {
+    const kept = saying.get(id);
+    if (kept !== undefined) return kept;
+
+    const holon = known.get(id)!.holon;
+    const mould = mouldIn(holon.instance);
+    const said: string[] = holon.name ? [holon.name] : [];
+
     const walk = (value: unknown, key?: string): void => {
       if (key?.startsWith("$")) return;
-      if (typeof value === "string") strings.push(value);
-      else if (Array.isArray(value)) value.forEach((each) => walk(each));
+
+      if (typeof value === "string") said.push(value);
+      else if (Array.isArray(value)) value.forEach((item) => walk(item));
       else if (typeof value === "object" && value !== null)
         for (const [inner, held] of Object.entries(value)) walk(held, inner);
     };
-    walk(holon?.body);
-    return strings.join(" ").toLocaleLowerCase();
-  };
 
-  const words = (text: unknown) => String(text).toLocaleLowerCase().split(/\s+/).filter(Boolean);
-  const contains = (text: unknown, wanted: unknown) => {
-    const said = String(text ?? "").toLocaleLowerCase();
-    return words(wanted).every((word) => said.includes(word));
-  };
+    for (const [key, value] of Object.entries(holon.body)) if (mould[key]?.shape !== "code") walk(value);
 
-  function apply(fn: unknown, given: Value[]): Value {
-    if (!isFn(fn)) throw new Error("not a function");
-    return evaluate(fn.fn, given);
+    for (const { id: part, holds } of references(holon.body, mould)) {
+      const body = holds ? known.get(part)?.holon.body : undefined;
+      if (body?.lexeme) said.push(body.text);
+    }
+
+    const text = said.join(" ").toLocaleLowerCase();
+    saying.set(id, text);
+
+    return text;
   }
 
-  const acts: Record<string, (given: Value[]) => Value> = {
-    // Index-backed: what needs the whole field.
-    all: () => [...known.keys()].map(ref),
-    in: ([holon]) =>
-      edgesIn(holonOf(holon)!.id).map(({ key, from, holds }) => ({ key, from: ref(from), holds })),
-    match: ([wanted]) =>
-      [...known.keys()]
-        .filter(
-          (id) =>
-            !["word", "lexeme", "sentence"].some((t) =>
-              known.get(id)!.holon.instance.some((i) => known.get(i)?.holon.name === t),
-            ),
-        )
-        .filter((id) => contains(says(id), wanted))
-        .map(ref),
+  // ---- Sets of holons
+
+  const ids = (value: unknown) =>
+    list(value)
+      .filter(isRef)
+      .map(({ $ref }) => $ref);
+  const isSet = (value: unknown) => isRef(value) || (Array.isArray(value) && value.every(isRef));
+
+  // The holons a test keeps, in the field's order.
+  const keep = (test: (id: string) => boolean) => [...known.keys()].filter(test).map(ref);
+
+  // The holons reached, in the field's order, without going through all of it.
+  const place = new Map([...known.keys()].map((id, i) => [id, i]));
+  const inOrder = (reached: Set<string>) =>
+    [...reached]
+      .filter((id) => place.has(id))
+      .sort((a, b) => place.get(a)! - place.get(b)!)
+      .map(ref);
+
+  // What the holons given connect to, down what they refer to or up what refers to them.
+  const along = (direction: "down" | "up", holding: boolean) => (given: Value[]) => {
+    const reached = new Set<string>();
+
+    for (const id of ids(given[0])) {
+      const holon = known.get(id)?.holon;
+      const edges =
+        direction === "down"
+          ? holon
+            ? references(holon.body, mouldIn(holon.instance))
+            : []
+          : (all.holders.get(id) ?? []).map(({ from, key, holds }) => ({ id: from, key, holds }));
+
+      for (const edge of edges) if (edge.holds === holding) reached.add(edge.id);
+    }
+
+    return inOrder(reached);
+  };
+
+  // ---- Applying a function, written in place or kept as a holon
+
+  function apply(fn: unknown, given: Value[], depth: number): Value {
+    if (isClosure(fn)) {
+      const words = Object.fromEntries(fn.fn.map((word, i) => [word, given[i] ?? null]));
+      return evaluate(fn.gives, { words, up: fn.scope }, depth + 1);
+    }
+
+    if (isRef(fn) && known.get(fn.$ref)) return called(fn.$ref, given, depth);
+
+    return null;
+  }
+
+  // ---- Acts that read the field
+
+  type FieldAct = (given: Value[], depth: number) => Value;
+
+  const field: Record<string, FieldAct> = {
+    everything: () => [...known.keys()].map(ref),
+    type: ([types]) => {
+      const wanted = new Set(ids(types));
+      return keep((id) => known.get(id)!.holon.instance.some((type) => wanted.has(type)));
+    },
+    types: () => keep((id) => known.get(id)!.holon.mould !== undefined),
+    store: ([key]) => keep((id) => known.get(id)!.store === key),
+    stores: () => [...new Set([...known.values()].map(({ store }) => store))],
+    children: along("down", true),
+    parents: along("up", true),
+    points: along("down", false),
+    pointers: along("up", false),
+    search: ([text]) => {
+      const wanted = words(text);
+      if (!wanted.length) return [];
+
+      return keep(
+        (id) => !isWordLike(known.get(id)!.holon.instance) && wanted.every((word) => says(id).includes(word)),
+      );
+    },
+    named: ([text]) => {
+      const wanted = words(text);
+      if (!wanted.length) return [];
+
+      return keep((id) => {
+        const name = known.get(id)!.holon.name?.toLocaleLowerCase();
+        return name !== undefined && wanted.every((word) => name.includes(word));
+      });
+    },
+    in: ([holon]) => edgesIn(holon),
+    out: ([holon]) => edgesOut(holon),
+    says: ([holon]) => (holonOf(holon) ? says((holon as Ref).$ref) : null),
     log: ([store]) =>
       (context.logs?.get(String(store)) ?? []).map(({ at, says, hash }) => ({ at, says, hash })),
 
-    // Walking from what one holds.
+    // How a set is looked at, which the engine reads by its shape; worked out, each
+    // gives what it is given.
+    group: ([given]) => given ?? [],
+    flat: ([given]) => given ?? [],
+
+    // A holon's own values, a record's or a list's.
     get([value, key]) {
-      if (isRef(value)) {
-        const holon = holonOf(value);
-        if (!holon) return null;
+      const holon = holonOf(value);
+
+      if (holon) {
         const own: Record<string, Value> = {
           id: holon.id,
           name: holon.name ?? null,
@@ -156,104 +339,242 @@ export function kernel(context: Context) {
         };
         return String(key) in own ? own[String(key)]! : valueOf(holon.body[String(key)]);
       }
-      if (typeof value === "object" && value !== null && !Array.isArray(value))
-        return value[key as string] ?? null;
+
+      if (Array.isArray(value)) return typeof key === "number" ? (value[key] ?? null) : null;
+      if (isRecord(value)) return value[String(key)] ?? null;
+
       return null;
     },
-    out: ([holon]) => edgesOut(holonOf(holon)!.id).map(({ key, to, holds }) => ({ key, to: ref(to), holds })),
+    keys: ([value]) => {
+      const holon = holonOf(value);
+      if (holon) return Object.keys(holon.body);
+
+      return isRecord(value) ? Object.keys(value) : [];
+    },
+
+    // Lists worked through by a function.
+    map: ([items, fn], depth) => list(items).map((item) => apply(fn, [item], depth)),
+    filter: ([items, fn], depth) => list(items).filter((item) => truly(apply(fn, [item], depth))),
+    fold: ([items, start, fn], depth) =>
+      list(items).reduce<Value>((acc, item) => apply(fn, [acc, item], depth), start ?? null),
+    sort: ([items, fn], depth) =>
+      list(items)
+        .map((item) => ({ item, by: fn ? apply(fn, [item], depth) : item }))
+        .sort((a, b) => order(a.by, b.by))
+        .map(({ item }) => item),
+    apply: ([fn, ...given], depth) => apply(fn, given, depth),
 
     // The walk: a step applied from what was reached, until nothing new is reached, or a
-    // depth, or what the stop says; it yields the edges it walked, so a line, a branch
+    // depth, or what the stop says; it gives the edges it walked, so a line, a branch
     // and a join can all be drawn from it.
-    follow([seeds, step, stop]) {
-      const depthAt = (stop as Record<string, Value> | null)?.depth;
-      const until = (stop as Record<string, Value> | null)?.until;
-      const seen = new Set(list(seeds).map((seed) => (seed as Ref).$ref));
+    follow([seeds, step, stop], depth) {
+      const depthAt = isRecord(stop) ? stop.depth : undefined;
+      const until = isRecord(stop) ? stop.until : undefined;
+      const seen = new Set(ids(seeds));
       const walked: Value[] = [];
       let frontier = [...seen];
 
-      for (let depth = 1; frontier.length && (typeof depthAt !== "number" || depth <= depthAt); depth++) {
+      for (let down = 1; frontier.length && (typeof depthAt !== "number" || down <= depthAt); down++) {
         const next: string[] = [];
 
         for (const from of frontier) {
-          if (until && depth > 1 && apply(until, [ref(from)])) continue;
+          if (until && down > 1 && truly(apply(until, [ref(from)], depth))) continue;
 
-          for (const reached of list(apply(step, [ref(from)]))) {
-            const to = isRef(reached) ? reached.$ref : ((reached as Record<string, Value>).to as Ref).$ref;
-            const key = isRef(reached) ? null : ((reached as Record<string, Value>).key ?? null);
+          for (const reached of list(apply(step, [ref(from)], depth))) {
+            const edge = isRef(reached) ? { to: reached, key: null } : isRecord(reached) ? reached : {};
+            if (!isRef(edge.to)) continue;
 
-            walked.push({ from: ref(from), to: ref(to), key, depth });
-            if (!seen.has(to)) {
-              seen.add(to);
-              next.push(to);
+            walked.push({ from: ref(from), to: edge.to, key: edge.key ?? null, depth: down });
+
+            if (!seen.has(edge.to.$ref)) {
+              seen.add(edge.to.$ref);
+              next.push(edge.to.$ref);
             }
           }
         }
+
         frontier = next;
       }
+
       return walked;
     },
 
-    // Working with values.
-    map: ([items, fn]) => list(items).map((item) => apply(fn, [item])),
-    filter: ([items, fn]) => list(items).filter((item) => apply(fn, [item]) === true),
-    fold: ([items, start, fn]) =>
-      list(items).reduce<Value>((acc, item) => apply(fn, [acc, item]), start ?? null),
-    sort: ([items, fn]) =>
-      [...list(items)].sort((a, b) => {
-        const [x, y] = [apply(fn, [a]), apply(fn, [b])] as [any, any];
-        return x < y ? -1 : x > y ? 1 : 0;
-      }),
-    reverse: ([items]) => [...list(items)].reverse(),
-    take: ([items, n]) => list(items).slice(0, Number(n)),
-    skip: ([items, n]) => list(items).slice(Number(n)),
-    first: ([items]) => list(items)[0] ?? null,
-    size: ([items]) => list(items).length,
-    has: ([items, item]) => list(items).some((each) => same(each, item)),
-    distinct: ([items]) =>
-      list(items).filter((item, i, all) => all.findIndex((each) => same(each, item)) === i),
-    union: (sets) =>
-      sets.flatMap(list).filter((item, i, all) => all.findIndex((each) => same(each, item)) === i),
-    common: ([first, ...rest]) =>
-      list(first).filter((item) => rest.every((set) => list(set).some((each) => same(each, item)))),
-    minus: ([from, out]) => list(from).filter((item) => !list(out).some((each) => same(each, item))),
-    keys: ([record]) => Object.keys((record ?? {}) as object),
-    put: ([record, key, value]) => ({ ...((record ?? {}) as object), [String(key)]: value }),
-    else: ([value, otherwise]) => value ?? otherwise ?? null,
-    eq: ([a, b]) => same(a, b),
-    lt: ([a, b]) => (a as any) < (b as any),
-    add: ([a, b]) => (typeof a === "string" || typeof b === "string" ? `${a}${b}` : Number(a) + Number(b)),
-    mul: ([a, b]) => Number(a) * Number(b),
-    and: (given) => given.every((each) => each === true),
-    or: (given) => given.some((each) => each === true),
-    not: ([value]) => value !== true,
-    contains: ([text, wanted]) => contains(text, wanted),
-    words: ([text]) => words(text),
-    says: ([holon]) => says(holonOf(holon)!.id),
+    // Not is one lattice with and and or: of a set of holons, everything else the field
+    // holds; of a truth, its opposite.
+    not: ([value]) => {
+      if (!isSet(value)) return !truly(value);
+
+      const out = new Set(ids(value));
+      return keep((id) => !out.has(id));
+    },
   };
 
-  function evaluate(expr: Expr, env: Value[] = []): Value {
-    if (expr === null || typeof expr !== "object") return expr as Value;
-    if (Array.isArray(expr)) throw new Error("a list is written { list: [ … ] }");
+  // What is worked out only as it is needed: a branch, and the rest of a conjunction.
+  // And and or given sets of holons are their meet and join, in the field's order.
+  const lazy: Record<string, Lazy> = {
+    if: ([test, then, otherwise]) => (truly(test?.()) ? (then?.() ?? null) : (otherwise?.() ?? null)),
 
-    const form = expr as Record<string, unknown>;
+    case([value, cases, otherwise]) {
+      const key = value?.();
+      const chosen = typeof key === "string" ? cases?.key(key) : undefined;
 
-    if ("$ref" in form) return ref(form.$ref as string);
-    if ("arg" in form) return env[form.arg as number] ?? null;
-    if ("fn" in form) return { fn: form.fn, env } as unknown as Value;
-    if ("list" in form) return (form.list as Expr[]).map((each) => evaluate(each, env));
-    if ("record" in form)
-      return Object.fromEntries(
-        Object.entries(form.record as object).map(([key, each]) => [key, evaluate(each, env)]),
-      );
-    if ("call" in form) {
-      const act = acts[form.call as string];
-      if (!act) throw new Error(`no act ${form.call}`);
-      return act(((form.with as Expr[]) ?? []).map((each) => evaluate(each, env)));
-    }
+      return chosen !== undefined ? chosen : (otherwise?.() ?? null);
+    },
 
-    throw new Error(`not an expression: ${JSON.stringify(expr).slice(0, 80)}`);
+    and(given) {
+      let last: Value = true;
+      const sets: Set<string>[] = [];
+
+      for (const each of given) {
+        last = each();
+
+        if (isSet(last)) sets.push(new Set(ids(last)));
+        else if (!truly(last)) return last;
+      }
+
+      return sets.length ? keep((id) => sets.every((set) => set.has(id))) : last;
+    },
+
+    or(given) {
+      const sets: Set<string>[] = [];
+
+      for (const each of given) {
+        const value = each();
+
+        if (isSet(value)) sets.push(new Set(ids(value)));
+        else if (truly(value)) return value;
+      }
+
+      return sets.length ? keep((id) => sets.some((set) => set.has(id))) : false;
+    },
+  };
+
+  const natives = { ...values, ...field };
+
+  // ---- Working out
+
+  // A function kept as a holon, given values: natively, or by what it gives.
+  function called(id: string, given: Value[], depth: number): Value {
+    const holon = known.get(id)?.holon;
+    const body = (holon?.body ?? {}) as { native?: string; gives?: Expr };
+
+    if (body.native && natives[body.native]) return natives[body.native]!(given, depth);
+
+    // A lazy act handed values already worked out, as when it is given to map.
+    if (body.native && lazy[body.native]) return lazy[body.native]!(given.map((each) => valued(each)));
+
+    if (body.gives === undefined) throw new Error(`${holon?.name ?? id} is not a function`);
+
+    const gives = body.gives as { fn?: unknown; gives?: Expr };
+
+    return Array.isArray(gives?.fn)
+      ? apply(closure(gives.fn as string[], gives.gives, { words: {} }), given, depth)
+      : evaluate(body.gives, { words: {}, args: given }, depth + 1);
   }
 
-  return { evaluate, acts: Object.keys(acts) };
+  // What a lazy act is handed for a value already worked out; a case's record answers by key.
+  function valued(value: Value): Deferred {
+    const thunk = () => value;
+    return Object.assign(thunk, { key: (key: string) => (isRecord(value) ? value[key] : undefined) });
+  }
+
+  function lookUp(scope: Scope | undefined, word: string): Value {
+    for (let at = scope; at; at = at.up) if (word in at.words) return at.words[word]!;
+    throw new Error(`${word} is not a word any lambda around it takes`);
+  }
+
+  function argument(scope: Scope | undefined, place: number): Value {
+    for (let at = scope; at; at = at.up) if (at.args) return at.args[place] ?? null;
+    throw new Error("an argument is given only within a function of one's own");
+  }
+
+  // What a lazy act is handed for an expression: worked out when asked, and a record's
+  // field alone when a case asks for one.
+  function deferred(expression: Expr, scope: Scope, depth: number): Deferred {
+    const thunk = () => evaluate(expression, scope, depth);
+    const record = (expression as { record?: Record<string, Expr> } | null)?.record;
+
+    return Object.assign(thunk, {
+      key: (key: string) => (record && key in record ? evaluate(record[key], scope, depth) : undefined),
+    });
+  }
+
+  function evaluate(expression: Expr, scope: Scope = { words: {} }, depth = 0): Value {
+    if (depth > nesting) throw new Error(`an expression nests at most ${nesting} deep`);
+    if (expression === null || typeof expression !== "object") return (expression ?? null) as Value;
+    if (Array.isArray(expression)) throw new Error("a list is written { list: [ … ] }");
+
+    const form = expression as Record<string, unknown>;
+
+    if ("$ref" in form) return ref(form.$ref as string);
+    if ("var" in form) return lookUp(scope, form.var as string);
+    if ("arg" in form) return argument(scope, form.arg as number);
+    if ("fn" in form) return closure(form.fn as string[], form.gives, scope);
+    if ("list" in form) return (form.list as Expr[]).map((each) => evaluate(each, scope, depth));
+    if ("record" in form)
+      return Object.fromEntries(
+        Object.entries(form.record as object).map(([key, each]) => [key, evaluate(each, scope, depth)]),
+      );
+
+    if ("call" in form) {
+      const id = (form.call as Ref | undefined)?.$ref ?? "";
+      const holon = known.get(id)?.holon;
+      if (!holon) throw new Error(`the function ${id} is not in the field`);
+
+      const given = (form.with ?? []) as Expr[];
+      const native = (holon.body as { native?: string }).native;
+
+      if (native && lazy[native]) return lazy[native]!(given.map((each) => deferred(each, scope, depth + 1)));
+
+      return called(
+        id,
+        given.map((each) => evaluate(each, scope, depth + 1)),
+        depth + 1,
+      );
+    }
+
+    throw new Error(`not an expression: ${JSON.stringify(expression).slice(0, 80)}`);
+  }
+
+  return {
+    evaluate: (expression: Expr) => evaluate(expression),
+    natives: [...Object.keys(natives), ...Object.keys(lazy)],
+  };
+}
+
+// The kernel over everything a field holds, made once, so what it has worked out of the
+// field, as what each holon says, is kept while the field stands.
+const kernels = new WeakMap<Everything, ReturnType<typeof kernel>>();
+
+export function kernelOf(all: Everything) {
+  let made = kernels.get(all);
+  if (!made) kernels.set(all, (made = kernel({ all })));
+
+  return made;
+}
+
+// A body's values as values: a reference becomes the holon it names, and what glass
+// marks with $ is the store's, not the holon's.
+function valueOf(value: unknown): Value {
+  if (Array.isArray(value)) return value.map(valueOf);
+  if (isRef(value)) return ref(value.$ref);
+
+  if (typeof value === "object" && value !== null)
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([key]) => !key.startsWith("$"))
+        .map(([key, inner]) => [key, valueOf(inner)]),
+    );
+
+  return (value ?? null) as Value;
+}
+
+// A value as it may leave the kernel: a lambda is said as what it is, not where it was.
+export function plain(value: Value): Value {
+  if (isClosure(value)) return { function: value.fn.join(", ") };
+  if (Array.isArray(value)) return value.map(plain);
+  if (typeof value === "object" && value !== null)
+    return Object.fromEntries(Object.entries(value).map(([key, inner]) => [key, plain(inner)]));
+
+  return value;
 }

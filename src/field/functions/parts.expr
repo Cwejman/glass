@@ -1,0 +1,10 @@
+// What a holon holds, in the order it is read: a brief's flow, then its sections;
+// anything else in the order its body holds it.
+
+h => if(eq(first(h.instance).name, "brief"),
+  concat(
+    out(h) | filter(e => and(e.holds, eq(e.key, "prose"))),
+    out(h) | filter(e => and(e.holds, eq(e.key, "parts")))
+  ),
+  out(h) | filter(e => e.holds)
+) | map(e => e.to)
