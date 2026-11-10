@@ -25,10 +25,10 @@ const holons: { id: string; name?: string; in?: string }[] = [
 
 const names: Names = {
   functions: (name) => (functions[name] ? [functions[name]] : []),
-  holons(route) {
-    let found = holons.filter((holon) => holon.name === route[0]);
+  holons({ names }) {
+    let found = holons.filter((holon) => holon.name === names[0]);
 
-    for (const name of route.slice(1)) {
+    for (const name of names.slice(1)) {
       const within = new Set(found.map(({ id }) => id));
       found = holons.filter((holon) => holon.name === name && holon.in && within.has(holon.in));
     }

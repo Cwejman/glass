@@ -1,12 +1,15 @@
-// Appends one utterance of the author's to the session, as one commit: only the
-// holons it adds or changes are written, as new versions, and nothing written
-// before is touched.
-// Usage: bun src/tools/append.ts <utterance.txt> <typed|spoken> [paths.json]
-// In the text, {typed|meant} marks a fix, and _ inside it stands for a space.
+// Appends one utterance to a session, as one commit: the author's in their own words,
+// or an answer of the session's in its own voice. Only the holons it adds or changes are
+// written, as new versions, and nothing written before is touched.
+// Usage: bun src/tools/append.ts <session's name, or its start> <utterance.txt> <typed|spoken|answered> [paths.json]
+// In the author's text, {typed|meant} marks a fix, and _ inside it stands for a space.
+// A path patch adds paths, or says one of the session's own again by its title:
+//   { "add": [{ "title": "...", "opens": "...", "restsOn": ["..."] }],
+//     "edit": [{ "title": "...", "opens": "..." }] }
 
 import { commit } from "../store/store.ts";
 import { holonsOf, open, storeDir, type Holon } from "./stores.ts";
-import { proseWriter } from "./prose.ts";
+import { markedWriter, proseWriter } from "./prose.ts";
 
 type Patch = {
   add?: { title: string; opens: string; restsOn: string[] }[];
@@ -15,34 +18,55 @@ type Patch = {
 
 const ref = (to: string) => ({ $ref: to });
 
-const [file, as, patchFile] = process.argv.slice(2);
+const [named, file, as, patchFile] = process.argv.slice(2);
+if (!named || !file || !["typed", "spoken", "answered"].includes(as ?? ""))
+  throw new Error("usage: append.ts <session> <utterance.txt> <typed|spoken|answered> [paths.json]");
+
 const store = await open(storeDir);
 const holons = await holonsOf(store);
 
 const writer = proseWriter(holons, store.minter());
 const { types, put, flow } = writer;
+const marked = markedWriter(writer);
 
-const session = holons.find(
-  (h) => h.instance[0] === types.session && (h.name ?? "").startsWith("A second session"),
-)!;
+const sessions = holons.filter((h) => h.instance[0] === types.session && (h.name ?? "").startsWith(named));
+if (sessions.length !== 1) throw new Error(`${sessions.length} sessions begin with ${named}`);
+
+const session = sessions[0]!;
 const changed = new Set<Holon>([session]);
+const author = holons.find((h) => h.name === "The author" && h.instance[0] === types.voice)!;
 
-const text = await Bun.file(file!).text();
+// The author's words are plain; the session's answers carry their marks, a paragraph a line.
+const text = await Bun.file(file).text();
+const answered = as === "answered";
+const paragraphs = answered
+  ? text
+      .split("\n")
+      .filter((line) => line.trim())
+      .map(marked.paragraph)
+  : flow(text);
+
 const order = session.body.said.length + 1;
-const utterance = put("utterance", { as, order, flow: flow(text).map(ref) });
+const utterance = put("utterance", {
+  as: answered ? "answered by the session" : as,
+  order,
+  flow: paragraphs.map(ref),
+  voice: answered ? session.body.voice : ref(author.id),
+});
 session.body.said.push(ref(utterance));
 
-// A path patch: new paths, or a path's body changed in place by its title.
+// A path patch: new paths, or one of the session's own said again by its title.
 if (patchFile) {
   const patch: Patch = await Bun.file(patchFile).json();
+  const own = new Set(((session.body.paths ?? []) as { $ref: string }[]).map(({ $ref }) => $ref));
 
   for (const { title, ...path } of patch.add ?? []) {
     session.body.paths.push(ref(put("path", { ...path, stands: "noted", from: [ref(utterance)] }, title)));
   }
 
   for (const { title, opens } of patch.edit ?? []) {
-    const path = holons.find((h) => h.instance[0] === types.path && h.name === title);
-    if (!path) throw new Error(`no path titled ${title}`);
+    const path = holons.find((h) => own.has(h.id) && h.name === title);
+    if (!path) throw new Error(`the session has no path titled ${title}`);
 
     path.body.opens = opens;
     path.body.from.push(ref(utterance));
@@ -54,7 +78,7 @@ if (writer.lexiconGrew()) changed.add(writer.lexicon);
 
 const done = await commit(store, {
   holons: [...changed, ...writer.born],
-  says: `The second session, utterance ${order}`,
+  says: `${session.name}: utterance ${order}`,
 });
 console.log({
   utterance: order,

@@ -25,11 +25,15 @@
 import { isId } from "../store/store.ts";
 import type { Expr } from "../engine/kernel.ts";
 
+// A route of names through the wholes that hold each in turn: from anywhere, or, given
+// a store, from that store's level, what nothing in it holds.
+export type Route = { store?: string; names: string[] };
+
 // What a text needs of the field to be read, and to be said again: which functions
 // and holons a name finds, and how each is best said back.
 export type Names = {
   functions(name: string): string[];
-  holons(route: string[]): string[];
+  holons(route: Route): string[];
   isFunction(id: string): boolean;
   nameOf(id: string): string | undefined;
   // What a holon is and what holds it, so a name that finds several can say which.
@@ -94,12 +98,16 @@ function tokensOf(text: string): Token[] {
   return out;
 }
 
+const isName = (token: Token | undefined) => token?.kind === "word" || token?.kind === "string";
+const isMarkToken = (token: Token | undefined, value: string) =>
+  token?.kind === "mark" && token.value === value;
+
 // The names a text uses: every word that may name a function, and every route after @,
 // so whoever reads it can ask the field for just those before reading it.
 export function namesUsed(text: string) {
   const tokens = tokensOf(text);
   const words = new Set<string>();
-  const routes: string[][] = [];
+  const routes: Route[] = [];
 
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i]!;
@@ -107,24 +115,31 @@ export function namesUsed(text: string) {
     if (token.kind === "word") words.add(token.value);
 
     if (token.kind === "mark" && token.value === "@") {
-      const route: string[] = [];
+      const route: Route = { names: [] };
+      let j = i + 1;
 
-      for (let j = i + 1; j < tokens.length; j += 2) {
-        const part = tokens[j]!;
-        if (part.kind !== "word" && part.kind !== "string") break;
-
-        route.push(part.value);
-
-        const after = tokens[j + 1]!;
-        if (after.kind !== "mark" || after.value !== "/") break;
+      if (isName(tokens[j]) && isMarkToken(tokens[j + 1], ":")) {
+        route.store = (tokens[j] as { value: string }).value;
+        j += 2;
       }
 
-      if (route.length) routes.push(route);
+      for (; isName(tokens[j]); j += 2) {
+        route.names.push((tokens[j] as { value: string }).value);
+        if (!isMarkToken(tokens[j + 1], "/")) break;
+      }
+
+      if (route.names.length) routes.push(route);
     }
   }
 
   return { words: [...words], routes };
 }
+
+// A route said as it is written after @.
+export const routeText = ({ store, names }: Route) =>
+  `${store ? `${quotedName(store)}:` : ""}${names.map(quotedName).join("/")}`;
+
+const quotedName = (name: string) => (/^[\p{L}_][\p{L}\p{N}_]*$/u.test(name) ? name : JSON.stringify(name));
 
 const call = (id: string, given: Expr[]): Expr => ({
   call: { $ref: id },
@@ -202,22 +217,27 @@ export function parse(text: string, names: Names): Expr {
     return all;
   }
 
-  // A holon after @: its id, or a route of names, each a word or quoted.
+  // A holon after @: its id, or a route of names, each a word or quoted, from anywhere,
+  // or from a store's level when the store's key and a colon begin it.
   function holon(): string {
-    const route: string[] = [];
     const start = peek();
+    const route: Route = { names: [] };
+
+    if (isName(peek()) && isMark(":", peek(1))) {
+      route.store = (peek() as { value: string }).value;
+      next += 2;
+    }
 
     do {
-      const token = peek();
-      if (token.kind !== "word" && token.kind !== "string") fail("@ is followed by an id or a name");
+      if (!isName(peek())) fail("@ is followed by an id or a name");
 
-      route.push((token as { value: string }).value);
+      route.names.push((peek() as { value: string }).value);
       next++;
     } while (take("/"));
 
-    if (route.length === 1 && isId(route[0])) return route[0];
+    if (!route.store && route.names.length === 1 && isId(route.names[0])) return route.names[0];
 
-    return one(names.holons(route), `holon ${route.map((name) => JSON.stringify(name)).join("/")}`, start);
+    return one(names.holons(route), `holon ${routeText(route)}`, start);
   }
 
   function atom(): Expr {

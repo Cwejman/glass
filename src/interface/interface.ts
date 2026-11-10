@@ -16,7 +16,9 @@
 
 import type { HolonRead } from "../engine/reads.ts";
 import type { Holon } from "../store/store.ts";
-import { addressOf, placeAt, said, samePlace, type Place, type Titles } from "./address.ts";
+import { namesAsked } from "../language/names.ts";
+import { print, type Names, type Route } from "../language/text.ts";
+import { addressOf, expressionOf, namedAt, placeOf, samePlace, textOf, type Place } from "./address.ts";
 import type { Made } from "./component.ts";
 import type { Connection } from "./connection.ts";
 import { drawing, type Options } from "./drawing.ts";
@@ -47,13 +49,22 @@ async function offeredAndOwn(engine: Connection, whole: Ref | undefined) {
   return [...offered, ...own.filter((holon) => holon !== null)];
 }
 
-async function titlesOf(functions: HolonRead[]): Promise<Titles> {
-  const titles = new Map(functions.map(({ id, name }) => [id, name ?? id]));
-  const byTitle = new Map<string, string[]>();
+// The functions an address is said by: those the entry offers, and the reader's own.
+type Functions = { names: Names; or?: string; route?: string };
 
-  for (const [id, title] of titles) byTitle.set(title, [...(byTitle.get(title) ?? []), id]);
+function functionsOf(functions: HolonRead[]): Functions {
+  const named = (name: string) => functions.filter((fn) => fn.name === name).map(({ id }) => id);
 
-  return { titles, byTitle, or: functions.find(({ body }) => body.native === "or")?.id };
+  return {
+    names: {
+      functions: named,
+      holons: () => [],
+      isFunction: (id) => functions.some((fn) => fn.id === id),
+      nameOf: (id) => functions.find((fn) => fn.id === id)?.name,
+    },
+    or: functions.find(({ body }) => body.native === "or")?.id,
+    route: named("route")[0],
+  };
 }
 
 // The material laid on the page, so everything drawn is made of what the field says.
@@ -104,7 +115,7 @@ export async function mount(
   await keepAttached(engine, typeNamed("attachment"), attached);
 
   const components = await offeredAndOwn(engine, offer.components);
-  const functionsNow = async () => titlesOf(await offeredAndOwn(engine, offer.functions));
+  const functionsNow = async () => functionsOf(await offeredAndOwn(engine, offer.functions));
 
   if (!components.length) throw new Error("the entry offers no components");
 
@@ -136,7 +147,7 @@ export async function mount(
       ...((held?.body.visits as unknown[] | undefined) ?? []),
       {
         at: new Date().toISOString(),
-        looked: said(at, await functionsNow()),
+        looked: await lookedAt(at),
         ...(at.component ? { with: at.component.$ref } : {}),
       },
     ];
@@ -223,17 +234,48 @@ export async function mount(
     };
   }
 
+  // What a place says as text, as the reader's history keeps it.
+  async function lookedAt(at: Place) {
+    const { names, or } = await functionsNow();
+    return print(expressionOf(at, or), names);
+  }
+
+  // The route down to one holon, the names from its store's level, where those names
+  // find it alone; a holon on the way with no name of its own has none.
+  async function routeTo(at: Place, route?: string): Promise<Route | undefined> {
+    if (!route || at.argument?.length !== 1 || at.gathers) return undefined;
+
+    const id = at.argument[0]!.$ref;
+    const down = (await engine.read({ value: { call: { $ref: route }, with: [{ $ref: id }] } })) as
+      | { $ref: string }[]
+      | null;
+    const holons = await Promise.all((down ?? []).map(({ $ref }) => engine.holon($ref)));
+    if (!holons.length || holons.some((holon) => holon?.name === undefined)) return undefined;
+
+    const found: Route = { store: holons[0]!.store, names: holons.map((holon) => holon!.name!) };
+    const names = await namesAsked(engine.read, textOf({ route: found }));
+
+    return names.holons(found).length === 1 ? found : undefined;
+  }
+
   async function addressFor(at: Place) {
     if (samePlace(at, atRoot())) return location.pathname;
 
-    return addressOf(location.pathname, at, await functionsNow());
+    const { names, or, route } = await functionsNow();
+    return addressOf(location.pathname, at, { names, or, route: await routeTo(at, route) });
   }
 
   // The place the address names, or, where it names none that can be read, the root,
   // and the address is then made to say nothing.
   async function settle() {
     try {
-      place = placeAt(location.href, await functionsNow());
+      const named = namedAt(location.href);
+      place = named
+        ? placeOf(named, await namesAsked(engine.read, textOf(named)), (await functionsNow()).or)
+        : undefined;
+
+      // A route that led by its id, its names having moved, is said again as it stands now.
+      if (place && named && "route" in named) history.replaceState(null, "", await addressFor(place));
     } catch (error) {
       console.error(error);
       place = undefined;

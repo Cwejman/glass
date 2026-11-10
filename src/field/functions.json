@@ -334,6 +334,12 @@
     "written": "level.expr"
   },
   {
+    "name": "route",
+    "says": "The way down to a holon from its store's level: each whole that holds it, from the top, the first that holds it at each step, and then itself.",
+    "takes": ["holon"],
+    "written": "route.expr"
+  },
+  {
     "name": "is",
     "says": "Whether a holon is an instance of the type given.",
     "takes": ["holon", "holon"],

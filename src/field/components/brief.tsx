@@ -4,7 +4,8 @@
 // slot of its own. As a face: its name and its first paragraph.
 
 import type { HolonRead } from "../../engine/reads.ts";
-import type { Given, Space } from "../../interface/component.ts";
+import type { Given, Offer, Space } from "../../interface/component.ts";
+import { functionsIn } from "./parts.ts";
 import { h, type Child } from "./jsx.ts";
 import { block, refsOf } from "./prose.tsx";
 
@@ -13,7 +14,7 @@ export const declared = {
   says: "A brief: in full, the way down to it, its name and flow, and its sections read through after it; as a face, its name and first paragraph.",
   takes: ["brief"],
   kinds: ["full", "face"],
-  reads: ["whole", "holders", "holon"],
+  reads: ["whole", "holon", "instances", "value"],
 };
 
 export const style = `
@@ -79,7 +80,7 @@ async function full(given: Given, space: Space) {
   const way = (<nav aria-label="Where this stands" />) as HTMLElement;
 
   // The way down asks about everything, so the words do not wait for it.
-  wayDown(brief, space).then(
+  wayDown(brief, space, given.offered).then(
     (steps) =>
       way.replaceChildren(
         ...steps.map(
@@ -159,21 +160,16 @@ async function face({ holon }: Given, space: Space) {
   );
 }
 
-// From the top of its holarchy down to this brief, by what holds each.
-async function wayDown(brief: HolonRead, space: Space) {
-  const steps: { id: string; name: string }[] = [];
-  const seen = new Set([brief.id]);
+// From the top of its holarchy down to this brief, as the field's own route function
+// says it, the same that says where one is in the address.
+async function wayDown(brief: HolonRead, space: Space, offered: Offer) {
+  const route = [...(await functionsIn(space, offered)).values()].find(({ title }) => title === "route");
+  if (!route) return [];
 
-  for (let id = brief.id; ; ) {
-    const holder = (await space.read({ holders: id })).find(({ holds }) => holds);
+  const down = (await space.read({
+    value: { call: { $ref: route.id }, with: [{ $ref: brief.id }] },
+  })) as { $ref: string }[];
+  const wholes = await Promise.all(down.slice(0, -1).map(({ $ref }) => space.holon($ref)));
 
-    if (!holder || seen.has(holder.from)) return steps;
-
-    const whole = await space.holon(holder.from);
-    if (!whole) return steps;
-
-    steps.unshift({ id: whole.id, name: whole.name ?? "…" });
-    seen.add(whole.id);
-    id = whole.id;
-  }
+  return wholes.flatMap((whole) => (whole ? [{ id: whole.id, name: whole.name ?? "…" }] : []));
 }

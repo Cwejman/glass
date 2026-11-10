@@ -1,3 +1,5 @@
+import { namesAsked } from "../../language/names.ts";
+import { parse } from "../../language/text.ts";
 import { type Given, type HolonOf, type Reading, type Space } from "../../interface/component.ts";
 import { candidates } from "../../interface/finding.ts";
 import type { Argument, Axis, Expression } from "../../engine/expression.ts";
@@ -69,7 +71,7 @@ export const declared = {
       optional: true,
     },
   },
-  reads: ["gather", "holon", "instances", "groups", "level"],
+  reads: ["gather", "holon", "instances", "groups", "level", "named", "holders"],
 };
 
 type Ref = { $ref: string };
@@ -495,6 +497,21 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     ) as HolonOf<ComponentBody>[];
   };
 
+  // Words that read as an expression in the language, as an agent types it at the
+  // command line, are a way of looking of their own, or a holon to go to.
+  const written = async (text: string): Promise<Found[]> => {
+    if (!/[(@|]/.test(text)) return [];
+
+    try {
+      const expression = parse(text, await namesAsked(space.read, text)) as Expression;
+      const lead: Lead = "$ref" in expression ? { location: [expression.$ref] } : { expression };
+
+      return [{ label: text, meta: "said in the language", lead }];
+    } catch {
+      return [];
+    }
+  };
+
   // What the words find, with nothing taken: the holons they begin, the bricks they
   // name, the holons they name; the values in view they name; what near they name; and,
   // always, the words themselves as Text.
@@ -525,6 +542,7 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
     const named = bricks().filter(({ label }) => fits(said, label));
 
     return [
+      ...(await written(said)),
       ...named.filter(({ label }) => begins(said, label)),
       ...holons.filter(({ first }) => first).slice(0, 4),
       ...named.filter(({ label }) => !begins(said, label)),

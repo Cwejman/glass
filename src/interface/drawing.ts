@@ -195,7 +195,10 @@ export function drawing(
     }
 
     // The space one drawing works in. Its reach is a ceiling: a component reaches what
-    // it was handed, what that names, and what its own declared reads give back.
+    // it was handed, what that names, and what its own declared reads give back. Only
+    // the holons an expression names are judged, so a component that declares the value
+    // read may work out anything the field holds through the functions it reaches; it is
+    // a ceiling on what is named, not on what is computed.
     function spaceFor(current: () => boolean, call: Call, component: HolonRead, handed: string[]): Space {
       const declared = new Set((component.body.reads ?? []) as string[]);
       const reached = new Set([...handed, ...idsIn(call.offered), ...idsIn(call.settings)]);

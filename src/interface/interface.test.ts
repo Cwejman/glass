@@ -138,7 +138,7 @@ describe("reading", () => {
     )!;
     main.click();
 
-    await settled(() => location.search === "?look=store(:main)");
+    await settled(() => location.search === "?look=store(%22main%22)");
     await settled(() => faceNamed(page, "The wiki"));
   });
 
@@ -162,7 +162,7 @@ describe("reading", () => {
   });
 
   test("an address that cannot be read falls back to the entry", async () => {
-    const { page } = await open("https://glass.test/?look=Nonsense(((");
+    const { page } = await open("https://glass.test/?look=nonsense(((");
 
     await settled(() => storesShown(page).includes("main"));
   });
@@ -186,7 +186,7 @@ describe("reading", () => {
   });
 
   test("a way of looking lists what it gathers, in collections that open", async () => {
-    const { page } = await open("https://glass.test/?look=group(everything,:store)");
+    const { page } = await open("https://glass.test/?look=group(everything(),%22store%22)");
 
     await settled(() => faceNamed(page, "holons"));
     await settled(() => faceNamed(page, "main"));
@@ -196,7 +196,7 @@ describe("reading", () => {
     expect(main.textContent).toContain("holons");
 
     press(main);
-    await settled(() => location.search.includes("store(:main)"));
+    await settled(() => location.search.includes("store(%22main%22)"));
   });
 
   test("a type draws its fields and instances", async () => {
@@ -218,7 +218,14 @@ describe("reading", () => {
 });
 
 describe("moving", () => {
-  test("a press on a face moves, and going back is only the address changing", async () => {
+  test("an address by route lands where the route leads", async () => {
+    const { page } = await open("https://glass.test/?place=main/The+wiki/Glass/The+primitives");
+
+    await settled(() => heading(page) === "The primitives");
+    expect(location.search).toBe(`?place=main/The+wiki/Glass/The+primitives&id=${primitives}`);
+  });
+
+  test("a press on a face moves to its route, and going back is only the address changing", async () => {
     const { page, engine } = await open(`https://glass.test/?look=@${glassBrief}`);
     const first = location.href;
 
@@ -226,7 +233,7 @@ describe("moving", () => {
     press(faceNamed(page, "The primitives")!);
 
     await settled(() => heading(page) === "The primitives");
-    expect(location.search).toBe(`?look=@${primitives}`);
+    expect(location.search).toBe(`?place=main/The+wiki/Glass/The+primitives&id=${primitives}`);
 
     const [history_] = await settledHistory(engine);
     expect(history_).toBeTruthy();
@@ -333,7 +340,18 @@ describe("the search", () => {
     type(page, "mount reader");
 
     await take(page, "search: mount reader");
-    await settled(() => location.search.includes("search(:mount+reader)"));
+    await settled(() => location.search.includes("search(%22mount+reader%22)"));
+    await settled(() => page.querySelector(".list li"));
+  });
+
+  test("words said in the language are a way of looking of their own", async () => {
+    const { page } = await open(`https://glass.test/?look=@${glassBrief}`);
+
+    await settled(() => input(page));
+    type(page, "type(@types/brief) | level");
+
+    await take(page, "type(@types/brief) | level");
+    await settled(() => location.search.startsWith("?look=level(type(@"));
     await settled(() => page.querySelector(".list li"));
   });
 
@@ -348,20 +366,20 @@ describe("the search", () => {
     type(page, "types");
     await take(page, "types");
 
-    await settled(() => location.search.includes("not(types)"));
+    await settled(() => location.search.includes("not(types())"));
   });
 
   test("a part is let go with its ×, and all let go is everything", async () => {
-    const { page } = await open("https://glass.test/?look=group(everything,:store)");
+    const { page } = await open("https://glass.test/?look=group(everything(),%22store%22)");
 
     await settled(() => page.querySelector(".let-go"));
     press(page.querySelector(".let-go")!);
 
-    await settled(() => page.querySelector(".let-go") === null || location.search.includes("everything"));
+    await settled(() => page.querySelector(".let-go") === null || location.search.includes("everything()"));
   });
 
   test("laid where something was pressed, it says the place and lets go of nothing", async () => {
-    const { page } = await open("https://glass.test/?look=group(everything,:store)");
+    const { page } = await open("https://glass.test/?look=group(everything(),%22store%22)");
 
     await settled(() => page.querySelector(".list"));
 
