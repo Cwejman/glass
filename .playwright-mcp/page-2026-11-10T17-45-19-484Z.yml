@@ -1,0 +1,216 @@
+- main [ref=e2]:
+  - generic [ref=e390]:
+    - generic [ref=e392]:
+      - generic [ref=e395]:
+        - button "brief" [ref=e396] [cursor=pointer]
+        - generic [ref=e397]:
+          - button "The primitives" [disabled] [ref=e398]
+          - button "Let go of The primitives" [ref=e400] [cursor=pointer]: ×
+        - combobox [ref=e401]
+      - article [ref=e403]:
+        - navigation "Where this stands" [ref=e404]:
+          - link "The wiki" [ref=e405] [cursor=pointer]:
+            - /url: "#"
+          - link "›Glass" [ref=e406] [cursor=pointer]:
+            - /url: "#"
+        - heading "The primitives" [level=1] [ref=e407]
+        - paragraph [ref=e408]: "Data, types, programs, AI and interfaces are one field of whole pieces, and everything else in glass grows on them. Here they are in the order they stand on each other: the holon, its type, the store that keeps it, the engine that holds the stores, the field they make, the program, its effect, AI, and the interface. They are few on purpose: the author's aim is a core set of primitives, done with quality."
+        - paragraph [ref=e409]:
+          - emphasis [ref=e410]:
+            - text: The author's, from
+            - link "the grant" [ref=e411] [cursor=pointer]:
+              - /url: "#"
+            - text: and
+            - link "his words of 2026-10-31" [ref=e412] [cursor=pointer]:
+              - /url: "#"
+            - text: ; the store and the engine named as primitives his,
+            - link "2026-11-01" [ref=e413] [cursor=pointer]:
+              - /url: "#"
+            - text: .
+        - generic [ref=e414]:
+          - heading [level=2] [ref=e415]:
+            - link "Holon" [ref=e416] [cursor=pointer]:
+              - /url: "#"
+          - paragraph [ref=e417]: "A holon is a small piece that is whole in itself, and part of the field and of any whole that holds it. A note is a holon, and so is a program, a type, a component and a mount: the same kind of piece throughout."
+          - paragraph [ref=e418]: "A holon is its identity, what it is an instance of, and its body: what it holds. Beside them it may carry a name, by which it is addressed. The identity is given when it is born and never changes; every state it has had is kept as a version, each pointing back at the one before, so how it came to be stays readable."
+          - paragraph [ref=e419]:
+            - emphasis [ref=e420]:
+              - text: "The name beside the identity the author's, 2026-11-05. Whole pieces the author's, from the grant; part of the field his, 2026-11-02: everything is part of the field; that holons have ids and history his, 2026-11-01 (\"holons have to have ids I think and have to have commits\"); the shape of versions the session's, laid out in"
+              - link "the store" [ref=e421] [cursor=pointer]:
+                - /url: "#"
+              - text: .
+        - generic [ref=e422]:
+          - heading [level=2] [ref=e423]:
+            - link "Type" [ref=e424] [cursor=pointer]:
+              - /url: "#"
+          - paragraph [ref=e425]: "A type is a schema in the field: the structure a holon's data has. Data is by its nature structure, and types are what let a field hold structure of its own making, declared in the field itself, so a type is a holon too. Programs need data, and types are what they find it by."
+          - paragraph [ref=e426]:
+            - emphasis [ref=e427]:
+              - text: "The author's, 2026-11-01: type is what allows you to create schemas within the field, what allows for structure, and that is what programs need. How a type is written, and how the store checks a holon against it, is"
+              - link "open" [ref=e428] [cursor=pointer]:
+                - /url: "#"
+              - text: .
+          - paragraph [ref=e429]: "Each field a type declares is said in prose as well as in structure: what the key means, beside the shape the engine checks. A field is where holons connect, so the fields are the field's ontological connectors, and holons joined at them form a larger ontology, readable by a person, a program or a language model alike."
+          - paragraph [ref=e430]:
+            - emphasis [ref=e431]: "The author's, 2026-11-02: the fields of a holon are contact points for prose, so that we can build ontologically upon them; where each holon connects are the ontological connectors, forming larger ontology. That the prose stands beside the checked shape, and models read it, the session's proposal of the same day, which he answered yes."
+          - paragraph [ref=e432]: A type's fields are to stand beside its identity, out of its body, as its mould, since they say what other holons hold and not what the type itself holds; a cast, but for what comes from it. A holon is then a type by having a mould, and the type of types is let go.
+          - paragraph [ref=e433]:
+            - emphasis [ref=e434]:
+              - text: "The author's, 2026-11-05: fields goes out of the body; being a type both by being an instance of Type and by having fields was double, so yes, we drop the type type; mould for now. Built, as"
+              - link "the store" [ref=e435] [cursor=pointer]:
+                - /url: "#"
+              - text: tells.
+        - generic [ref=e436]:
+          - heading [level=2] [ref=e437]:
+            - link "Store" [ref=e438] [cursor=pointer]:
+              - /url: "#"
+          - paragraph [ref=e439]: "A store is where holons are kept and how they travel: every version of every holon, and every commit that changed them, as files that never change, with one pointer saying which commit is current. A store can be copied, served and attached anywhere, and every copy is whole."
+          - paragraph [ref=e440]:
+            - emphasis [ref=e441]:
+              - text: The store as a primitive the author's, 2026-11-01; its shape proposed by the session and agreed by the author, given whole in
+              - link "the store" [ref=e442] [cursor=pointer]:
+                - /url: "#"
+              - text: .
+          - paragraph [ref=e443]: A store is one space, and any whole within it can be taken away as a store of its own.
+          - paragraph [ref=e444]:
+            - emphasis [ref=e445]:
+              - text: The author's, 2026-11-04, told in
+              - link "the store" [ref=e446] [cursor=pointer]:
+                - /url: "#"
+              - text: .
+          - paragraph [ref=e447]: "A store is one source among the engine's integrations, the native one: git, the browser's history or a video's data are sources too, each with its own truth and format, reached through programs."
+          - paragraph [ref=e448]:
+            - emphasis [ref=e449]:
+              - text: The author's, 2026-11-04, told in
+              - link "the store" [ref=e450] [cursor=pointer]:
+                - /url: "#"
+              - text: .
+        - generic [ref=e451]:
+          - heading [level=2] [ref=e452]:
+            - link "Engine" [ref=e453] [cursor=pointer]:
+              - /url: "#"
+          - paragraph [ref=e454]: The engine holds the stores it attaches and is the only way into them. It reads them, carries out every change as a commit, and runs programs, and it judges every act against what the field declares, whoever asks. Nothing reaches a store but through an engine.
+          - paragraph [ref=e455]:
+            - emphasis [ref=e456]: "The author's, 2026-10-31 and 2026-11-01: a field needs an engine to govern it; carried from OpenLight's engine. How the engine runs a program, in what runtime and how contained, is open."
+        - generic [ref=e457]:
+          - heading [level=2] [ref=e458]:
+            - link "Field" [ref=e459] [cursor=pointer]:
+              - /url: "#"
+          - paragraph [ref=e460]: "The field is the stores an engine holds, read as one: where holons live together, and what programs and people ask. Holons hold each other as parts and point at each other from their bodies, so from any holon the field can be read upward to what holds it, downward to what it holds, and outward to what points at it."
+          - paragraph [ref=e461]:
+            - emphasis [ref=e462]:
+              - text: The one field the author's, from the grant; stores read as one carried from OpenLight; how holons relate, the author's, 2026-11-02, told in
+              - link "the relations" [ref=e463] [cursor=pointer]:
+                - /url: "#"
+              - text: .
+        - generic [ref=e464]:
+          - heading [level=2] [ref=e465]:
+            - link "Program" [ref=e466] [cursor=pointer]:
+              - /url: "#"
+          - paragraph [ref=e467]: "A program is a holon holding code that the engine runs. It declares the types it takes, the engine brings it the data that fits, and what it does, it does through the engine. A run is a program run once, kept as a holon too: what it was given, its result, and the commits its effects became."
+          - paragraph [ref=e468]: "A program exists only through the engine: it is data until the engine runs it. How a run is carried out is the engine's, and still open."
+          - paragraph [ref=e469]:
+            - emphasis [ref=e470]:
+              - text: "The author's, 2026-11-01: the program only exists through the engine, and how it is executed and run is open. Runs kept as holons his, the same day (\"it does use the field for runs, I would think\"); where they are kept is"
+              - link "the home" [ref=e471] [cursor=pointer]:
+                - /url: "#"
+              - text: .
+          - paragraph [ref=e472]: "A function is not a program. It is pure: evaluated wherever it is used, as in what an interface draws, every time it is drawn, so evaluating it is no event and nothing it gives is kept. A program is run, and a run is an event with a record. Both are first class, and a program cannot be used where a function is."
+          - paragraph [ref=e473]:
+            - emphasis [ref=e474]: "The author's, 2026-11-03: functions are different from programs, and functions are what are used in the UI; we're not renaming program to function, they're still a first class thing; can you use a program in a UI, I don't think you can."
+        - generic [ref=e475]:
+          - heading [level=2] [ref=e476]:
+            - link "Effect" [ref=e477] [cursor=pointer]:
+              - /url: "#"
+          - paragraph [ref=e478]: "A program acts by changing the field, and every change is a commit. The engine carries out the run, but what a run may touch is the field's to say: each place declares which programs may change it, and the engine follows that declaration. So every effect lands where it can be seen, within bounds the field itself holds."
+          - paragraph [ref=e479]:
+            - emphasis [ref=e480]: "The author's, 2026-10-31: the engine governs the execution but is merely governed by the declaration of the field. That each place declares it is the session's reading, as glass's first iteration built it."
+        - generic [ref=e481]:
+          - heading [level=2] [ref=e482]:
+            - link "AI" [ref=e483] [cursor=pointer]:
+              - /url: "#"
+          - paragraph [ref=e484]: "A completion model is a program, and each tool is a program of its own, separate from it. What is called an AI today is practically a harness: a program that calls a proprietary completion API and runs the tool calls it gets back. In glass the model, the tools and the harness are each a program in the field, taking their context from it and acting through it."
+          - paragraph [ref=e485]:
+            - emphasis [ref=e486]: The completion model and the tools as separate programs, and AI as practically a harness, the author's, 2026-10-31; the harness as one more program the session's synthesis.
+        - generic [ref=e487]:
+          - heading [level=2] [ref=e488]:
+            - link "Interface" [ref=e489] [cursor=pointer]:
+              - /url: "#"
+          - paragraph [ref=e490]: An interface is holons drawn by holons. A component is a holon that declares the type it takes and draws what it is given, made of code or of data; and a mount is a call to one, a component given what it reads, its argument. A component encloses what it is given and opens a space in it, where what it holds is drawn in turn by the components whose types match, so an interface assembles itself level by level.
+          - paragraph [ref=e491]:
+            - emphasis [ref=e492]: "The author's, 2026-10-31: each component encloses and opens space for new holarchy and new type-matched components therein. The mount is OpenLight's."
+          - paragraph [ref=e493]: "The primitives are still: they hold no state, take no press and move nowhere. Looking around the field is built on them, as one mount the reader keeps in their home, offered where the page's address says each time they look elsewhere."
+          - paragraph [ref=e494]:
+            - emphasis [ref=e495]:
+              - text: The author's,
+              - link "2026-11-03" [ref=e496] [cursor=pointer]:
+                - /url: "#"
+              - text: ": there is no state, no interaction, no navigation; it is something to birth upon the primitives, so it is editable. The one root mount the session's, from OpenLight's."
+    - dialog [ref=e497]:
+      - generic [ref=e499]:
+        - generic [ref=e500]:
+          - button "brief" [ref=e501] [cursor=pointer]
+          - button "The primitives" [disabled] [ref=e503]
+          - generic [ref=e583]: pointers
+          - combobox "a name" [active] [ref=e584]
+        - listbox [ref=e506]:
+          - option [ref=e585]:
+            - button "everything a set of its own" [ref=e586] [cursor=pointer]:
+              - generic [ref=e587]: everything
+              - generic [ref=e588]: a set of its own
+          - option [ref=e589]:
+            - button "type takes set" [ref=e590] [cursor=pointer]:
+              - generic [ref=e591]: type
+              - generic [ref=e592]: takes set
+          - option [ref=e593]:
+            - button "children takes set" [ref=e594] [cursor=pointer]:
+              - generic [ref=e595]: children
+              - generic [ref=e596]: takes set
+          - option [ref=e597]:
+            - button "parents takes set" [ref=e598] [cursor=pointer]:
+              - generic [ref=e599]: parents
+              - generic [ref=e600]: takes set
+          - option [ref=e601]:
+            - button "points takes set" [ref=e602] [cursor=pointer]:
+              - generic [ref=e603]: points
+              - generic [ref=e604]: takes set
+          - option [ref=e605]:
+            - button "pointers takes set" [ref=e606] [cursor=pointer]:
+              - generic [ref=e607]: pointers
+              - generic [ref=e608]: takes set
+          - option [ref=e609]:
+            - button "search takes words" [ref=e610] [cursor=pointer]:
+              - generic [ref=e611]: search
+              - generic [ref=e612]: takes words
+          - option [ref=e613]:
+            - button "named takes words" [ref=e614] [cursor=pointer]:
+              - generic [ref=e615]: named
+              - generic [ref=e616]: takes words
+          - option [ref=e617]:
+            - button "store takes store" [ref=e618] [cursor=pointer]:
+              - generic [ref=e619]: store
+              - generic [ref=e620]: takes store
+          - option [ref=e621]:
+            - button "types a set of its own" [ref=e622] [cursor=pointer]:
+              - generic [ref=e623]: types
+              - generic [ref=e624]: a set of its own
+          - option [ref=e625]:
+            - button "stores a set of its own" [ref=e626] [cursor=pointer]:
+              - generic [ref=e627]: stores
+              - generic [ref=e628]: a set of its own
+          - option [ref=e629]:
+            - button "and takes set, sets" [ref=e630] [cursor=pointer]:
+              - generic [ref=e631]: and
+              - generic [ref=e632]: takes set, sets
+          - option [ref=e633]:
+            - button "or takes set, sets" [ref=e634] [cursor=pointer]:
+              - generic [ref=e635]: or
+              - generic [ref=e636]: takes set, sets
+          - option [ref=e637]:
+            - button "not takes set" [ref=e638] [cursor=pointer]:
+              - generic [ref=e639]: not
+              - generic [ref=e640]: takes set
+          - option [ref=e641]:
+            - button "level takes set" [ref=e642] [cursor=pointer]:
+              - generic [ref=e643]: level
+              - generic [ref=e644]: takes set

@@ -1,0 +1,97 @@
+- main [ref=f8e2]:
+  - generic [ref=f8e5]:
+    - generic [ref=f8e7]:
+      - generic [ref=f8e8]:
+        - generic [ref=f8e9]:
+          - 'button "type: attachment" [ref=f8e10] [cursor=pointer]':
+            - generic [ref=f8e11]: "type:"
+            - generic [ref=f8e12]: attachment
+          - 'button "Let go of type: attachment" [ref=f8e13] [cursor=pointer]': ×
+        - combobox [active] [ref=f8e14]
+      - paragraph [ref=f8e15]: 4 holons
+      - listbox [ref=f8e16]:
+        - option [ref=f8e17]:
+          - button "The wiki favorite" [ref=f8e18] [cursor=pointer]:
+            - generic [ref=f8e19]: The wiki
+            - generic [ref=f8e20]: favorite
+        - option [ref=f8e21]:
+          - button "type takes set" [ref=f8e22] [cursor=pointer]:
+            - generic [ref=f8e23]: type
+            - generic [ref=f8e24]: takes set
+        - option [ref=f8e25]:
+          - button "children takes set" [ref=f8e26] [cursor=pointer]:
+            - generic [ref=f8e27]: children
+            - generic [ref=f8e28]: takes set
+        - option [ref=f8e29]:
+          - button "parents takes set" [ref=f8e30] [cursor=pointer]:
+            - generic [ref=f8e31]: parents
+            - generic [ref=f8e32]: takes set
+        - option [ref=f8e33]:
+          - button "points takes set" [ref=f8e34] [cursor=pointer]:
+            - generic [ref=f8e35]: points
+            - generic [ref=f8e36]: takes set
+        - option [ref=f8e37]:
+          - button "pointers takes set" [ref=f8e38] [cursor=pointer]:
+            - generic [ref=f8e39]: pointers
+            - generic [ref=f8e40]: takes set
+        - option [ref=f8e41]:
+          - button "search takes words" [ref=f8e42] [cursor=pointer]:
+            - generic [ref=f8e43]: search
+            - generic [ref=f8e44]: takes words
+        - option [ref=f8e45]:
+          - button "named takes words" [ref=f8e46] [cursor=pointer]:
+            - generic [ref=f8e47]: named
+            - generic [ref=f8e48]: takes words
+        - option [ref=f8e49]:
+          - button "store takes store" [ref=f8e50] [cursor=pointer]:
+            - generic [ref=f8e51]: store
+            - generic [ref=f8e52]: takes store
+        - option [ref=f8e53]:
+          - button "types a set of its own" [ref=f8e54] [cursor=pointer]:
+            - generic [ref=f8e55]: types
+            - generic [ref=f8e56]: a set of its own
+        - option [ref=f8e57]:
+          - button "stores a set of its own" [ref=f8e58] [cursor=pointer]:
+            - generic [ref=f8e59]: stores
+            - generic [ref=f8e60]: a set of its own
+        - option [ref=f8e61]:
+          - button "or takes set, sets" [ref=f8e62] [cursor=pointer]:
+            - generic [ref=f8e63]: or
+            - generic [ref=f8e64]: takes set, sets
+        - option [ref=f8e65]:
+          - button "not takes set" [ref=f8e66] [cursor=pointer]:
+            - generic [ref=f8e67]: not
+            - generic [ref=f8e68]: takes set
+        - option [ref=f8e69]:
+          - button "level takes set" [ref=f8e70] [cursor=pointer]:
+            - generic [ref=f8e71]: level
+            - generic [ref=f8e72]: takes set
+        - option [ref=f8e73]:
+          - button "Group by gather what is in view into collections" [ref=f8e74] [cursor=pointer]:
+            - generic [ref=f8e75]: Group by
+            - generic [ref=f8e76]: gather what is in view into collections
+        - option [ref=f8e77]:
+          - button "Flat all of what is in view, not only its level" [ref=f8e78] [cursor=pointer]:
+            - generic [ref=f8e79]: Flat
+            - generic [ref=f8e80]: all of what is in view, not only its level
+        - option [ref=f8e81]:
+          - button "Open go to one holon" [ref=f8e82] [cursor=pointer]:
+            - generic [ref=f8e83]: Open
+            - generic [ref=f8e84]: go to one holon
+    - list [ref=f8e86]:
+      - listitem [ref=f8e87]:
+        - generic [ref=f8e89] [cursor=pointer]:
+          - strong [ref=f8e90]: glass
+          - generic [ref=f8e91]: ./store/glass/
+      - listitem [ref=f8e92]:
+        - generic [ref=f8e94] [cursor=pointer]:
+          - strong [ref=f8e95]: main
+          - generic [ref=f8e96]: ./store/
+      - listitem [ref=f8e97]:
+        - generic [ref=f8e99] [cursor=pointer]:
+          - strong [ref=f8e100]: paper
+          - generic [ref=f8e101]: ./store/paper/
+      - listitem [ref=f8e102]:
+        - generic [ref=f8e104] [cursor=pointer]:
+          - strong [ref=f8e105]: paper-readings
+          - generic [ref=f8e106]: ./store/paper-readings/

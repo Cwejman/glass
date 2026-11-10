@@ -8,9 +8,11 @@
 //
 // A store answers a clause, [e, a, v] with any of them known, from its index: the same
 // facts kept in four orders, by holon, by key, by key and value, and by the holon a
-// value refers to. It is a pure function of the store's holons at a commit, so it can be
-// built wherever it runs, and could one day be shipped beside the blocks. Another kind of
-// store answers the same clauses its own way.
+// value refers to. It is a pure function of the store's holons at a commit and of the
+// types they are read through, which may stand in another store, and of the key the
+// store is attached by; so it is built wherever it runs, and shipping it beside the
+// blocks asks first that holding be read from $holds alone. Another kind of store
+// answers the same clauses its own way.
 
 import type { Holon } from "../store/store.ts";
 import type { Known } from "./expression.ts";

@@ -46,6 +46,11 @@ const paragraphs = answered
       .map(marked.paragraph)
   : flow(text);
 
+if (answered && !session.body.voice) throw new Error(`${session.name} has no voice of its own to answer in`);
+
+session.body.said ??= [];
+session.body.paths ??= [];
+
 const order = session.body.said.length + 1;
 const utterance = put("utterance", {
   as: answered ? "answered by the session" : as,
@@ -69,7 +74,7 @@ if (patchFile) {
     if (!path) throw new Error(`the session has no path titled ${title}`);
 
     path.body.opens = opens;
-    path.body.from.push(ref(utterance));
+    path.body.from = [...(path.body.from ?? []), ref(utterance)];
     changed.add(path);
   }
 }

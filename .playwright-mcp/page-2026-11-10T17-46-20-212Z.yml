@@ -1,0 +1,104 @@
+- main [ref=f3e2]:
+  - generic [ref=f3e276]:
+    - generic [ref=f3e279]:
+      - generic [ref=f3e280]:
+        - button "session" [disabled] [ref=f3e281]
+        - button "Let go of session" [ref=f3e283] [cursor=pointer]: ×
+      - combobox [ref=f3e284]
+    - article [ref=f3e286]:
+      - heading "session" [level=1] [ref=f3e287]
+      - paragraph [ref=f3e288]: "One session of work with the author: when it ran, what it stood beside, the words it received in order, and the paths of evolution it noted."
+      - heading "Its fields" [level=2] [ref=f3e289]
+      - generic [ref=f3e290]:
+        - term [ref=f3e291]:
+          - text: beside
+          - generic [ref=f3e292]: string, optional
+        - definition [ref=f3e293]: "What ran beside it, as the arity of sessions grows: a note in words until that session is a holon to point at."
+        - term [ref=f3e294]:
+          - text: condensations
+          - generic [ref=f3e295]: list of ref, holds, optional
+        - definition [ref=f3e296]: What stands for its utterances in fewer words, held as its own.
+        - term [ref=f3e297]:
+          - text: ended
+          - generic [ref=f3e298]: string, optional
+        - definition [ref=f3e299]: "How its end was declared, where it was declared: a session is ended by being said to end."
+        - term [ref=f3e300]:
+          - text: forkedAt
+          - generic [ref=f3e301]: ref, optional
+        - definition [ref=f3e302]: The utterance of that session at which it was forked.
+        - term [ref=f3e303]:
+          - text: forkedFrom
+          - generic [ref=f3e304]: ref, optional
+        - definition [ref=f3e305]: "For a session forked from another: the session it was forked from."
+        - term [ref=f3e306]:
+          - text: kept
+          - generic [ref=f3e307]: string, optional
+        - definition [ref=f3e308]: How much of it was kept, where not all of it was.
+        - term [ref=f3e309]:
+          - text: notes
+          - generic [ref=f3e310]: set of ref, optional
+        - definition [ref=f3e311]: Holons it wrote that stand on their own and that it points at, such as a licence reading.
+        - term [ref=f3e312]: ondate
+        - definition [ref=f3e313]: The day it ran.
+        - term [ref=f3e314]:
+          - text: paths
+          - generic [ref=f3e315]: list of ref, holds
+        - definition [ref=f3e316]: Paths of evolution the session noted, in the order noted.
+        - term [ref=f3e317]:
+          - text: said
+          - generic [ref=f3e318]: list of ref, holds
+        - definition [ref=f3e319]: The author's utterances, in the order they came.
+        - term [ref=f3e320]:
+          - text: sent
+          - generic [ref=f3e321]: list of ref, holds, optional
+        - definition [ref=f3e322]: "The messages it sent to other sessions, where their timelines meet: held as its own."
+        - term [ref=f3e323]:
+          - text: sources
+          - generic [ref=f3e324]: list of ref, holds, optional
+        - definition [ref=f3e325]: The sources it read from outside the field, held as its own.
+        - term [ref=f3e326]:
+          - text: voice
+          - generic [ref=f3e327]: ref, holds, optional
+        - definition [ref=f3e328]: The voice it answered in, held as its own.
+      - heading "Its instances, 10" [level=2] [ref=f3e329]
+      - list [ref=f3e331]:
+        - listitem [ref=f3e332]:
+          - generic [ref=f3e334] [cursor=pointer]:
+            - strong [ref=f3e335]: "A fifth session, kept in brief: the store's format settled by attack, the store made blocks, and the code asked for"
+            - generic [ref=f3e336]: session · in main
+        - listitem [ref=f3e337]:
+          - generic [ref=f3e339] [cursor=pointer]:
+            - strong [ref=f3e340]: A second session, and glass named an operating system
+            - generic [ref=f3e341]: session · in main
+        - listitem [ref=f3e342]:
+          - generic [ref=f3e344] [cursor=pointer]:
+            - strong [ref=f3e345]: A fork on selection and layering, ended by the author
+            - generic [ref=f3e346]: session · in main
+        - listitem [ref=f3e347]:
+          - generic [ref=f3e349] [cursor=pointer]:
+            - strong [ref=f3e350]: A fork on the paper's licence, ended by the author
+            - generic [ref=f3e351]: session · in main
+        - listitem [ref=f3e352]:
+          - generic [ref=f3e354] [cursor=pointer]:
+            - strong [ref=f3e355]: "The web read appropriately: a fork on feeds, relays, licences and elevating others"
+            - generic [ref=f3e356]: session · in main
+        - listitem [ref=f3e357]:
+          - generic [ref=f3e359] [cursor=pointer]:
+            - strong [ref=f3e360]: "A third session: the store read through the probe, then mended, its log made steps, and what was said measured"
+            - generic [ref=f3e361]: session · in main
+        - listitem [ref=f3e362]:
+          - generic [ref=f3e364] [cursor=pointer]:
+            - strong [ref=f3e365]: "A fourth session, kept in brief: the field given roots, the brief a flow and sections, a title a name"
+            - generic [ref=f3e366]: session · in main
+        - listitem [ref=f3e367]:
+          - generic [ref=f3e369] [cursor=pointer]:
+            - strong [ref=f3e370]: "A sixth session, kept whole: the code brought to the store, and a language for the engine and a store for each module asked after"
+            - generic [ref=f3e371]: session · in main
+        - listitem [ref=f3e372]:
+          - generic [ref=f3e374] [cursor=pointer]:
+            - strong [ref=f3e375]: "A seventh session, kept whole: the field seen by its levels, the glue carved, expressions taken down to a kernel of facts, and the plan from here"
+            - generic [ref=f3e376]: session · in main
+        - listitem [ref=f3e377]:
+          - generic [ref=f3e379] [cursor=pointer]:
+            - strong [ref=f3e380]: "An eighth session, kept whole: one language for expressions, the kernel drawn into the engine, and the field read at the command line"
+            - generic [ref=f3e381]: session · in main

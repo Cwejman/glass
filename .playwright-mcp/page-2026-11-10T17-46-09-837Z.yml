@@ -1,0 +1,183 @@
+- main [ref=f2e2]:
+  - generic [ref=f2e252]:
+    - generic [ref=f2e254]:
+      - generic [ref=f2e257]:
+        - button "session" [ref=f2e258] [cursor=pointer]
+        - generic [ref=f2e259]:
+          - 'button "An eighth session, kept whole: one language for expressions, the kernel drawn into the engine, and the field read at the command line" [disabled] [ref=f2e260]'
+          - 'button "Let go of An eighth session, kept whole: one language for expressions, the kernel drawn into the engine, and the field read at the command line" [ref=f2e262] [cursor=pointer]': ×
+        - combobox [ref=f2e263]
+      - article [ref=f2e265]:
+        - 'heading "An eighth session, kept whole: one language for expressions, the kernel drawn into the engine, and the field read at the command line" [level=1] [ref=f2e266]'
+        - paragraph [ref=f2e267]: session · in main
+        - heading "Is an instance of" [level=2] [ref=f2e268]
+        - list [ref=f2e270]:
+          - listitem [ref=f2e271]:
+            - generic [ref=f2e273] [cursor=pointer]:
+              - strong [ref=f2e274]: session
+              - generic [ref=f2e275]: "One session of work with the author: when it ran, what it stood beside, the words it received in order, and the paths of evolution it noted. · 10 instances"
+        - heading "Holds" [level=2] [ref=f2e276]
+        - generic [ref=f2e277]:
+          - term [ref=f2e278]: kept
+          - definition [ref=f2e279]:
+            - paragraph [ref=f2e280]: "Whole in the author's words: all seven of the author's utterances, and after each the essence of the session's answer in its own voice, the fuller answers written in the conversation and not kept. Whether each came spoken or typed is the session's reading; one word the dictation misheard is corrected, with what it wrote kept on the word. The work is in its commit: the kernel drawn from a prototype into the engine and the interface's sets worked out by it; the language said as text and written in code by a template; glass's functions named each by one word, with their ids kept, and some written in the language in the field; src/tools/ask.ts, a local engine at the command line, the probe and the read tool retired for it; the wiki brought to it. Each piece was read by fresh agents, a design attacked before it was built, the code read for its tone and bugs, and the command line used cold by an agent knowing nothing else, and what they found was mended; 169 tests pass."
+          - term [ref=f2e281]: "on"
+          - definition [ref=f2e282]: 2026-11-10
+          - term [ref=f2e283]: paths
+          - definition [ref=f2e284]:
+            - list [ref=f2e286]:
+              - listitem [ref=f2e287]:
+                - generic [ref=f2e289] [cursor=pointer]:
+                  - strong [ref=f2e290]: The plan from here
+                  - generic [ref=f2e291]: path · in main
+              - listitem [ref=f2e292]:
+                - generic [ref=f2e294] [cursor=pointer]:
+                  - strong [ref=f2e295]: A face in TypeScript's own syntax
+                  - generic [ref=f2e296]: path · in main
+              - listitem [ref=f2e297]:
+                - generic [ref=f2e299] [cursor=pointer]:
+                  - strong [ref=f2e300]: A function named alone
+                  - generic [ref=f2e301]: path · in main
+          - term [ref=f2e302]: said
+          - definition [ref=f2e303]:
+            - list [ref=f2e305]:
+              - listitem [ref=f2e306]:
+                - generic [ref=f2e308] [cursor=pointer]:
+                  - strong [ref=f2e309]: 1M7360TVPDXC06Q
+                  - generic [ref=f2e310]: utterance · in main
+              - listitem [ref=f2e311]:
+                - generic [ref=f2e313] [cursor=pointer]:
+                  - strong [ref=f2e314]: 1M7360TVPDXC09J
+                  - generic [ref=f2e315]: utterance · in main
+              - listitem [ref=f2e316]:
+                - generic [ref=f2e318] [cursor=pointer]:
+                  - strong [ref=f2e319]: 1M7360TVPDXC0BJ
+                  - generic [ref=f2e320]: utterance · in main
+              - listitem [ref=f2e321]:
+                - generic [ref=f2e323] [cursor=pointer]:
+                  - strong [ref=f2e324]: 1M7360TVPDXC0E5
+                  - generic [ref=f2e325]: utterance · in main
+              - listitem [ref=f2e326]:
+                - generic [ref=f2e328] [cursor=pointer]:
+                  - strong [ref=f2e329]: 1M7360TVPDXC0F1
+                  - generic [ref=f2e330]: utterance · in main
+              - listitem [ref=f2e331]:
+                - generic [ref=f2e333] [cursor=pointer]:
+                  - strong [ref=f2e334]: 1M7360TVPDXC0H7
+                  - generic [ref=f2e335]: utterance · in main
+              - listitem [ref=f2e336]:
+                - generic [ref=f2e338] [cursor=pointer]:
+                  - strong [ref=f2e339]: 1M7360TVPDXC0M8
+                  - generic [ref=f2e340]: utterance · in main
+              - listitem [ref=f2e341]:
+                - generic [ref=f2e343] [cursor=pointer]:
+                  - strong [ref=f2e344]: 1M7360TVPDXC0Q8
+                  - generic [ref=f2e345]: utterance · in main
+              - listitem [ref=f2e346]:
+                - generic [ref=f2e348] [cursor=pointer]:
+                  - strong [ref=f2e349]: 1M7360TVPDXC0QQ
+                  - generic [ref=f2e350]: utterance · in main
+              - listitem [ref=f2e351]:
+                - generic [ref=f2e353] [cursor=pointer]:
+                  - strong [ref=f2e354]: 1M7360TVPDXC0S7
+                  - generic [ref=f2e355]: utterance · in main
+              - listitem [ref=f2e356]:
+                - generic [ref=f2e358] [cursor=pointer]:
+                  - strong [ref=f2e359]: 1M7360TVPDXC0V6
+                  - generic [ref=f2e360]: utterance · in main
+              - listitem [ref=f2e361]:
+                - generic [ref=f2e363] [cursor=pointer]:
+                  - strong [ref=f2e364]: 1M7360TVPDXC0ZZ
+                  - generic [ref=f2e365]: utterance · in main
+              - listitem [ref=f2e366]:
+                - generic [ref=f2e368] [cursor=pointer]:
+                  - strong [ref=f2e369]: 1M7360TVPDXC11D
+                  - generic [ref=f2e370]: utterance · in main
+              - listitem [ref=f2e371]:
+                - generic [ref=f2e373] [cursor=pointer]:
+                  - strong [ref=f2e374]: 1M7360TVPDXC13V
+                  - generic [ref=f2e375]: utterance · in main
+          - term [ref=f2e376]: voice
+          - definition [ref=f2e377]:
+            - generic [ref=f2e379] [cursor=pointer]:
+              - strong [ref=f2e380]: A session of 2026-11-10, on the language
+              - generic [ref=f2e381]: voice · in main
+    - dialog [ref=f2e382]:
+      - generic [ref=f2e384]:
+        - generic [ref=f2e385]:
+          - button "session" [ref=f2e386] [cursor=pointer]
+          - 'button "An eighth session, kept whole: one language for expressions, the kernel drawn into the engine, and the field read at the command line" [disabled] [ref=f2e388]'
+          - combobox [active] [ref=f2e390]
+        - listbox [ref=f2e391]:
+          - option [ref=f2e392]:
+            - button "Look here go" [ref=f2e393] [cursor=pointer]:
+              - generic [ref=f2e394]: Look here
+              - generic [ref=f2e395]: go
+          - option [ref=f2e396]:
+            - button "Look here with Reader component" [ref=f2e397] [cursor=pointer]:
+              - generic [ref=f2e398]: Look here with Reader
+              - generic [ref=f2e399]: component
+          - option [ref=f2e400]:
+            - button "Place on the favorites favorites" [ref=f2e401] [cursor=pointer]:
+              - generic [ref=f2e402]: Place on the favorites
+              - generic [ref=f2e403]: favorites
+          - option [ref=f2e404]:
+            - button "type takes set" [ref=f2e405] [cursor=pointer]:
+              - generic [ref=f2e406]: type
+              - generic [ref=f2e407]: takes set
+          - option [ref=f2e408]:
+            - button "children takes set" [ref=f2e409] [cursor=pointer]:
+              - generic [ref=f2e410]: children
+              - generic [ref=f2e411]: takes set
+          - option [ref=f2e412]:
+            - button "parents takes set" [ref=f2e413] [cursor=pointer]:
+              - generic [ref=f2e414]: parents
+              - generic [ref=f2e415]: takes set
+          - option [ref=f2e416]:
+            - button "points takes set" [ref=f2e417] [cursor=pointer]:
+              - generic [ref=f2e418]: points
+              - generic [ref=f2e419]: takes set
+          - option [ref=f2e420]:
+            - button "pointers takes set" [ref=f2e421] [cursor=pointer]:
+              - generic [ref=f2e422]: pointers
+              - generic [ref=f2e423]: takes set
+          - option [ref=f2e424]:
+            - button "search takes words" [ref=f2e425] [cursor=pointer]:
+              - generic [ref=f2e426]: search
+              - generic [ref=f2e427]: takes words
+          - option [ref=f2e428]:
+            - button "named takes words" [ref=f2e429] [cursor=pointer]:
+              - generic [ref=f2e430]: named
+              - generic [ref=f2e431]: takes words
+          - option [ref=f2e432]:
+            - button "store takes store" [ref=f2e433] [cursor=pointer]:
+              - generic [ref=f2e434]: store
+              - generic [ref=f2e435]: takes store
+          - option [ref=f2e436]:
+            - button "types a set of its own" [ref=f2e437] [cursor=pointer]:
+              - generic [ref=f2e438]: types
+              - generic [ref=f2e439]: a set of its own
+          - option [ref=f2e440]:
+            - button "stores a set of its own" [ref=f2e441] [cursor=pointer]:
+              - generic [ref=f2e442]: stores
+              - generic [ref=f2e443]: a set of its own
+          - option [ref=f2e444]:
+            - button "or takes set, sets" [ref=f2e445] [cursor=pointer]:
+              - generic [ref=f2e446]: or
+              - generic [ref=f2e447]: takes set, sets
+          - option [ref=f2e448]:
+            - button "not takes set" [ref=f2e449] [cursor=pointer]:
+              - generic [ref=f2e450]: not
+              - generic [ref=f2e451]: takes set
+          - option [ref=f2e452]:
+            - button "level takes set" [ref=f2e453] [cursor=pointer]:
+              - generic [ref=f2e454]: level
+              - generic [ref=f2e455]: takes set
+          - option [ref=f2e456]:
+            - button "Group by gather what is in view into collections" [ref=f2e457] [cursor=pointer]:
+              - generic [ref=f2e458]: Group by
+              - generic [ref=f2e459]: gather what is in view into collections
+          - option [ref=f2e460]:
+            - button "Open go to one holon" [ref=f2e461] [cursor=pointer]:
+              - generic [ref=f2e462]: Open
+              - generic [ref=f2e463]: go to one holon

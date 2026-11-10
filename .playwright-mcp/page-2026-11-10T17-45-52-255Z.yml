@@ -1,0 +1,62 @@
+- main [ref=f2e2]:
+  - generic [ref=f2e5]:
+    - generic [ref=f2e8]:
+      - button "sessions" [ref=f2e9] [cursor=pointer]
+      - generic [ref=f2e10]:
+        - button "Sessions" [disabled] [ref=f2e11]
+        - button "Let go of Sessions" [ref=f2e13] [cursor=pointer]: ×
+      - combobox [ref=f2e14]
+    - article [ref=f2e16]:
+      - heading "Sessions" [level=1] [ref=f2e17]
+      - paragraph [ref=f2e18]: sessions · in main
+      - heading "Is an instance of" [level=2] [ref=f2e19]
+      - list [ref=f2e21]:
+        - listitem [ref=f2e22]:
+          - generic [ref=f2e24] [cursor=pointer]:
+            - strong [ref=f2e25]: sessions
+            - generic [ref=f2e26]: The whole holding the sessions, so they stand in one place and not each at the field's top. · 1 instance
+      - heading "Holds" [level=2] [ref=f2e27]
+      - generic [ref=f2e28]:
+        - term [ref=f2e29]: sessions
+        - definition [ref=f2e30]:
+          - list [ref=f2e32]:
+            - listitem [ref=f2e33]:
+              - generic [ref=f2e35] [cursor=pointer]:
+                - strong [ref=f2e36]: A second session, and glass named an operating system
+                - generic [ref=f2e37]: session · in main
+            - listitem [ref=f2e38]:
+              - generic [ref=f2e40] [cursor=pointer]:
+                - strong [ref=f2e41]: A fork on selection and layering, ended by the author
+                - generic [ref=f2e42]: session · in main
+            - listitem [ref=f2e43]:
+              - generic [ref=f2e45] [cursor=pointer]:
+                - strong [ref=f2e46]: A fork on the paper's licence, ended by the author
+                - generic [ref=f2e47]: session · in main
+            - listitem [ref=f2e48]:
+              - generic [ref=f2e50] [cursor=pointer]:
+                - strong [ref=f2e51]: "The web read appropriately: a fork on feeds, relays, licences and elevating others"
+                - generic [ref=f2e52]: session · in main
+            - listitem [ref=f2e53]:
+              - generic [ref=f2e55] [cursor=pointer]:
+                - strong [ref=f2e56]: "A third session: the store read through the probe, then mended, its log made steps, and what was said measured"
+                - generic [ref=f2e57]: session · in main
+            - listitem [ref=f2e58]:
+              - generic [ref=f2e60] [cursor=pointer]:
+                - strong [ref=f2e61]: "A fourth session, kept in brief: the field given roots, the brief a flow and sections, a title a name"
+                - generic [ref=f2e62]: session · in main
+            - listitem [ref=f2e63]:
+              - generic [ref=f2e65] [cursor=pointer]:
+                - strong [ref=f2e66]: "A fifth session, kept in brief: the store's format settled by attack, the store made blocks, and the code asked for"
+                - generic [ref=f2e67]: session · in main
+            - listitem [ref=f2e68]:
+              - generic [ref=f2e70] [cursor=pointer]:
+                - strong [ref=f2e71]: "A sixth session, kept whole: the code brought to the store, and a language for the engine and a store for each module asked after"
+                - generic [ref=f2e72]: session · in main
+            - listitem [ref=f2e73]:
+              - generic [ref=f2e75] [cursor=pointer]:
+                - strong [ref=f2e76]: "A seventh session, kept whole: the field seen by its levels, the glue carved, expressions taken down to a kernel of facts, and the plan from here"
+                - generic [ref=f2e77]: session · in main
+            - listitem [ref=f2e78]:
+              - generic [ref=f2e80] [cursor=pointer]:
+                - strong [ref=f2e81]: "An eighth session, kept whole: one language for expressions, the kernel drawn into the engine, and the field read at the command line"
+                - generic [ref=f2e82]: session · in main

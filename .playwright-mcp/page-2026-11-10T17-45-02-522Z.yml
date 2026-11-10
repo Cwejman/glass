@@ -1,0 +1,118 @@
+- main [ref=e2]:
+  - generic [ref=e294]:
+    - generic [ref=e297]:
+      - button "brief" [ref=e298] [cursor=pointer]
+      - generic [ref=e299]:
+        - button "The home" [disabled] [ref=e300]
+        - button "Let go of The home" [ref=e302] [cursor=pointer]: ×
+      - combobox [ref=e303]
+    - article [ref=e305]:
+      - navigation "Where this stands" [ref=e306]:
+        - link "The wiki" [ref=e307] [cursor=pointer]:
+          - /url: "#"
+        - link "›Glass" [ref=e308] [cursor=pointer]:
+          - /url: "#"
+        - link "›The architecture" [ref=e309] [cursor=pointer]:
+          - /url: "#"
+      - heading "The home" [level=1] [ref=e310]
+      - paragraph [ref=e311]: "The engine in the client has a field of its own, its home, kept in the browser so a reload loses nothing. Everything the reader does is kept there, apart from the stores they pulled: what is attached, how they arrange what they see, the programs they run. The engine reads the home and the pulled stores as one field, and writes each change to where it belongs."
+      - paragraph [ref=e312]:
+        - emphasis [ref=e313]: "The author's, 2026-11-01: the engine you have locally has its own field, and it is not mixing with the one which is public."
+      - generic [ref=e314]:
+        - heading [level=2] [ref=e315]:
+          - link "What the home holds" [ref=e316] [cursor=pointer]:
+            - /url: "#"
+        - paragraph [ref=e317]: "The home is a store like any other, written by the engine and kept in the browser's own storage. It holds six things:"
+        - list [ref=e318]:
+          - listitem [ref=e319]:
+            - strong [ref=e320]: What is attached
+            - text: :each store, where it is fetched from, which ref, whether pinned to one commit, and whether it may be written. Since 2026-11-09 each is kept as an attachment, what it is called and where it comes from; its ref, pinning and writing are not yet kept.
+        - list [ref=e321]:
+          - listitem [ref=e322]:
+            - strong [ref=e323]: The entry
+            - text: ": the mount the client boots into, at first the one the attached store ships."
+        - list [ref=e324]:
+          - listitem [ref=e325]:
+            - strong [ref=e326]: The root
+            - text: ": the mount the reader looks through, holding what is theirs, the component it calls and what it offers."
+        - list [ref=e327]:
+          - listitem [ref=e328]:
+            - strong [ref=e329]: The history
+            - text: ": where the reader has looked, a visit added with each move."
+        - list [ref=e330]:
+          - listitem [ref=e331]:
+            - strong [ref=e332]: The runs
+            - text: ": every program the reader's engine has run."
+        - list [ref=e333]:
+          - listitem [ref=e334]:
+            - strong [ref=e335]: The reader's branches
+            - text: ": their own commits on the stores they pulled, as"
+            - link "beneath" [ref=e336] [cursor=pointer]:
+              - /url: "#"
+            - text: .
+        - paragraph [ref=e337]: It is the same as an engine's home directory on one's own machine, holding what it attaches and what it mounts at its root.
+        - paragraph [ref=e338]:
+          - emphasis [ref=e339]: The author's, 2026-11-01; the home as a store with its attachments and its entry is OpenLight's, where the arrangement is called the session.
+      - generic [ref=e340]:
+        - heading [level=2] [ref=e341]:
+          - link "Pulled stores are read, never mixed" [ref=e342] [cursor=pointer]:
+            - /url: "#"
+        - paragraph [ref=e343]: An attached store is read as part of the field and never written into. Someone else's runs are not in it and are not wanted, and the reader's own runs go to the home, so what was published stays exactly what was published.
+        - paragraph [ref=e344]:
+          - emphasis [ref=e345]: "The author's, 2026-11-01: do you care about the runs that someone else did?"
+      - generic [ref=e346]:
+        - heading [level=2] [ref=e347]:
+          - link "Some places are projections" [ref=e348] [cursor=pointer]:
+            - /url: "#"
+        - paragraph [ref=e349]: "The engine shows some things as places that are not holons in any store: a store's commits, whether a store is behind the host it was fetched from. Commits are objects in the store, but they are not holons, and the engine draws them as a place when one is read. Such a place reads and draws like any other and holds nothing of its own."
+        - paragraph [ref=e350]:
+          - emphasis [ref=e351]: "The author's, 2026-11-01: the engine sometimes projects things, like commits, which are not things in the field per se. Projected places are OpenLight's. What is attached became holons kept in the home, 2026-11-09."
+      - generic [ref=e352]:
+        - heading [level=2] [ref=e353]:
+          - link "Layout and data are partitioned" [ref=e354] [cursor=pointer]:
+            - /url: "#"
+        - paragraph [ref=e355]: Editing the layout and editing the data are different acts, so they land in different places.
+        - paragraph [ref=e356]:
+          - emphasis [ref=e357]: "The author's, 2026-11-01: there is a difference between editing the data and editing the layout; let's say that layout is partitioned to local."
+        - generic [ref=e358]:
+          - heading [level=3] [ref=e359]:
+            - link "Layout belongs to whoever is looking" [ref=e360] [cursor=pointer]:
+              - /url: "#"
+          - paragraph [ref=e361]: How things are drawn, which component draws a holon and what the reader looks at, is how the reader looks at the field, so changing it never touches the store. The root starts as the entry the store ships, and the reader follows the author's changes to it until they move themselves; from then on they hold their own root in the home.
+          - paragraph [ref=e362]:
+            - emphasis [ref=e363]: The partition the author's, 2026-11-01; following the store's entry until the first move is the session's proposal, from OpenLight's desktop, where the session is the writable home of the arrangement. What was the arrangement, a layout of panes, became the root mount on 2026-11-03.
+        - generic [ref=e364]:
+          - heading [level=3] [ref=e365]:
+            - link "Data belongs to its source" [ref=e366] [cursor=pointer]:
+              - /url: "#"
+          - paragraph [ref=e367]: A holon's title, prose and data are what the store says, so changing them changes the source. The change is a commit on the reader's own branch of the pulled store, kept in the home. On a reload the reader stands on their branch or on the store's head, both always there, and one day a branch can be offered back.
+          - paragraph [ref=e368]:
+            - emphasis [ref=e369]: Reasoned, the session's, 2026-11-01, answering the author's question of whether a reload loads the public data or the persisted data. In OpenLight, editing what you only read is a clone attached for writing, which its object model was meant to replace.
+      - generic [ref=e370]:
+        - heading [level=2] [ref=e371]:
+          - link "Everything is programs and places" [ref=e372] [cursor=pointer]:
+            - /url: "#"
+        - paragraph [ref=e373]: "Governing the home is done by programs, judged by the engine like any act: resetting the root, clearing what is local, attaching another store, pulling the latest. What the reader stands on, which store, which commit, whether behind, is a place, drawn by a component like anything else. Nothing is managed from outside the field."
+        - paragraph [ref=e374]:
+          - emphasis [ref=e375]: "The author's, 2026-11-01: there is no special chrome on top, it's all first-class native, as if Unix were built on programs and files."
+      - generic [ref=e376]:
+        - heading [level=2] [ref=e377]:
+          - link "The history is a holon of its own" [ref=e378] [cursor=pointer]:
+            - /url: "#"
+        - paragraph [ref=e379]: Where the reader looks is the page's address, so going back and forward is only the address changing, and a reload lands where the address says. What the reader has looked at is kept in the home as their history, a holon each move adds a visit to and nothing rewrites; the root mount holds only what is the reader's, the component it calls and what it offers, and no longer changes with every move.
+        - paragraph [ref=e380]:
+          - emphasis [ref=e381]:
+            - text: Reasoned, the session's, 2026-11-01, answering the author's question of what a virtual history stack means; the root's versions were the history from 2026-11-03 until the author found, the same night, that walking back by writing old versions again is not real history, since commits are a line you can't reverse,
+            - link "said" [ref=e382] [cursor=pointer]:
+              - /url: "#"
+            - text: . As
+            - link "the interface" [ref=e383] [cursor=pointer]:
+              - /url: "#"
+            - text: tells.
+      - generic [ref=e384]:
+        - heading [level=2] [ref=e385]:
+          - link "When the shape of state changes" [ref=e386] [cursor=pointer]:
+            - /url: "#"
+        - paragraph [ref=e387]: What is kept in the home is kept in the shape the engine wrote it in, and when that shape changes, what is kept may stop fitting. The floor is that the home is typed and reset is a program, so the reader is never stuck. How kept state follows a change of shape is open, as it is in OpenLight.
+        - paragraph [ref=e388]:
+          - emphasis [ref=e389]: The author's concern, 2026-11-01; open.

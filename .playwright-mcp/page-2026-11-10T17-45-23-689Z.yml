@@ -1,0 +1,813 @@
+- main [ref=e2]:
+  - generic [ref=e647]:
+    - generic [ref=e649]:
+      - generic [ref=e650]:
+        - generic [ref=e651]:
+          - 'button "pointers: everything" [ref=e652] [cursor=pointer]':
+            - generic [ref=e653]: "pointers:"
+            - generic [ref=e654]: everything
+          - 'button "Let go of pointers: everything" [ref=e655] [cursor=pointer]': ×
+        - combobox [ref=e656]
+      - paragraph [ref=e657]: 83601 holons, 83407 at this level
+    - list [ref=e659]:
+      - listitem [ref=e660]:
+        - generic [ref=e662] [cursor=pointer]:
+          - strong [ref=e663]: Reader
+          - generic [ref=e664]: component · in glass
+      - listitem [ref=e665]:
+        - generic [ref=e667] [cursor=pointer]:
+          - strong [ref=e668]: entry
+          - generic [ref=e669]: gives a way of looking
+      - listitem [ref=e670]:
+        - generic [ref=e672] [cursor=pointer]:
+          - strong [ref=e673]: text
+          - generic [ref=e674]: function · in glass
+      - listitem [ref=e675]:
+        - generic [ref=e677] [cursor=pointer]:
+          - strong [ref=e678]: measure
+          - generic [ref=e679]: function · in glass
+      - listitem [ref=e680]:
+        - generic [ref=e682] [cursor=pointer]:
+          - strong [ref=e683]: parts
+          - generic [ref=e684]: function · in glass
+      - listitem [ref=e685]:
+        - generic [ref=e687] [cursor=pointer]:
+          - strong [ref=e688]: digest
+          - generic [ref=e689]: function · in glass
+      - listitem [ref=e690]:
+        - generic [ref=e692] [cursor=pointer]:
+          - strong [ref=e693]: level
+          - generic [ref=e694]: function · in glass
+      - listitem [ref=e695]:
+        - generic [ref=e697] [cursor=pointer]:
+          - strong [ref=e698]: is
+          - generic [ref=e699]: function · in glass
+      - listitem [ref=e700]:
+        - generic [ref=e702] [cursor=pointer]:
+          - strong [ref=e703]: outline
+          - generic [ref=e704]: function · in glass
+      - listitem [ref=e705]:
+        - generic [ref=e707] [cursor=pointer]:
+          - strong [ref=e708]: route
+          - generic [ref=e709]: function · in glass
+      - listitem [ref=e710]:
+        - generic [ref=e712] [cursor=pointer]:
+          - strong [ref=e713]: Hi,
+          - generic [ref=e714]: word · in main
+      - listitem [ref=e715]:
+        - generic [ref=e717] [cursor=pointer]:
+          - strong [ref=e718]: a
+          - generic [ref=e719]: word · in main
+      - listitem [ref=e720]:
+        - generic [ref=e722] [cursor=pointer]:
+          - strong [ref=e723]: session
+          - generic [ref=e724]: word · in main
+      - listitem [ref=e725]:
+        - generic [ref=e727] [cursor=pointer]:
+          - strong [ref=e728]: just
+          - generic [ref=e729]: word · in main
+      - listitem [ref=e730]:
+        - generic [ref=e732] [cursor=pointer]:
+          - strong [ref=e733]: trying
+          - generic [ref=e734]: word · in main
+      - listitem [ref=e735]:
+        - generic [ref=e737] [cursor=pointer]:
+          - strong [ref=e738]: to
+          - generic [ref=e739]: word · in main
+      - listitem [ref=e740]:
+        - generic [ref=e742] [cursor=pointer]:
+          - strong [ref=e743]: bootstrap.
+          - generic [ref=e744]: word · in main
+      - listitem [ref=e745]:
+        - generic [ref=e747] [cursor=pointer]:
+          - strong [ref=e748]: But
+          - generic [ref=e749]: word · in main
+      - listitem [ref=e750]:
+        - generic [ref=e752] [cursor=pointer]:
+          - strong [ref=e753]: if
+          - generic [ref=e754]: word · in main
+      - listitem [ref=e755]:
+        - generic [ref=e757] [cursor=pointer]:
+          - strong [ref=e758]: it
+          - generic [ref=e759]: word · in main
+      - listitem [ref=e760]:
+        - generic [ref=e762] [cursor=pointer]:
+          - strong [ref=e763]: came,
+          - generic [ref=e764]: word · in main
+      - listitem [ref=e765]:
+        - generic [ref=e767] [cursor=pointer]:
+          - strong [ref=e768]: just
+          - generic [ref=e769]: word · in main
+      - listitem [ref=e770]:
+        - generic [ref=e772] [cursor=pointer]:
+          - strong [ref=e773]: too
+          - generic [ref=e774]: word · in main
+      - listitem [ref=e775]:
+        - generic [ref=e777] [cursor=pointer]:
+          - strong [ref=e778]: much
+          - generic [ref=e779]: word · in main
+      - listitem [ref=e780]:
+        - generic [ref=e782] [cursor=pointer]:
+          - strong [ref=e783]: tokens.
+          - generic [ref=e784]: word · in main
+      - listitem [ref=e785]:
+        - generic [ref=e787] [cursor=pointer]:
+          - strong [ref=e788]: I
+          - generic [ref=e789]: word · in main
+      - listitem [ref=e790]:
+        - generic [ref=e792] [cursor=pointer]:
+          - strong [ref=e793]: expect
+          - generic [ref=e794]: word · in main
+      - listitem [ref=e795]:
+        - generic [ref=e797] [cursor=pointer]:
+          - strong [ref=e798]: you
+          - generic [ref=e799]: word · in main
+      - listitem [ref=e800]:
+        - generic [ref=e802] [cursor=pointer]:
+          - strong [ref=e803]: to
+          - generic [ref=e804]: word · in main
+      - listitem [ref=e805]:
+        - generic [ref=e807] [cursor=pointer]:
+          - strong [ref=e808]: land
+          - generic [ref=e809]: word · in main
+      - listitem [ref=e810]:
+        - generic [ref=e812] [cursor=pointer]:
+          - strong [ref=e813]: at
+          - generic [ref=e814]: word · in main
+      - listitem [ref=e815]:
+        - generic [ref=e817] [cursor=pointer]:
+          - strong [ref=e818]: about
+          - generic [ref=e819]: word · in main
+      - listitem [ref=e820]:
+        - generic [ref=e822] [cursor=pointer]:
+          - strong [ref=e823]: 70,000
+          - generic [ref=e824]: word · in main
+      - listitem [ref=e825]:
+        - generic [ref=e827] [cursor=pointer]:
+          - strong [ref=e828]: tokens.
+          - generic [ref=e829]: word · in main
+      - listitem [ref=e830]:
+        - generic [ref=e832] [cursor=pointer]:
+          - strong [ref=e833]: You're
+          - generic [ref=e834]: word · in main
+      - listitem [ref=e835]:
+        - generic [ref=e837] [cursor=pointer]:
+          - strong [ref=e838]: to
+          - generic [ref=e839]: word · in main
+      - listitem [ref=e840]:
+        - generic [ref=e842] [cursor=pointer]:
+          - strong [ref=e843]: of
+          - generic [ref=e844]: word · in main
+      - listitem [ref=e845]:
+        - generic [ref=e847] [cursor=pointer]:
+          - strong [ref=e848]: course
+          - generic [ref=e849]: word · in main
+      - listitem [ref=e850]:
+        - generic [ref=e852] [cursor=pointer]:
+          - strong [ref=e853]: read
+          - generic [ref=e854]: word · in main
+      - listitem [ref=e855]:
+        - generic [ref=e857] [cursor=pointer]:
+          - strong [ref=e858]: the
+          - generic [ref=e859]: word · in main
+      - listitem [ref=e860]:
+        - generic [ref=e862] [cursor=pointer]:
+          - strong [ref=e863]: store,
+          - generic [ref=e864]: word · in main
+      - listitem [ref=e865]:
+        - generic [ref=e867] [cursor=pointer]:
+          - strong [ref=e868]: the
+          - generic [ref=e869]: word · in main
+      - listitem [ref=e870]:
+        - generic [ref=e872] [cursor=pointer]:
+          - strong [ref=e873]: wiki.
+          - generic [ref=e874]: word · in main
+      - listitem [ref=e875]:
+        - generic [ref=e877] [cursor=pointer]:
+          - strong [ref=e878]: But
+          - generic [ref=e879]: word · in main
+      - listitem [ref=e880]:
+        - generic [ref=e882] [cursor=pointer]:
+          - strong [ref=e883]: for
+          - generic [ref=e884]: word · in main
+      - listitem [ref=e885]:
+        - generic [ref=e887] [cursor=pointer]:
+          - strong [ref=e888]: the
+          - generic [ref=e889]: word · in main
+      - listitem [ref=e890]:
+        - generic [ref=e892] [cursor=pointer]:
+          - strong [ref=e893]: sessions
+          - generic [ref=e894]: word · in main
+      - listitem [ref=e895]:
+        - generic [ref=e897] [cursor=pointer]:
+          - strong [ref=e898]: and
+          - generic [ref=e899]: word · in main
+      - listitem [ref=e900]:
+        - generic [ref=e902] [cursor=pointer]:
+          - strong [ref=e903]: for
+          - generic [ref=e904]: word · in main
+      - listitem [ref=e905]:
+        - generic [ref=e907] [cursor=pointer]:
+          - strong [ref=e908]: what
+          - generic [ref=e909]: word · in main
+      - listitem [ref=e910]:
+        - generic [ref=e912] [cursor=pointer]:
+          - strong [ref=e913]: was
+          - generic [ref=e914]: word · in main
+      - listitem [ref=e915]:
+        - generic [ref=e917] [cursor=pointer]:
+          - strong [ref=e918]: said,
+          - generic [ref=e919]: word · in main
+      - listitem [ref=e920]:
+        - generic [ref=e922] [cursor=pointer]:
+          - strong [ref=e923]: you
+          - generic [ref=e924]: word · in main
+      - listitem [ref=e925]:
+        - generic [ref=e927] [cursor=pointer]:
+          - strong [ref=e928]: have
+          - generic [ref=e929]: word · in main
+      - listitem [ref=e930]:
+        - generic [ref=e932] [cursor=pointer]:
+          - strong [ref=e933]: to
+          - generic [ref=e934]: word · in main
+      - listitem [ref=e935]:
+        - generic [ref=e937] [cursor=pointer]:
+          - strong [ref=e938]: use
+          - generic [ref=e939]: word · in main
+      - listitem [ref=e940]:
+        - generic [ref=e942] [cursor=pointer]:
+          - strong [ref=e943]: the
+          - generic [ref=e944]: word · in main
+      - listitem [ref=e945]:
+        - generic [ref=e947] [cursor=pointer]:
+          - strong [ref=e948]: markers.
+          - generic [ref=e949]: word · in main
+      - listitem [ref=e950]:
+        - generic [ref=e952] [cursor=pointer]:
+          - strong [ref=e953]: So
+          - generic [ref=e954]: word · in main
+      - listitem [ref=e955]:
+        - generic [ref=e957] [cursor=pointer]:
+          - strong [ref=e958]: the
+          - generic [ref=e959]: word · in main
+      - listitem [ref=e960]:
+        - generic [ref=e962] [cursor=pointer]:
+          - strong [ref=e963]: read
+          - generic [ref=e964]: word · in main
+      - listitem [ref=e965]:
+        - generic [ref=e967] [cursor=pointer]:
+          - strong [ref=e968]: that
+          - generic [ref=e969]: word · in main
+      - listitem [ref=e970]:
+        - generic [ref=e972] [cursor=pointer]:
+          - strong [ref=e973]: which
+          - generic [ref=e974]: word · in main
+      - listitem [ref=e975]:
+        - generic [ref=e977] [cursor=pointer]:
+          - strong [ref=e978]: is
+          - generic [ref=e979]: word · in main
+      - listitem [ref=e980]:
+        - generic [ref=e982] [cursor=pointer]:
+          - strong [ref=e983]: relevant.
+          - generic [ref=e984]: word · in main
+      - listitem [ref=e985]:
+        - generic [ref=e987] [cursor=pointer]:
+          - strong [ref=e988]: Holding
+          - generic [ref=e989]: word · in main
+      - listitem [ref=e990]:
+        - generic [ref=e992] [cursor=pointer]:
+          - strong [ref=e993]: essentially
+          - generic [ref=e994]: word · in main
+      - listitem [ref=e995]:
+        - generic [ref=e997] [cursor=pointer]:
+          - strong [ref=e998]: all
+          - generic [ref=e999]: word · in main
+      - listitem [ref=e1000]:
+        - generic [ref=e1002] [cursor=pointer]:
+          - strong [ref=e1003]: of
+          - generic [ref=e1004]: word · in main
+      - listitem [ref=e1005]:
+        - generic [ref=e1007] [cursor=pointer]:
+          - strong [ref=e1008]: the
+          - generic [ref=e1009]: word · in main
+      - listitem [ref=e1010]:
+        - generic [ref=e1012] [cursor=pointer]:
+          - strong [ref=e1013]: important
+          - generic [ref=e1014]: word · in main
+      - listitem [ref=e1015]:
+        - generic [ref=e1017] [cursor=pointer]:
+          - strong [ref=e1018]: knowledge
+          - generic [ref=e1019]: word · in main
+      - listitem [ref=e1020]:
+        - generic [ref=e1022] [cursor=pointer]:
+          - strong [ref=e1023]: you
+          - generic [ref=e1024]: word · in main
+      - listitem [ref=e1025]:
+        - generic [ref=e1027] [cursor=pointer]:
+          - strong [ref=e1028]: need
+          - generic [ref=e1029]: word · in main
+      - listitem [ref=e1030]:
+        - generic [ref=e1032] [cursor=pointer]:
+          - strong [ref=e1033]: to
+          - generic [ref=e1034]: word · in main
+      - listitem [ref=e1035]:
+        - generic [ref=e1037] [cursor=pointer]:
+          - strong [ref=e1038]: hold.
+          - generic [ref=e1039]: word · in main
+      - listitem [ref=e1040]:
+        - generic [ref=e1042] [cursor=pointer]:
+          - strong [ref=e1043]: Not
+          - generic [ref=e1044]: word · in main
+      - listitem [ref=e1045]:
+        - generic [ref=e1047] [cursor=pointer]:
+          - strong [ref=e1048]: reading
+          - generic [ref=e1049]: word · in main
+      - listitem [ref=e1050]:
+        - generic [ref=e1052] [cursor=pointer]:
+          - strong [ref=e1053]: that
+          - generic [ref=e1054]: word · in main
+      - listitem [ref=e1055]:
+        - generic [ref=e1057] [cursor=pointer]:
+          - strong [ref=e1058]: which
+          - generic [ref=e1059]: word · in main
+      - listitem [ref=e1060]:
+        - generic [ref=e1062] [cursor=pointer]:
+          - strong [ref=e1063]: is
+          - generic [ref=e1064]: word · in main
+      - listitem [ref=e1065]:
+        - generic [ref=e1067] [cursor=pointer]:
+          - strong [ref=e1068]: shall
+          - generic [ref=e1069]: word · in main
+      - listitem [ref=e1070]:
+        - generic [ref=e1072] [cursor=pointer]:
+          - strong [ref=e1073]: we
+          - generic [ref=e1074]: word · in main
+      - listitem [ref=e1075]:
+        - generic [ref=e1077] [cursor=pointer]:
+          - strong [ref=e1078]: say
+          - generic [ref=e1079]: word · in main
+      - listitem [ref=e1080]:
+        - generic [ref=e1082] [cursor=pointer]:
+          - strong [ref=e1083]: duplicates
+          - generic [ref=e1084]: word · in main
+      - listitem [ref=e1085]:
+        - generic [ref=e1087] [cursor=pointer]:
+          - strong [ref=e1088]: or
+          - generic [ref=e1089]: word · in main
+      - listitem [ref=e1090]:
+        - generic [ref=e1092] [cursor=pointer]:
+          - strong [ref=e1093]: stale.
+          - generic [ref=e1094]: word · in main
+      - listitem [ref=e1095]:
+        - generic [ref=e1097] [cursor=pointer]:
+          - strong [ref=e1098]: Of
+          - generic [ref=e1099]: word · in main
+      - listitem [ref=e1100]:
+        - generic [ref=e1102] [cursor=pointer]:
+          - strong [ref=e1103]: course
+          - generic [ref=e1104]: word · in main
+      - listitem [ref=e1105]:
+        - generic [ref=e1107] [cursor=pointer]:
+          - strong [ref=e1108]: not
+          - generic [ref=e1109]: word · in main
+      - listitem [ref=e1110]:
+        - generic [ref=e1112] [cursor=pointer]:
+          - strong [ref=e1113]: reading
+          - generic [ref=e1114]: word · in main
+      - listitem [ref=e1115]:
+        - generic [ref=e1117] [cursor=pointer]:
+          - strong [ref=e1118]: paper
+          - generic [ref=e1119]: word · in main
+      - listitem [ref=e1120]:
+        - generic [ref=e1122] [cursor=pointer]:
+          - strong [ref=e1123]: or
+          - generic [ref=e1124]: word · in main
+      - listitem [ref=e1125]:
+        - generic [ref=e1127] [cursor=pointer]:
+          - strong [ref=e1128]: the
+          - generic [ref=e1129]: word · in main
+      - listitem [ref=e1130]:
+        - generic [ref=e1132] [cursor=pointer]:
+          - strong [ref=e1133]: paper
+          - generic [ref=e1134]: word · in main
+      - listitem [ref=e1135]:
+        - generic [ref=e1137] [cursor=pointer]:
+          - strong [ref=e1138]: runs.
+          - generic [ref=e1139]: word · in main
+      - listitem [ref=e1140]:
+        - generic [ref=e1142] [cursor=pointer]:
+          - strong [ref=e1143]: But
+          - generic [ref=e1144]: word · in main
+      - listitem [ref=e1145]:
+        - generic [ref=e1147] [cursor=pointer]:
+          - strong [ref=e1148]: of
+          - generic [ref=e1149]: word · in main
+      - listitem [ref=e1150]:
+        - generic [ref=e1152] [cursor=pointer]:
+          - strong [ref=e1153]: course
+          - generic [ref=e1154]: word · in main
+      - listitem [ref=e1155]:
+        - generic [ref=e1157] [cursor=pointer]:
+          - strong [ref=e1158]: you
+          - generic [ref=e1159]: word · in main
+      - listitem [ref=e1160]:
+        - generic [ref=e1162] [cursor=pointer]:
+          - strong [ref=e1163]: will
+          - generic [ref=e1164]: word · in main
+      - listitem [ref=e1165]:
+        - generic [ref=e1167] [cursor=pointer]:
+          - strong [ref=e1168]: do
+          - generic [ref=e1169]: word · in main
+      - listitem [ref=e1170]:
+        - generic [ref=e1172] [cursor=pointer]:
+          - strong [ref=e1173]: a
+          - generic [ref=e1174]: word · in main
+      - listitem [ref=e1175]:
+        - generic [ref=e1177] [cursor=pointer]:
+          - strong [ref=e1178]: simple
+          - generic [ref=e1179]: word · in main
+      - listitem [ref=e1180]:
+        - generic [ref=e1182] [cursor=pointer]:
+          - strong [ref=e1183]: probe
+          - generic [ref=e1184]: word · in main
+      - listitem [ref=e1185]:
+        - generic [ref=e1187] [cursor=pointer]:
+          - strong [ref=e1188]: of
+          - generic [ref=e1189]: word · in main
+      - listitem [ref=e1190]:
+        - generic [ref=e1192] [cursor=pointer]:
+          - strong [ref=e1193]: the
+          - generic [ref=e1194]: word · in main
+      - listitem [ref=e1195]:
+        - generic [ref=e1197] [cursor=pointer]:
+          - strong [ref=e1198]: field,
+          - generic [ref=e1199]: word · in main
+      - listitem [ref=e1200]:
+        - generic [ref=e1202] [cursor=pointer]:
+          - strong [ref=e1203]: and
+          - generic [ref=e1204]: word · in main
+      - listitem [ref=e1205]:
+        - generic [ref=e1207] [cursor=pointer]:
+          - strong [ref=e1208]: so
+          - generic [ref=e1209]: word · in main
+      - listitem [ref=e1210]:
+        - generic [ref=e1212] [cursor=pointer]:
+          - strong [ref=e1213]: if
+          - generic [ref=e1214]: word · in main
+      - listitem [ref=e1215]:
+        - generic [ref=e1217] [cursor=pointer]:
+          - strong [ref=e1218]: you
+          - generic [ref=e1219]: word · in main
+      - listitem [ref=e1220]:
+        - generic [ref=e1222] [cursor=pointer]:
+          - strong [ref=e1223]: have
+          - generic [ref=e1224]: word · in main
+      - listitem [ref=e1225]:
+        - generic [ref=e1227] [cursor=pointer]:
+          - strong [ref=e1228]: questions
+          - generic [ref=e1229]: word · in main
+      - listitem [ref=e1230]:
+        - generic [ref=e1232] [cursor=pointer]:
+          - strong [ref=e1233]: about
+          - generic [ref=e1234]: word · in main
+      - listitem [ref=e1235]:
+        - generic [ref=e1237] [cursor=pointer]:
+          - strong [ref=e1238]: something
+          - generic [ref=e1239]: word · in main
+      - listitem [ref=e1240]:
+        - generic [ref=e1242] [cursor=pointer]:
+          - strong [ref=e1243]: else
+          - generic [ref=e1244]: word · in main
+      - listitem [ref=e1245]:
+        - generic [ref=e1247] [cursor=pointer]:
+          - strong [ref=e1248]: that
+          - generic [ref=e1249]: word · in main
+      - listitem [ref=e1250]:
+        - generic [ref=e1252] [cursor=pointer]:
+          - strong [ref=e1253]: I've
+          - generic [ref=e1254]: word · in main
+      - listitem [ref=e1255]:
+        - generic [ref=e1257] [cursor=pointer]:
+          - strong [ref=e1258]: not
+          - generic [ref=e1259]: word · in main
+      - listitem [ref=e1260]:
+        - generic [ref=e1262] [cursor=pointer]:
+          - strong [ref=e1263]: mentioned,
+          - generic [ref=e1264]: word · in main
+      - listitem [ref=e1265]:
+        - generic [ref=e1267] [cursor=pointer]:
+          - strong [ref=e1268]: you
+          - generic [ref=e1269]: word · in main
+      - listitem [ref=e1270]:
+        - generic [ref=e1272] [cursor=pointer]:
+          - strong [ref=e1273]: can
+          - generic [ref=e1274]: word · in main
+      - listitem [ref=e1275]:
+        - generic [ref=e1277] [cursor=pointer]:
+          - strong [ref=e1278]: ask.
+          - generic [ref=e1279]: word · in main
+      - listitem [ref=e1280]:
+        - generic [ref=e1282] [cursor=pointer]:
+          - strong [ref=e1283]: Once
+          - generic [ref=e1284]: word · in main
+      - listitem [ref=e1285]:
+        - generic [ref=e1287] [cursor=pointer]:
+          - strong [ref=e1288]: you
+          - generic [ref=e1289]: word · in main
+      - listitem [ref=e1290]:
+        - generic [ref=e1292] [cursor=pointer]:
+          - strong [ref=e1293]: bootstrap,
+          - generic [ref=e1294]: word · in main
+      - listitem [ref=e1295]:
+        - generic [ref=e1297] [cursor=pointer]:
+          - strong [ref=e1298]: I
+          - generic [ref=e1299]: word · in main
+      - listitem [ref=e1300]:
+        - generic [ref=e1302] [cursor=pointer]:
+          - strong [ref=e1303]: will
+          - generic [ref=e1304]: word · in main
+      - listitem [ref=e1305]:
+        - generic [ref=e1307] [cursor=pointer]:
+          - strong [ref=e1308]: take
+          - generic [ref=e1309]: word · in main
+      - listitem [ref=e1310]:
+        - generic [ref=e1312] [cursor=pointer]:
+          - strong [ref=e1313]: you
+          - generic [ref=e1314]: word · in main
+      - listitem [ref=e1315]:
+        - generic [ref=e1317] [cursor=pointer]:
+          - strong [ref=e1318]: to
+          - generic [ref=e1319]: word · in main
+      - listitem [ref=e1320]:
+        - generic [ref=e1322] [cursor=pointer]:
+          - strong [ref=e1323]: your
+          - generic [ref=e1324]: word · in main
+      - listitem [ref=e1325]:
+        - generic [ref=e1327] [cursor=pointer]:
+          - strong [ref=e1328]: task.
+          - generic [ref=e1329]: word · in main
+      - listitem [ref=e1330]:
+        - generic [ref=e1332] [cursor=pointer]:
+          - strong [ref=e1333]: 1M6Y8YRYWTTB04C
+          - generic [ref=e1334]: utterance · in main
+      - listitem [ref=e1335]:
+        - generic [ref=e1337] [cursor=pointer]:
+          - strong [ref=e1338]: For
+          - generic [ref=e1339]: word · in main
+      - listitem [ref=e1340]:
+        - generic [ref=e1342] [cursor=pointer]:
+          - strong [ref=e1343]: the
+          - generic [ref=e1344]: word · in main
+      - listitem [ref=e1345]:
+        - generic [ref=e1347] [cursor=pointer]:
+          - strong [ref=e1348]: first
+          - generic [ref=e1349]: word · in main
+      - listitem [ref=e1350]:
+        - generic [ref=e1352] [cursor=pointer]:
+          - strong [ref=e1353]: two,
+          - generic [ref=e1354]: word · in main
+      - listitem [ref=e1355]:
+        - generic [ref=e1357] [cursor=pointer]:
+          - strong [ref=e1358]: I
+          - generic [ref=e1359]: word · in main
+      - listitem [ref=e1360]:
+        - generic [ref=e1362] [cursor=pointer]:
+          - strong [ref=e1363]: don't
+          - generic [ref=e1364]: word · in main
+      - listitem [ref=e1365]:
+        - generic [ref=e1367] [cursor=pointer]:
+          - strong [ref=e1368]: know.
+          - generic [ref=e1369]: word · in main
+      - listitem [ref=e1370]:
+        - generic [ref=e1372] [cursor=pointer]:
+          - strong [ref=e1373]: This
+          - generic [ref=e1374]: word · in main
+      - listitem [ref=e1375]:
+        - generic [ref=e1377] [cursor=pointer]:
+          - strong [ref=e1378]: is
+          - generic [ref=e1379]: word · in main
+      - listitem [ref=e1380]:
+        - generic [ref=e1382] [cursor=pointer]:
+          - strong [ref=e1383]: really
+          - generic [ref=e1384]: word · in main
+      - listitem [ref=e1385]:
+        - generic [ref=e1387] [cursor=pointer]:
+          - strong [ref=e1388]: specific
+          - generic [ref=e1389]: word · in main
+      - listitem [ref=e1390]:
+        - generic [ref=e1392] [cursor=pointer]:
+          - strong [ref=e1393]: things.
+          - generic [ref=e1394]: word · in main
+      - listitem [ref=e1395]:
+        - generic [ref=e1397] [cursor=pointer]:
+          - strong [ref=e1398]: I
+          - generic [ref=e1399]: word · in main
+      - listitem [ref=e1400]:
+        - generic [ref=e1402] [cursor=pointer]:
+          - strong [ref=e1403]: can't
+          - generic [ref=e1404]: word · in main
+      - listitem [ref=e1405]:
+        - generic [ref=e1407] [cursor=pointer]:
+          - strong [ref=e1408]: say
+          - generic [ref=e1409]: word · in main
+      - listitem [ref=e1410]:
+        - generic [ref=e1412] [cursor=pointer]:
+          - strong [ref=e1413]: that
+          - generic [ref=e1414]: word · in main
+      - listitem [ref=e1415]:
+        - generic [ref=e1417] [cursor=pointer]:
+          - strong [ref=e1418]: I
+          - generic [ref=e1419]: word · in main
+      - listitem [ref=e1420]:
+        - generic [ref=e1422] [cursor=pointer]:
+          - strong [ref=e1423]: have
+          - generic [ref=e1424]: word · in main
+      - listitem [ref=e1425]:
+        - generic [ref=e1427] [cursor=pointer]:
+          - strong [ref=e1428]: full
+          - generic [ref=e1429]: word · in main
+      - listitem [ref=e1430]:
+        - generic [ref=e1432] [cursor=pointer]:
+          - strong [ref=e1433]: confidence
+          - generic [ref=e1434]: word · in main
+      - listitem [ref=e1435]:
+        - generic [ref=e1437] [cursor=pointer]:
+          - strong [ref=e1438]: in
+          - generic [ref=e1439]: word · in main
+      - listitem [ref=e1440]:
+        - generic [ref=e1442] [cursor=pointer]:
+          - strong [ref=e1443]: what
+          - generic [ref=e1444]: word · in main
+      - listitem [ref=e1445]:
+        - generic [ref=e1447] [cursor=pointer]:
+          - strong [ref=e1448]: we're
+          - generic [ref=e1449]: word · in main
+      - listitem [ref=e1450]:
+        - generic [ref=e1452] [cursor=pointer]:
+          - strong [ref=e1453]: doing.
+          - generic [ref=e1454]: word · in main
+      - listitem [ref=e1455]:
+        - generic [ref=e1457] [cursor=pointer]:
+          - strong [ref=e1458]: When
+          - generic [ref=e1459]: word · in main
+      - listitem [ref=e1460]:
+        - generic [ref=e1462] [cursor=pointer]:
+          - strong [ref=e1463]: it
+          - generic [ref=e1464]: word · in main
+      - listitem [ref=e1465]:
+        - generic [ref=e1467] [cursor=pointer]:
+          - strong [ref=e1468]: comes
+          - generic [ref=e1469]: word · in main
+      - listitem [ref=e1470]:
+        - generic [ref=e1472] [cursor=pointer]:
+          - strong [ref=e1473]: to
+          - generic [ref=e1474]: word · in main
+      - listitem [ref=e1475]:
+        - generic [ref=e1477] [cursor=pointer]:
+          - strong [ref=e1478]: these
+          - generic [ref=e1479]: word · in main
+      - listitem [ref=e1480]:
+        - generic [ref=e1482] [cursor=pointer]:
+          - strong [ref=e1483]: things,
+          - generic [ref=e1484]: word · in main
+      - listitem [ref=e1485]:
+        - generic [ref=e1487] [cursor=pointer]:
+          - strong [ref=e1488]: the
+          - generic [ref=e1489]: word · in main
+      - listitem [ref=e1490]:
+        - generic [ref=e1492] [cursor=pointer]:
+          - strong [ref=e1493]: hashes
+          - generic [ref=e1494]: word · in main
+      - listitem [ref=e1495]:
+        - generic [ref=e1497] [cursor=pointer]:
+          - strong [ref=e1498]: and
+          - generic [ref=e1499]: word · in main
+      - listitem [ref=e1500]:
+        - generic [ref=e1502] [cursor=pointer]:
+          - strong [ref=e1503]: the
+          - generic [ref=e1504]: word · in main
+      - listitem [ref=e1505]:
+        - generic [ref=e1507] [cursor=pointer]:
+          - strong [ref=e1508]: structures
+          - generic [ref=e1509]: word · in main
+      - listitem [ref=e1510]:
+        - generic [ref=e1512] [cursor=pointer]:
+          - strong [ref=e1513]: and
+          - generic [ref=e1514]: word · in main
+      - listitem [ref=e1515]:
+        - generic [ref=e1517] [cursor=pointer]:
+          - strong [ref=e1518]: indexes
+          - generic [ref=e1519]: word · in main
+      - listitem [ref=e1520]:
+        - generic [ref=e1522] [cursor=pointer]:
+          - strong [ref=e1523]: and
+          - generic [ref=e1524]: word · in main
+      - listitem [ref=e1525]:
+        - generic [ref=e1527] [cursor=pointer]:
+          - strong [ref=e1528]: all
+          - generic [ref=e1529]: word · in main
+      - listitem [ref=e1530]:
+        - generic [ref=e1532] [cursor=pointer]:
+          - strong [ref=e1533]: of
+          - generic [ref=e1534]: word · in main
+      - listitem [ref=e1535]:
+        - generic [ref=e1537] [cursor=pointer]:
+          - strong [ref=e1538]: this.
+          - generic [ref=e1539]: word · in main
+      - listitem [ref=e1540]:
+        - generic [ref=e1542] [cursor=pointer]:
+          - strong [ref=e1543]: And
+          - generic [ref=e1544]: word · in main
+      - listitem [ref=e1545]:
+        - generic [ref=e1547] [cursor=pointer]:
+          - strong [ref=e1548]: for
+          - generic [ref=e1549]: word · in main
+      - listitem [ref=e1550]:
+        - generic [ref=e1552] [cursor=pointer]:
+          - strong [ref=e1553]: the
+          - generic [ref=e1554]: word · in main
+      - listitem [ref=e1555]:
+        - generic [ref=e1557] [cursor=pointer]:
+          - strong [ref=e1558]: end
+          - generic [ref=e1559]: word · in main
+      - listitem [ref=e1560]:
+        - generic [ref=e1562] [cursor=pointer]:
+          - strong [ref=e1563]: and
+          - generic [ref=e1564]: word · in main
+      - listitem [ref=e1565]:
+        - generic [ref=e1567] [cursor=pointer]:
+          - strong [ref=e1568]: to
+          - generic [ref=e1569]: word · in main
+      - listitem [ref=e1570]:
+        - generic [ref=e1572] [cursor=pointer]:
+          - strong [ref=e1573]: declare
+          - generic [ref=e1574]: word · in main
+      - listitem [ref=e1575]:
+        - generic [ref=e1577] [cursor=pointer]:
+          - strong [ref=e1578]: a
+          - generic [ref=e1579]: word · in main
+      - listitem [ref=e1580]:
+        - generic [ref=e1582] [cursor=pointer]:
+          - strong [ref=e1583]: small
+          - generic [ref=e1584]: word · in main
+      - listitem [ref=e1585]:
+        - generic [ref=e1587] [cursor=pointer]:
+          - strong [ref=e1588]: kernel,
+          - generic [ref=e1589]: word · in main
+      - listitem [ref=e1590]:
+        - generic [ref=e1592] [cursor=pointer]:
+          - strong [ref=e1593]: I
+          - generic [ref=e1594]: word · in main
+      - listitem [ref=e1595]:
+        - generic [ref=e1597] [cursor=pointer]:
+          - strong [ref=e1598]: don't
+          - generic [ref=e1599]: word · in main
+      - listitem [ref=e1600]:
+        - generic [ref=e1602] [cursor=pointer]:
+          - strong [ref=e1603]: know
+          - generic [ref=e1604]: word · in main
+      - listitem [ref=e1605]:
+        - generic [ref=e1607] [cursor=pointer]:
+          - strong [ref=e1608]: what
+          - generic [ref=e1609]: word · in main
+      - listitem [ref=e1610]:
+        - generic [ref=e1612] [cursor=pointer]:
+          - strong [ref=e1613]: that
+          - generic [ref=e1614]: word · in main
+      - listitem [ref=e1615]:
+        - generic [ref=e1617] [cursor=pointer]:
+          - strong [ref=e1618]: means
+          - generic [ref=e1619]: word · in main
+      - listitem [ref=e1620]:
+        - generic [ref=e1622] [cursor=pointer]:
+          - strong [ref=e1623]: either.
+          - generic [ref=e1624]: word · in main
+      - listitem [ref=e1625]:
+        - generic [ref=e1627] [cursor=pointer]:
+          - strong [ref=e1628]: Does
+          - generic [ref=e1629]: word · in main
+      - listitem [ref=e1630]:
+        - generic [ref=e1632] [cursor=pointer]:
+          - strong [ref=e1633]: that
+          - generic [ref=e1634]: word · in main
+      - listitem [ref=e1635]:
+        - generic [ref=e1637] [cursor=pointer]:
+          - strong [ref=e1638]: mean
+          - generic [ref=e1639]: word · in main
+      - listitem [ref=e1640]:
+        - generic [ref=e1642] [cursor=pointer]:
+          - strong [ref=e1643]: that
+          - generic [ref=e1644]: word · in main
+      - listitem [ref=e1645]:
+        - generic [ref=e1647] [cursor=pointer]:
+          - strong [ref=e1648]: we
+          - generic [ref=e1649]: word · in main
+      - listitem [ref=e1650]:
+        - generic [ref=e1652] [cursor=pointer]:
+          - strong [ref=e1653]: do?
+          - generic [ref=e1654]: word · in main
+      - listitem [ref=e1655]:
+        - generic [ref=e1657] [cursor=pointer]:
+          - strong [ref=e1658]: Make
+          - generic [ref=e1659]: word · in main
+      - listitem [ref=e1660]: 83207 more not drawn. Narrow what is looked at to reach them.

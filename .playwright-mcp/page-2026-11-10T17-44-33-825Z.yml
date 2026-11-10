@@ -1,0 +1,50 @@
+- main [ref=e2]:
+  - generic [ref=e105]:
+    - generic [ref=e108]:
+      - button "brief" [ref=e109] [cursor=pointer]
+      - generic [ref=e110]:
+        - button "The wiki" [disabled] [ref=e111]
+        - button "Let go of The wiki" [ref=e113] [cursor=pointer]: ×
+      - combobox [ref=e114]
+    - article [ref=e116]:
+      - navigation "Where this stands"
+      - heading "The wiki" [level=1] [ref=e117]
+      - generic [ref=e118]:
+        - heading [level=2] [ref=e119]:
+          - link "Glass" [ref=e120] [cursor=pointer]:
+            - /url: "#"
+        - paragraph [ref=e121]: Glass puts data, programs, AI and interfaces in one place, as small whole pieces kept with their whole history, and runs them with a real engine in your own browser. Programs then build on each other by what they take and give, not by glue, and an interface draws itself from the pieces it shows. Glass is the successor to the author's OpenLight, and the foundation a personal site will be built on first.
+        - paragraph [ref=e122]: "Before anything else, what glass rests on: what matters most to it, and the culture it grows in."
+        - generic [ref=e124] [cursor=pointer]:
+          - heading "The grounds" [level=2] [ref=e125]
+          - paragraph [ref=e126]: "Glass rests on what matters most to it, and what decides that is its ontology: what exists in it, held as knowledge in language that a knowledge graph can be built on. That is the primitives. Everything else keeps, runs or draws them, and each part should be as separate as the primitives it serves, and read as what it is."
+        - paragraph [ref=e127]: Everything in glass stands on a few primitives, so they come next.
+        - generic [ref=e129] [cursor=pointer]:
+          - heading "The primitives" [level=2] [ref=e130]
+          - paragraph [ref=e131]: "Data, types, programs, AI and interfaces are one field of whole pieces, and everything else in glass grows on them. Here they are in the order they stand on each other: the holon, its type, the store that keeps it, the engine that holds the stores, the field they make, the program, its effect, AI, and the interface. They are few on purpose: the author's aim is a core set of primitives, done with quality."
+        - paragraph [ref=e132]: "Holding the primitives, the architecture says where they are kept and how they move: a store anyone can serve as plain files, and a client that pulls it and runs an engine over it, in a field of its own."
+        - generic [ref=e134] [cursor=pointer]:
+          - heading "The architecture" [level=2] [ref=e135]
+          - paragraph [ref=e136]: A working application, a site among them, needs state, and state needs a field to hold it, an engine to govern it, and an interface connected to the engine. Glass keeps the field in a store anyone can serve as plain files, and puts the engine and the interface in a client that pulls the store and runs over it, in the reader's own browser.
+        - paragraph [ref=e137]: The first thing the store holds is knowledge, this wiki among it, so how knowledge stands in the store and is read comes next.
+        - generic [ref=e139] [cursor=pointer]:
+          - heading "Knowledge in the store" [level=2] [ref=e140]
+          - paragraph [ref=e141]: "The first thing glass's store holds is knowledge, starting with this wiki, so the first thing glass must do well is present it: along the gradient, the biggest understanding first and the rest beneath, never flat. The rule already says what knowledge is made of, and glass takes it as it stands."
+        - paragraph [ref=e142]: With that held, the plan proposes what is built first, what waits, and what is still open.
+        - generic [ref=e144] [cursor=pointer]:
+          - heading "The plan" [level=2] [ref=e145]
+          - paragraph [ref=e146]: "The first mark was to read this wiki from a real store, through a real engine in the browser, along the gradient. It was built, and then the store, the engine and the interface were built again on the blocks, and it stands. What comes next is not in this brief: the root README's Where it stands says it."
+        - paragraph [ref=e147]: "Beneath it all lies where glass comes from: OpenLight, the rule, and glass's own first iteration, built and then cleared."
+        - generic [ref=e149] [cursor=pointer]:
+          - heading "Where it comes from" [level=2] [ref=e150]
+          - paragraph [ref=e151]: Glass comes from two of the author's works and one attempt of its own. OpenLight gave the vision and most of the architecture, the rule gave the shape knowledge takes, and glass's first iteration, built and cleared in three days, showed what building ahead of the architecture costs.
+        - paragraph [ref=e152]: Then the work itself, told over its commits as it happened, until the store can hold it.
+        - generic [ref=e154] [cursor=pointer]:
+          - heading "History" [level=2] [ref=e155]
+          - paragraph [ref=e156]: How glass came to be what it is, told over its commits, newest first, each day by the runs of work it held, with the commits standing beneath as leaves. It moved into the store with everything else, and each step since is told in its commits and its sessions as well as here.
+        - paragraph [ref=e157]: Last stand the author's own words, kept as they were said, which every brief above grew from.
+        - generic [ref=e159] [cursor=pointer]:
+          - heading "As it was said" [level=2] [ref=e160]
+          - paragraph [ref=e161]: The author's own words, kept as they were said, a day to a file, newest first. Everything in this wiki grew from them, and each brief says which words it stands on. They are mostly dictated by voice, so where the transcription misheard a word, the word meant is set in brackets; typed words have their spelling set right, and nothing else is changed.
+        - paragraph [ref=e162]:
+          - emphasis [ref=e163]: The author's aim, 2026-10-31 and 2026-11-01; the wording and the order are the session's, from the outline the author approved on 2026-11-01.

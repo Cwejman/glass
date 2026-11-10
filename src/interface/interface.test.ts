@@ -209,11 +209,20 @@ describe("reading", () => {
   });
 
   test("any other holon is drawn by the wildcard, with what it holds", async () => {
-    const { page } = await open("https://glass.test/?look=@1M6YBY3G0001XEJ");
+    const { page } = await open("https://glass.test/?look=@1M72V32949Z60AN");
 
     await settled(() => page.querySelector(".holon h1"));
 
-    expect(page.querySelector(".holon .values")?.textContent).toContain("paths");
+    expect(page.querySelector(".holon .values")?.textContent).toContain("opens");
+  });
+
+  test("a session is read as it was had, what was said in order, by whose voice", async () => {
+    const { page } = await open("https://glass.test/?look=@1M7360TVPDXC000");
+
+    await settled(() => page.querySelector(".session .utterance header"));
+
+    expect(page.querySelector(".session .utterance header")?.textContent).toContain("1.");
+    expect(page.querySelector(".session .utterance header")?.textContent).toContain("The author");
   });
 });
 
@@ -254,7 +263,7 @@ describe("moving", () => {
   });
 
   test("a press where one already stands keeps the component one chose", async () => {
-    const first = await open("https://glass.test/?look=@1M6YBY3G0001XEJ");
+    const first = await open("https://glass.test/?look=@1M72V32949Z60AN");
     await settled(() => first.page.querySelector(".holon h1"));
 
     const [wildcard] = await first.engine.read({ named: "Holon", store: "glass" });

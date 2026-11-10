@@ -1,0 +1,50 @@
+- main [ref=e2]:
+  - generic [ref=e41]:
+    - generic [ref=e43]:
+      - generic [ref=e44]:
+        - generic [ref=e45]:
+          - 'button "store: main" [ref=e46] [cursor=pointer]':
+            - generic [ref=e47]: "store:"
+            - generic [ref=e48]: main
+          - 'button "Let go of store: main" [ref=e49] [cursor=pointer]': ×
+        - combobox [ref=e50]
+      - paragraph [ref=e51]: 83041 holons, 10 at this level
+    - list [ref=e53]:
+      - listitem [ref=e54]:
+        - generic [ref=e56] [cursor=pointer]:
+          - strong [ref=e57]: lexicon
+          - generic [ref=e58]: lexicon · in main
+      - listitem [ref=e59]:
+        - generic [ref=e61] [cursor=pointer]:
+          - strong [ref=e62]: The author
+          - generic [ref=e63]: voice · in main
+      - listitem [ref=e64]:
+        - generic [ref=e66] [cursor=pointer]:
+          - heading "As it was said" [level=2] [ref=e67]
+          - paragraph [ref=e68]: The author's own words, kept as they were said, a day to a file, newest first. Everything in this wiki grew from them, and each brief says which words it stands on. They are mostly dictated by voice, so where the transcription misheard a word, the word meant is set in brackets; typed words have their spelling set right, and nothing else is changed.
+      - listitem [ref=e69]:
+        - heading "The wiki" [level=2] [ref=e72] [cursor=pointer]
+      - listitem [ref=e73]:
+        - generic [ref=e75] [cursor=pointer]:
+          - strong [ref=e76]: wiki-markdown
+          - generic [ref=e77]: markdown-forms · in main
+      - listitem [ref=e78]:
+        - generic [ref=e80] [cursor=pointer]:
+          - strong [ref=e81]: raised
+          - generic [ref=e82]: threads · in main
+      - listitem [ref=e83]:
+        - generic [ref=e85] [cursor=pointer]:
+          - strong [ref=e86]: measured
+          - generic [ref=e87]: measures · in main
+      - listitem [ref=e88]:
+        - generic [ref=e90] [cursor=pointer]:
+          - strong [ref=e91]: Statistics and functions
+          - generic [ref=e92]: statistics · in main
+      - listitem [ref=e93]:
+        - generic [ref=e95] [cursor=pointer]:
+          - strong [ref=e96]: Sessions
+          - generic [ref=e97]: sessions · in main
+      - listitem [ref=e98]:
+        - generic [ref=e100] [cursor=pointer]:
+          - strong [ref=e101]: types
+          - generic [ref=e102]: a holon · in main

@@ -270,9 +270,16 @@ export async function mount(
   async function settle() {
     try {
       const named = namedAt(location.href);
-      place = named
-        ? placeOf(named, await namesAsked(engine.read, textOf(named)), (await functionsNow()).or)
-        : undefined;
+
+      // A route's id is the holon's identity: where it still stands, the route is only how
+      // the address read, and is said again as it stands now.
+      const kept = named && "route" in named && named.id ? await engine.holon(named.id) : null;
+
+      place = kept
+        ? { argument: [{ $ref: kept.id }], ...(named!.component ? { component: named!.component } : {}) }
+        : named
+          ? placeOf(named, await namesAsked(engine.read, textOf(named)), (await functionsNow()).or)
+          : undefined;
 
       // A route that led by its id, its names having moved, is said again as it stands now.
       if (place && named && "route" in named) history.replaceState(null, "", await addressFor(place));

@@ -1,0 +1,215 @@
+- main [ref=f3e2]:
+  - generic [ref=f3e5]:
+    - generic [ref=f3e8]:
+      - generic [ref=f3e9]:
+        - button "types" [disabled] [ref=f3e10]
+        - button "Let go of types" [ref=f3e12] [cursor=pointer]: ×
+      - combobox [ref=f3e13]
+    - article [ref=f3e15]:
+      - heading "types" [level=1] [ref=f3e16]
+      - paragraph [ref=f3e17]: a holon · in main
+      - heading "Holds" [level=2] [ref=f3e18]
+      - generic [ref=f3e19]:
+        - term [ref=f3e20]: holds
+        - definition [ref=f3e21]:
+          - list [ref=f3e23]:
+            - listitem [ref=f3e24]:
+              - generic [ref=f3e26] [cursor=pointer]:
+                - strong [ref=f3e27]: session
+                - generic [ref=f3e28]: "One session of work with the author: when it ran, what it stood beside, the words it received in order, and the paths of evolution it noted. · 10 instances"
+            - listitem [ref=f3e29]:
+              - generic [ref=f3e31] [cursor=pointer]:
+                - strong [ref=f3e32]: utterance
+                - generic [ref=f3e33]: "One expression, of the author's or of whoever its voice says, as one message: a stretch of time in which his words bounce off each other more than off the same words elsewhere. Its parts are paragraphs and breaks, in order. · 179 instances"
+            - listitem [ref=f3e34]:
+              - generic [ref=f3e36] [cursor=pointer]:
+                - strong [ref=f3e37]: paragraph
+                - generic [ref=f3e38]: "One point, as the rule has it, held as its sentences rather than one string: a proposal beyond the drafted Paragraph, which holds text. · 1176 instances"
+            - listitem [ref=f3e39]:
+              - generic [ref=f3e41] [cursor=pointer]:
+                - strong [ref=f3e42]: break
+                - generic [ref=f3e43]: "A mark the author drew between parts of one utterance, as ---- or **: not a divider but landscape, making space between what it parts, or by its absence clustering what it leaves together. Words across a mark stand further apart than words in one cluster. Kept exactly as drawn, since its length and kind may carry meaning; a part of the drafted types of prose to be confirmed. · 11 instances"
+            - listitem [ref=f3e44]:
+              - generic [ref=f3e46] [cursor=pointer]:
+                - strong [ref=f3e47]: sentence
+                - generic [ref=f3e48]: One sentence, held as its words in order, so the words near each other are found near each other. · 4702 instances
+            - listitem [ref=f3e49]:
+              - generic [ref=f3e51] [cursor=pointer]:
+                - strong [ref=f3e52]: word
+                - generic [ref=f3e53]: "One word where it was said, a proposal beside the drafted Term, which is to be settled with it: its place is its locality, the sentence, paragraph and utterance holding it. What it shares with the same word elsewhere is its lexeme, which it only points at. · 71450 instances"
+            - listitem [ref=f3e54]:
+              - generic [ref=f3e56] [cursor=pointer]:
+                - strong [ref=f3e57]: lexeme
+                - generic [ref=f3e58]: "A word as one, across every place it is said: the far relation, where the sentence is the near one. Its occurrences point at it; it holds none of them. · 3874 instances"
+            - listitem [ref=f3e59]:
+              - generic [ref=f3e61] [cursor=pointer]:
+                - strong [ref=f3e62]: path
+                - generic [ref=f3e63]: "A possible evolution of glass, noted before it is weighed: what it opens, what unsettled decisions it rests on, and where it stands. · 52 instances"
+            - listitem [ref=f3e64]:
+              - generic [ref=f3e66] [cursor=pointer]:
+                - strong [ref=f3e67]: drawing
+                - generic [ref=f3e68]: "Lines drawn with characters, as the author draws them: kept whole and exactly, line by line, since their meaning is their shape and not their words. · 1 instance"
+            - listitem [ref=f3e69]:
+              - generic [ref=f3e71] [cursor=pointer]:
+                - strong [ref=f3e72]: lexicon
+                - generic [ref=f3e73]: The whole that holds every lexeme, so the words as one stand in one place and not each at the field's top. · 1 instance
+            - listitem [ref=f3e74]:
+              - generic [ref=f3e76] [cursor=pointer]:
+                - strong [ref=f3e77]: document
+                - generic [ref=f3e78]: "A work from outside the field, read in whole: what it is, where it came from, under what licence, and its sections in order. · 1 instance"
+            - listitem [ref=f3e79]:
+              - generic [ref=f3e81] [cursor=pointer]:
+                - strong [ref=f3e82]: section
+                - generic [ref=f3e83]: "A section of a document, by its own number and title, holding its flow and then its subsections, in order: the holarchy the authors drew. · 44 instances"
+            - listitem [ref=f3e84]:
+              - generic [ref=f3e86] [cursor=pointer]:
+                - strong [ref=f3e87]: figure
+                - generic [ref=f3e88]: A figure or table of a document, held by its caption alone; its image is not read in. · 6 instances
+            - listitem [ref=f3e89]:
+              - generic [ref=f3e91] [cursor=pointer]:
+                - strong [ref=f3e92]: paragraph
+                - generic [ref=f3e93]: One paragraph, held as its sentences; as read from a two-column page, so a break may fall where the authors had none. · 144 instances
+            - listitem [ref=f3e94]:
+              - generic [ref=f3e96] [cursor=pointer]:
+                - strong [ref=f3e97]: sentence
+                - generic [ref=f3e98]: One sentence, held as its words in order. · 479 instances
+            - listitem [ref=f3e99]:
+              - generic [ref=f3e101] [cursor=pointer]:
+                - strong [ref=f3e102]: word
+                - generic [ref=f3e103]: One word where it stands; it points at its lexeme, the word as one. · 11212 instances
+            - listitem [ref=f3e104]:
+              - generic [ref=f3e106] [cursor=pointer]:
+                - strong [ref=f3e107]: lexeme
+                - generic [ref=f3e108]: A word as one, across every place it stands. · 2096 instances
+            - listitem [ref=f3e109]:
+              - generic [ref=f3e111] [cursor=pointer]:
+                - strong [ref=f3e112]: lexicon
+                - generic [ref=f3e113]: The whole holding every lexeme of this branch. · 1 instance
+            - listitem [ref=f3e114]:
+              - generic [ref=f3e116] [cursor=pointer]:
+                - strong [ref=f3e117]: branch
+                - generic [ref=f3e118]: "A branch over a held space: one isolated reading, its own holarchy of understandings, a store of its own beside the base. It does not record what steered it. · 17 instances"
+            - listitem [ref=f3e119]:
+              - generic [ref=f3e121] [cursor=pointer]:
+                - strong [ref=f3e122]: understanding
+                - generic [ref=f3e123]: "One understanding in a branch, the rule's way: the biggest first, each breaking down into smaller ones, the smallest holding the base. · 499 instances"
+            - listitem [ref=f3e124]:
+              - generic [ref=f3e126] [cursor=pointer]:
+                - strong [ref=f3e127]: statistic
+                - generic [ref=f3e128]: "A statistic over the field, declared as functional data: prose and an expression, drawn whenever looked at, so it is always of the store as it stands and nothing derived goes stale. · 6 instances"
+            - listitem [ref=f3e129]:
+              - generic [ref=f3e131] [cursor=pointer]:
+                - strong [ref=f3e132]: function
+                - generic [ref=f3e133]: A function, as field/types/function.json declares it, carried here until the field's own is brought in; the two are one type to be merged by id when it does. · 8 instances
+            - listitem [ref=f3e134]:
+              - generic [ref=f3e136] [cursor=pointer]:
+                - strong [ref=f3e137]: message
+                - generic [ref=f3e138]: "Words sent from one session to another: a point where the sessions converge, pointed at by both and held by the one that sent it. · 4 instances"
+            - listitem [ref=f3e139]:
+              - generic [ref=f3e141] [cursor=pointer]:
+                - strong [ref=f3e142]: source
+                - generic [ref=f3e143]: "A source read from outside the field: kept by its link and what was found in it, never by a copy of it. · 7 instances"
+            - listitem [ref=f3e144]:
+              - generic [ref=f3e146] [cursor=pointer]:
+                - strong [ref=f3e147]: claim
+                - generic [ref=f3e148]: "One thing a source says, as a holon of its own: what it is about, the figure and its unit, the moment it was true for, and the source that says it. Two sources saying different things of the same are two claims, and both stand. · 12 instances"
+            - listitem [ref=f3e149]:
+              - generic [ref=f3e151] [cursor=pointer]:
+                - strong [ref=f3e152]: permission
+                - generic [ref=f3e153]: "The line of hygiene as data: for a source, what may enter the field, what may be drawn from it at reading, and what may be shared onward. The engine is to judge acts against it, as it judges every act against what the field declares. · 2 instances"
+            - listitem [ref=f3e154]:
+              - generic [ref=f3e156] [cursor=pointer]:
+                - strong [ref=f3e157]: voice
+                - generic [ref=f3e158]: "Who speaks: an author, a session, a fork, a writer read from outside. An utterance says its voice by pointing at one. · 10 instances"
+            - listitem [ref=f3e159]:
+              - generic [ref=f3e161] [cursor=pointer]:
+                - strong [ref=f3e162]: following
+                - generic [ref=f3e163]: "A field following a source: at what pace, through which relay if any, and for how long. A poll is a run of it, and a poll that finds something new becomes one commit. · 1 instance"
+            - listitem [ref=f3e164]:
+              - generic [ref=f3e166] [cursor=pointer]:
+                - strong [ref=f3e167]: condensation
+                - generic [ref=f3e168]: "A holon that stands for another in fewer words: not a version of it, since a version is the same holon changed, but a holon of its own pointing at what it condenses. Where the fuller original was never kept, it says so. · 23 instances"
+            - listitem [ref=f3e169]:
+              - generic [ref=f3e171] [cursor=pointer]:
+                - strong [ref=f3e172]: brief
+                - generic [ref=f3e173]: "A piece of knowledge under the rule, one understanding, each part standing on those before it: its flow, then its sections. A brief mounted in the flow of another is a break, as starting a new file was, and that placing is the deliberate act. Exports to markdown from its depth and order while it nests no more than a heading can. · 326 instances"
+            - listitem [ref=f3e174]:
+              - generic [ref=f3e176] [cursor=pointer]:
+                - strong [ref=f3e177]: list
+                - generic [ref=f3e178]: A list of items, ordered or not, as written. · 36 instances
+            - listitem [ref=f3e179]:
+              - generic [ref=f3e181] [cursor=pointer]:
+                - strong [ref=f3e182]: item
+                - generic [ref=f3e183]: "One item of a list: its marker as written, its sentences, and a list nested beneath it. · 44 instances"
+            - listitem [ref=f3e184]:
+              - generic [ref=f3e186] [cursor=pointer]:
+                - strong [ref=f3e187]: quote
+                - generic [ref=f3e188]: A passage set apart as a quote, holding blocks of its own. · 2 instances
+            - listitem [ref=f3e189]:
+              - generic [ref=f3e191] [cursor=pointer]:
+                - strong [ref=f3e192]: code
+                - generic [ref=f3e193]: "Code as written in a fence: a string, closed, with its language. · 11 instances"
+            - listitem [ref=f3e194]:
+              - generic [ref=f3e196] [cursor=pointer]:
+                - strong [ref=f3e197]: table
+                - generic [ref=f3e198]: "A table, kept closed as its lines for now: opening its rows and cells into holons is left for when it is attuned to. · 0 instances"
+            - listitem [ref=f3e199]:
+              - generic [ref=f3e201] [cursor=pointer]:
+                - strong [ref=f3e202]: closed
+                - generic [ref=f3e203]: "Prose kept closed as one string, where unpacking it would not give it back exactly: the closed form, to be opened when attuned to. · 0 instances"
+            - listitem [ref=f3e204]:
+              - generic [ref=f3e206] [cursor=pointer]:
+                - strong [ref=f3e207]: link
+                - generic [ref=f3e208]: "Words that lead somewhere: they hold their words and name where they lead, as written. · 89 instances"
+            - listitem [ref=f3e209]:
+              - generic [ref=f3e211] [cursor=pointer]:
+                - strong [ref=f3e212]: emphasis
+                - generic [ref=f3e213]: Words set in emphasis. Its words, or its sentences where it holds more than one, as a ground line does. · 188 instances
+            - listitem [ref=f3e214]:
+              - generic [ref=f3e216] [cursor=pointer]:
+                - strong [ref=f3e217]: strong
+                - generic [ref=f3e218]: Words set strong. Its words, or its sentences where it holds more than one, as a ground line does. · 49 instances
+            - listitem [ref=f3e219]:
+              - generic [ref=f3e221] [cursor=pointer]:
+                - strong [ref=f3e222]: codespan
+                - generic [ref=f3e223]: A few words of code within a sentence, a string, closed. · 129 instances
+            - listitem [ref=f3e224]:
+              - generic [ref=f3e226] [cursor=pointer]:
+                - strong [ref=f3e227]: markdown
+                - generic [ref=f3e228]: "Markdown's form of one holon of prose: the marks, numbers, routes and whitespace by which it is written as markdown and nothing else needs. It rests on the holon and points at it, in a branch of its own, so native prose stands clean and the files come back exactly. Since breaks became direct references, the forms no longer bring the files back to the byte; a brief exports from its depth and order instead. · 454 instances"
+            - listitem [ref=f3e229]:
+              - generic [ref=f3e231] [cursor=pointer]:
+                - strong [ref=f3e232]: markdown-forms
+                - generic [ref=f3e233]: The whole holding markdown's forms of a branch of prose. · 1 instance
+            - listitem [ref=f3e234]:
+              - generic [ref=f3e236] [cursor=pointer]:
+                - strong [ref=f3e237]: step
+                - generic [ref=f3e238]: "A piece of work glass takes, as data: where it stands, when, what it comes after, and the commits that carried it. Its story is the prose of the brief it also is; a step is a brief's second type, so nothing it tells is told twice. · 54 instances"
+            - listitem [ref=f3e239]:
+              - generic [ref=f3e241] [cursor=pointer]:
+                - strong [ref=f3e242]: measures
+                - generic [ref=f3e243]: The whole holding the measures given to what was said and to briefs the work has overtaken, so they stand in one place and not each at the field's top. · 1 instance
+            - listitem [ref=f3e244]:
+              - generic [ref=f3e246] [cursor=pointer]:
+                - strong [ref=f3e247]: threads
+                - generic [ref=f3e248]: The whole holding the threads raised from what was said, so they stand in one place and not each at the field's top. · 1 instance
+            - listitem [ref=f3e249]:
+              - generic [ref=f3e251] [cursor=pointer]:
+                - strong [ref=f3e252]: measure
+                - generic [ref=f3e253]: "The grade given to something said. The author's practice, which he calls using measures: when something is said it is given a measure, such as that it is not yet owned by the build structure, and a value, and graded, so that what matters is not forgotten and its words stay as they were said. A measure need not be concluded: it is there to reason with, so that a session can say what is to be read and what is not. A brief may be measured too, as stale: the work has overtaken it, and it is marked rather than rewritten, so that no one is fooled by it. · 96 instances"
+            - listitem [ref=f3e254]:
+              - generic [ref=f3e256] [cursor=pointer]:
+                - strong [ref=f3e257]: thread
+                - generic [ref=f3e258]: "A matter raised in what was said and not yet owned by what is built: what it asks, where the author left it, the sentences it was raised in, and the briefs it bears on. The author's own words stay its ground, pointed at and never retold as settled; held as a holon because that is the respectful way to hold another's words. · 33 instances"
+            - listitem [ref=f3e259]:
+              - generic [ref=f3e261] [cursor=pointer]:
+                - strong [ref=f3e262]: sessions
+                - generic [ref=f3e263]: The whole holding the sessions, so they stand in one place and not each at the field's top. · 1 instance
+            - listitem [ref=f3e264]:
+              - generic [ref=f3e266] [cursor=pointer]:
+                - strong [ref=f3e267]: statistics
+                - generic [ref=f3e268]: The whole holding the statistics and functions declared over the field and not yet built, so they stand in one place and not each at the field's top. · 1 instance
+            - listitem [ref=f3e269]:
+              - generic [ref=f3e271] [cursor=pointer]:
+                - strong [ref=f3e272]: licence
+                - generic [ref=f3e273]: "A work's licence as read: what it says, who decided the reading, and the permission it grants. · 1 instance"

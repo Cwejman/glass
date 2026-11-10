@@ -1,0 +1,134 @@
+- main [ref=f7e2]:
+  - generic [ref=f7e3]:
+    - generic [ref=f7e5]:
+      - generic [ref=f7e8]:
+        - button "brief" [ref=f7e9] [cursor=pointer]
+        - generic [ref=f7e10]:
+          - button "The wiki" [disabled] [ref=f7e11]
+          - button "Let go of The wiki" [ref=f7e13] [cursor=pointer]: ×
+        - combobox [ref=f7e14]
+      - article [ref=f7e16]:
+        - navigation "Where this stands"
+        - heading "The wiki" [level=1] [ref=f7e17]
+        - generic [ref=f7e18]:
+          - heading [level=2] [ref=f7e19]:
+            - link "Glass" [ref=f7e20] [cursor=pointer]:
+              - /url: "#"
+          - paragraph [ref=f7e21]: Glass puts data, programs, AI and interfaces in one place, as small whole pieces kept with their whole history, and runs them with a real engine in your own browser. Programs then build on each other by what they take and give, not by glue, and an interface draws itself from the pieces it shows. Glass is the successor to the author's OpenLight, and the foundation a personal site will be built on first.
+          - paragraph [ref=f7e22]: "Before anything else, what glass rests on: what matters most to it, and the culture it grows in."
+          - generic [ref=f7e24] [cursor=pointer]:
+            - heading "The grounds" [level=2] [ref=f7e25]
+            - paragraph [ref=f7e26]: "Glass rests on what matters most to it, and what decides that is its ontology: what exists in it, held as knowledge in language that a knowledge graph can be built on. That is the primitives. Everything else keeps, runs or draws them, and each part should be as separate as the primitives it serves, and read as what it is."
+          - paragraph [ref=f7e27]: Everything in glass stands on a few primitives, so they come next.
+          - generic [ref=f7e29] [cursor=pointer]:
+            - heading "The primitives" [level=2] [ref=f7e30]
+            - paragraph [ref=f7e31]: "Data, types, programs, AI and interfaces are one field of whole pieces, and everything else in glass grows on them. Here they are in the order they stand on each other: the holon, its type, the store that keeps it, the engine that holds the stores, the field they make, the program, its effect, AI, and the interface. They are few on purpose: the author's aim is a core set of primitives, done with quality."
+          - paragraph [ref=f7e32]: "Holding the primitives, the architecture says where they are kept and how they move: a store anyone can serve as plain files, and a client that pulls it and runs an engine over it, in a field of its own."
+          - generic [ref=f7e34] [cursor=pointer]:
+            - heading "The architecture" [level=2] [ref=f7e35]
+            - paragraph [ref=f7e36]: A working application, a site among them, needs state, and state needs a field to hold it, an engine to govern it, and an interface connected to the engine. Glass keeps the field in a store anyone can serve as plain files, and puts the engine and the interface in a client that pulls the store and runs over it, in the reader's own browser.
+          - paragraph [ref=f7e37]: The first thing the store holds is knowledge, this wiki among it, so how knowledge stands in the store and is read comes next.
+          - generic [ref=f7e39] [cursor=pointer]:
+            - heading "Knowledge in the store" [level=2] [ref=f7e40]
+            - paragraph [ref=f7e41]: "The first thing glass's store holds is knowledge, starting with this wiki, so the first thing glass must do well is present it: along the gradient, the biggest understanding first and the rest beneath, never flat. The rule already says what knowledge is made of, and glass takes it as it stands."
+          - paragraph [ref=f7e42]: With that held, the plan proposes what is built first, what waits, and what is still open.
+          - generic [ref=f7e44] [cursor=pointer]:
+            - heading "The plan" [level=2] [ref=f7e45]
+            - paragraph [ref=f7e46]: "The first mark was to read this wiki from a real store, through a real engine in the browser, along the gradient. It was built, and then the store, the engine and the interface were built again on the blocks, and it stands. What comes next is not in this brief: the root README's Where it stands says it."
+          - paragraph [ref=f7e47]: "Beneath it all lies where glass comes from: OpenLight, the rule, and glass's own first iteration, built and then cleared."
+          - generic [ref=f7e49] [cursor=pointer]:
+            - heading "Where it comes from" [level=2] [ref=f7e50]
+            - paragraph [ref=f7e51]: Glass comes from two of the author's works and one attempt of its own. OpenLight gave the vision and most of the architecture, the rule gave the shape knowledge takes, and glass's first iteration, built and cleared in three days, showed what building ahead of the architecture costs.
+          - paragraph [ref=f7e52]: Then the work itself, told over its commits as it happened, until the store can hold it.
+          - generic [ref=f7e54] [cursor=pointer]:
+            - heading "History" [level=2] [ref=f7e55]
+            - paragraph [ref=f7e56]: How glass came to be what it is, told over its commits, newest first, each day by the runs of work it held, with the commits standing beneath as leaves. It moved into the store with everything else, and each step since is told in its commits and its sessions as well as here.
+          - paragraph [ref=f7e57]: Last stand the author's own words, kept as they were said, which every brief above grew from.
+          - generic [ref=f7e59] [cursor=pointer]:
+            - heading "As it was said" [level=2] [ref=f7e60]
+            - paragraph [ref=f7e61]: The author's own words, kept as they were said, a day to a file, newest first. Everything in this wiki grew from them, and each brief says which words it stands on. They are mostly dictated by voice, so where the transcription misheard a word, the word meant is set in brackets; typed words have their spelling set right, and nothing else is changed.
+          - paragraph [ref=f7e62]:
+            - emphasis [ref=f7e63]: The author's aim, 2026-10-31 and 2026-11-01; the wording and the order are the session's, from the outline the author approved on 2026-11-01.
+    - dialog [ref=f7e150]:
+      - generic [ref=f7e152]:
+        - generic [ref=f7e153]:
+          - button "brief" [ref=f7e154] [cursor=pointer]
+          - button "The wiki" [disabled] [ref=f7e156]
+          - combobox [active] [ref=f7e158]
+        - listbox [ref=f7e159]:
+          - option [ref=f7e160]:
+            - button "Look here go" [ref=f7e161] [cursor=pointer]:
+              - generic [ref=f7e162]: Look here
+              - generic [ref=f7e163]: go
+          - option [ref=f7e164]:
+            - button "Look here with Holon component" [ref=f7e165] [cursor=pointer]:
+              - generic [ref=f7e166]: Look here with Holon
+              - generic [ref=f7e167]: component
+          - option [ref=f7e168]:
+            - button "Look here with Reader component" [ref=f7e169] [cursor=pointer]:
+              - generic [ref=f7e170]: Look here with Reader
+              - generic [ref=f7e171]: component
+          - option [ref=f7e172]:
+            - button "Place on the favorites favorites" [ref=f7e173] [cursor=pointer]:
+              - generic [ref=f7e174]: Place on the favorites
+              - generic [ref=f7e175]: favorites
+          - option [ref=f7e176]:
+            - button "type takes set" [ref=f7e177] [cursor=pointer]:
+              - generic [ref=f7e178]: type
+              - generic [ref=f7e179]: takes set
+          - option [ref=f7e180]:
+            - button "children takes set" [ref=f7e181] [cursor=pointer]:
+              - generic [ref=f7e182]: children
+              - generic [ref=f7e183]: takes set
+          - option [ref=f7e184]:
+            - button "parents takes set" [ref=f7e185] [cursor=pointer]:
+              - generic [ref=f7e186]: parents
+              - generic [ref=f7e187]: takes set
+          - option [ref=f7e188]:
+            - button "points takes set" [ref=f7e189] [cursor=pointer]:
+              - generic [ref=f7e190]: points
+              - generic [ref=f7e191]: takes set
+          - option [ref=f7e192]:
+            - button "pointers takes set" [ref=f7e193] [cursor=pointer]:
+              - generic [ref=f7e194]: pointers
+              - generic [ref=f7e195]: takes set
+          - option [ref=f7e196]:
+            - button "search takes words" [ref=f7e197] [cursor=pointer]:
+              - generic [ref=f7e198]: search
+              - generic [ref=f7e199]: takes words
+          - option [ref=f7e200]:
+            - button "named takes words" [ref=f7e201] [cursor=pointer]:
+              - generic [ref=f7e202]: named
+              - generic [ref=f7e203]: takes words
+          - option [ref=f7e204]:
+            - button "store takes store" [ref=f7e205] [cursor=pointer]:
+              - generic [ref=f7e206]: store
+              - generic [ref=f7e207]: takes store
+          - option [ref=f7e208]:
+            - button "types a set of its own" [ref=f7e209] [cursor=pointer]:
+              - generic [ref=f7e210]: types
+              - generic [ref=f7e211]: a set of its own
+          - option [ref=f7e212]:
+            - button "stores a set of its own" [ref=f7e213] [cursor=pointer]:
+              - generic [ref=f7e214]: stores
+              - generic [ref=f7e215]: a set of its own
+          - option [ref=f7e216]:
+            - button "or takes set, sets" [ref=f7e217] [cursor=pointer]:
+              - generic [ref=f7e218]: or
+              - generic [ref=f7e219]: takes set, sets
+          - option [ref=f7e220]:
+            - button "not takes set" [ref=f7e221] [cursor=pointer]:
+              - generic [ref=f7e222]: not
+              - generic [ref=f7e223]: takes set
+          - option [ref=f7e224]:
+            - button "level takes set" [ref=f7e225] [cursor=pointer]:
+              - generic [ref=f7e226]: level
+              - generic [ref=f7e227]: takes set
+          - option [ref=f7e228]:
+            - button "Group by gather what is in view into collections" [ref=f7e229] [cursor=pointer]:
+              - generic [ref=f7e230]: Group by
+              - generic [ref=f7e231]: gather what is in view into collections
+          - option [ref=f7e232]:
+            - button "Open go to one holon" [ref=f7e233] [cursor=pointer]:
+              - generic [ref=f7e234]: Open
+              - generic [ref=f7e235]: go to one holon

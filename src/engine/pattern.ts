@@ -28,6 +28,10 @@ export type Binding = Record<string, FactValue>;
 // What the kernel gives a pattern: a test held to the values it names.
 export type Working = { test(fn: unknown, given: FactValue[]): boolean };
 
+// The most ways a pattern may hold before it is refused, so a pattern whose clauses share
+// no variable cannot join everything with everything and stop the reader.
+export const most = 1_000_000;
+
 // How each step was answered, so a plan can be said.
 export type Step = { step: string; served: string; facts: number; bindings: number };
 
@@ -211,6 +215,11 @@ export function solve(
           const made = bindFact(next.fact, fact, binding);
           if (made) joined.push(made);
         }
+
+        if (joined.length > most)
+          throw new Error(
+            `the pattern holds more than ${most.toLocaleString("en")} ways after ${said(next)}; give its clauses a variable in common`,
+          );
       } else if ("or" in next) {
         for (const branch of next.or) joined.push(...solve(branch, stores, working, undefined, [binding]));
       }

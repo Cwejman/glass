@@ -1,0 +1,813 @@
+- main [ref=f1e2]:
+  - generic [ref=f1e79]:
+    - generic [ref=f1e81]:
+      - generic [ref=f1e82]:
+        - generic [ref=f1e83]:
+          - 'button "search: holon" [ref=f1e84] [cursor=pointer]':
+            - generic [ref=f1e85]: "search:"
+            - generic [ref=f1e86]: holon
+          - 'button "Let go of search: holon" [ref=f1e87] [cursor=pointer]': ×
+        - combobox [ref=f1e88]
+      - paragraph [ref=f1e89]: 977 holons, 832 at this level
+    - list [ref=f1e91]:
+      - listitem [ref=f1e92]:
+        - generic [ref=f1e94] [cursor=pointer]:
+          - strong [ref=f1e95]: History
+          - generic [ref=f1e96]: history · in home
+      - listitem [ref=f1e97]:
+        - generic [ref=f1e99] [cursor=pointer]:
+          - strong [ref=f1e100]: mount
+          - generic [ref=f1e101]: "A call: a component and what it gives it to draw, holons in order or a way of looking. One holon is drawn as itself, several as a list, a way of looking as what it gathers. A mount is the one thing that stands still to be changed, so the root of what one looks at is a mount. Where it looks is the page's address, and what the reader keeps in it is their own. · 1 instance"
+      - listitem [ref=f1e102]:
+        - generic [ref=f1e104] [cursor=pointer]:
+          - strong [ref=f1e105]: component
+          - generic [ref=f1e106]: "A holon that declares the types it takes and draws what it is given, opening space in it where what it holds is drawn in turn by the components that match. It is made of code, or of data: mounts held as its template. · 9 instances"
+      - listitem [ref=f1e107]:
+        - generic [ref=f1e109] [cursor=pointer]:
+          - strong [ref=f1e110]: everything
+          - generic [ref=f1e111]: function · in glass
+      - listitem [ref=f1e112]:
+        - generic [ref=f1e114] [cursor=pointer]:
+          - strong [ref=f1e115]: children
+          - generic [ref=f1e116]: function · in glass
+      - listitem [ref=f1e117]:
+        - generic [ref=f1e119] [cursor=pointer]:
+          - strong [ref=f1e120]: parents
+          - generic [ref=f1e121]: function · in glass
+      - listitem [ref=f1e122]:
+        - generic [ref=f1e124] [cursor=pointer]:
+          - strong [ref=f1e125]: points
+          - generic [ref=f1e126]: function · in glass
+      - listitem [ref=f1e127]:
+        - generic [ref=f1e129] [cursor=pointer]:
+          - strong [ref=f1e130]: pointers
+          - generic [ref=f1e131]: function · in glass
+      - listitem [ref=f1e132]:
+        - generic [ref=f1e134] [cursor=pointer]:
+          - strong [ref=f1e135]: and
+          - generic [ref=f1e136]: function · in glass
+      - listitem [ref=f1e137]:
+        - generic [ref=f1e139] [cursor=pointer]:
+          - strong [ref=f1e140]: or
+          - generic [ref=f1e141]: function · in glass
+      - listitem [ref=f1e142]:
+        - generic [ref=f1e144] [cursor=pointer]:
+          - strong [ref=f1e145]: not
+          - generic [ref=f1e146]: function · in glass
+      - listitem [ref=f1e147]:
+        - generic [ref=f1e149] [cursor=pointer]:
+          - strong [ref=f1e150]: Mount
+          - generic [ref=f1e151]: component · in glass
+      - listitem [ref=f1e152]:
+        - generic [ref=f1e154] [cursor=pointer]:
+          - strong [ref=f1e155]: Holon
+          - generic [ref=f1e156]: component · in glass
+      - listitem [ref=f1e157]:
+        - generic [ref=f1e159] [cursor=pointer]:
+          - strong [ref=f1e160]: Search
+          - generic [ref=f1e161]: component · in glass
+      - listitem [ref=f1e162]:
+        - generic [ref=f1e164] [cursor=pointer]:
+          - strong [ref=f1e165]: List
+          - generic [ref=f1e166]: component · in glass
+      - listitem [ref=f1e167]:
+        - generic [ref=f1e169] [cursor=pointer]:
+          - strong [ref=f1e170]: Brief
+          - generic [ref=f1e171]: component · in glass
+      - listitem [ref=f1e172]:
+        - generic [ref=f1e174] [cursor=pointer]:
+          - strong [ref=f1e175]: Collection
+          - generic [ref=f1e176]: component · in glass
+      - listitem [ref=f1e177]:
+        - generic [ref=f1e179] [cursor=pointer]:
+          - strong [ref=f1e180]: Attachment
+          - generic [ref=f1e181]: component · in glass
+      - listitem [ref=f1e182]:
+        - generic [ref=f1e184] [cursor=pointer]:
+          - strong [ref=f1e185]: in
+          - generic [ref=f1e186]: function · in glass
+      - listitem [ref=f1e187]:
+        - generic [ref=f1e189] [cursor=pointer]:
+          - strong [ref=f1e190]: out
+          - generic [ref=f1e191]: function · in glass
+      - listitem [ref=f1e192]:
+        - generic [ref=f1e194] [cursor=pointer]:
+          - strong [ref=f1e195]: says
+          - generic [ref=f1e196]: function · in glass
+      - listitem [ref=f1e197]:
+        - generic [ref=f1e199] [cursor=pointer]:
+          - strong [ref=f1e200]: get
+          - generic [ref=f1e201]: function · in glass
+      - listitem [ref=f1e202]:
+        - generic [ref=f1e204] [cursor=pointer]:
+          - strong [ref=f1e205]: keys
+          - generic [ref=f1e206]: function · in glass
+      - listitem [ref=f1e207]:
+        - generic [ref=f1e209] [cursor=pointer]:
+          - strong [ref=f1e210]: kind
+          - generic [ref=f1e211]: function · in glass
+      - listitem [ref=f1e212]:
+        - generic [ref=f1e214] [cursor=pointer]:
+          - strong [ref=f1e215]: follow
+          - generic [ref=f1e216]: function · in glass
+      - listitem [ref=f1e217]:
+        - generic [ref=f1e219] [cursor=pointer]:
+          - strong [ref=f1e220]: text
+          - generic [ref=f1e221]: function · in glass
+      - listitem [ref=f1e222]:
+        - generic [ref=f1e224] [cursor=pointer]:
+          - strong [ref=f1e225]: measure
+          - generic [ref=f1e226]: function · in glass
+      - listitem [ref=f1e227]:
+        - generic [ref=f1e229] [cursor=pointer]:
+          - strong [ref=f1e230]: parts
+          - generic [ref=f1e231]: function · in glass
+      - listitem [ref=f1e232]:
+        - generic [ref=f1e234] [cursor=pointer]:
+          - strong [ref=f1e235]: digest
+          - generic [ref=f1e236]: function · in glass
+      - listitem [ref=f1e237]:
+        - generic [ref=f1e239] [cursor=pointer]:
+          - strong [ref=f1e240]: is
+          - generic [ref=f1e241]: function · in glass
+      - listitem [ref=f1e242]:
+        - generic [ref=f1e244] [cursor=pointer]:
+          - strong [ref=f1e245]: outline
+          - generic [ref=f1e246]: function · in glass
+      - listitem [ref=f1e247]:
+        - generic [ref=f1e249] [cursor=pointer]:
+          - strong [ref=f1e250]: route
+          - generic [ref=f1e251]: function · in glass
+      - listitem [ref=f1e252]:
+        - generic [ref=f1e254] [cursor=pointer]:
+          - strong [ref=f1e255]: That is unusual, having the snapshot matter most, and commit history with the co…
+          - generic [ref=f1e256]: sentence · in main
+      - listitem [ref=f1e257]:
+        - generic [ref=f1e259] [cursor=pointer]:
+          - strong [ref=f1e260]: The lexicon grown by its parts
+          - generic [ref=f1e261]: path · in main
+      - listitem [ref=f1e262]:
+        - generic [ref=f1e264] [cursor=pointer]:
+          - strong [ref=f1e265]: claim
+          - generic [ref=f1e266]: "One thing a source says, as a holon of its own: what it is about, the figure and its unit, the moment it was true for, and the source that says it. Two sources saying different things of the same are two claims, and both stand. · 12 instances"
+      - listitem [ref=f1e267]:
+        - generic [ref=f1e269] [cursor=pointer]:
+          - strong [ref=f1e270]: condensation
+          - generic [ref=f1e271]: "A holon that stands for another in fewer words: not a version of it, since a version is the same holon changed, but a holon of its own pointing at what it condenses. Where the fuller original was never kept, it says so. · 23 instances"
+      - listitem [ref=f1e272]:
+        - generic [ref=f1e274] [cursor=pointer]:
+          - strong [ref=f1e275]: table
+          - generic [ref=f1e276]: "A table, kept closed as its lines for now: opening its rows and cells into holons is left for when it is attuned to. · 0 instances"
+      - listitem [ref=f1e277]:
+        - generic [ref=f1e279] [cursor=pointer]:
+          - strong [ref=f1e280]: markdown
+          - generic [ref=f1e281]: "Markdown's form of one holon of prose: the marks, numbers, routes and whitespace by which it is written as markdown and nothing else needs. It rests on the holon and points at it, in a branch of its own, so native prose stands clean and the files come back exactly. Since breaks became direct references, the forms no longer bring the files back to the byte; a brief exports from its depth and order instead. · 454 instances"
+      - listitem [ref=f1e282]:
+        - generic [ref=f1e284] [cursor=pointer]:
+          - strong [ref=f1e285]: thread
+          - generic [ref=f1e286]: "A matter raised in what was said and not yet owned by what is built: what it asks, where the author left it, the sentences it was raised in, and the briefs it bears on. The author's own words stay its ground, pointed at and never retold as settled; held as a holon because that is the respectful way to hold another's words. · 33 instances"
+      - listitem [ref=f1e287]:
+        - generic [ref=f1e289] [cursor=pointer]:
+          - strong [ref=f1e290]: If it takes a particular holon, that has the string inside it, and you need to c…
+          - generic [ref=f1e291]: sentence · in main
+      - listitem [ref=f1e292]:
+        - generic [ref=f1e294] [cursor=pointer]:
+          - strong [ref=f1e295]: Well, I think some of the awareness stream is interfaced with the [holon].
+          - generic [ref=f1e296]: sentence · in main
+      - listitem [ref=f1e297]:
+        - generic [ref=f1e299] [cursor=pointer]:
+          - strong [ref=f1e300]: Because you're changing the [holon].
+          - generic [ref=f1e301]: sentence · in main
+      - listitem [ref=f1e302]:
+        - generic [ref=f1e304] [cursor=pointer]:
+          - strong [ref=f1e305]: Now, that's the stream have to be a [holon] itself, in the field, no, no, the st…
+          - generic [ref=f1e306]: sentence · in main
+      - listitem [ref=f1e307]:
+        - generic [ref=f1e309] [cursor=pointer]:
+          - strong [ref=f1e310]: We know this integrations do provide entities that look as if they are [holons].
+          - generic [ref=f1e311]: sentence · in main
+      - listitem [ref=f1e312]:
+        - generic [ref=f1e314] [cursor=pointer]:
+          - strong [ref=f1e315]: So I don't need to create a [holon] to have it.
+          - generic [ref=f1e316]: sentence · in main
+      - listitem [ref=f1e317]:
+        - generic [ref=f1e319] [cursor=pointer]:
+          - strong [ref=f1e320]: Is it that you work through manipulating the field that you create a buffer just…
+          - generic [ref=f1e321]: sentence · in main
+      - listitem [ref=f1e322]:
+        - generic [ref=f1e324] [cursor=pointer]:
+          - strong [ref=f1e325]: The layout, of course, is a [holon].
+          - generic [ref=f1e326]: sentence · in main
+      - listitem [ref=f1e327]:
+        - generic [ref=f1e329] [cursor=pointer]:
+          - strong [ref=f1e330]: It's probably going to contain more [holons] because they're more components, et…
+          - generic [ref=f1e331]: sentence · in main
+      - listitem [ref=f1e332]:
+        - generic [ref=f1e334] [cursor=pointer]:
+          - strong [ref=f1e335]: Because to me, it's really is, I mean, sometimes you need to create holons that …
+          - generic [ref=f1e336]: sentence · in main
+      - listitem [ref=f1e337]:
+        - generic [ref=f1e339] [cursor=pointer]:
+          - strong [ref=f1e340]: And in that commit, you build all the holons that you need and place them togeth…
+          - generic [ref=f1e341]: sentence · in main
+      - listitem [ref=f1e342]:
+        - generic [ref=f1e344] [cursor=pointer]:
+          - heading "Into how many holons does prose break" [level=2] [ref=f1e345]
+          - paragraph [ref=f1e346]: No worries, thank you. Can do nesting of bullet points. There's nothing wrong with that. You might use it to substitute a real brief structure before you build it, etc. That's probably okay. But there is another side of this where we are not covering everything we need to reflect on. The first thing is that this is all then within one body. Now, is that the right thing? When do we need to break a [holon] into multiple [holons]? Should it in fact be that each of these are [holons], but we now can create virtual spaces for [holons]? Like nested universes that you don't clutter your unless you care for. What about the fact that language breaks into not only paragraphs but sentences and to words? What about being able then to give things more meaning I can see here that words can be replaced by having a key as an object. For bolding, etc. All of this is just reserved strings. Whilst if it were [holons] and types, it'd be different, right? And once I was considering that, you know, for you be able to mark a word and add a comment on a word, that word needs to be addressable. And unless you actually break a paragraph into its sentences and into its words, that is not particularly possible. The same way so I'm not sure yet about this. It opens up for various questions
+      - listitem [ref=f1e347]:
+        - generic [ref=f1e349] [cursor=pointer]:
+          - strong [ref=f1e350]: When do we need to break a [holon] into multiple [holons]?
+          - generic [ref=f1e351]: sentence · in main
+      - listitem [ref=f1e352]:
+        - generic [ref=f1e354] [cursor=pointer]:
+          - strong [ref=f1e355]: Should it in fact be that each of these are [holons], but we now can create virt…
+          - generic [ref=f1e356]: sentence · in main
+      - listitem [ref=f1e357]:
+        - generic [ref=f1e359] [cursor=pointer]:
+          - strong [ref=f1e360]: Whilst if it were [holons] and types, it'd be different, right?
+          - generic [ref=f1e361]: sentence · in main
+      - listitem [ref=f1e362]:
+        - generic [ref=f1e364] [cursor=pointer]:
+          - strong [ref=f1e365]: I thought name was something first class for [holons], but now you have name in …
+          - generic [ref=f1e366]: sentence · in main
+      - listitem [ref=f1e367]:
+        - generic [ref=f1e369] [cursor=pointer]:
+          - strong [ref=f1e370]: But then you're showing the types not as [holons].
+          - generic [ref=f1e371]: sentence · in main
+      - listitem [ref=f1e372]:
+        - generic [ref=f1e374] [cursor=pointer]:
+          - strong [ref=f1e375]: They would be [holons], but then you're showing me the four types.
+          - generic [ref=f1e376]: sentence · in main
+      - listitem [ref=f1e377]:
+        - generic [ref=f1e379] [cursor=pointer]:
+          - strong [ref=f1e380]: looks better, but then the [holon] paragraph has something called fields.
+          - generic [ref=f1e381]: sentence · in main
+      - listitem [ref=f1e382]:
+        - generic [ref=f1e384] [cursor=pointer]:
+          - heading "What makes a holon a type" [level=2] [ref=f1e385]
+          - paragraph [ref=f1e386]: Your types really be instance of type, because instance is something first class. What defines something to be a type or not? Because a [holon] that is a type, it only defines types, it doesn't define actual data, right? So there is a difference in that, so that's question that comes up. Okay, so you're saying that fields is where you define. A type, so a [holon] can have information and then it can have makes me wonder if it should be under the body though. Perhaps be something more first class. Okay, so now I see. [Says] is what's built in. Two fields. Because every field needs to have a prose. Right. Shape is where you then define it. Right. Either is a way of doing unions, because we are, of course, describing our own just like list, just like either, okay, those things make sense.
+      - listitem [ref=f1e387]:
+        - generic [ref=f1e389] [cursor=pointer]:
+          - strong [ref=f1e390]: Because a [holon] that is a type, it only defines types, it doesn't define actua…
+          - generic [ref=f1e391]: sentence · in main
+      - listitem [ref=f1e392]:
+        - generic [ref=f1e394] [cursor=pointer]:
+          - strong [ref=f1e395]: A type, so a [holon] can have information and then it can have makes me wonder i…
+          - generic [ref=f1e396]: sentence · in main
+      - listitem [ref=f1e397]:
+        - generic [ref=f1e399] [cursor=pointer]:
+          - strong [ref=f1e400]: yes we drop the type type but i'm not settled on the name fields, for it doesnt …
+          - generic [ref=f1e401]: sentence · in main
+      - listitem [ref=f1e402]:
+        - generic [ref=f1e404] [cursor=pointer]:
+          - strong [ref=f1e405]: Regarding mounts i [still] have a question, a mount can hold an expression becau…
+          - generic [ref=f1e406]: sentence · in main
+      - listitem [ref=f1e407]:
+        - generic [ref=f1e409] [cursor=pointer]:
+          - heading "Interior holons as a primitive, or namespaced holons" [level=2] [ref=f1e410]
+          - paragraph [ref=f1e411]: So before you answer, I was already thinking about this. That inheritance is one thing, that's solves the contractual thing, because it's contractual. Because you have an implementation, right? You have what renders native prose. And of course, if you want it to be open-ended, for others to add things, then they have to be able to add how that thing is rendered. Or whatever renders is convoluted, or the data is convoluted. That means that at root level, there's a list. Maybe not. Maybe a lone paragraph can be placed as well. But a brief, perhaps, would take what? Would it really take a wildcard? Well, yes, if we just think that [prose is] ultimately native structures. But just now have the elementals to make prose. That is open-ended and interesting. But that means that now you can place anything. Any [holon]. Right? And by placing a [holon], you place the reference object. In JSON. And then it becomes a mount. All right. Now, a brief is going to have some things. It's going to maybe render a breadcrumb. Maybe render a title. A heading, that is. And then it would be just open-ended pure functionality of what it renders, right? It would very most likely make a list. Because it needs to take its element. Does that mean it just takes a list of what? A list of any? Okay. It takes a list of anything. Not it takes a list of references. Then you can type anything. So that's a problem. Then you can type any JSON, and then things can't be matched. So we are talking about that it's always a reference to because we're now creating the possibility of instantiating from a mold a JSON element in the interior. So we now need to come up with a new syntactical things for how we type this, right? It can't be any. It has to say the contents have to be interior [holons]. So we are essentially creating interior [holons]. To be honest. And that is now a new primitive then. And if that's the case, then if you nest things, if you nest lists, so the list now contains, no, it has to contain a [holon]. Can't contain a list. It has to contain a [holon]. And that [holon] may be able to take another list. So let's say that I use the paragraph and maybe it's not even paragraph, maybe it is just text, maybe there is no such thing as a paragraph, but paragraph exists because it has spacing and the spacing exists because it is in a list. But if it's done that's for you to inspect as well. Or reason about. So can I then just write string? Well, maybe not. So I'm opening here what I think are the most important critiques. What I'm stating is not a solution, it's a possibility I'm seeing but I need you to ground things into reality. Now that requires appropriate reasoning. Because another question that comes up to me is, because one problem with Git is that it's not granular enough. A commit is bloat in a way. So an action that changes something, you want to keep at the fidelity of that action. Is there any reason to think that we are wrong here in doing the internals and it really should be exposed [holons] themselves? But they really are just namespaced, and it's the capabilities of the namespace to simplify the internals to the outside as to not bloat. There is someone who's recently done something I've been thinking about before as well. I think I'm gonna give you the name of that. You can check that out as well. It's called [varorium] and she [approached] the topic as well
+      - listitem [ref=f1e412]:
+        - generic [ref=f1e414] [cursor=pointer]:
+          - strong [ref=f1e415]: Any [holon].
+          - generic [ref=f1e416]: sentence · in main
+      - listitem [ref=f1e417]:
+        - generic [ref=f1e419] [cursor=pointer]:
+          - strong [ref=f1e420]: And by placing a [holon], you place the reference object.
+          - generic [ref=f1e421]: sentence · in main
+      - listitem [ref=f1e422]:
+        - generic [ref=f1e424] [cursor=pointer]:
+          - strong [ref=f1e425]: It has to say the contents have to be interior [holons].
+          - generic [ref=f1e426]: sentence · in main
+      - listitem [ref=f1e427]:
+        - generic [ref=f1e429] [cursor=pointer]:
+          - strong [ref=f1e430]: So we are essentially creating interior [holons].
+          - generic [ref=f1e431]: sentence · in main
+      - listitem [ref=f1e432]:
+        - generic [ref=f1e434] [cursor=pointer]:
+          - strong [ref=f1e435]: And if that's the case, then if you nest things, if you nest lists, so the list …
+          - generic [ref=f1e436]: sentence · in main
+      - listitem [ref=f1e437]:
+        - generic [ref=f1e439] [cursor=pointer]:
+          - strong [ref=f1e440]: It has to contain a [holon].
+          - generic [ref=f1e441]: sentence · in main
+      - listitem [ref=f1e442]:
+        - generic [ref=f1e444] [cursor=pointer]:
+          - strong [ref=f1e445]: And that [holon] may be able to take another list.
+          - generic [ref=f1e446]: sentence · in main
+      - listitem [ref=f1e447]:
+        - generic [ref=f1e449] [cursor=pointer]:
+          - strong [ref=f1e450]: Is there any reason to think that we are wrong here in doing the internals and i…
+          - generic [ref=f1e451]: sentence · in main
+      - listitem [ref=f1e452]:
+        - generic [ref=f1e454] [cursor=pointer]:
+          - strong [ref=f1e455]: It's just a [holon] with its body.
+          - generic [ref=f1e456]: sentence · in main
+      - listitem [ref=f1e457]:
+        - generic [ref=f1e459] [cursor=pointer]:
+          - strong [ref=f1e460]: Because you give me JSON where you show the references is in the placement is a …
+          - generic [ref=f1e461]: sentence · in main
+      - listitem [ref=f1e462]:
+        - generic [ref=f1e464] [cursor=pointer]:
+          - strong [ref=f1e465]: Sure, it doesn't touch the contents of the [holons], which is great.
+          - generic [ref=f1e466]: sentence · in main
+      - listitem [ref=f1e467]:
+        - generic [ref=f1e469] [cursor=pointer]:
+          - strong [ref=f1e470]: Secondly, we may be able to use the rule knowledge and briefs as an example of t…
+          - generic [ref=f1e471]: sentence · in main
+      - listitem [ref=f1e472]:
+        - generic [ref=f1e474] [cursor=pointer]:
+          - strong [ref=f1e475]: That means that the content is actually part of a workflow, but then it's also p…
+          - generic [ref=f1e476]: sentence · in main
+      - listitem [ref=f1e477]:
+        - generic [ref=f1e479] [cursor=pointer]:
+          - strong [ref=f1e480]: Which has 2 [subholons].
+          - generic [ref=f1e481]: sentence · in main
+      - listitem [ref=f1e482]:
+        - generic [ref=f1e484] [cursor=pointer]:
+          - strong [ref=f1e485]: As if these briefs were not briefs, but they were [holons].
+          - generic [ref=f1e486]: sentence · in main
+      - listitem [ref=f1e487]:
+        - generic [ref=f1e489] [cursor=pointer]:
+          - strong [ref=f1e490]: And what I've been thinking when I've been working with the surface and with the…
+          - generic [ref=f1e491]: sentence · in main
+      - listitem [ref=f1e492]:
+        - generic [ref=f1e494] [cursor=pointer]:
+          - strong [ref=f1e495]: But you're talking about the fact that [holons] are files, in a way, they are da…
+          - generic [ref=f1e496]: sentence · in main
+      - listitem [ref=f1e497]:
+        - generic [ref=f1e499] [cursor=pointer]:
+          - strong [ref=f1e500]: It's per definition a shortcut [holon], right?
+          - generic [ref=f1e501]: sentence · in main
+      - listitem [ref=f1e502]:
+        - generic [ref=f1e504] [cursor=pointer]:
+          - strong [ref=f1e505]: That is interesting, but why place it on a [holon] when briefs are the [holons] …
+          - generic [ref=f1e506]: sentence · in main
+      - listitem [ref=f1e507]:
+        - generic [ref=f1e509] [cursor=pointer]:
+          - strong [ref=f1e510]: I think briefs and typed [holons] and data are to intersect in reality.
+          - generic [ref=f1e511]: sentence · in main
+      - listitem [ref=f1e512]:
+        - generic [ref=f1e514] [cursor=pointer]:
+          - strong [ref=f1e515]: Where each [holon's] name is its name.
+          - generic [ref=f1e516]: sentence · in main
+      - listitem [ref=f1e517]:
+        - generic [ref=f1e519] [cursor=pointer]:
+          - strong [ref=f1e520]: And each [holon's] content is its content.
+          - generic [ref=f1e521]: sentence · in main
+      - listitem [ref=f1e522]:
+        - generic [ref=f1e524] [cursor=pointer]:
+          - strong [ref=f1e525]: A brief and its ordered briefs under it is certainly ordered, and so each brief …
+          - generic [ref=f1e526]: sentence · in main
+      - listitem [ref=f1e527]:
+        - generic [ref=f1e529] [cursor=pointer]:
+          - strong [ref=f1e530]: Does it mean can because then for a [holon], to be a type, can it then also plac…
+          - generic [ref=f1e531]: sentence · in main
+      - listitem [ref=f1e532]:
+        - generic [ref=f1e534] [cursor=pointer]:
+          - strong [ref=f1e535]: Because here you're saying that glasses function is one [holon] holding a map.
+          - generic [ref=f1e536]: sentence · in main
+      - listitem [ref=f1e537]:
+        - generic [ref=f1e539] [cursor=pointer]:
+          - strong [ref=f1e540]: So a brief says under, but then in the reference, it's still references the actu…
+          - generic [ref=f1e541]: sentence · in main
+      - listitem [ref=f1e542]:
+        - generic [ref=f1e544] [cursor=pointer]:
+          - strong [ref=f1e545]: Or you say now that an untyped [holon] holds nothing.
+          - generic [ref=f1e546]: sentence · in main
+      - listitem [ref=f1e547]:
+        - generic [ref=f1e549] [cursor=pointer]:
+          - heading "Untyped holons say for themselves" [level=2] [ref=f1e550]
+          - paragraph [ref=f1e551]: Oh, the thing about the birth, that's to be scrapped as soon as the [glass] reaches a level, that's okay. Because then we'll just add a pipeline and then we'll just build it, and then anyone can read the documentation anyway, and then we can drop it from the markdown, that's fine. Especially if [glass] is able to allow you to read the code as well, as being able to browse through Git. So you're able to, hey, now I want to look upon only the files. I want to look at the file. I want to see its relation to the field. I think that's a definite level where we're happy to drop it.
+      - listitem [ref=f1e552]:
+        - generic [ref=f1e554] [cursor=pointer]:
+          - strong [ref=f1e555]: So I think types are not mandatory to be able to have references to other [holon…
+          - generic [ref=f1e556]: sentence · in main
+      - listitem [ref=f1e557]:
+        - generic [ref=f1e559] [cursor=pointer]:
+          - strong [ref=f1e560]: The writes are maintains its own [holon].
+          - generic [ref=f1e561]: sentence · in main
+      - listitem [ref=f1e562]:
+        - generic [ref=f1e564] [cursor=pointer]:
+          - strong [ref=f1e565]: That is not very [holon]-like.
+          - generic [ref=f1e566]: sentence · in main
+      - listitem [ref=f1e567]:
+        - generic [ref=f1e569] [cursor=pointer]:
+          - strong [ref=f1e570]: Not two lines of one [holon] meet again.
+          - generic [ref=f1e571]: sentence · in main
+      - listitem [ref=f1e572]:
+        - generic [ref=f1e574] [cursor=pointer]:
+          - heading "Integrations, and the name a holon earns" [level=2] [ref=f1e575]
+          - paragraph [ref=f1e576]: Who's to say that integrations are mutable? Now, one thing is that an integration comes with programs. The only way to touch what you see is through the programs, fine, if that's what the integration is. But who's to say that integration is always to read-only things? And why can't the stores we are talking about be the same first-class citizen as the other integrations? Thinking wild here, I don't think I see everything straight at the moment. Just then clarify for me, then we're aligned, it sounds like, with that the [holon] earns the name, but do tell me what that actually looks like. So when you reference that you hold something, it's a set, but you can hold something as a list. Then each still has its own name, but now they have order. That's it. There is no map like you talked about once. Good, agree that dimensions for briefs is not yet understood. So we're not doing an implementation yet. We're currently in a spec iteration. So we assume to set to this big topic, then we're going to continue to talk about [prose], and we're going to continue to talk about dimensions for briefs. Indexes, we could go over later because I'm soon I'm concluding our session. So then only we touch on integrations briefly now. Either we resolve it or we postpone it. And then you are definitely to write all the important information to the substrate, commit, etc. But first, let's make sure we conclude our topics.
+      - listitem [ref=f1e577]:
+        - generic [ref=f1e579] [cursor=pointer]:
+          - strong [ref=f1e580]: Just then clarify for me, then we're aligned, it sounds like, with that the [hol…
+          - generic [ref=f1e581]: sentence · in main
+      - listitem [ref=f1e582]:
+        - generic [ref=f1e584] [cursor=pointer]:
+          - strong [ref=f1e585]: Then it's up to the integration if you can manipulate the [holons] or not.
+          - generic [ref=f1e586]: sentence · in main
+      - listitem [ref=f1e587]:
+        - generic [ref=f1e589] [cursor=pointer]:
+          - strong [ref=f1e590]: And the commits in Git is means that the file was at a certain commit when your …
+          - generic [ref=f1e591]: sentence · in main
+      - listitem [ref=f1e592]:
+        - generic [ref=f1e594] [cursor=pointer]:
+          - strong [ref=f1e595]: Maybe the file's content is to be shown in the [holon].
+          - generic [ref=f1e596]: sentence · in main
+      - listitem [ref=f1e597]:
+        - generic [ref=f1e599] [cursor=pointer]:
+          - strong [ref=f1e600]: From the defined store, upon the defined holons, how this comes together.
+          - generic [ref=f1e601]: sentence · in main
+      - listitem [ref=f1e602]:
+        - generic [ref=f1e604] [cursor=pointer]:
+          - strong [ref=f1e605]: We link to a holon, we link, we place a location, then we want to mount whatever…
+          - generic [ref=f1e606]: sentence · in main
+      - listitem [ref=f1e607]:
+        - generic [ref=f1e609] [cursor=pointer]:
+          - strong [ref=f1e610]: But no moment in time did I think about something that draws a [holon] and its v…
+          - generic [ref=f1e611]: sentence · in main
+      - listitem [ref=f1e612]:
+        - generic [ref=f1e614] [cursor=pointer]:
+          - strong [ref=f1e615]: That would be whatever you use to look upon a [holon], if there is no more speci…
+          - generic [ref=f1e616]: sentence · in main
+      - listitem [ref=f1e617]:
+        - generic [ref=f1e619] [cursor=pointer]:
+          - strong [ref=f1e620]: So I'm not looking at an actual [holon].
+          - generic [ref=f1e621]: sentence · in main
+      - listitem [ref=f1e622]:
+        - generic [ref=f1e624] [cursor=pointer]:
+          - strong [ref=f1e625]: So without reading too much here, it is a holon that if is passed down as an off…
+          - generic [ref=f1e626]: sentence · in main
+      - listitem [ref=f1e627]:
+        - generic [ref=f1e629] [cursor=pointer]:
+          - strong [ref=f1e630]: But at least not single line holon definitions, multiline like OpenLight.
+          - generic [ref=f1e631]: sentence · in main
+      - listitem [ref=f1e632]:
+        - generic [ref=f1e634] [cursor=pointer]:
+          - strong [ref=f1e635]: Records is probably superseded by typed holons?
+          - generic [ref=f1e636]: sentence · in main
+      - listitem [ref=f1e637]:
+        - generic [ref=f1e639] [cursor=pointer]:
+          - strong [ref=f1e640]: Are you saying holders, holon and name are reserved first class words for reads …
+          - generic [ref=f1e641]: sentence · in main
+      - listitem [ref=f1e642]:
+        - generic [ref=f1e644] [cursor=pointer]:
+          - strong [ref=f1e645]: Any mount any slot is a component and a set of holons that is already defined by…
+          - generic [ref=f1e646]: sentence · in main
+      - listitem [ref=f1e647]:
+        - generic [ref=f1e649] [cursor=pointer]:
+          - strong [ref=f1e650]: Holons.
+          - generic [ref=f1e651]: sentence · in main
+      - listitem [ref=f1e652]:
+        - generic [ref=f1e654] [cursor=pointer]:
+          - strong [ref=f1e655]: I see there's 19 holons in today.
+          - generic [ref=f1e656]: sentence · in main
+      - listitem [ref=f1e657]:
+        - generic [ref=f1e659] [cursor=pointer]:
+          - strong [ref=f1e660]: Now if we want some status, how many holons in how many etc.
+          - generic [ref=f1e661]: sentence · in main
+      - listitem [ref=f1e662]:
+        - generic [ref=f1e664] [cursor=pointer]:
+          - strong [ref=f1e665]: Well, ultimately, if you have a program, such as group by, that may be used anyw…
+          - generic [ref=f1e666]: sentence · in main
+      - listitem [ref=f1e667]:
+        - generic [ref=f1e669] [cursor=pointer]:
+          - strong [ref=f1e670]: Does holons have names?
+          - generic [ref=f1e671]: sentence · in main
+      - listitem [ref=f1e672]:
+        - generic [ref=f1e674] [cursor=pointer]:
+          - strong [ref=f1e675]: Well we ar enow back to one of the most prominent decisions around the primitive…
+          - generic [ref=f1e676]: sentence · in main
+      - listitem [ref=f1e677]:
+        - generic [ref=f1e679] [cursor=pointer]:
+          - strong [ref=f1e680]: When it comes to how a holon itself is stored, this is interesting to me.
+          - generic [ref=f1e681]: sentence · in main
+      - listitem [ref=f1e682]:
+        - generic [ref=f1e684] [cursor=pointer]:
+          - strong [ref=f1e685]: Secondly, it has holon and previous and above title data [prose].
+          - generic [ref=f1e686]: sentence · in main
+      - listitem [ref=f1e687]:
+        - generic [ref=f1e689] [cursor=pointer]:
+          - strong [ref=f1e690]: A holon is what it needs to have for the storage, and then it has its body.
+          - generic [ref=f1e691]: sentence · in main
+      - listitem [ref=f1e692]:
+        - generic [ref=f1e694] [cursor=pointer]:
+          - strong [ref=f1e695]: So it's not in its body, yet there is a field called holon here, which I don't k…
+          - generic [ref=f1e696]: sentence · in main
+      - listitem [ref=f1e697]:
+        - generic [ref=f1e699] [cursor=pointer]:
+          - strong [ref=f1e700]: So because we address holons by ID, a lot.
+          - generic [ref=f1e701]: sentence · in main
+      - listitem [ref=f1e702]:
+        - generic [ref=f1e704] [cursor=pointer]:
+          - strong [ref=f1e705]: If you have type references to something, then that must be contained within the…
+          - generic [ref=f1e706]: sentence · in main
+      - listitem [ref=f1e707]:
+        - generic [ref=f1e709] [cursor=pointer]:
+          - strong [ref=f1e710]: If we are doing only typed, then of course I have to update the owner anytime I …
+          - generic [ref=f1e711]: sentence · in main
+      - listitem [ref=f1e712]:
+        - generic [ref=f1e714] [cursor=pointer]:
+          - heading "What a holon is" [level=2] [ref=f1e715]
+          - paragraph [ref=f1e716]: What does this mean for the meaning of a holon? Is something really whole anymore, or is the holon when you can cut something but is it directional? A holon is whole because it and its children come together as a whole. I don't know. Please consider it.
+      - listitem [ref=f1e717]:
+        - generic [ref=f1e719] [cursor=pointer]:
+          - strong [ref=f1e720]: What does this mean for the meaning of a holon?
+          - generic [ref=f1e721]: sentence · in main
+      - listitem [ref=f1e722]:
+        - generic [ref=f1e724] [cursor=pointer]:
+          - strong [ref=f1e725]: Is something really whole anymore, or is the holon when you can cut something bu…
+          - generic [ref=f1e726]: sentence · in main
+      - listitem [ref=f1e727]:
+        - generic [ref=f1e729] [cursor=pointer]:
+          - strong [ref=f1e730]: A holon is whole because it and its children come together as a whole.
+          - generic [ref=f1e731]: sentence · in main
+      - listitem [ref=f1e732]:
+        - generic [ref=f1e734] [cursor=pointer]:
+          - strong [ref=f1e735]: In what ways are we aligned with the definition of [holon]?
+          - generic [ref=f1e736]: sentence · in main
+      - listitem [ref=f1e737]:
+        - generic [ref=f1e739] [cursor=pointer]:
+          - strong [ref=f1e740]: Would someone under scrutiny say these are not [holons]?
+          - generic [ref=f1e741]: sentence · in main
+      - listitem [ref=f1e742]:
+        - generic [ref=f1e744] [cursor=pointer]:
+          - strong [ref=f1e745]: I mean, a [holon] is part of the whole.
+          - generic [ref=f1e746]: sentence · in main
+      - listitem [ref=f1e747]:
+        - generic [ref=f1e749] [cursor=pointer]:
+          - strong [ref=f1e750]: The interface goes upon it by their nature coupled only to themselves for their …
+          - generic [ref=f1e751]: sentence · in main
+      - listitem [ref=f1e752]:
+        - generic [ref=f1e754] [cursor=pointer]:
+          - strong [ref=f1e755]: Yes of course field of a holon are contact point for prose, so that we can in fa…
+          - generic [ref=f1e756]: sentence · in main
+      - listitem [ref=f1e757]:
+        - generic [ref=f1e759] [cursor=pointer]:
+          - strong [ref=f1e760]: For where each holon connects are at the ontological connectors, forming larger …
+          - generic [ref=f1e761]: sentence · in main
+      - listitem [ref=f1e762]:
+        - generic [ref=f1e764] [cursor=pointer]:
+          - strong [ref=f1e765]: The [holon's] address within that store space, right?
+          - generic [ref=f1e766]: sentence · in main
+      - listitem [ref=f1e767]:
+        - generic [ref=f1e769] [cursor=pointer]:
+          - strong [ref=f1e770]: And if the store that you're connected to has an address and that address is in …
+          - generic [ref=f1e771]: sentence · in main
+      - listitem [ref=f1e772]:
+        - generic [ref=f1e774] [cursor=pointer]:
+          - strong [ref=f1e775]: Holons have to have ids I think and have to have commits.
+          - generic [ref=f1e776]: sentence · in main
+      - listitem [ref=f1e777]:
+        - generic [ref=f1e779] [cursor=pointer]:
+          - strong [ref=f1e780]: But again, the store is built on holons and holons can have any type structure t…
+          - generic [ref=f1e781]: sentence · in main
+      - listitem [ref=f1e782]:
+        - generic [ref=f1e784] [cursor=pointer]:
+          - strong [ref=f1e785]: Or is instead each paragraph a holon?
+          - generic [ref=f1e786]: sentence · in main
+      - listitem [ref=f1e787]:
+        - generic [ref=f1e789] [cursor=pointer]:
+          - strong [ref=f1e790]: Stating that the program is a [holon] that acts is kind of weird.
+          - generic [ref=f1e791]: sentence · in main
+      - listitem [ref=f1e792]:
+        - generic [ref=f1e794] [cursor=pointer]:
+          - strong [ref=f1e795]: For instance, a [holon] is drawn and it already holds kinds of things in it.
+          - generic [ref=f1e796]: sentence · in main
+      - listitem [ref=f1e797]:
+        - generic [ref=f1e799] [cursor=pointer]:
+          - strong [ref=f1e800]: Each is coupled only to itself and to the holons it takes, and decoupled from th…
+          - generic [ref=f1e801]: sentence · in main
+      - listitem [ref=f1e802]:
+        - generic [ref=f1e804] [cursor=pointer]:
+          - strong [ref=f1e805]: "Inference chooses, pure compute acts, and both work on one ontology: a field's s…"
+          - generic [ref=f1e806]: sentence · in main
+      - listitem [ref=f1e807]:
+        - generic [ref=f1e809] [cursor=pointer]:
+          - strong [ref=f1e810]: "Here they are in the order they stand on each other: the holon, its type, the st…"
+          - generic [ref=f1e811]: sentence · in main
+      - listitem [ref=f1e812]:
+        - generic [ref=f1e814] [cursor=pointer]:
+          - heading "Holon" [level=2] [ref=f1e815]
+          - paragraph [ref=f1e816]: "A holon is a small piece that is whole in itself, and part of the field and of any whole that holds it. A note is a holon, and so is a program, a type, a component and a mount: the same kind of piece throughout."
+      - listitem [ref=f1e817]:
+        - generic [ref=f1e819] [cursor=pointer]:
+          - strong [ref=f1e820]: A holon is a small piece that is whole in itself, and part of the field and of a…
+          - generic [ref=f1e821]: sentence · in main
+      - listitem [ref=f1e822]:
+        - generic [ref=f1e824] [cursor=pointer]:
+          - strong [ref=f1e825]: "A note is a holon, and so is a program, a type, a component and a mount: the sam…"
+          - generic [ref=f1e826]: sentence · in main
+      - listitem [ref=f1e827]:
+        - generic [ref=f1e829] [cursor=pointer]:
+          - strong [ref=f1e830]: "A holon is its identity, what it is an instance of, and its body: what it holds."
+          - generic [ref=f1e831]: sentence · in main
+      - listitem [ref=f1e832]:
+        - generic [ref=f1e834] [cursor=pointer]:
+          - strong [ref=f1e835]: "A type is a schema in the field: the structure a holon's data has."
+          - generic [ref=f1e836]: sentence · in main
+      - listitem [ref=f1e837]:
+        - generic [ref=f1e839] [cursor=pointer]:
+          - strong [ref=f1e840]: Data is by its nature structure, and types are what let a field hold structure o…
+          - generic [ref=f1e841]: sentence · in main
+      - listitem [ref=f1e842]:
+        - generic [ref=f1e844] [cursor=pointer]:
+          - strong [ref=f1e845]: How a type is written, and how the store checks a holon against it, is open.
+          - generic [ref=f1e846]: sentence · in main
+      - listitem [ref=f1e847]:
+        - generic [ref=f1e849] [cursor=pointer]:
+          - strong [ref=f1e850]: A field is where holons connect, so the fields are the field's ontological conne…
+          - generic [ref=f1e851]: sentence · in main
+      - listitem [ref=f1e852]:
+        - generic [ref=f1e854] [cursor=pointer]:
+          - strong [ref=f1e855]: "The author's, 2026-11-02: the fields of a holon are contact points for prose, so…"
+          - generic [ref=f1e856]: sentence · in main
+      - listitem [ref=f1e857]:
+        - generic [ref=f1e859] [cursor=pointer]:
+          - strong [ref=f1e860]: A type's fields are to stand beside its identity, out of its body, as its mould,…
+          - generic [ref=f1e861]: sentence · in main
+      - listitem [ref=f1e862]:
+        - generic [ref=f1e864] [cursor=pointer]:
+          - strong [ref=f1e865]: A holon is then a type by having a mould, and the type of types is let go.
+          - generic [ref=f1e866]: sentence · in main
+      - listitem [ref=f1e867]:
+        - generic [ref=f1e869] [cursor=pointer]:
+          - strong [ref=f1e870]: "The field is the stores an engine holds, read as one: where holons live together…"
+          - generic [ref=f1e871]: sentence · in main
+      - listitem [ref=f1e872]:
+        - generic [ref=f1e874] [cursor=pointer]:
+          - strong [ref=f1e875]: Holons hold each other as parts and point at each other from their bodies, so fr…
+          - generic [ref=f1e876]: sentence · in main
+      - listitem [ref=f1e877]:
+        - generic [ref=f1e879] [cursor=pointer]:
+          - strong [ref=f1e880]: The one field the author's, from the grant; stores read as one carried from Open…
+          - generic [ref=f1e881]: emphasis · in main
+      - listitem [ref=f1e882]:
+        - generic [ref=f1e884] [cursor=pointer]:
+          - strong [ref=f1e885]: A program is a holon holding code that the engine runs.
+          - generic [ref=f1e886]: sentence · in main
+      - listitem [ref=f1e887]:
+        - generic [ref=f1e889] [cursor=pointer]:
+          - strong [ref=f1e890]: "A run is a program run once, kept as a holon too: what it was given, its result,…"
+          - generic [ref=f1e891]: sentence · in main
+      - listitem [ref=f1e892]:
+        - generic [ref=f1e894] [cursor=pointer]:
+          - strong [ref=f1e895]: Runs kept as holons his, the same day ("it does use the field for runs, I would …
+          - generic [ref=f1e896]: sentence · in main
+      - listitem [ref=f1e897]:
+        - generic [ref=f1e899] [cursor=pointer]:
+          - strong [ref=f1e900]: An interface is holons drawn by holons.
+          - generic [ref=f1e901]: sentence · in main
+      - listitem [ref=f1e902]:
+        - generic [ref=f1e904] [cursor=pointer]:
+          - strong [ref=f1e905]: A component is a holon that declares the type it takes and draws what it is give…
+          - generic [ref=f1e906]: sentence · in main
+      - listitem [ref=f1e907]:
+        - generic [ref=f1e909] [cursor=pointer]:
+          - strong [ref=f1e910]: "The author's, 2026-11-01: holons have ids and history, and the store is glass's …"
+          - generic [ref=f1e911]: sentence · in main
+      - listitem [ref=f1e912]:
+        - generic [ref=f1e914] [cursor=pointer]:
+          - strong [ref=f1e915]: "A commit that also touched something beyond the whole goes with it whole: what i…"
+          - generic [ref=f1e916]: sentence · in main
+      - listitem [ref=f1e917]:
+        - generic [ref=f1e919] [cursor=pointer]:
+          - heading "A holon's identity" [level=2] [ref=f1e920]
+          - paragraph [ref=f1e921]: "An id is fifteen characters that sort as text: nine of the moment of the commit that minted it, and six of a count that starts at a chance place in that commit and only goes up. So a commit's new holons are its first id and how many, they sort as they sit, and a client knows without fetching anything whether a store can hold an id. Ids are unique across stores, so a store can be taken away, changed and brought back, and a reference into another store is written as any other."
+      - listitem [ref=f1e922]:
+        - generic [ref=f1e924] [cursor=pointer]:
+          - heading "A version is one holon as it stood" [level=2] [ref=f1e925]
+          - paragraph [ref=f1e926]: "A version holds what the store needs and the holon's body: its id, the block holding the version before it, what it is an instance of, and, where it has them, its name and its mould. The body is whatever the holon holds itself, shaped by its types. Versions are the atoms: they stand one to a line in a block, and everything else in the store only points at them."
+      - listitem [ref=f1e927]:
+        - generic [ref=f1e929] [cursor=pointer]:
+          - heading "Taking a holon out" [level=2] [ref=f1e930]
+          - paragraph [ref=f1e931]: "A change may also take holons out of the field: they are listed as gone from that commit on, while every version they had stays, read from the commits before."
+      - listitem [ref=f1e932]:
+        - generic [ref=f1e934] [cursor=pointer]:
+          - strong [ref=f1e935]: "A version stores nothing about other holons beside its body: every relation is a…"
+          - generic [ref=f1e936]: sentence · in main
+      - listitem [ref=f1e937]:
+        - generic [ref=f1e939] [cursor=pointer]:
+          - strong [ref=f1e940]: "The store stays flat: a holon held by two wholes is one holon with one line of v…"
+          - generic [ref=f1e941]: sentence · in main
+      - listitem [ref=f1e942]:
+        - generic [ref=f1e944] [cursor=pointer]:
+          - heading "How holons relate" [level=2] [ref=f1e945]
+          - paragraph [ref=f1e946]: A holon is its identity, what it is, and its body, with a name beside them, and for a type its mould, and nothing else is stored. Every relation between holons is a reference inside a body, or a type's mould, and a reference either holds what it points at or only points. A whole is a holon whose references hold its parts, and a part may stand whole in many wholes. So the field needs no relation of its own beyond instance, and every way of reading it, as a holarchy, as namespaces or as dimensions, is the engine reading bodies.
+      - listitem [ref=f1e947]:
+        - generic [ref=f1e949] [cursor=pointer]:
+          - strong [ref=f1e950]: A holon is its identity, what it is, and its body, with a name beside them, and …
+          - generic [ref=f1e951]: sentence · in main
+      - listitem [ref=f1e952]:
+        - generic [ref=f1e954] [cursor=pointer]:
+          - strong [ref=f1e955]: Every relation between holons is a reference inside a body, or a type's mould, a…
+          - generic [ref=f1e956]: sentence · in main
+      - listitem [ref=f1e957]:
+        - generic [ref=f1e959] [cursor=pointer]:
+          - strong [ref=f1e960]: A whole is a holon whose references hold its parts, and a part may stand whole i…
+          - generic [ref=f1e961]: sentence · in main
+      - listitem [ref=f1e962]:
+        - generic [ref=f1e964] [cursor=pointer]:
+          - strong [ref=f1e965]: A version stores a holon's identity, what it is an instance of, and its body.
+          - generic [ref=f1e966]: sentence · in main
+      - listitem [ref=f1e967]:
+        - generic [ref=f1e969] [cursor=pointer]:
+          - strong [ref=f1e970]: A holon may be an instance of several types.
+          - generic [ref=f1e971]: sentence · in main
+      - listitem [ref=f1e972]:
+        - generic [ref=f1e974] [cursor=pointer]:
+          - strong [ref=f1e975]: "The author's, 2026-11-05: I thought name was something first class for holons; f…"
+          - generic [ref=f1e976]: emphasis · in main
+      - listitem [ref=f1e977]:
+        - generic [ref=f1e979] [cursor=pointer]:
+          - strong [ref=f1e980]: Any relation a holon has to another is a reference in its body, under a key its …
+          - generic [ref=f1e981]: sentence · in main
+      - listitem [ref=f1e982]:
+        - generic [ref=f1e984] [cursor=pointer]:
+          - strong [ref=f1e985]: It holds what it points at, making it a part of the holon it stands in, or it on…
+          - generic [ref=f1e986]: sentence · in main
+      - listitem [ref=f1e987]:
+        - generic [ref=f1e989] [cursor=pointer]:
+          - strong [ref=f1e990]: Any holon may reference, typed or not.
+          - generic [ref=f1e991]: sentence · in main
+      - listitem [ref=f1e992]:
+        - generic [ref=f1e994] [cursor=pointer]:
+          - strong [ref=f1e995]: A mount's offer is a set of names, each to a holon, search to the Search compone…
+          - generic [ref=f1e996]: sentence · in main
+      - listitem [ref=f1e997]:
+        - generic [ref=f1e999] [cursor=pointer]:
+          - strong [ref=f1e1000]: A mount that points at what it offers names it under its settings' own names, so…
+          - generic [ref=f1e1001]: sentence · in main
+      - listitem [ref=f1e1002]:
+        - generic [ref=f1e1004] [cursor=pointer]:
+          - heading "Prose held by lone links, until it was holons" [level=2] [ref=f1e1005]
+          - paragraph [ref=f1e1006]: In a brief written as Markdown, a link standing alone in a paragraph placed a part there, with the sentence before it saying why, and a link inside a sentence only mentioned. That was a convention read from the text, not a reference the store knew, and it lasted as long as briefs were files. Prose is holons now, so a part is a reference that holds.
+      - listitem [ref=f1e1007]:
+        - generic [ref=f1e1009] [cursor=pointer]:
+          - strong [ref=f1e1010]: A relation is held by the holon that can be written, and across stores that answ…
+          - generic [ref=f1e1011]: sentence · in main
+      - listitem [ref=f1e1012]:
+        - generic [ref=f1e1014] [cursor=pointer]:
+          - strong [ref=f1e1015]: An entry of something kept by time points at what keeps it instead, since such e…
+          - generic [ref=f1e1016]: sentence · in main
+      - listitem [ref=f1e1017]:
+        - generic [ref=f1e1019] [cursor=pointer]:
+          - strong [ref=f1e1020]: A relation that has a time or attributes of its own is a holon of its own, holdi…
+          - generic [ref=f1e1021]: sentence · in main
+      - listitem [ref=f1e1022]:
+        - generic [ref=f1e1024] [cursor=pointer]:
+          - strong [ref=f1e1025]: A visit is one such, when and what one looked at, kept as an entry in the reader…
+          - generic [ref=f1e1026]: sentence · in main
+      - listitem [ref=f1e1027]:
+        - generic [ref=f1e1029] [cursor=pointer]:
+          - strong [ref=f1e1030]: That one holon has one owner, as OpenLight held, is left open on purpose.
+          - generic [ref=f1e1031]: sentence · in main
+      - listitem [ref=f1e1032]:
+        - generic [ref=f1e1034] [cursor=pointer]:
+          - strong [ref=f1e1035]: "The author's, 2026-11-04: a holon that has no name unless you know its parent is…"
+          - generic [ref=f1e1036]: sentence · in main
+      - listitem [ref=f1e1037]:
+        - generic [ref=f1e1039] [cursor=pointer]:
+          - strong [ref=f1e1040]: "An address is a route of names through wholes, from where the field begins: glas…"
+          - generic [ref=f1e1041]: sentence · in main
+      - listitem [ref=f1e1042]:
+        - generic [ref=f1e1044] [cursor=pointer]:
+          - strong [ref=f1e1045]: A holon held by several wholes has as many routes, glass/wiki/the-store and favo…
+          - generic [ref=f1e1046]: sentence · in main
+      - listitem [ref=f1e1047]:
+        - generic [ref=f1e1049] [cursor=pointer]:
+          - strong [ref=f1e1050]: A reference holds the id, never a route, so moving a holon or adding one before …
+          - generic [ref=f1e1051]: sentence · in main
+      - listitem [ref=f1e1052]:
+        - generic [ref=f1e1054] [cursor=pointer]:
+          - strong [ref=f1e1055]: Glass's build still holds names as one flat map in each store's index, its root …
+          - generic [ref=f1e1056]: sentence · in main
+      - listitem [ref=f1e1057]:
+        - generic [ref=f1e1059] [cursor=pointer]:
+          - strong [ref=f1e1060]: "A brief's paragraphs, a list in it, an image, a word that stands for something: …"
+          - generic [ref=f1e1061]: sentence · in main
+      - listitem [ref=f1e1062]:
+        - generic [ref=f1e1064] [cursor=pointer]:
+          - strong [ref=f1e1065]: "Inside them is only what is not a holon: values, shaped by the holon's mould, te…"
+          - generic [ref=f1e1066]: sentence · in main
+      - listitem [ref=f1e1067]:
+        - generic [ref=f1e1069] [cursor=pointer]:
+          - strong [ref=f1e1070]: So the field holds holons and values within them, and nothing between.
+          - generic [ref=f1e1071]: sentence · in main
+      - listitem [ref=f1e1072]:
+        - generic [ref=f1e1074] [cursor=pointer]:
+          - strong [ref=f1e1075]: "The author's, 2026-11-05: good, that leaves us with indexing; his critiques of t…"
+          - generic [ref=f1e1076]: emphasis · in main
+      - listitem [ref=f1e1077]:
+        - generic [ref=f1e1079] [cursor=pointer]:
+          - strong [ref=f1e1080]: "A holon's interior was first proposed: elements with ids of their own inside a b…"
+          - generic [ref=f1e1081]: sentence · in main
+      - listitem [ref=f1e1082]:
+        - generic [ref=f1e1084] [cursor=pointer]:
+          - strong [ref=f1e1085]: To keep it typed, so that a brief's prose could say it holds only typed things a…
+          - generic [ref=f1e1086]: sentence · in main
+      - listitem [ref=f1e1087]:
+        - generic [ref=f1e1089] [cursor=pointer]:
+          - strong [ref=f1e1090]: That text under editing has no lasting identity, a sentence split and which half…
+          - generic [ref=f1e1091]: sentence · in main
+      - listitem [ref=f1e1092]: 632 more not drawn. Narrow what is looked at to reach them.

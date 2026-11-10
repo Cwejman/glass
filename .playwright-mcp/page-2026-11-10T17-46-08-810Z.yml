@@ -1,0 +1,31 @@
+- main [ref=f2e2]:
+  - generic [ref=f2e215]:
+    - generic [ref=f2e218]:
+      - button "utterance" [ref=f2e219] [cursor=pointer]
+      - generic [ref=f2e220]:
+        - button "1M7360TVPDXC06Q" [disabled] [ref=f2e221]
+        - button "Let go of 1M7360TVPDXC06Q" [ref=f2e223] [cursor=pointer]: ×
+      - combobox [ref=f2e224]
+    - article [ref=f2e226]:
+      - heading "1M7360TVPDXC06Q" [level=1] [ref=f2e227]
+      - paragraph [ref=f2e228]: utterance · in main
+      - heading "Is an instance of" [level=2] [ref=f2e229]
+      - list [ref=f2e231]:
+        - listitem [ref=f2e232]:
+          - generic [ref=f2e234] [cursor=pointer]:
+            - strong [ref=f2e235]: utterance
+            - generic [ref=f2e236]: "One expression, of the author's or of whoever its voice says, as one message: a stretch of time in which his words bounce off each other more than off the same words elsewhere. Its parts are paragraphs and breaks, in order. · 179 instances"
+      - heading "Holds" [level=2] [ref=f2e237]
+      - generic [ref=f2e238]:
+        - term [ref=f2e239]: as
+        - definition [ref=f2e240]: spoken
+        - term [ref=f2e241]: flow
+        - definition [ref=f2e242]:
+          - paragraph [ref=f2e243]: Hi. You're a new session. The seventh session was before you. You'll begin by bootstrap. I think appropriate that you read the whole of the wiki but then for previous sessions you used the raised aspect to only get the parts that's complementary, right, to the wiki. I'm naturally you don't read paper or the paper readings, there's also a plan. It's maybe called the plan from here or something. There is of course a little bit of plan in the readme, but I think there is more of an extensive plan. So yeah, as you read the store, you will comprehend what it is I'm talking about, because of course everything I mentioned is in the store, so we need to be able to read that. Of course, you want to read that as effectively as possible. That is with as minimal footprint as possible on the context window. But naturally, I expect you to consume around 100,000 tokens or something like that. Yeah, and then lay forward the plan, and if you think it's reasonable. And really, every session has a purpose. So then what's the purpose of this session?
+        - term [ref=f2e244]: order
+        - definition [ref=f2e245]: "1"
+        - term [ref=f2e246]: voice
+        - definition [ref=f2e247]:
+          - generic [ref=f2e249] [cursor=pointer]:
+            - strong [ref=f2e250]: The author
+            - generic [ref=f2e251]: voice · in main

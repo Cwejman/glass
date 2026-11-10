@@ -285,6 +285,18 @@ pre {
   color: var(--ink);
   font: inherit;
   white-space: nowrap;
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* A long name shortens to fit, so the part's × is always within reach. */
+.search .part-change {
+  min-width: 0;
+}
+
+.search .part-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .search button.part {

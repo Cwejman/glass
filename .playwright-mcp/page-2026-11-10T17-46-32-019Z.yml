@@ -1,0 +1,48 @@
+- main [ref=f4e2]:
+  - generic [ref=f4e5]:
+    - generic [ref=f4e8]:
+      - button "statistic" [ref=f4e9] [cursor=pointer]
+      - generic [ref=f4e10]:
+        - button "Holons by kind" [disabled] [ref=f4e11]
+        - button "Let go of Holons by kind" [ref=f4e13] [cursor=pointer]: ×
+      - combobox [ref=f4e14]
+    - article [ref=f4e16]:
+      - heading "Holons by kind" [level=1] [ref=f4e17]
+      - paragraph [ref=f4e18]: statistic · in main
+      - heading "Is an instance of" [level=2] [ref=f4e19]
+      - list [ref=f4e21]:
+        - listitem [ref=f4e22]:
+          - generic [ref=f4e24] [cursor=pointer]:
+            - strong [ref=f4e25]: statistic
+            - generic [ref=f4e26]: "A statistic over the field, declared as functional data: prose and an expression, drawn whenever looked at, so it is always of the store as it stands and nothing derived goes stale. · 6 instances"
+      - heading "Holds" [level=2] [ref=f4e27]
+      - generic [ref=f4e28]:
+        - term [ref=f4e29]: drawn
+        - definition [ref=f4e30]: a table by kind
+        - term [ref=f4e31]: gives
+        - definition [ref=f4e32]:
+          - generic [ref=f4e33]:
+            - term [ref=f4e34]: call
+            - definition [ref=f4e35]: count
+            - term [ref=f4e36]: with
+            - definition [ref=f4e37]:
+              - list [ref=f4e38]:
+                - listitem [ref=f4e39]:
+                  - generic [ref=f4e40]:
+                    - term [ref=f4e41]: call
+                    - definition [ref=f4e42]: group
+                    - term [ref=f4e43]: with
+                    - definition [ref=f4e44]:
+                      - list [ref=f4e45]:
+                        - listitem [ref=f4e46]:
+                          - generic [ref=f4e47]:
+                            - term [ref=f4e48]: call
+                            - definition [ref=f4e49]: everything
+                            - term [ref=f4e50]: with
+                            - definition:
+                              - list
+                        - listitem [ref=f4e51]: type
+        - term [ref=f4e52]: says
+        - definition [ref=f4e53]: "How the field is made: every holon counted under its type, the first view of any store or union."
+        - term [ref=f4e54]: status
+        - definition [ref=f4e55]: proposed

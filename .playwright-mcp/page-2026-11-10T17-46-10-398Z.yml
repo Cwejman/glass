@@ -1,0 +1,103 @@
+- main [ref=f2e2]:
+  - generic [ref=f2e254]:
+    - generic [ref=f2e257]:
+      - button "session" [ref=f2e258] [cursor=pointer]
+      - generic [ref=f2e259]:
+        - 'button "An eighth session, kept whole: one language for expressions, the kernel drawn into the engine, and the field read at the command line" [disabled] [ref=f2e260]'
+        - 'button "Let go of An eighth session, kept whole: one language for expressions, the kernel drawn into the engine, and the field read at the command line" [ref=f2e262] [cursor=pointer]': ×
+      - combobox [ref=f2e263]
+    - article [ref=f2e265]:
+      - 'heading "An eighth session, kept whole: one language for expressions, the kernel drawn into the engine, and the field read at the command line" [level=1] [ref=f2e266]'
+      - paragraph [ref=f2e267]: session · in main
+      - heading "Is an instance of" [level=2] [ref=f2e268]
+      - list [ref=f2e270]:
+        - listitem [ref=f2e271]:
+          - generic [ref=f2e273] [cursor=pointer]:
+            - strong [ref=f2e274]: session
+            - generic [ref=f2e275]: "One session of work with the author: when it ran, what it stood beside, the words it received in order, and the paths of evolution it noted. · 10 instances"
+      - heading "Holds" [level=2] [ref=f2e276]
+      - generic [ref=f2e277]:
+        - term [ref=f2e278]: kept
+        - definition [ref=f2e279]:
+          - paragraph [ref=f2e280]: "Whole in the author's words: all seven of the author's utterances, and after each the essence of the session's answer in its own voice, the fuller answers written in the conversation and not kept. Whether each came spoken or typed is the session's reading; one word the dictation misheard is corrected, with what it wrote kept on the word. The work is in its commit: the kernel drawn from a prototype into the engine and the interface's sets worked out by it; the language said as text and written in code by a template; glass's functions named each by one word, with their ids kept, and some written in the language in the field; src/tools/ask.ts, a local engine at the command line, the probe and the read tool retired for it; the wiki brought to it. Each piece was read by fresh agents, a design attacked before it was built, the code read for its tone and bugs, and the command line used cold by an agent knowing nothing else, and what they found was mended; 169 tests pass."
+        - term [ref=f2e281]: "on"
+        - definition [ref=f2e282]: 2026-11-10
+        - term [ref=f2e283]: paths
+        - definition [ref=f2e284]:
+          - list [ref=f2e286]:
+            - listitem [ref=f2e287]:
+              - generic [ref=f2e289] [cursor=pointer]:
+                - strong [ref=f2e290]: The plan from here
+                - generic [ref=f2e291]: path · in main
+            - listitem [ref=f2e292]:
+              - generic [ref=f2e294] [cursor=pointer]:
+                - strong [ref=f2e295]: A face in TypeScript's own syntax
+                - generic [ref=f2e296]: path · in main
+            - listitem [ref=f2e297]:
+              - generic [ref=f2e299] [cursor=pointer]:
+                - strong [ref=f2e300]: A function named alone
+                - generic [ref=f2e301]: path · in main
+        - term [ref=f2e302]: said
+        - definition [ref=f2e303]:
+          - list [ref=f2e305]:
+            - listitem [ref=f2e306]:
+              - generic [ref=f2e308] [cursor=pointer]:
+                - strong [ref=f2e309]: 1M7360TVPDXC06Q
+                - generic [ref=f2e310]: utterance · in main
+            - listitem [ref=f2e311]:
+              - generic [ref=f2e313] [cursor=pointer]:
+                - strong [ref=f2e314]: 1M7360TVPDXC09J
+                - generic [ref=f2e315]: utterance · in main
+            - listitem [ref=f2e316]:
+              - generic [ref=f2e318] [cursor=pointer]:
+                - strong [ref=f2e319]: 1M7360TVPDXC0BJ
+                - generic [ref=f2e320]: utterance · in main
+            - listitem [ref=f2e321]:
+              - generic [ref=f2e323] [cursor=pointer]:
+                - strong [ref=f2e324]: 1M7360TVPDXC0E5
+                - generic [ref=f2e325]: utterance · in main
+            - listitem [ref=f2e326]:
+              - generic [ref=f2e328] [cursor=pointer]:
+                - strong [ref=f2e329]: 1M7360TVPDXC0F1
+                - generic [ref=f2e330]: utterance · in main
+            - listitem [ref=f2e331]:
+              - generic [ref=f2e333] [cursor=pointer]:
+                - strong [ref=f2e334]: 1M7360TVPDXC0H7
+                - generic [ref=f2e335]: utterance · in main
+            - listitem [ref=f2e336]:
+              - generic [ref=f2e338] [cursor=pointer]:
+                - strong [ref=f2e339]: 1M7360TVPDXC0M8
+                - generic [ref=f2e340]: utterance · in main
+            - listitem [ref=f2e341]:
+              - generic [ref=f2e343] [cursor=pointer]:
+                - strong [ref=f2e344]: 1M7360TVPDXC0Q8
+                - generic [ref=f2e345]: utterance · in main
+            - listitem [ref=f2e346]:
+              - generic [ref=f2e348] [cursor=pointer]:
+                - strong [ref=f2e349]: 1M7360TVPDXC0QQ
+                - generic [ref=f2e350]: utterance · in main
+            - listitem [ref=f2e351]:
+              - generic [ref=f2e353] [cursor=pointer]:
+                - strong [ref=f2e354]: 1M7360TVPDXC0S7
+                - generic [ref=f2e355]: utterance · in main
+            - listitem [ref=f2e356]:
+              - generic [ref=f2e358] [cursor=pointer]:
+                - strong [ref=f2e359]: 1M7360TVPDXC0V6
+                - generic [ref=f2e360]: utterance · in main
+            - listitem [ref=f2e361]:
+              - generic [ref=f2e363] [cursor=pointer]:
+                - strong [ref=f2e364]: 1M7360TVPDXC0ZZ
+                - generic [ref=f2e365]: utterance · in main
+            - listitem [ref=f2e366]:
+              - generic [ref=f2e368] [cursor=pointer]:
+                - strong [ref=f2e369]: 1M7360TVPDXC11D
+                - generic [ref=f2e370]: utterance · in main
+            - listitem [ref=f2e371]:
+              - generic [ref=f2e373] [cursor=pointer]:
+                - strong [ref=f2e374]: 1M7360TVPDXC13V
+                - generic [ref=f2e375]: utterance · in main
+        - term [ref=f2e376]: voice
+        - definition [ref=f2e377]:
+          - generic [ref=f2e379] [cursor=pointer]:
+            - strong [ref=f2e380]: A session of 2026-11-10, on the language
+            - generic [ref=f2e381]: voice · in main

@@ -96,7 +96,9 @@ function tokensOf(text: string): Token[] {
       out.push({ at, kind: "mark", value: mark });
       at += mark.length;
     } else {
-      throw new Error(`nothing in the language begins with ${rest[0]}, at ${where(text, at)}`);
+      throw new Error(
+        `nothing in the language begins with ${rest[0]}, at ${where(text, at)}${rest.startsWith("=") || rest.startsWith("!") || rest.startsWith("<") ? "; to compare, eq(a, b), lt(a, b) and not(…)" : ""}`,
+      );
     }
   }
 

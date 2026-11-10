@@ -3,10 +3,15 @@
 // name for a heading, its own words, and then what it holds, each a level deeper.
 
 (h, depth) => case(first(h.instance).name, {
-  word: join([h.before, h.text, h.after]),
+  // A mark that closes what came before, written before a word, keeps to what came before.
+  word: if(has([",", ";", ":", ".", "!", "?", ")"], h.before), join([h.before, " ", h.text, h.after]), join([h.before, h.text, h.after])),
   codespan: join(["`", h.text, "`"]),
   closed: join(["`", h.text, "`"]),
-  sentence: join(map(h.words, text), " "),
+  sentence: fold(h.words, "", (said, w) => join([
+    said,
+    if(or(eq(said, ""), has([",", ";", ":", ".", "!", "?", ")"], w.before), has([",", ";", ":", ".", "!", "?", ")"], w.text)), "", " "),
+    text(w)
+  ])),
   paragraph: join(map(h.sentences, text), " "),
   link: join(["[", join(map(h.words, text), " "), "]"]),
   emphasis: join(["*", join(map(concat(h.words, h.sentences), text), " "), "*"]),
@@ -19,6 +24,7 @@
   list: join(map(h.items, i => text(i, depth)), "\n"),
   quote: join(map(h.prose, p => join(["> ", text(p, depth)])), "\n>\n"),
   code: join(["```", h.language, "\n", h.text, "\n```"]),
+  drawing: join(["```\n", join(h.lines, "\n"), "\n```"]),
   break: else(h.mark, "---")
 },
   // A whole: its heading, its own words, and what it holds, in the order it is read.
