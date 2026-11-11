@@ -21,7 +21,7 @@
 // holons is a set wherever and, or and not are given one, an empty list the empty set.
 
 import { canonical } from "../integrations/glass/canonical.ts";
-import type { LogEntry } from "../integrations/glass/store.ts";
+import { writtenBy, type LogEntry } from "../integrations/glass/store.ts";
 import type { Everything } from "./expression.ts";
 import { answeringAll, indexOf, mouldIn as mouldsIn, type Answering, type FactValue } from "./facts.ts";
 import { mouldOf, type Mould } from "./moulds.ts";
@@ -322,6 +322,13 @@ export function kernel(context: Context) {
     says: ([holon]) => (holonOf(holon) ? says((holon as Ref).$ref) : null),
     log: ([store]) =>
       (context.logs?.get(String(store)) ?? []).map(({ at, says, hash }) => ({ at, says, hash })),
+    since: ([store, moment]) => {
+      const written = new Set(
+        (context.logs?.get(String(store)) ?? []).filter(({ at }) => at > String(moment)).flatMap(writtenBy),
+      );
+
+      return keep((id) => written.has(id) && known.get(id)!.store === store);
+    },
 
     // How a set is looked at, which the engine reads by its shape; worked out, each
     // gives what it is given.

@@ -47,6 +47,7 @@ const fn = Object.fromEntries(
     "not",
     "group",
     "flat",
+    "since",
   ].map((native) => [native, mint()]),
 );
 const ownFn = mint();
@@ -337,6 +338,24 @@ describe("expressions", () => {
 });
 
 describe("the engine", () => {
+  test("since gives the holons a store's commits wrote after a moment, as its log says", async () => {
+    const was = pulledHolons.find(({ id }) => id === note)!;
+    const { store } = await commit(await pulledStore(), {
+      holons: [{ ...was, body: { title: "Moved" } }],
+      says: "the note said again",
+      at: "2999-01-01T00:00:00.000Z",
+    });
+    const engine = startEngine(await openStore(memoryFiles()));
+    await engine.attach("pulled", store);
+
+    const since = (moment: string) => engine.read({ value: call("since", "pulled", moment) });
+
+    expect(await since("2998-01-01T00:00:00.000Z")).toEqual([{ $ref: note }]);
+    expect(((await since("2000-01-01T00:00:00.000Z")) as unknown[]).length).toBe(pulledHolons.length);
+    expect(await since("3000-01-01T00:00:00.000Z")).toEqual([]);
+    expect(await engine.read({ value: call("since", "nowhere", "2000-01-01T00:00:00.000Z") })).toEqual([]);
+  });
+
   test("a holon is read with its store, block and types' names", async () => {
     const { engine } = await started();
     const read = await homeHolon(engine, brief);

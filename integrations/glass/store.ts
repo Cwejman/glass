@@ -25,7 +25,7 @@ export type Version = Holon & { prev: string | null };
 
 export type Latest = { block: string; version: Version };
 
-type BlockEntry = { first: string | null; hash: string; moved: string[]; new: number };
+export type BlockEntry = { first: string | null; hash: string; moved: string[]; new: number };
 
 type Checkpoint = {
   blocks: [hash: string, first: string][];
@@ -52,7 +52,8 @@ type Table = {
   gone: Set<string>;
 };
 
-export type LogEntry = { hash: string; at: string; says: string };
+// A commit as the log tells it: when, what it says, its hash, and what it wrote and took out.
+export type LogEntry = { hash: string; at: string; says: string; blocks: BlockEntry[]; gone: string[] };
 
 export type Commit = {
   holons: Holon[];
@@ -90,6 +91,17 @@ const decode = (text: string) => [...text].reduce((n, char) => n * 32 + alphabet
 export const idAt = (ms: number, count = 0) => encode(ms, 9) + encode(count, 6);
 
 export const nextId = (id: string) => id.slice(0, 9) + encode(decode(id.slice(9)) + 1, 6);
+
+// The holons a commit gave a version: each block's new ones, a run from its first, and
+// those it moved there. Read from the line alone, no block fetched.
+export function writtenBy({ blocks }: Pick<LogEntry, "blocks">) {
+  return blocks.flatMap(({ first, new: count, moved }) => {
+    const born: string[] = [];
+    for (let id = first; id && born.length < count; id = nextId(id)) born.push(id);
+
+    return [...born, ...moved];
+  });
+}
 
 export const isId = (value: unknown): value is string =>
   typeof value === "string" && /^[0-9A-HJKMNP-TV-Z]{15}$/.test(value);
@@ -318,7 +330,13 @@ export async function openStore(files: Files, blocks = new Map<string, Promise<M
   }
 
   const log = async (): Promise<LogEntry[]> =>
-    (await fullLog()).map(({ hash, line: { at, says } }) => ({ hash, at, says }));
+    (await fullLog()).map(({ hash, line: { at, says, blocks, gone } }) => ({
+      hash,
+      at,
+      says,
+      blocks: blocks ?? [],
+      gone: gone ?? [],
+    }));
 
   // Every version of a holon, newest first, following prev. Only when asked.
   async function versions(id: string) {

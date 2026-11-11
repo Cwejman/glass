@@ -112,6 +112,12 @@
     "takes": ["holon"]
   },
   {
+    "name": "since",
+    "native": "since",
+    "says": "What the store given has written since the moment given, as its log says: each holon still in the field that a commit after that moment brought in or said again. A moment is written as the log writes one, 2026-11-11 or 2026-11-11T12:00, so a day is its start.",
+    "takes": ["store", "words"]
+  },
+  {
     "name": "log",
     "native": "log",
     "says": "The commits of the store whose key is given, each when, what it says, and its hash.",

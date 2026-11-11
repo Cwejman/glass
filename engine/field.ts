@@ -153,8 +153,10 @@ async function valueOf(field: Field, all: Everything, expression: Expr) {
   const problem = expressionProblem(expression);
   if (problem) throw new Error(problem);
 
-  const asksOfHistory = idsIn(expression).some(
-    (id) => (all.known.get(id)?.holon.body as { native?: unknown } | undefined)?.native === "log",
+  const asksOfHistory = idsIn(expression).some((id) =>
+    ["log", "since"].includes(
+      String((all.known.get(id)?.holon.body as { native?: unknown } | undefined)?.native),
+    ),
   );
   if (!asksOfHistory) return plain(kernelOf(all).evaluate(expression));
 
