@@ -36,6 +36,7 @@ export type Committed = { commit: string; ids: Record<string, string> };
 export type Engine = {
   attach(key: string, store: Source, options?: { write?: false }): Promise<void>;
   attach(key: string, store: Store, options: { write: true }): Promise<void>;
+  renew(key: string, store: Source): Promise<void>;
   read<R extends Read>(query: R): Promise<Answer<R>>;
   commit(change: Change): Promise<Committed>;
   onChange(listener: () => void): () => void;
@@ -334,6 +335,22 @@ export function startEngine(given: readonly Attached[] = []): Engine {
 
         const attached: Attached = write ? { key, store: store as Store, write } : { key, store };
         become(fieldOf([...field.stores, attached], field));
+      }),
+
+    // A store this engine only reads, taken again as it now stands: what was published
+    // since, and nothing of what one wrote, for nothing is written to a store only read.
+    renew: (key, store) =>
+      inTurn(async () => {
+        const attached = field.stores.find((one) => one.key === key);
+        if (!attached) throw new Error(`nothing is attached as ${key}`);
+        if (isWritable(attached)) throw new Error(`${key} is written here, and is never taken again`);
+
+        become(
+          fieldOf(
+            field.stores.map((one) => (one.key === key ? { key, store } : one)),
+            field,
+          ),
+        );
       }),
 
     read: (query) => read(field, query),

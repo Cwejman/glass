@@ -730,6 +730,22 @@ describe("attachments", () => {
     expect(contents.map(({ $ref }) => $ref)).toEqual([storeType.id, ids["~1"]!]);
   });
 
+  test("a store only read is taken again as it now stands, and one written never is", async () => {
+    const engine = await engineOf("a");
+    let heard = 0;
+    engine.onChange(() => heard++);
+
+    const { store: newer } = await commit(await pulledStore(), {
+      holons: [noteOf(note, "published since")],
+      says: "published since",
+    });
+    await engine.renew("pulled", newer);
+
+    expect((await engine.read({ holon: note }))?.body.title).toBe("published since");
+    expect(heard).toBe(1);
+    await expect(engine.renew("a", newer)).rejects.toThrow("is written here");
+  });
+
   test("what goes leaves every store that keeps it, and nothing left may point at it", async () => {
     const engine = await engineOf("a");
     const kept = (await engine.commit({ holons: [noteOf("~1", "to go")] })).ids["~1"]!;

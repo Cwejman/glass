@@ -19,6 +19,28 @@ const started = idbFiles("glass-home")
   .then((home) => startEngine([{ key: "home", store: home, write: true }]));
 
 const subscriptions = new Map<number, { read: Read; last: string }>();
+
+// The stores fetched from an address, each with the head it was read at. Every few seconds
+// each is asked whether it has moved on, and one that has is taken again, so what is
+// drawn follows what is published while one looks.
+const served = new Map<string, { url: string; head: string | null }>();
+const every = 5000;
+
+async function follow() {
+  const engine = await started;
+
+  for (const [key, was] of served) {
+    const now = await openStore(servedFiles(was.url, await pulled)).catch(() => null);
+    if (!now || now.head === was.head) continue;
+
+    served.set(key, { url: was.url, head: now.head });
+    await engine.renew(key, now);
+  }
+
+  setTimeout(follow, every);
+}
+
+setTimeout(follow, every);
 let changes = 0;
 
 const send = (reply: Reply) => self.postMessage(reply);
@@ -29,7 +51,9 @@ async function answer(message: Message) {
   switch (message.op) {
     case "attach": {
       const url = new URL(message.url, self.location.href).href;
-      await engine.attach(message.key, await openStore(servedFiles(url, await pulled)));
+      const store = await openStore(servedFiles(url, await pulled));
+      await engine.attach(message.key, store);
+      served.set(message.key, { url, head: store.head });
       return null;
     }
 
