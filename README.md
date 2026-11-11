@@ -31,7 +31,7 @@ What the store holds:
 - the second session of 2026-11-06, utterance by utterance, with its paths of evolution, and the forks that met it; the third session, of 2026-11-07 and 2026-11-08; a fourth and a fifth, of 2026-11-08, kept in brief; a sixth, of 2026-11-09, kept whole; a seventh, of 2026-11-09 and 2026-11-10, an eighth, of 2026-11-10, a ninth, of 2026-11-10 and 2026-11-11, and a tenth, of 2026-11-11, kept whole in the author's words;
 - statistics declared as prose and expression, never stored;
 - measures on what was said, sessions and passages graded with a note, none of them a conclusion: read them to reason about what to read. Briefs the work has overtaken are measured too, as stale;
-- threads raised from what was said that no brief owns yet.
+- threads: the questions held open in the field, raised by any voice, the author's, a session's or an agent's, each standing open, leaning, settled or let go; `author/thread.ts` raises and moves them.
 
 Almost nothing stands loose. The main store has ten roots: the lexicon, what was said, the wiki, its markdown forms, the threads, the measures, a whole for statistics and functions, one for the sessions, one for the types, and the author's voice, which speaks across them. A session holds its own, and a source what stands upon it.
 
@@ -57,6 +57,8 @@ bun engine/ask.ts 'type(@types/measure) | filter(m => eq(m.value, 3)) | map(m =>
 bun engine/ask.ts 'type(@types/thread) | map(t => {raised: t.raised, stands: t.stands})'
                                                        the threads raised from what was said
 ```
+
+What moved in certainty since a moment is asked of the log: `bun engine/ask.ts 'and(type(@types/thread), since("main", "2026-11-11")) | map(t => {name: t.name, stands: t.stands, asks: t.asks})'`.
 
 A brief the work has overtaken carries a measure that says so, its note saying what no longer holds: `bun engine/ask.ts 'type(@main:types/measure) | filter(m => eq(m.as, "stale")) | map(m => {of: m.of, note: m.note})'` lists them, and none stand today. A key a holon does not hold gives null, never an error, so `@types/session.mould | keys` is the way to know what to ask for.
 
