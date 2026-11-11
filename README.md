@@ -77,14 +77,14 @@ The text is drawn from the holons each time; none is stored. A word is `before +
 The code is modules at the root, each a folder standing on those before it, imported by relative path; how it is written is the wiki's How the code is written, under The grounds.
 
 - `integrations/glass/`: glass's own format, the integration the engine speaks natively: canonical text, blocks, the log and its checkpoints, commits and landing, over files in a folder, at an address or in the browser's storage. Its vectors, made apart from its code, fix it.
-- `engine/`: the field as a value and what reads and judges it, the kernel and patterns, the protocol and the worker it runs in; and its command line, `ask.ts`, the way an agent reads. The command line and the tests over the real stores take them from `stores.ts` at the root, so they stand on the repository, not the engine alone, until the command line takes the stores it attaches as its own given.
+- `engine/`: the field as a value and what reads and judges it, the kernel and patterns, the protocol and the worker it runs in; and its command line, `ask.ts`, the way an agent reads. The command line, the tools and the tests over the real stores find them through `stores.ts` at the root, which searches where they lie.
 - `language/`: the language an expression is said in, as text, and a template for code.
 - `interface/`: the contract components draw against, finding a component, drawing slots, the address, the root and the chassis.
 - `components/`: the library, with the material, the entry, and for now the types and functions glass ships; `make.ts` makes them into its store.
 - `author/`: the author's words and explorations, and the tools that write them.
 - `site/`: the page, and the build that writes it, the client and every store into `site/dist/`, output only and never kept.
 
-`stores.ts` at the root says which folder holds which store, by the name it is asked by. Everything runs with Bun from the root: `bun install`, `bun test`, `bun run check`, `bun run format`, and, after changing a component, `bun run field`; after changing the engine or the interface, `bun run build`.
+No file says which folder holds which store: every folder keeping a `.glass/` is one, named by its own root, the one holon in it of the type store, and `stores.ts` at the root finds them so (2026-11-11). Everything runs with Bun from the root: `bun install`, `bun test`, `bun run check`, `bun run format`, and, after changing a component, `bun run field`; after changing the engine or the interface, `bun run build`.
 
 ## Where it stands
 

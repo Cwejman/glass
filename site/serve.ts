@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { storeFolder, stores, type StoreName } from "../stores.ts";
+import { storesHere } from "../stores.ts";
 import { host } from "./host.ts";
 
 // Serves the site on this machine: the page and the client from what was built, each
@@ -9,7 +9,7 @@ import { host } from "./host.ts";
 
 const hosted = await host({
   port: Number(process.env.PORT ?? 4330),
-  stores: Object.fromEntries((Object.keys(stores) as StoreName[]).map((name) => [name, storeFolder(name)])),
+  stores: Object.fromEntries([...(await storesHere())].map(([name, { folder }]) => [name, folder])),
   home: join(import.meta.dir, "home"),
   site: join(import.meta.dir, "dist"),
 });

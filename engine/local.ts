@@ -8,12 +8,12 @@ import { join } from "node:path";
 import { memoryFiles } from "../integrations/glass/files.ts";
 import { openStore } from "../integrations/glass/store.ts";
 import { gitSource } from "../integrations/git/git.ts";
-import { openStores, type StoreName } from "../stores.ts";
+import { openStores } from "../stores.ts";
 import { startEngine, type Engine } from "./engine.ts";
 
 type Local = {
   // The stores written through this engine; every other is only read.
-  writes?: readonly StoreName[];
+  writes?: readonly string[];
   // This repository's own history, read through git, attached as the store git.
   git?: boolean;
 };
@@ -24,9 +24,9 @@ export async function localEngine({ writes = [], git = false }: Local = {}): Pro
   const engine = startEngine([
     ...(writes.length ? [] : [{ key: "home", store: await openStore(memoryFiles()), write: true as const }]),
     ...stores.map(([key, store]) =>
-      writes.includes(key as StoreName)
+      writes.includes(key)
         ? { key, store, write: true as const }
-        : { key, store: store as typeof store, write: false as const },
+        : { key, store, write: false as const },
     ),
   ]);
 

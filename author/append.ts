@@ -22,7 +22,7 @@ const [named, file, as, patchFile] = process.argv.slice(2);
 if (!named || !file || !["typed", "spoken", "answered"].includes(as ?? ""))
   throw new Error("usage: append.ts <session> <utterance.txt> <typed|spoken|answered> [paths.json]");
 
-const store = await open(storeFolder("main"));
+const store = await open(await storeFolder("main"));
 const holons = await holonsOf(store);
 
 const writer = proseWriter(holons, store.minter());

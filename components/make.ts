@@ -17,7 +17,7 @@ import { holonsOf, open, storeFolder } from "../stores.ts";
 const here = import.meta.dir;
 const json = (path: string) => JSON.parse(readFileSync(join(here, path), "utf8"));
 
-const store = await open(storeFolder("glass"));
+const store = await open(await storeFolder("glass"));
 const before = await holonsOf(store);
 const mint = store.minter();
 

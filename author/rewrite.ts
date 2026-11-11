@@ -45,7 +45,7 @@ type Edit =
 const held = (id: string) => ({ $ref: id, $holds: true });
 
 const patch: Edit[] = await Bun.file(process.argv[2]!).json();
-const store = await open(storeFolder("main"));
+const store = await open(await storeFolder("main"));
 const holons = await holonsOf(store);
 const byId = new Map(holons.map((holon) => [holon.id, holon]));
 const mint = store.minter();

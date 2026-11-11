@@ -30,7 +30,7 @@ type Session = {
 const ref = (to: string) => ({ $ref: to });
 
 const session: Session = await Bun.file(process.argv[2]!).json();
-const store = await open(storeFolder("main"));
+const store = await open(await storeFolder("main"));
 const holons = await holonsOf(store);
 const mint = store.minter();
 

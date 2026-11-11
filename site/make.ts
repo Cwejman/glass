@@ -9,14 +9,14 @@ import { join } from "node:path";
 import { canonical } from "../integrations/glass/canonical.ts";
 import type { Holon } from "../integrations/glass/store.ts";
 import { localEngine } from "../engine/local.ts";
-import { holonsOf, open, storeFolder, stores, typeNamed, typesOf } from "../stores.ts";
+import { holonsOf, open, storeFolder, storesHere, typeNamed, typesOf } from "../stores.ts";
 
 type Site = { name: string; entry: string };
 
 const site: Site = await Bun.file(join(import.meta.dir, "site.json")).json();
-const store = await open(storeFolder("site"));
+const store = await open(await storeFolder("site"));
 const before = await holonsOf(store);
-const glass = await holonsOf(await open(storeFolder("glass")));
+const glass = await holonsOf(await open(await storeFolder("glass")));
 const mint = store.minter();
 
 const glassTypes = typesOf(glass);
@@ -33,7 +33,7 @@ const start: Holon = {
   name: "start",
   body: {
     // Every other store this repository holds, each beside the site's own.
-    attachments: Object.keys(stores)
+    attachments: [...(await storesHere()).keys()]
       .filter((key) => key !== site.name)
       .map((key) => ({ key, from: `../${key}/` })),
     entry: { $ref: glassNamed(site.entry, "mount") },

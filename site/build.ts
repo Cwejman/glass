@@ -4,7 +4,7 @@
 
 import { cpSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { storeFolder, stores, type StoreName } from "../stores.ts";
+import { storesHere } from "../stores.ts";
 
 const repo = join(import.meta.dir, "..");
 const dist = join(import.meta.dir, "dist");
@@ -24,9 +24,7 @@ const built = await Bun.build({
 
 if (!built.success) throw new AggregateError(built.logs, "building the client");
 
-const names = Object.keys(stores) as StoreName[];
-
-for (const name of names) cpSync(storeFolder(name), join(dist, "stores", name), { recursive: true });
+for (const [name, { folder }] of await storesHere()) cpSync(folder, join(dist, "stores", name), { recursive: true });
 
 // The page names the site's store, which says what else to attach and what to boot into.
 const page = await Bun.file(join(import.meta.dir, "index.html")).text();
