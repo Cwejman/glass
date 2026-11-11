@@ -4,8 +4,12 @@
 //
 // A patch is a list of what to change, each by the brief's id:
 //   { "id": "...", "name": "a new name", "flow": [ ... ], "says": "..." }
-// and of what to bring in, under a whole:
-//   { "new": "its name", "under": "the whole's id", "flow": [ ... ] }
+// and of what to bring in, under a whole, first among its parts or after one of them:
+//   { "new": "its name", "under": "the whole's id", "after": "a part's id", "flow": [ ... ] }
+// and of a brief moved to another whole, or to another place in its own:
+//   { "move": "its id", "under": "the whole's id", "after": "a part's id" }
+// and of a brief let go, with all it alone holds; its versions stay in the history:
+//   { "letGo": "its id" }
 // and the stale marks it resolves:
 //   { "resolves": ["id of a brief marked stale"] }
 // and what the commit says of itself:
@@ -13,7 +17,9 @@
 //
 // A flow lists, in order: a string, a new paragraph in marked prose; { "keep": i }, what
 // stood at place i of the old flow; { "keep": i, "change": [[from, to]] }, that paragraph
-// said again with its words changed; { "code": "...", "language": "..." }; { "list": [...] }.
+// said again with its words changed; { "code": "...", "language": "..." }; { "list": [...] };
+// { "mount": "a brief's id" }, a brief placed in the flow as a break, and so no longer among
+// the parts of the brief whose flow it stands in.
 
 import { mouldOf, type Mould } from "../engine/moulds.ts";
 import { partsOf, references } from "../engine/references.ts";
@@ -25,11 +31,14 @@ type FlowItem =
   | string
   | { keep: number; change?: [string, string][] }
   | { code: string; language?: string }
-  | { list: string[] };
+  | { list: string[] }
+  | { mount: string };
 
 type Edit =
   | { id: string; name?: string; flow?: FlowItem[] }
-  | { new: string; under: string; flow: FlowItem[] }
+  | { new: string; under: string; after?: string; flow: FlowItem[] }
+  | { move: string; under: string; after?: string }
+  | { letGo: string }
   | { resolves: string[] }
   | { says: string };
 
@@ -73,6 +82,10 @@ function flowOf(before: { $ref: string }[], flow: FlowItem[], name: string) {
       return held(put("code", { text: item.code, ...(item.language ? { language: item.language } : {}) }));
     if ("list" in item)
       return held(put("list", { items: item.list.map((text) => ({ $ref: marked.item(text) })) }));
+    if ("mount" in item) {
+      if (!byId.has(item.mount)) throw new Error(`${name} mounts ${item.mount}, which is not in the store`);
+      return held(item.mount);
+    }
 
     const kept = before[item.keep];
     if (!kept) throw new Error(`${name} has nothing at place ${item.keep}`);
@@ -91,8 +104,41 @@ function flowOf(before: { $ref: string }[], flow: FlowItem[], name: string) {
   });
 }
 
+// The whole that holds a brief among its parts.
+const wholeOf = (id: string) => holons.find((holon) => refsOf(holon.body.parts).includes(id));
+
+// A part placed in a whole: after the part named, or first.
+function place(whole: Holon, id: string, after?: string) {
+  const parts = (whole.body.parts ?? []) as { $ref: string }[];
+  const at = after === undefined ? 0 : parts.findIndex(({ $ref }) => $ref === after) + 1;
+  if (after !== undefined && at === 0) throw new Error(`${whole.name} holds no ${after}`);
+
+  whole.body.parts = [...parts.slice(0, at), { $ref: id }, ...parts.slice(at)];
+  changed.add(whole);
+}
+
+function unplace(id: string) {
+  const whole = wholeOf(id);
+  if (!whole) throw new Error(`nothing holds ${id} among its parts`);
+
+  whole.body.parts = whole.body.parts.filter(({ $ref }: { $ref: string }) => $ref !== id);
+  changed.add(whole);
+}
+
 for (const edit of patch) {
   if ("says" in edit) continue;
+
+  if ("move" in edit) {
+    unplace(edit.move);
+    place(byId.get(edit.under)!, edit.move, edit.after);
+    continue;
+  }
+
+  if ("letGo" in edit) {
+    unplace(edit.letGo);
+    replaced.add(edit.letGo);
+    continue;
+  }
 
   if ("resolves" in edit) {
     const measures = holons.filter(
@@ -116,8 +162,7 @@ for (const edit of patch) {
       name: edit.new,
       body: { parts: [], prose: flowOf([], edit.flow, edit.new) },
     });
-    whole.body.parts = [{ $ref: id }, ...whole.body.parts];
-    changed.add(whole);
+    place(whole, id, edit.after);
   } else {
     const brief = byId.get(edit.id);
     if (!brief) throw new Error(`no holon ${edit.id}`);
@@ -131,6 +176,9 @@ for (const edit of patch) {
 
       const after = new Set(refsOf(brief.body.prose));
       for (const id of before) if (!after.has(id)) replaced.add(id);
+
+      // A brief mounted in the flow is no longer among the parts as well.
+      brief.body.parts = (brief.body.parts ?? []).filter(({ $ref }: { $ref: string }) => !after.has($ref));
     }
 
     changed.add(brief);
@@ -198,4 +246,6 @@ const { blocks, bytes } = await commit(store, {
   says: patch.flatMap((edit) => ("says" in edit ? [edit.says] : [])).join(" ") || "Briefs rewritten",
 });
 
+for (const { id, name, instance } of born)
+  if (instance[0] === types.brief) console.log(`born: ${id} ${name}`);
 console.log({ changed: changed.size, born: born.length, gone: gone.length, blocks, bytes });

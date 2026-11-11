@@ -88,7 +88,10 @@ const sessionHolon: Holon = {
 };
 
 const letGo = session.letGo.map((title) => {
-  const path = holons.find((h) => h.instance[0] === types.path && h.name === title);
+  // Of paths that share a title, the one still noted is the one let go.
+  const path = holons.find(
+    (h) => h.instance[0] === types.path && h.name === title && h.body.stands === "noted",
+  );
   if (!path) throw new Error(`no path titled ${title}`);
 
   path.body.stands = "let go";
