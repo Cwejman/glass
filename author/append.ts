@@ -79,6 +79,16 @@ if (patchFile) {
   }
 }
 
+// The session's running cycle spans what is said while it runs.
+const running = ((session.body.cycles ?? []) as { $ref: string }[])
+  .map(({ $ref }) => holons.find((h) => h.id === $ref)!)
+  .find((cycle) => cycle?.body.stands === "running");
+
+if (running) {
+  running.body.said = [...(running.body.said ?? []), ref(utterance)];
+  changed.add(running);
+}
+
 if (writer.lexiconGrew()) changed.add(writer.lexicon);
 
 const done = await commit(store, {
