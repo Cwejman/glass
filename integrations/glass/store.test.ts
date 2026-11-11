@@ -4,7 +4,18 @@
 import { expect, test } from "bun:test";
 import { canonical } from "./canonical.ts";
 import { memoryFiles, servedFiles } from "./files.ts";
-import { commit, isId, land, nextId, openStore, sha, type Holon, type Store } from "./store.ts";
+import {
+  act,
+  commit,
+  isId,
+  land,
+  nextId,
+  openStore,
+  sha,
+  writtenBy,
+  type Holon,
+  type Store,
+} from "./store.ts";
 
 const vectors = await Bun.file(new URL("./vectors/format.json", import.meta.url)).json();
 const canonicalCases = await Bun.file(new URL("./vectors/canonical.json", import.meta.url)).json();
@@ -408,4 +419,153 @@ test("an empty store reads as empty", async () => {
   expect((await store.all()).size).toBe(0);
   expect(await store.read("0".repeat(15))).toBe(null);
   expect(await store.log()).toEqual([]);
+});
+
+// Files holding what the vectors say, as a store's folder would.
+const filesOf = ({ blocks, log, ref }: { blocks: Record<string, string>; log: string[]; ref: string }) =>
+  memoryFiles(
+    new Map([
+      ...Object.entries(blocks).map(
+        ([hash, content]) => [`blocks/${hash}.jsonl`, new TextEncoder().encode(content)] as const,
+      ),
+      ["log/0.jsonl", new TextEncoder().encode(`${log.join("\n")}\n`)] as const,
+      ["refs/main", new TextEncoder().encode(ref)] as const,
+    ]),
+  );
+
+test("lines written before read as they are, each act the same, and a commit lands after them", async () => {
+  const { before } = vectors;
+  const store = await openStore(filesOf(before));
+
+  expect(await textsOf(store)).toEqual(before.field);
+  expect((await store.log()).map(({ act }) => act)).toEqual(before.acts);
+
+  const { after } = before;
+  const { store: next } = await commit(store, after);
+
+  expect(logOf(next)).toEqual(after.log);
+  expect(text(memoryOf(next).get("refs/main"))).toBe(after.ref);
+
+  for (const [hash, content] of Object.entries(after.block)) {
+    expect(text(memoryOf(next).get(`blocks/${hash}.jsonl`))).toBe(content as string);
+  }
+});
+
+test("an act across two stores is one act in each, its blocks each store's own", async () => {
+  const { first, then } = vectors.act;
+  const stores = [await fresh(), await fresh()];
+
+  const done = await act(
+    stores.map((store, i) => ({ store, holons: first.stores[i].holons })),
+    { says: first.says, at: first.at, born: first.born },
+  );
+
+  expect(done.act).toBe(first.content);
+
+  for (const [i, wanted] of first.stores.entries()) {
+    const store = done.stores[i]!;
+
+    for (const [hash, content] of Object.entries(wanted.block)) {
+      expect(text(memoryOf(store).get(`blocks/${hash}.jsonl`))).toBe(content as string);
+    }
+
+    expect(logOf(store)).toEqual(wanted.log);
+    expect(text(memoryOf(store).get("refs/main"))).toBe(wanted.ref);
+    expect(await textsOf(await reopened(store))).toEqual(wanted.field);
+    expect((await store.log()).map(({ act }) => act)).toEqual([first.content]);
+  }
+
+  const [a, b] = done.stores as [Store, Store];
+  const [inA, inB, inBoth] = first.born as string[];
+
+  expect([a.mayHold(inA!), a.mayHold(inB!), a.mayHold(inBoth!)]).toEqual([true, false, true]);
+  expect([b.mayHold(inA!), b.mayHold(inB!), b.mayHold(inBoth!)]).toEqual([false, true, true]);
+  expect(writtenBy((await a.log())[0]!)).toEqual([inA, inBoth]);
+
+  const gone = await act(
+    done.stores.map((store) => ({ store, holons: [] })),
+    { says: then.says, at: then.at, gone: then.gone },
+  );
+
+  expect(gone.act).toBe(then.content);
+
+  for (const [i, wanted] of then.stores.entries()) {
+    expect(logOf(gone.stores[i]!)).toEqual(wanted.log);
+    expect(text(memoryOf(gone.stores[i]!).get("refs/main"))).toBe(wanted.ref);
+    expect(await textsOf(await reopened(gone.stores[i]!))).toEqual(wanted.field);
+  }
+});
+
+test("an act's new ids are one run across every store, and none in a moment a store holds", async () => {
+  const [a, b] = [await fresh(), await fresh()];
+  const mint = a.minter();
+  const [x, , z] = [mint(), mint(), mint()];
+
+  await expect(
+    act(
+      [
+        { store: a, holons: [{ id: x, instance: [], body: {} }] },
+        { store: b, holons: [{ id: z, instance: [], body: {} }] },
+      ],
+      { says: "a gap" },
+    ),
+  ).rejects.toThrow("not one run");
+
+  const { stores } = await act([{ store: a, holons: [{ id: x, instance: [], body: {} }] }], { says: "x" });
+
+  await expect(
+    act([{ store: stores[0]!, holons: [{ id: z, instance: [], body: {} }] }], { says: "again" }),
+  ).rejects.toThrow("mint again");
+});
+
+test("a line that names both a predecessor and a parent is refused", async () => {
+  const { before } = vectors;
+  const [first] = before.log;
+  const both = first.replace('"parent":null', '"parent":null,"predecessor":null');
+
+  await expect(
+    openStore(filesOf({ blocks: before.blocks, log: [both], ref: `${await sha(both)} 0\n` })),
+  ).rejects.toThrow("both a predecessor and a parent");
+});
+
+test("what a commit cut into blocks brings in can be taken out, and stays out on reopening", async () => {
+  const seed = (
+    await commit(await fresh(), { holons: [{ id: "1M6XGF9K0000000", instance: [], body: {} }], says: "seed" })
+  ).store;
+  const mint = seed.minter();
+  const holons: Holon[] = Array.from({ length: 600 }, (_, i) => ({
+    id: mint(),
+    instance: [],
+    body: { text: `${i} ${"x".repeat(500)}` },
+  }));
+  const { store: large } = await commit(seed, { holons, says: "large" });
+  const taken = [holons[0]!.id, holons[300]!.id, holons[599]!.id];
+  const { store } = await commit(large, { holons: [], says: "taken", gone: taken });
+
+  for (const id of taken) expect(await (await reopened(store)).read(id)).toBe(null);
+  expect((await (await reopened(store)).all()).size).toBe(598);
+});
+
+test("an act refuses one store given twice, and one that touches no store", async () => {
+  const store = await fresh();
+
+  await expect(
+    act(
+      [
+        { store, holons: [] },
+        { store, holons: [] },
+      ],
+      { says: "twice" },
+    ),
+  ).rejects.toThrow("given twice");
+
+  await expect(
+    act(
+      [
+        { store, holons: [] },
+        { store: await fresh(), holons: [] },
+      ],
+      { says: "nothing" },
+    ),
+  ).rejects.toThrow("touches no store");
 });

@@ -39,9 +39,9 @@
     "e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce": "{\"body\":{\"text\":\"type\"},\"id\":\"1M6XGF6G0000100\",\"instance\":[],\"mould\":{\"text\":{}},\"name\":\"word\",\"prev\":null}\n{\"body\":{\"text\":\"one\"},\"id\":\"1M6XGF6G0000101\",\"instance\":[\"1M6XGF6G0000100\"],\"prev\":null}\n{\"body\":{\"text\":\"two\"},\"id\":\"1M6XGF6G0000102\",\"instance\":[\"1M6XGF6G0000100\"],\"prev\":null}\n"
    },
    "log": [
-    "{\"at\":\"2026-11-08T00:00:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF6G0000100\",\"hash\":\"e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce\",\"moved\":[],\"new\":3}],\"checkpoint\":{\"blocks\":[[\"e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce\",\"1M6XGF6G0000100\"]],\"gone\":[],\"moved\":[]},\"gone\":[],\"parent\":null,\"says\":\"first\"}"
+    "{\"at\":\"2026-11-08T00:00:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF6G0000100\",\"hash\":\"e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce\",\"moved\":[],\"new\":3}],\"checkpoint\":{\"blocks\":[[\"e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce\",\"1M6XGF6G0000100\",3]],\"gone\":[],\"moved\":[]},\"gone\":[],\"predecessor\":null,\"says\":\"first\"}"
    ],
-   "ref": "312028f59331163b3ea561568f700fdc38a6116573e2334c4c59d3d482a0e090 0\n",
+   "ref": "55871c421374a9321445cfda6a70c2983c7d0c59bc8520f2404c68dfdb382c6a 0\n",
    "field": {
     "1M6XGF6G0000100": "type",
     "1M6XGF6G0000101": "one",
@@ -81,10 +81,10 @@
     "83310cc881970f42fc2050309389dd764bec6f898feea2604b2c251db11454fa": "{\"body\":{\"next\":{\"$ref\":\"1M6XGF6G0000101\"},\"text\":\"three\"},\"id\":\"1M6XGF7H0000200\",\"instance\":[\"1M6XGF6G0000100\"],\"prev\":null}\n{\"body\":{\"text\":\"one, edited\"},\"id\":\"1M6XGF6G0000101\",\"instance\":[\"1M6XGF6G0000100\"],\"prev\":\"e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce\"}\n"
    },
    "log": [
-    "{\"at\":\"2026-11-08T00:00:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF6G0000100\",\"hash\":\"e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce\",\"moved\":[],\"new\":3}],\"checkpoint\":{\"blocks\":[[\"e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce\",\"1M6XGF6G0000100\"]],\"gone\":[],\"moved\":[]},\"gone\":[],\"parent\":null,\"says\":\"first\"}",
-    "{\"at\":\"2026-11-08T00:01:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF7H0000200\",\"hash\":\"83310cc881970f42fc2050309389dd764bec6f898feea2604b2c251db11454fa\",\"moved\":[\"1M6XGF6G0000101\"],\"new\":1}],\"gone\":[\"1M6XGF6G0000102\"],\"parent\":\"312028f59331163b3ea561568f700fdc38a6116573e2334c4c59d3d482a0e090\",\"says\":\"second\"}"
+    "{\"at\":\"2026-11-08T00:00:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF6G0000100\",\"hash\":\"e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce\",\"moved\":[],\"new\":3}],\"checkpoint\":{\"blocks\":[[\"e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce\",\"1M6XGF6G0000100\",3]],\"gone\":[],\"moved\":[]},\"gone\":[],\"predecessor\":null,\"says\":\"first\"}",
+    "{\"at\":\"2026-11-08T00:01:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF7H0000200\",\"hash\":\"83310cc881970f42fc2050309389dd764bec6f898feea2604b2c251db11454fa\",\"moved\":[\"1M6XGF6G0000101\"],\"new\":1}],\"gone\":[\"1M6XGF6G0000102\"],\"predecessor\":\"55871c421374a9321445cfda6a70c2983c7d0c59bc8520f2404c68dfdb382c6a\",\"says\":\"second\"}"
    ],
-   "ref": "c6890d95609210d561de93c40d3ef90031880cbd99700b64b951b8935baab48e 0\n",
+   "ref": "6321cdf3740c74b8a8bdcb8ebe8ef85cf0a7b4f0393b4e8bba192dbcf7285669 0\n",
    "field": {
     "1M6XGF6G0000100": "type",
     "1M6XGF6G0000101": "one, edited",
@@ -111,16 +111,162 @@
    "3fbdd571503ad22da9f13cf604e998e86eef8e43e621465103c6b077238b036b": "{\"body\":{\"text\":\"four\"},\"id\":\"1M6XGF8J0000000\",\"instance\":[\"1M6XGF6G0000100\"],\"prev\":null}\n"
   },
   "log": [
-   "{\"at\":\"2026-11-08T00:00:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF6G0000100\",\"hash\":\"e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce\",\"moved\":[],\"new\":3}],\"checkpoint\":{\"blocks\":[[\"e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce\",\"1M6XGF6G0000100\"]],\"gone\":[],\"moved\":[]},\"gone\":[],\"parent\":null,\"says\":\"first\"}",
-   "{\"at\":\"2026-11-08T00:01:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF7H0000200\",\"hash\":\"83310cc881970f42fc2050309389dd764bec6f898feea2604b2c251db11454fa\",\"moved\":[\"1M6XGF6G0000101\"],\"new\":1}],\"gone\":[\"1M6XGF6G0000102\"],\"parent\":\"312028f59331163b3ea561568f700fdc38a6116573e2334c4c59d3d482a0e090\",\"says\":\"second\"}",
-   "{\"at\":\"2026-11-08T00:02:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF8J0000000\",\"hash\":\"3fbdd571503ad22da9f13cf604e998e86eef8e43e621465103c6b077238b036b\",\"moved\":[],\"new\":1}],\"gone\":[],\"parent\":\"c6890d95609210d561de93c40d3ef90031880cbd99700b64b951b8935baab48e\",\"says\":\"third, written apart\"}"
+   "{\"at\":\"2026-11-08T00:00:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF6G0000100\",\"hash\":\"e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce\",\"moved\":[],\"new\":3}],\"checkpoint\":{\"blocks\":[[\"e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce\",\"1M6XGF6G0000100\",3]],\"gone\":[],\"moved\":[]},\"gone\":[],\"predecessor\":null,\"says\":\"first\"}",
+   "{\"at\":\"2026-11-08T00:01:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF7H0000200\",\"hash\":\"83310cc881970f42fc2050309389dd764bec6f898feea2604b2c251db11454fa\",\"moved\":[\"1M6XGF6G0000101\"],\"new\":1}],\"gone\":[\"1M6XGF6G0000102\"],\"predecessor\":\"55871c421374a9321445cfda6a70c2983c7d0c59bc8520f2404c68dfdb382c6a\",\"says\":\"second\"}",
+   "{\"at\":\"2026-11-08T00:02:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF8J0000000\",\"hash\":\"3fbdd571503ad22da9f13cf604e998e86eef8e43e621465103c6b077238b036b\",\"moved\":[],\"new\":1}],\"gone\":[],\"predecessor\":\"6321cdf3740c74b8a8bdcb8ebe8ef85cf0a7b4f0393b4e8bba192dbcf7285669\",\"says\":\"third, written apart\"}"
   ],
-  "ref": "c05356f24aeffb431dc17a375f1718e4c6ffc44803d15156012d3ae03f15c73e 0\n",
+  "ref": "774edbd9221ca752b14c273e6c96ccf0e60b7ac0c3bdeb8d9878307b2588af87 0\n",
   "field": {
    "1M6XGF6G0000100": "type",
    "1M6XGF6G0000101": "one, edited",
    "1M6XGF7H0000200": "three",
    "1M6XGF8J0000000": "four"
+  }
+ },
+ "before": {
+  "blocks": {
+   "e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce": "{\"body\":{\"text\":\"type\"},\"id\":\"1M6XGF6G0000100\",\"instance\":[],\"mould\":{\"text\":{}},\"name\":\"word\",\"prev\":null}\n{\"body\":{\"text\":\"one\"},\"id\":\"1M6XGF6G0000101\",\"instance\":[\"1M6XGF6G0000100\"],\"prev\":null}\n{\"body\":{\"text\":\"two\"},\"id\":\"1M6XGF6G0000102\",\"instance\":[\"1M6XGF6G0000100\"],\"prev\":null}\n",
+   "83310cc881970f42fc2050309389dd764bec6f898feea2604b2c251db11454fa": "{\"body\":{\"next\":{\"$ref\":\"1M6XGF6G0000101\"},\"text\":\"three\"},\"id\":\"1M6XGF7H0000200\",\"instance\":[\"1M6XGF6G0000100\"],\"prev\":null}\n{\"body\":{\"text\":\"one, edited\"},\"id\":\"1M6XGF6G0000101\",\"instance\":[\"1M6XGF6G0000100\"],\"prev\":\"e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce\"}\n"
+  },
+  "log": [
+   "{\"at\":\"2026-11-08T00:00:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF6G0000100\",\"hash\":\"e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce\",\"moved\":[],\"new\":3}],\"checkpoint\":{\"blocks\":[[\"e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce\",\"1M6XGF6G0000100\"]],\"gone\":[],\"moved\":[]},\"gone\":[],\"parent\":null,\"says\":\"first\"}",
+   "{\"at\":\"2026-11-08T00:01:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF7H0000200\",\"hash\":\"83310cc881970f42fc2050309389dd764bec6f898feea2604b2c251db11454fa\",\"moved\":[\"1M6XGF6G0000101\"],\"new\":1}],\"gone\":[\"1M6XGF6G0000102\"],\"parent\":\"312028f59331163b3ea561568f700fdc38a6116573e2334c4c59d3d482a0e090\",\"says\":\"second\"}"
+  ],
+  "ref": "c6890d95609210d561de93c40d3ef90031880cbd99700b64b951b8935baab48e 0\n",
+  "field": {
+   "1M6XGF6G0000100": "type",
+   "1M6XGF6G0000101": "one, edited",
+   "1M6XGF7H0000200": "three"
+  },
+  "acts": [
+   "2f99e5c8f4c86d57d00a390d018fc2b5f962e584c06f9cbc50d1117496ef4209",
+   "306bd39d977883b3949ad476a41247bb6471612c29eb919c7c3e1867984c1d57"
+  ],
+  "after": {
+   "says": "after",
+   "at": "2026-11-08T00:03:00.000Z",
+   "holons": [
+    {
+     "id": "1M6XGF8J0000000",
+     "instance": [
+      "1M6XGF6G0000100"
+     ],
+     "body": {
+      "text": "after"
+     }
+    }
+   ],
+   "block": {
+    "df8294ba6b1fd9508debd36164ec80f1dc0e4042d8db0cfcd0e15747d98c2e58": "{\"body\":{\"text\":\"after\"},\"id\":\"1M6XGF8J0000000\",\"instance\":[\"1M6XGF6G0000100\"],\"prev\":null}\n"
+   },
+   "log": [
+    "{\"at\":\"2026-11-08T00:00:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF6G0000100\",\"hash\":\"e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce\",\"moved\":[],\"new\":3}],\"checkpoint\":{\"blocks\":[[\"e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce\",\"1M6XGF6G0000100\"]],\"gone\":[],\"moved\":[]},\"gone\":[],\"parent\":null,\"says\":\"first\"}",
+    "{\"at\":\"2026-11-08T00:01:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF7H0000200\",\"hash\":\"83310cc881970f42fc2050309389dd764bec6f898feea2604b2c251db11454fa\",\"moved\":[\"1M6XGF6G0000101\"],\"new\":1}],\"gone\":[\"1M6XGF6G0000102\"],\"parent\":\"312028f59331163b3ea561568f700fdc38a6116573e2334c4c59d3d482a0e090\",\"says\":\"second\"}",
+    "{\"at\":\"2026-11-08T00:03:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF8J0000000\",\"hash\":\"df8294ba6b1fd9508debd36164ec80f1dc0e4042d8db0cfcd0e15747d98c2e58\",\"moved\":[],\"new\":1}],\"gone\":[],\"predecessor\":\"c6890d95609210d561de93c40d3ef90031880cbd99700b64b951b8935baab48e\",\"says\":\"after\"}"
+   ],
+   "ref": "414b08ac41c794a72eee3b396d747c536dd03dda16ebe90617e13e1d14da8bd8 0\n"
+  }
+ },
+ "act": {
+  "first": {
+   "says": "an act across two stores",
+   "at": "2026-11-11T00:00:00.000Z",
+   "born": [
+    "1M6XGF9K0000300",
+    "1M6XGF9K0000301",
+    "1M6XGF9K0000302"
+   ],
+   "stores": [
+    {
+     "holons": [
+      {
+       "id": "1M6XGF9K0000300",
+       "instance": [],
+       "body": {
+        "text": "in a"
+       }
+      },
+      {
+       "id": "1M6XGF9K0000302",
+       "instance": [],
+       "body": {
+        "text": "in both"
+       }
+      }
+     ],
+     "block": {
+      "35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d": "{\"body\":{\"text\":\"in a\"},\"id\":\"1M6XGF9K0000300\",\"instance\":[],\"prev\":null}\n{\"body\":{\"text\":\"in both\"},\"id\":\"1M6XGF9K0000302\",\"instance\":[],\"prev\":null}\n"
+     },
+     "log": [
+      "{\"at\":\"2026-11-11T00:00:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF9K0000300\",\"hash\":\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\",\"moved\":[\"1M6XGF9K0000302\"],\"new\":1},{\"first\":\"1M6XGF9K0000301\",\"hash\":\"c8ec8a254d52138c4c9294fea9cfffc7557779030aed0704a24b1f41b4b54e29\",\"moved\":[],\"new\":2}],\"checkpoint\":{\"blocks\":[[\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\",\"1M6XGF9K0000300\",1]],\"gone\":[],\"moved\":[[\"1M6XGF9K0000302\",\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\"]]},\"gone\":[],\"own\":[\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\"],\"predecessor\":null,\"says\":\"an act across two stores\"}"
+     ],
+     "ref": "80ac9da3d3a8c2407d01c0876c44cef87aa03b6fb5f7d3ca62ec83f92da78f7c 0\n",
+     "field": {
+      "1M6XGF9K0000300": "in a",
+      "1M6XGF9K0000302": "in both"
+     }
+    },
+    {
+     "holons": [
+      {
+       "id": "1M6XGF9K0000301",
+       "instance": [],
+       "body": {
+        "text": "in b"
+       }
+      },
+      {
+       "id": "1M6XGF9K0000302",
+       "instance": [],
+       "body": {
+        "text": "in both"
+       }
+      }
+     ],
+     "block": {
+      "c8ec8a254d52138c4c9294fea9cfffc7557779030aed0704a24b1f41b4b54e29": "{\"body\":{\"text\":\"in b\"},\"id\":\"1M6XGF9K0000301\",\"instance\":[],\"prev\":null}\n{\"body\":{\"text\":\"in both\"},\"id\":\"1M6XGF9K0000302\",\"instance\":[],\"prev\":null}\n"
+     },
+     "log": [
+      "{\"at\":\"2026-11-11T00:00:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF9K0000300\",\"hash\":\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\",\"moved\":[\"1M6XGF9K0000302\"],\"new\":1},{\"first\":\"1M6XGF9K0000301\",\"hash\":\"c8ec8a254d52138c4c9294fea9cfffc7557779030aed0704a24b1f41b4b54e29\",\"moved\":[],\"new\":2}],\"checkpoint\":{\"blocks\":[[\"c8ec8a254d52138c4c9294fea9cfffc7557779030aed0704a24b1f41b4b54e29\",\"1M6XGF9K0000301\",2]],\"gone\":[],\"moved\":[]},\"gone\":[],\"own\":[\"c8ec8a254d52138c4c9294fea9cfffc7557779030aed0704a24b1f41b4b54e29\"],\"predecessor\":null,\"says\":\"an act across two stores\"}"
+     ],
+     "ref": "ab543bc9090970178b6249e24fe0b2700341833e5443925ce1371f1c563eaa3f 0\n",
+     "field": {
+      "1M6XGF9K0000301": "in b",
+      "1M6XGF9K0000302": "in both"
+     }
+    }
+   ],
+   "content": "c12a4a56be05346be15739a189982fea927081f2d0f7cc4e33dac503642f3d31"
+  },
+  "then": {
+   "says": "taken out of the field",
+   "at": "2026-11-11T00:01:00.000Z",
+   "gone": [
+    "1M6XGF9K0000302"
+   ],
+   "stores": [
+    {
+     "log": [
+      "{\"at\":\"2026-11-11T00:00:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF9K0000300\",\"hash\":\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\",\"moved\":[\"1M6XGF9K0000302\"],\"new\":1},{\"first\":\"1M6XGF9K0000301\",\"hash\":\"c8ec8a254d52138c4c9294fea9cfffc7557779030aed0704a24b1f41b4b54e29\",\"moved\":[],\"new\":2}],\"checkpoint\":{\"blocks\":[[\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\",\"1M6XGF9K0000300\",1]],\"gone\":[],\"moved\":[[\"1M6XGF9K0000302\",\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\"]]},\"gone\":[],\"own\":[\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\"],\"predecessor\":null,\"says\":\"an act across two stores\"}",
+      "{\"at\":\"2026-11-11T00:01:00.000Z\",\"blocks\":[],\"gone\":[\"1M6XGF9K0000302\"],\"own\":[],\"predecessor\":\"80ac9da3d3a8c2407d01c0876c44cef87aa03b6fb5f7d3ca62ec83f92da78f7c\",\"says\":\"taken out of the field\"}"
+     ],
+     "ref": "af49045f86cbfd05cc5143f56ef090dcefb7687e613a1882b025c83bd4b011b8 0\n",
+     "field": {
+      "1M6XGF9K0000300": "in a"
+     }
+    },
+    {
+     "log": [
+      "{\"at\":\"2026-11-11T00:00:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF9K0000300\",\"hash\":\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\",\"moved\":[\"1M6XGF9K0000302\"],\"new\":1},{\"first\":\"1M6XGF9K0000301\",\"hash\":\"c8ec8a254d52138c4c9294fea9cfffc7557779030aed0704a24b1f41b4b54e29\",\"moved\":[],\"new\":2}],\"checkpoint\":{\"blocks\":[[\"c8ec8a254d52138c4c9294fea9cfffc7557779030aed0704a24b1f41b4b54e29\",\"1M6XGF9K0000301\",2]],\"gone\":[],\"moved\":[]},\"gone\":[],\"own\":[\"c8ec8a254d52138c4c9294fea9cfffc7557779030aed0704a24b1f41b4b54e29\"],\"predecessor\":null,\"says\":\"an act across two stores\"}",
+      "{\"at\":\"2026-11-11T00:01:00.000Z\",\"blocks\":[],\"gone\":[\"1M6XGF9K0000302\"],\"own\":[],\"predecessor\":\"ab543bc9090970178b6249e24fe0b2700341833e5443925ce1371f1c563eaa3f\",\"says\":\"taken out of the field\"}"
+     ],
+     "ref": "8a408cbe88d33f1f72b0e217baa70f342eb6d544f7273aa33be460d5a4e8971d 0\n",
+     "field": {
+      "1M6XGF9K0000301": "in b"
+     }
+    }
+   ],
+   "content": "7f27e1c062b62756d5fb457c276595a7864900b757cf6737e249880f7028e44c"
   }
  },
  "history": {

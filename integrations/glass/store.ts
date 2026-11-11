@@ -5,6 +5,10 @@
 //   log/<n>.jsonl       commits, one per line; each volume opens with a checkpoint
 //   blocks/<hash>.jsonl versions, one per line, about 64 KB to a block
 //
+// An act is one commit in every store it touches: each store's line holds the act
+// whole, its predecessor, and, where the act wrote elsewhere too, which blocks are its
+// own. What the act says, apart from where it stands, is the same in every store.
+//
 // A store here is a value: what stood at one head. Adding to it gives the next.
 // Reading the latest of any holon costs the ref, the open volume and one block.
 // Everything older is fetched only when asked for.
@@ -28,16 +32,20 @@ export type Latest = { block: string; version: Version };
 export type BlockEntry = { first: string | null; hash: string; moved: string[]; new: number };
 
 type Checkpoint = {
-  blocks: [hash: string, first: string][];
+  blocks: TableBlock[];
   gone: string[];
   moved: [id: string, hash: string][];
 };
 
+// A line names the line before it as its predecessor; one written before 2026-11-11
+// names it its parent. Own is said only by an act that touched other stores too.
 type Line = {
   at: string;
   blocks: BlockEntry[];
   gone: string[];
-  parent: string | null;
+  predecessor?: string | null;
+  parent?: string | null;
+  own?: string[];
   says: string;
   checkpoint?: Checkpoint;
   conversion?: { blocks: string[] };
@@ -45,15 +53,27 @@ type Line = {
   oldHash?: string;
 };
 
+// A block in the table: its hash, its first new holon, and how many new ones it holds
+// from there; a block entered before 2026-11-11 has no count.
+type TableBlock = [hash: string, first: string, count?: number];
+
 // What a head holds: which block holds what. Never changed, only made anew.
 type Table = {
-  blocks: [hash: string, first: string][];
+  blocks: TableBlock[];
   moved: Map<string, string>;
   gone: Set<string>;
 };
 
-// A commit as the log tells it: when, what it says, its hash, and what it wrote and took out.
-export type LogEntry = { hash: string; at: string; says: string; blocks: BlockEntry[]; gone: string[] };
+// A commit as a store's log tells it: its hash, the hash of the act it is, when, what it
+// says, and the blocks it wrote here and what it took out.
+export type LogEntry = {
+  hash: string;
+  act: string;
+  at: string;
+  says: string;
+  blocks: BlockEntry[];
+  gone: string[];
+};
 
 export type Commit = {
   holons: Holon[];
@@ -128,9 +148,21 @@ const tableOf = ({
   gone: new Set(gone),
 });
 
-function apply(table: Table, line: Pick<Line, "blocks" | "gone">) {
-  for (const block of line.blocks) {
-    if (block.first) table.blocks.push([block.hash, block.first]);
+// The line before, as a line names it.
+function predecessorOf(line: Line) {
+  if ("predecessor" in line && "parent" in line)
+    throw new Error("a line names both a predecessor and a parent");
+
+  return line.predecessor ?? line.parent ?? null;
+}
+
+// The blocks of a line this store keeps: all of them, unless it says which are its own.
+const ownBlocks = ({ blocks, own }: Pick<Line, "blocks" | "own">) =>
+  own ? blocks.filter(({ hash }) => own.includes(hash)) : blocks;
+
+function apply(table: Table, line: Pick<Line, "blocks" | "gone" | "own">) {
+  for (const block of ownBlocks(line)) {
+    if (block.first) table.blocks.push([block.hash, block.first, block.new]);
 
     for (const id of block.moved) {
       table.moved.set(id, block.hash);
@@ -138,7 +170,8 @@ function apply(table: Table, line: Pick<Line, "blocks" | "gone">) {
     }
   }
 
-  for (const id of line.gone) table.gone.add(id);
+  sortBlocks(table);
+  for (const id of line.gone) if (mayHold(table, id)) table.gone.add(id);
 }
 
 const byId =
@@ -155,7 +188,7 @@ const sortBlocks = (table: Table) => {
 function floor(table: Table, id: string) {
   let low = 0;
   let high = table.blocks.length - 1;
-  let found: [string, string] | undefined;
+  let found: TableBlock | undefined;
 
   while (low <= high) {
     const middle = (low + high) >> 1;
@@ -171,13 +204,21 @@ function floor(table: Table, id: string) {
   return found;
 }
 
-// Whether this head can hold an id at all, known without fetching anything: an id was
-// minted in the moment of the block that holds it.
-function mayHold(table: Table, id: string) {
-  if (table.moved.has(id)) return true;
-
+// Whether a commit here already minted in an id's moment.
+function holdsMoment(table: Table, id: string) {
   const block = floor(table, id);
   return block !== undefined && momentOf(block[1]) === momentOf(id);
+}
+
+// Whether this head can hold an id at all, known without fetching anything: it was
+// moved into a block here, or it lies in a run of new holons a block here holds. A
+// block without a count is known only by the moment it was minted in.
+function mayHold(table: Table, id: string) {
+  if (table.moved.has(id)) return true;
+  if (!holdsMoment(table, id)) return false;
+
+  const [, first, count] = floor(table, id)!;
+  return count === undefined || decode(id.slice(9)) < decode(first.slice(9)) + count;
 }
 
 // ---- Reading
@@ -208,12 +249,13 @@ async function readRef(files: Files) {
 // it is a commit that never finished, and was never part of this store.
 async function tableFromVolume(lines: string[], head: string) {
   let table = emptyTable();
-  let parent: string | null = null;
+  let before: string | null = null;
 
   for (const [i, text] of lines.entries()) {
     const line: Line = JSON.parse(text);
 
-    if (i > 0 && line.parent !== parent) throw new Error(`the log breaks at line ${i} of its open volume`);
+    const named = predecessorOf(line);
+    if (i > 0 && named !== before) throw new Error(`the log breaks at line ${i} of its open volume`);
 
     if (i === 0) {
       if (!line.checkpoint) throw new Error("the open log volume has no checkpoint");
@@ -222,9 +264,9 @@ async function tableFromVolume(lines: string[], head: string) {
       apply(table, line);
     }
 
-    parent = await sha(text);
+    before = await sha(text);
 
-    if (parent === head) return { table: sortBlocks(table), length: i + 1 };
+    if (before === head) return { table: sortBlocks(table), length: i + 1 };
   }
 
   throw new Error("the ref names no line of its volume");
@@ -311,18 +353,18 @@ export async function openStore(files: Files, blocks = new Map<string, Promise<M
     const entries: { text: string; hash: string; line: Line }[] = [];
     if (!ref) return entries;
 
-    let parent: string | null = null;
+    let before: string | null = null;
 
     for (let volume = 0; volume <= ref.volume; volume++) {
       for (const text of await readLines(files, volume)) {
         const line: Line = JSON.parse(text);
 
-        if (line.parent !== parent) throw new Error(`the log breaks in volume ${volume}`);
+        if (predecessorOf(line) !== before) throw new Error(`the log breaks in volume ${volume}`);
 
-        parent = await sha(text);
-        entries.push({ text, hash: parent, line });
+        before = await sha(text);
+        entries.push({ text, hash: before, line });
 
-        if (parent === ref.head) return entries;
+        if (before === ref.head) return entries;
       }
     }
 
@@ -330,13 +372,16 @@ export async function openStore(files: Files, blocks = new Map<string, Promise<M
   }
 
   const log = async (): Promise<LogEntry[]> =>
-    (await fullLog()).map(({ hash, line: { at, says, blocks, gone } }) => ({
-      hash,
-      at,
-      says,
-      blocks: blocks ?? [],
-      gone: gone ?? [],
-    }));
+    Promise.all(
+      (await fullLog()).map(async ({ hash, line }) => ({
+        hash,
+        act: await actHash(line),
+        at: line.at,
+        says: line.says,
+        blocks: ownBlocks(line),
+        gone: line.gone ?? [],
+      })),
+    );
 
   // Every version of a holon, newest first, following prev. Only when asked.
   async function versions(id: string) {
@@ -432,13 +477,16 @@ async function mustBeCurrent(store: Store) {
   if ((ref?.head ?? null) !== store.head) throw new Error("the store moved since it was opened");
 }
 
-async function appendLine(store: Store, fields: Pick<Line, "at" | "blocks" | "gone" | "says">) {
+// Writes a store's line, past its ref, and gives what publishes it: the ref moved to
+// it, and the store it made. What a commit that never finished left past the ref is
+// written over.
+async function writeLine(store: Store, fields: Pick<Line, "at" | "blocks" | "gone" | "says" | "own">) {
   const open = store.head ? await readLines(store.files, store.volume) : [];
   const kept = open.slice(0, store.openLines);
   const grown = kept.slice(1).reduce((size, text) => size + encoded(text).length + 1, 0);
   const opensVolume = !store.head || grown >= blockSize;
   const volume = !store.head ? 0 : opensVolume ? store.volume + 1 : store.volume;
-  const line: Line = { ...fields, parent: store.head };
+  const line: Line = { ...fields, predecessor: store.head };
 
   if (opensVolume) {
     const state = tableOf(store.table);
@@ -453,15 +501,15 @@ async function appendLine(store: Store, fields: Pick<Line, "at" | "blocks" | "go
 
   const text = canonical(line);
 
-  // What a commit that never finished left past the ref is written over.
   if (opensVolume) await store.files.write(logPath(volume), `${text}\n`);
   else if (open.length > kept.length)
     await store.files.write(logPath(volume), `${[...kept, text].join("\n")}\n`);
   else await store.files.append(logPath(volume), `${text}\n`);
 
-  await store.files.write("refs/main", `${await sha(text)} ${volume}\n`);
-
-  return openStore(store.files, store.blocks);
+  return async () => {
+    await store.files.write("refs/main", `${await sha(text)} ${volume}\n`);
+    return openStore(store.files, store.blocks);
+  };
 }
 
 // Cuts what a commit writes into blocks, none past the block size unless one line is.
@@ -487,43 +535,37 @@ function cut<T extends { text: string }>(lines: T[]) {
   return pieces;
 }
 
-// Adds one commit and gives the store it made: each holon a new version pointing
-// back at the block before. Nothing written before is touched, and the ref moves last.
-export async function commit(
-  store: Store,
-  { holons, says, at = new Date().toISOString(), gone = [] }: Commit,
-) {
-  await mustBeCurrent(store);
+export type Given = { store: Store; holons: Holon[] };
 
-  if (new Set(holons.map(({ id }) => id)).size !== holons.length)
-    throw new Error("one holon is written twice in one commit");
+export type Act = { says: string; at?: string; gone?: string[]; born?: string[] };
 
-  const places = await Promise.all(
-    holons.map(async (holon) => ({ holon, was: await store.lastVersion(holon.id) })),
-  );
-  const born = places
-    .filter(({ was }) => !was)
+// Writes one store's share of an act into its blocks: in this store, the act's new
+// holons it keeps, as far as they run one after another, are its own run; whatever else
+// it keeps arrives, moved, pointing back at the block before here, if any.
+type Place = { holon: Holon; was: Latest | null };
+
+async function writeBlocks(store: Store, places: Place[], minted: ReadonlySet<string>) {
+  const mine = places
+    .filter(({ holon, was }) => !was && minted.has(holon.id))
     .map(({ holon }) => holon)
     .sort(byId(({ id }) => id));
-  const edited = places.filter(({ was }) => was);
-
-  born.forEach(({ id }, i) => {
-    if (i > 0 && id !== nextId(born[i - 1]!.id)) {
-      throw new Error(`new ids are not one run: ${born[i - 1]!.id} then ${id}`);
-    }
-  });
-
-  if (born.length && mayHold(store.table, born[0]!.id)) {
-    throw new Error(`another commit holds the moment of ${born[0]!.id}: mint again`);
+  const run: Holon[] = [];
+  for (const holon of mine) {
+    if (run.length && holon.id !== nextId(run.at(-1)!.id)) break;
+    run.push(holon);
   }
 
+  const inRun = new Set(run.map(({ id }) => id));
+
   const lines = [
-    ...born.map((holon) => ({ id: holon.id, isNew: true, text: canonical({ ...holon, prev: null }) })),
-    ...edited.map(({ holon, was }) => ({
-      id: holon.id,
-      isNew: false,
-      text: canonical({ ...holon, prev: was!.block }),
-    })),
+    ...run.map((holon) => ({ id: holon.id, isNew: true, text: canonical({ ...holon, prev: null }) })),
+    ...places
+      .filter(({ holon }) => !inRun.has(holon.id))
+      .map(({ holon, was }) => ({
+        id: holon.id,
+        isNew: false,
+        text: canonical({ ...holon, prev: was?.block ?? null }),
+      })),
   ];
 
   const entries: BlockEntry[] = [];
@@ -546,17 +588,105 @@ export async function commit(
     });
   }
 
-  const taken = (await Promise.all(gone.map(async (id) => ((await store.read(id)) ? id : null))))
-    .filter((id): id is string => id !== null)
-    .sort();
-
-  const next = await appendLine(store, { at, blocks: entries, gone: taken, says });
-
-  return { store: next, commit: next.head!, blocks: entries.length, bytes };
+  return { entries, bytes };
 }
 
-// What a commit says, apart from where it stands in a log.
-const sayingOf = ({ at, blocks, gone, says }: Line) => canonical({ at, blocks, gone, says });
+// One act, one commit in every store it touches, given each store and the holons it
+// keeps. Its new holons are those named born, or else every one no store given holds,
+// and they are one run, minted together in a moment no store has used. Every block is
+// written to every store, then each store's line, then each ref, so an act cut short
+// after its blocks published nothing. Gone takes a holon out of every store that holds it.
+export async function act(given: Given[], { says, at = new Date().toISOString(), gone = [], born }: Act) {
+  if (new Set(given.map(({ store }) => store.files)).size !== given.length)
+    throw new Error("one store is given twice in one act");
+
+  for (const { store, holons } of given) {
+    await mustBeCurrent(store);
+
+    if (new Set(holons.map(({ id }) => id)).size !== holons.length)
+      throw new Error("one holon is written twice in one store");
+  }
+
+  // Where each holon stood in each store given: its version there, if any.
+  const placed = await Promise.all(
+    given.map(({ store, holons }) =>
+      Promise.all(holons.map(async (holon) => ({ holon, was: await store.lastVersion(holon.id) }))),
+    ),
+  );
+  const places = placed.flat();
+  const kept = new Set(places.filter(({ was }) => was).map(({ holon }) => holon.id));
+  const minted = [
+    ...new Set(born ?? places.map(({ holon }) => holon.id).filter((id) => !kept.has(id))),
+  ].sort();
+
+  minted.forEach((id, i) => {
+    if (i > 0 && id !== nextId(minted[i - 1]!))
+      throw new Error(`new ids are not one run: ${minted[i - 1]} then ${id}`);
+  });
+
+  if (minted.length && given.some(({ store }) => holdsMoment(store.table, minted[0]!)))
+    throw new Error(`another commit holds the moment of ${minted[0]}: mint again`);
+
+  const mintedSet = new Set(minted);
+  const written: Awaited<ReturnType<typeof writeBlocks>>[] = [];
+  for (const [i, { store }] of given.entries()) written.push(await writeBlocks(store, placed[i]!, mintedSet));
+
+  const holding = await Promise.all(
+    given.map(async ({ store }) =>
+      (await Promise.all(gone.map(async (id) => ((await store.read(id)) ? id : null)))).filter(
+        (id): id is string => id !== null,
+      ),
+    ),
+  );
+  const taken = [...new Set(holding.flat())].sort();
+
+  const touched = given.map(
+    (_, i) => given.length === 1 || written[i]!.entries.length > 0 || holding[i]!.length > 0,
+  );
+  if (!touched.some(Boolean))
+    throw new Error("the act touches no store: it writes nothing and takes nothing out");
+
+  const several = touched.filter(Boolean).length > 1;
+
+  const blocks = [
+    ...new Map(written.flatMap(({ entries }) => entries).map((entry) => [canonical(entry), entry])).values(),
+  ].sort(byId(({ hash }) => hash));
+  const content = { at, blocks, gone: taken, says };
+
+  const publish = [];
+  for (const [i, { store }] of given.entries()) {
+    if (!touched[i]) continue;
+
+    const own = several ? { own: written[i]!.entries.map(({ hash }) => hash).sort() } : {};
+    publish.push({ i, moveRef: await writeLine(store, { ...content, ...own }) });
+  }
+
+  const stores = given.map(({ store }) => store);
+  for (const { i, moveRef } of publish) stores[i] = await moveRef();
+
+  return {
+    stores,
+    act: await sha(sayingOf(content)),
+    blocks: written.reduce((sum, { entries }) => sum + entries.length, 0),
+    bytes: written.reduce((sum, { bytes }) => sum + bytes, 0),
+  };
+}
+
+// Adds one commit to one store and gives the store it made: an act that touches it alone.
+export async function commit(store: Store, change: Commit) {
+  const done = await act([{ store, holons: change.holons }], change);
+  const next = done.stores[0]!;
+
+  return { store: next, commit: next.head!, act: done.act, blocks: done.blocks, bytes: done.bytes };
+}
+
+// What a commit says, apart from where it stands in a log: the act, the same in every
+// store it touched, and in a line written before 2026-11-11.
+const sayingOf = ({ at, blocks, gone, says }: Pick<Line, "at" | "blocks" | "gone" | "says">) =>
+  canonical({ at, blocks, gone, says });
+
+// The act a line is, named by its hash.
+export const actHash = (line: Pick<Line, "at" | "blocks" | "gone" | "says">) => sha(sayingOf(line));
 
 // Lands another copy's commits on this store: its blocks copied as they are, its log
 // lines chained on again. Nothing in a block changes, so no id or reference does. A
@@ -584,9 +714,9 @@ export async function land(store: Store, other: Store) {
   const onlyOurs = oursSince.filter((line) => !saidThere.has(sayingOf(line)));
   const incoming = theirsSince.filter((line) => !saidHere.has(sayingOf(line)));
 
-  const changes = (line: Line) => [...line.blocks.flatMap((block) => block.moved), ...line.gone];
+  const changes = (line: Line) => [...ownBlocks(line).flatMap((block) => block.moved), ...line.gone];
   const moments = (line: Line) =>
-    line.blocks.flatMap((block) => (block.first ? [momentOf(block.first)] : []));
+    ownBlocks(line).flatMap((block) => (block.first ? [momentOf(block.first)] : []));
 
   const touched = new Set(onlyOurs.flatMap(changes));
   const minted = new Set(onlyOurs.flatMap(moments));
@@ -600,14 +730,17 @@ export async function land(store: Store, other: Store) {
   let at = store;
 
   for (const line of incoming) {
-    for (const { hash } of line.blocks) {
+    for (const { hash } of ownBlocks(line)) {
       const bytes = await other.files.read(blockPath(hash));
       if (!bytes) throw new Error(`block ${hash} is missing from the other copy`);
 
       await store.files.write(blockPath(hash), bytes);
     }
 
-    at = await appendLine(at, { at: line.at, blocks: line.blocks, gone: line.gone, says: line.says });
+    const own = line.own ? { own: line.own } : {};
+    at = await (
+      await writeLine(at, { at: line.at, blocks: line.blocks, gone: line.gone, says: line.says, ...own })
+    )();
   }
 
   return { landed: incoming.length, store: at };

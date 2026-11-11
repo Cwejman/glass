@@ -120,7 +120,7 @@
   {
     "name": "log",
     "native": "log",
-    "says": "The commits of the store whose key is given, each when, what it says, and its hash.",
+    "says": "The commits of the store whose key is given, each when, what it says, its hash, and the hash of the act it is, the same in every store the act touched.",
     "takes": ["key"]
   },
   {

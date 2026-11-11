@@ -321,7 +321,7 @@ export function kernel(context: Context) {
     out: ([holon]) => edgesOut(holon),
     says: ([holon]) => (holonOf(holon) ? says((holon as Ref).$ref) : null),
     log: ([store]) =>
-      (context.logs?.get(String(store)) ?? []).map(({ at, says, hash }) => ({ at, says, hash })),
+      (context.logs?.get(String(store)) ?? []).map(({ at, says, hash, act }) => ({ at, says, hash, act })),
     since: ([store, moment]) => {
       const written = new Set(
         (context.logs?.get(String(store)) ?? []).filter(({ at }) => at > String(moment)).flatMap(writtenBy),
