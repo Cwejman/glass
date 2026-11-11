@@ -35,6 +35,7 @@ if (act === "open") {
   const cycle = {
     id,
     instance: [typeNamed("cycle")],
+    name: step,
     body: { step, purpose, began: now, said: [], stands: "running" },
   };
 
