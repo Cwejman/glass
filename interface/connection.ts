@@ -1,5 +1,7 @@
-// The interface's end of the one protocol: requests to the engine's thread, each
-// answered once, and subscriptions answered again whenever what they read changes.
+// The interface's end of the one protocol: requests to the engine, each answered once,
+// and subscriptions answered again whenever what they read changes. The engine is
+// reached through a port: its own thread in the browser, or a socket to an engine running
+// elsewhere, as one on this machine.
 
 import type { Change, Committed } from "../engine/engine.ts";
 import type { Message, Reply, Request } from "../engine/protocol.ts";
@@ -9,12 +11,38 @@ export type Subscription<T> = { value: T; close: () => void };
 
 export type Connection = ReturnType<typeof connect>;
 
-export function connect(worker: Worker) {
+// What carries the protocol: a message sent, and each message that comes back.
+export type Port = {
+  postMessage(message: Message): void;
+  onmessage: ((event: MessageEvent<Reply>) => void) | null;
+};
+
+// A socket to an engine at an address, as a port: what is sent before it opens waits.
+export function socketPort(url: string): Port {
+  const socket = new WebSocket(url);
+  const waiting: string[] = [];
+  const port: Port = {
+    postMessage(message) {
+      const text = JSON.stringify(message);
+      if (socket.readyState === WebSocket.OPEN) socket.send(text);
+      else waiting.push(text);
+    },
+    onmessage: null,
+  };
+
+  socket.onopen = () => waiting.splice(0).forEach((text) => socket.send(text));
+  socket.onmessage = ({ data }) =>
+    port.onmessage?.(new MessageEvent("message", { data: JSON.parse(String(data)) }));
+
+  return port;
+}
+
+export function connect(worker: Port) {
   let next = 1;
   const waiting = new Map<number, { resolve: (value: unknown) => void; reject: (error: Error) => void }>();
   const listeners = new Map<number, (value: unknown) => void>();
 
-  worker.onmessage = ({ data }: MessageEvent<Reply>) => {
+  worker.onmessage = ({ data }) => {
     if ("subscription" in data) {
       listeners.get(data.subscription)?.(data.value);
       return;
