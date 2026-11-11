@@ -12,8 +12,9 @@ import { answeringOf, storeIndexesOf } from "./kernel.ts";
 
 // What a store's index answers, held against an index built fresh from the same field.
 function answersAsFresh(all: Everything, key: string) {
-  const own = all.held.get(key)!.filter((each) => all.known.get(each.holon.id) === each);
-  const fresh = indexOf(own, mouldIn(all.known));
+  const held = all.held.get(key)!;
+  const also = new Set(held.filter((each) => all.known.get(each.holon.id) !== each));
+  const fresh = indexOf(held, mouldIn(all.known), also);
   const carried = storeIndexesOf(all).get(key)!;
 
   for (const asked of [

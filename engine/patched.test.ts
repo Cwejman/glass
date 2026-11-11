@@ -12,10 +12,11 @@ import { howIndexed, storeIndexesOf } from "./kernel.ts";
 
 // Everything asked of an index, each order and the words, held against a fresh index.
 function answersAsFresh(all: Everything, key: string) {
-  const own = all.held.get(key)!.filter((each) => all.known.get(each.holon.id) === each);
-  const fresh = indexOf(own, mouldIn(all.known));
+  const held = all.held.get(key)!;
+  const also = new Set(held.filter((each) => all.known.get(each.holon.id) !== each));
+  const fresh = indexOf(held, mouldIn(all.known), also);
   const index = storeIndexesOf(all).get(key)!;
-  const ids = own.map(({ holon }) => holon.id);
+  const ids = held.map(({ holon }) => holon.id);
 
   const asked: Asked[] = [
     {},

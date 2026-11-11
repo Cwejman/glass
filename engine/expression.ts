@@ -38,7 +38,14 @@ export type Everything = {
   held: ReadonlyMap<string, readonly Known[]>;
   // Each store's index as last made, handed from field to field.
   shelf: Shelf;
+  // Every store a holon is kept in, where it is kept in more than one, in the order they
+  // are attached; there is nothing first about it.
+  residences: ReadonlyMap<string, readonly string[]>;
 };
+
+// Every store a holon resides in.
+export const storesOf = (all: Everything, id: string): readonly string[] =>
+  all.residences.get(id) ?? [all.known.get(id)!.store];
 
 export type Holder = { from: string; key: string; holds: boolean };
 
@@ -65,7 +72,17 @@ export function everythingOf(
     }
   }
 
-  return { known, holders, held, shelf };
+  const residences = new Map<string, string[]>();
+  for (const [key, list] of held)
+    for (const each of list) {
+      const read = known.get(each.holon.id);
+      if (read === each) continue;
+      const stores = residences.get(each.holon.id) ?? [read!.store];
+      if (!stores.includes(key)) stores.push(key);
+      residences.set(each.holon.id, stores);
+    }
+
+  return { known, holders, held, shelf, residences };
 }
 
 const nesting = 32;
@@ -218,7 +235,7 @@ function valuesAlong(all: Everything, id: string, axis: Axis) {
   const known = all.known.get(id)!;
 
   if (axis === "type") return known.holon.instance;
-  if (axis === "store") return [known.store];
+  if (axis === "store") return storesOf(all, id);
 
   return [...new Set((all.holders.get(id) ?? []).filter(({ holds }) => holds).map(({ from }) => from))];
 }

@@ -22,7 +22,7 @@
 
 import { canonical } from "../integrations/glass/canonical.ts";
 import { writtenBy, type LogEntry } from "../integrations/glass/store.ts";
-import type { Everything, Known } from "./expression.ts";
+import { storesOf, type Everything, type Known } from "./expression.ts";
 import {
   answeringAll,
   indexOf,
@@ -312,8 +312,8 @@ export function kernel(context: Context) {
       return keep((id) => known.get(id)!.holon.instance.some((type) => wanted.has(type)));
     },
     types: () => keep((id) => known.get(id)!.holon.mould !== undefined),
-    store: ([key]) => keep((id) => known.get(id)!.store === key),
-    stores: () => [...new Set([...known.values()].map(({ store }) => store))],
+    store: ([key]) => keep((id) => storesOf(all, id).includes(String(key))),
+    stores: () => [...new Set([...known.keys()].flatMap((id) => storesOf(all, id)))],
     children: along("down", true),
     parents: along("up", true),
     points: along("down", false),
@@ -345,7 +345,7 @@ export function kernel(context: Context) {
         (context.logs?.get(String(store)) ?? []).filter(({ at }) => at > String(moment)).flatMap(writtenBy),
       );
 
-      return keep((id) => written.has(id) && known.get(id)!.store === store);
+      return keep((id) => written.has(id) && storesOf(all, id).includes(String(store)));
     },
 
     // How a set is looked at, which the engine reads by its shape; worked out, each
@@ -720,17 +720,16 @@ const versionOf = (known: Known): Version => known.block ?? known;
 const typeVersionOf = (known: Known | undefined): Version | undefined =>
   known && (known.block === undefined ? known : `${known.store}\u0000${known.block}`);
 
-// A store's index, kept beside what it was made of: each holon it was made of by its
-// version, each type they are read through by its version, and the holons another store
-// claimed first. Kept by the key the store is attached by on a shelf each field hands to
-// the next, so a store a commit changed is patched from the index before it. The shelf
-// is the one thing a read writes: what it keeps is worked out, never said, so an old
-// field asked late leaves only a longer patch for the next.
+// A store's index, kept beside what it was made of: each holon it keeps by its version,
+// and each type they are read through by its version. Kept by the key the store is
+// attached by on a shelf each field hands to the next, so a store a commit changed is
+// patched from the index before it. The shelf is the one thing a read writes: what it
+// keeps is worked out, never said, so an old field asked late leaves only a longer patch
+// for the next.
 export type Kept = {
   index: Index;
   versions: ReadonlyMap<string, Version>;
   types: ReadonlyMap<string, Version | undefined>;
-  claimedElsewhere: string;
 };
 
 export type Shelf = Map<string, Kept>;
@@ -749,12 +748,16 @@ export function howIndexed(all: Everything): ReadonlyMap<string, Made> {
 // costs a little for each holon it says again, and copies every order once.
 const mostPatched = 1 / 4;
 
-// A store's holons as an index is made of them: those it claims first, each by its
-// version, and the types they are read through; and, against what was kept, the holons
-// to be said again: those whose version changed, came or went, or whose type changed.
+// A holon a store keeps where the field reads another store's copy: said here only as
+// kept here, so its version here is only that.
+const keptHere = "kept here, read from another store";
+
+// A store's holons as an index is made of them: each by its version, those the field
+// reads from another store apart, and the types its own are read through; and, against
+// what was kept, the holons to be said again: those whose version changed, came or went,
+// or whose type changed.
 function changesOf(held: Held, all: Everything, kept: Kept | undefined) {
-  const own: Known[] = [];
-  const claimedElsewhere: string[] = [];
+  const also = new Set<Known>();
   const versions = new Map<string, Version>();
   const types = new Map<string, Version | undefined>();
   const dirty = new Set<string>();
@@ -763,16 +766,14 @@ function changesOf(held: Held, all: Everything, kept: Kept | undefined) {
 
   for (const each of held) {
     const id = each.holon.id;
-    if (all.known.get(id) !== each) {
-      claimedElsewhere.push(id);
-      continue;
-    }
+    const readHere = all.known.get(id) === each;
 
-    own.push(each);
-    for (const type of each.holon.instance)
-      if (!types.has(type)) types.set(type, typeVersionOf(all.known.get(type)));
+    if (readHere) {
+      for (const type of each.holon.instance)
+        if (!types.has(type)) types.set(type, typeVersionOf(all.known.get(type)));
+    } else also.add(each);
 
-    const version = versionOf(each);
+    const version = readHere ? versionOf(each) : keptHere;
     versions.set(id, version);
     const was = kept?.versions.get(id);
     if (was !== undefined) stillHeld++;
@@ -785,30 +786,32 @@ function changesOf(held: Held, all: Everything, kept: Kept | undefined) {
 
     const changedTypes = new Set([...types].filter(([id, version]) => kept.types.get(id) !== version).map(([id]) => id));
     if (changedTypes.size)
-      for (const { holon } of own) if (holon.instance.some((type) => changedTypes.has(type))) dirty.add(holon.id);
+      for (const each of held)
+        if (!also.has(each) && each.holon.instance.some((type) => changedTypes.has(type))) dirty.add(each.holon.id);
   }
 
-  return { own, dirty, versions, types, claimedElsewhere: claimedElsewhere.join(" ") };
+  return { also, dirty, versions, types };
 }
 
 function storeIndex(key: string, held: Held, all: Everything): { index: Index; how: Made } {
   const kept = all.shelf.get(key);
-  const { own, dirty, versions, types, claimedElsewhere } = changesOf(held, all, kept);
+  const { also, dirty, versions, types } = changesOf(held, all, kept);
+  const mould = mouldsIn(all.known);
 
   const keep = (index: Index, how: Made) => {
-    all.shelf.set(key, { index, versions, types, claimedElsewhere });
+    all.shelf.set(key, { index, versions, types });
     return { index, how };
   };
 
-  if (!kept) return keep(indexOf(own, mouldsIn(all.known)), "fresh");
+  if (!kept) return keep(indexOf(held, mould, also), "fresh");
   if (!dirty.size) return keep(kept.index, "kept");
 
   const patched =
-    dirty.size <= Math.max(own.length, kept.versions.size) * mostPatched
-      ? patchedIndex(kept.index, own, dirty, mouldsIn(all.known))
+    dirty.size <= Math.max(held.length, kept.versions.size) * mostPatched
+      ? patchedIndex(kept.index, held, also, dirty, mould)
       : undefined;
 
-  return patched ? keep(patched, "patched") : keep(indexOf(own, mouldsIn(all.known)), "fresh");
+  return patched ? keep(patched, "patched") : keep(indexOf(held, mould, also), "fresh");
 }
 
 // Each store's index, by the key it is attached by.

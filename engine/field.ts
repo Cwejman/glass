@@ -80,7 +80,8 @@ export function fieldOf(stores: readonly Attached[], before?: Field): Field {
     const held = await Promise.all(stores.map(({ key }) => storeHolons(key)));
     const known = new Map<string, Known>();
 
-    // A holon two stores claim is the first's, as when one is read alone.
+    // A holon kept in several stores is one holon, read from the first that gives it, so
+    // its version is the same block wherever it is kept in both; it resides in each.
     for (const each of held.flat()) if (!known.has(each.holon.id)) known.set(each.holon.id, each);
 
     return everythingOf(known, new Map(stores.map(({ key }, i) => [key, held[i]!])), shelf);

@@ -537,7 +537,7 @@ describe("the engine", () => {
     expect(await engine.read({ named: "A note", store: "pulled" })).toEqual([note]);
   });
 
-  test("the first store to hold a holon is the one read, in everything as in one", async () => {
+  test("a holon two stores keep is read from the first, and resides in both", async () => {
     const pulled = await pulledStore();
     const other = await pulledStore();
     const engine = startEngine([{ key: "home", store: await openStore(memoryFiles()), write: true }]);
@@ -548,7 +548,8 @@ describe("the engine", () => {
     expect((await engine.read({ holon: note }))?.store).toBe("first");
     expect(await engine.read({ named: "A note", store: "second" })).toEqual([note]);
     expect((await engine.read({ gather: call("store", "first") })).length).toBe(pulledHolons.length);
-    expect((await engine.read({ gather: call("store", "second") })).length).toBe(0);
+    // It resides in both, none first: read from the first, found in each.
+    expect((await engine.read({ gather: call("store", "second") })).length).toBe(pulledHolons.length);
   });
 
   test("the field changes with a commit, and listeners hear of it", async () => {

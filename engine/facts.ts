@@ -53,13 +53,16 @@ export const valueKey = (value: FactValue) => (isRef(value) ? value.$ref : `${ty
 // A fact's value's key, kept or said.
 export const keyOfFact = (fact: Fact) => fact.k ?? valueKey(fact.v);
 
+// That a holon is kept in a store.
+const storeFact = (e: string, store: string): Fact => ({ e, a: "store", v: store, k: valueKey(store) });
+
 // The facts one holon says, given the moulds of what it is.
 export function factsOf(holon: Holon, store: string, mould: Mould): Fact[] {
   const e = holon.id;
   const facts: Fact[] = [
     ...holon.instance.map((type) => ({ e, a: "instance", v: { $ref: type }, k: type })),
     ...(holon.name !== undefined ? [{ e, a: "name", v: holon.name, k: valueKey(holon.name) }] : []),
-    { e, a: "store", v: store, k: valueKey(store) },
+    storeFact(e, store),
   ];
 
   for (const { id, key, holds } of references(holon.body, mould)) {
@@ -139,9 +142,18 @@ function ordered(facts: readonly Fact[]) {
   return { byHolon, byHolonKey, byKey, byKeyValue, byRef };
 }
 
+// What one holon a store keeps says there: all it says, or, where another store's copy
+// of it is the one the field reads, only that it is kept here too, so it is said once.
+const saidHere = (each: Known, mouldFor: (holon: Holon) => Mould, also: ReadonlySet<Known>) =>
+  also.has(each) ? [storeFact(each.holon.id, each.store)] : factsOf(each.holon, each.store, mouldFor(each.holon));
+
 // A store's index of its facts.
-export function indexOf(held: readonly Known[], mouldFor: (holon: Holon) => Mould): Index {
-  const facts = held.flatMap(({ holon, store }) => factsOf(holon, store, mouldFor(holon)));
+export function indexOf(
+  held: readonly Known[],
+  mouldFor: (holon: Holon) => Mould,
+  also: ReadonlySet<Known> = new Set(),
+): Index {
+  const facts = held.flatMap((each) => saidHere(each, mouldFor, also));
   const ids = held.map(({ holon }) => holon.id);
 
   return answering({ ids, byId: inIdOrder(ids), count: facts.length, ...ordered(facts), spoken: new Map() });
@@ -358,6 +370,7 @@ function patchedWords(words: Words, a: string, dirty: ReadonlySet<string>, order
 export function patchedIndex(
   before: Index,
   held: readonly Known[],
+  also: ReadonlySet<Known>,
   dirty: ReadonlySet<string>,
   mouldFor: (holon: Holon) => Mould,
 ): Index | undefined {
@@ -366,7 +379,7 @@ export function patchedIndex(
   if (!old.byId || !inIdOrder(ids)) return undefined;
 
   const now = held.filter(({ holon }) => dirty.has(holon.id));
-  const added = now.flatMap(({ holon, store }) => factsOf(holon, store, mouldFor(holon)));
+  const added = now.flatMap((each) => saidHere(each, mouldFor, also));
   const removed = [...dirty].flatMap((e) => old.byHolon.get(e) ?? []);
 
   const byHolon = new Map(old.byHolon);
