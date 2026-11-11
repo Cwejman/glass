@@ -113,14 +113,19 @@ const byPlace = (fn: Definition) =>
 
 // A function of one's own's expression, each argument it names given in.
 function substituted(expression: Expression, given: Argument[]): Expression {
+  // Only a call and an argument are worked into; a list is gone through, and anything
+  // else, a pattern's variable, a record or a value, stands as it is.
   const inner = (value: Argument): Argument => {
-    if (typeof value === "string" || "$ref" in value) return value;
+    if (Array.isArray(value)) return value.map(inner) as unknown as Argument;
+    if (typeof value !== "object" || value === null || "$ref" in value) return value;
 
     if ("arg" in value) {
       const argument = given[value.arg];
       if (argument === undefined) throw new Error(`there is no argument ${value.arg + 1}`);
       return argument;
     }
+
+    if (!("call" in value)) return value;
 
     return { call: value.call, ...(value.with ? { with: value.with.map(inner) } : {}) };
   };

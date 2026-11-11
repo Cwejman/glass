@@ -725,6 +725,17 @@ describe("the real stores", async () => {
 
   const wikiRoot = "The primitives";
 
+  test("a function of one's own that holds a pattern gathers as the interface asks it", async () => {
+    const [awaiting] = await engine.read({ named: "awaiting", store: "main" });
+    const asked = { call: { $ref: awaiting! } };
+
+    const gathered = await engine.read({ gather: asked });
+    const level = await engine.read({ level: asked });
+
+    expect(gathered.length).toBeGreaterThan(0);
+    expect(level).toEqual(gathered);
+  });
+
   test("every holon judged sound against its types", async () => {
     const all = await fieldOf(Object.entries(opened).map(([key, store]) => ({ key, store }))).everything();
     const wrong: string[] = [];

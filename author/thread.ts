@@ -6,7 +6,7 @@
 // A list of what to do, each one of:
 //   { "name": "...", "asks": "...", "stands": "open",
 //     "raised": { "session": "its name, or its start", "order": 9, "words": "a phrase it says" },
-//     "touches": ["a brief's id"] }                      a thread raised; words narrow it to
+//     "touches": ["a brief's id"], "awaits": true }    awaits: it waits on the author                      a thread raised; words narrow it to
 //                                                         the sentences that say them
 //   { "move": "its name", "stands": "leaning", "asks": "..." }   where one stands, said again
 //   { "says": "..." }                                     what the commit says of itself
@@ -20,8 +20,9 @@ type Raise = {
   stands: string;
   raised: { session: string; order: number; words?: string };
   touches?: string[];
+  awaits?: boolean;
 };
-type Move = { move: string; stands: string; asks?: string };
+type Move = { move: string; stands: string; asks?: string; awaits?: boolean };
 type Step = Raise | Move | { says: string };
 
 const ref = (id: string) => ({ $ref: id });
@@ -80,10 +81,14 @@ for (const step of steps) {
     const was = threadNamed(step.move);
     if (!was) throw new Error(`no thread named ${step.move}`);
 
-    moved.push({
-      ...was,
-      body: { ...was.body, stands: step.stands, ...(step.asks ? { asks: step.asks } : {}) },
-    });
+    const body: Holon["body"] = {
+      ...was.body,
+      stands: step.stands,
+      ...(step.asks ? { asks: step.asks } : {}),
+    };
+    if (step.awaits !== undefined) body.awaits = step.awaits;
+
+    moved.push({ ...was, body });
     continue;
   }
 
@@ -98,6 +103,7 @@ for (const step of steps) {
       raised: raisedIn(step.raised).map(ref),
       stands: step.stands,
       ...(step.touches?.length ? { touches: step.touches.map(ref) } : {}),
+      ...(step.awaits ? { awaits: true } : {}),
     },
   });
 }
