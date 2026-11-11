@@ -4,9 +4,7 @@ What the author has said and explored, and the tools that write it into the main
 
 - `session.ts`: adds a session as one commit: its voice, its utterances, the paths it noted and those it let go.
 - `append.ts`: adds one utterance to a session already kept, with any paths it notes.
-- `rewrite.ts`: rewrites briefs of the wiki as one commit, each keeping its id and its history; it also places, moves, mounts and lets go of briefs. A patch that writes prose says whose words they are: the author's stand as said, a session's are measured unratified, each paragraph by itself, until the author ratifies them.
-- `cycle.ts`: opens and closes a session's cycles, each a commit, the running one growing as utterances are kept.
-- `thread.ts`: raises threads and moves where they stand.
+- `rewrite.ts`: rewrites briefs of the wiki as one commit, each keeping its id and its history; it also places, moves, mounts and lets go of briefs.
 - `prose.ts`: the prose writer the others share, marked text into paragraphs, sentences and words.
 
 Beside them stand two stores of the author's exploring: `paper/`, a paper on holonic systems as published with its licence, and as holons one to one, and `paper-readings/`, the readings built upon it. Each keeps its store in its own `.glass/`.

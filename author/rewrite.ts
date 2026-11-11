@@ -14,12 +14,6 @@
 //   { "resolves": ["id of a brief marked stale"] }
 // and what the commit says of itself:
 //   { "says": "..." }
-// and whose words it writes, which every patch that writes prose must say:
-//   { "by": "author" }                          the author's own, ratified as said
-//   { "by": "a session's name, or its start", "note": "..." }
-// What a session writes is its own until the author ratifies it: each paragraph it writes
-// anew is measured unratified, by the session's voice, with the note saying where it came
-// from, so ratification is said of the field as raising and measuring are.
 //
 // A flow lists, in order: a string, a new paragraph in marked prose; { "keep": i }, what
 // stood at place i of the old flow; { "keep": i, "change": [[from, to]] }, that paragraph
@@ -46,7 +40,6 @@ type Edit =
   | { move: string; under: string; after?: string }
   | { letGo: string }
   | { resolves: string[] }
-  | { by: string; note?: string }
   | { says: string };
 
 const held = (id: string) => ({ $ref: id, $holds: true });
@@ -64,10 +57,6 @@ const changed = new Set<Holon>();
 const replaced = new Set<string>();
 
 const refsOf = (list: unknown) => ((list ?? []) as { $ref: string }[]).map(({ $ref }) => $ref);
-
-// What the rewrite writes anew, as it is written: whose words they are is said at the end.
-const fresh: string[] = [];
-const freshly = (id: string) => (fresh.push(id), held(id));
 
 // A paragraph said again as marked prose: the same marks it holds, in words.
 function said(id: string): string {
@@ -88,11 +77,11 @@ function said(id: string): string {
 
 function flowOf(before: { $ref: string }[], flow: FlowItem[], name: string) {
   return flow.map((item) => {
-    if (typeof item === "string") return freshly(marked.paragraph(item));
+    if (typeof item === "string") return held(marked.paragraph(item));
     if ("code" in item)
-      return freshly(put("code", { text: item.code, ...(item.language ? { language: item.language } : {}) }));
+      return held(put("code", { text: item.code, ...(item.language ? { language: item.language } : {}) }));
     if ("list" in item)
-      return freshly(put("list", { items: item.list.map((text) => ({ $ref: marked.item(text) })) }));
+      return held(put("list", { items: item.list.map((text) => ({ $ref: marked.item(text) })) }));
     if ("mount" in item) {
       if (!byId.has(item.mount)) throw new Error(`${name} mounts ${item.mount}, which is not in the store`);
       return held(item.mount);
@@ -111,7 +100,7 @@ function flowOf(before: { $ref: string }[], flow: FlowItem[], name: string) {
       text = text.replace(from, () => to);
     }
 
-    return freshly(marked.paragraph(text));
+    return held(marked.paragraph(text));
   });
 }
 
@@ -137,7 +126,7 @@ function unplace(id: string) {
 }
 
 for (const edit of patch) {
-  if ("says" in edit || "by" in edit) continue;
+  if ("says" in edit) continue;
 
   if ("move" in edit) {
     unplace(edit.move);
@@ -194,33 +183,6 @@ for (const edit of patch) {
 
     changed.add(brief);
   }
-}
-
-// Whose words were written: the author's stand as said; a session's are measured
-// unratified, each paragraph by itself, until the author says otherwise.
-const [whose] = patch.flatMap((edit) => ("by" in edit ? [edit] : []));
-if (fresh.length && !whose) throw new Error("the patch writes prose and says not whose: add { by }");
-
-if (fresh.length && whose!.by !== "author") {
-  const typeNamed = (name: string) => holons.find((holon) => holon.name === name && holon.mould)!.id;
-  const sessions = holons.filter(
-    (holon) => holon.instance[0] === typeNamed("session") && (holon.name ?? "").startsWith(whose!.by),
-  );
-  if (sessions.length !== 1) throw new Error(`${sessions.length} sessions begin with ${whose!.by}`);
-
-  const measured = holons.find((holon) => holon.instance[0] === typeNamed("measures"))!;
-  const marks = fresh.map((paragraph) =>
-    put("measure", {
-      as: "unratified",
-      by: sessions[0]!.body.voice,
-      of: [{ $ref: paragraph }],
-      value: 2,
-      ...(whose!.note ? { note: whose!.note } : {}),
-    }),
-  );
-
-  measured.body.measures = [...measured.body.measures, ...marks.map((id) => ({ $ref: id }))];
-  changed.add(measured);
 }
 
 if (writer.lexiconGrew()) changed.add(writer.lexicon);
