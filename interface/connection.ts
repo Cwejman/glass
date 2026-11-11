@@ -18,21 +18,41 @@ export type Port = {
 };
 
 // A socket to an engine at an address, as a port: what is sent before it opens waits.
-export function socketPort(url: string): Port {
+// When it is lost, what was asked and never answered is answered that the engine is gone,
+// and whoever opened it is told whether it had ever opened.
+export function socketPort(url: string, lost: (opened: boolean) => void): Port {
   const socket = new WebSocket(url);
   const waiting: string[] = [];
+  const unanswered = new Set<number>();
+  let opened = false;
+
+  const told = (data: Reply) => port.onmessage?.(new MessageEvent("message", { data }));
   const port: Port = {
     postMessage(message) {
       const text = JSON.stringify(message);
+      unanswered.add(message.id);
       if (socket.readyState === WebSocket.OPEN) socket.send(text);
       else waiting.push(text);
     },
     onmessage: null,
   };
 
-  socket.onopen = () => waiting.splice(0).forEach((text) => socket.send(text));
-  socket.onmessage = ({ data }) =>
-    port.onmessage?.(new MessageEvent("message", { data: JSON.parse(String(data)) }));
+  socket.onopen = () => {
+    opened = true;
+    waiting.splice(0).forEach((text) => socket.send(text));
+  };
+
+  socket.onmessage = ({ data }) => {
+    const reply = JSON.parse(String(data)) as Reply;
+    if ("id" in reply) unanswered.delete(reply.id);
+    told(reply);
+  };
+
+  socket.onclose = () => {
+    for (const id of unanswered) told({ id, ok: false, error: `the engine at ${url} is gone` });
+    unanswered.clear();
+    lost(opened);
+  };
 
   return port;
 }

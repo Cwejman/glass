@@ -1,34 +1,17 @@
-import { join, normalize } from "node:path";
+import { join } from "node:path";
 import { storeFolder, stores, type StoreName } from "../stores.ts";
+import { host } from "./host.ts";
 
-// Serves the site as a static host would, on this machine only: the page and the
-// client from what was built, and each store live from its own folder, so what is
-// drawn is what the field holds now, not what it held when the site was built.
+// Serves the site on this machine: the page and the client from what was built, each
+// store live from its own folder, and one engine over them that the page mounts to, so
+// what is drawn is what the field holds now. The home is the host's own, kept beside the
+// site and never committed.
 
-const site = join(import.meta.dir, "dist");
-const port = Number(process.env.PORT ?? 4330);
-
-// Where a path is kept: a store's files in its folder, anything else in what was built.
-function fileOf(path: string) {
-  const [, first, name, ...rest] = path.split("/");
-
-  if (first === "stores" && name && Object.hasOwn(stores, name))
-    return Bun.file(join(storeFolder(name as StoreName), ...rest));
-
-  return Bun.file(join(site, path.endsWith("/") ? `${path}index.html` : path));
-}
-
-Bun.serve({
-  port,
-  hostname: "127.0.0.1",
-  async fetch(request) {
-    const path = normalize(decodeURIComponent(new URL(request.url).pathname));
-    const file = fileOf(path);
-    if (!path.startsWith("/") || path.includes("..") || !(await file.exists()))
-      return new Response("not here", { status: 404 });
-    return new Response(file, {
-      headers: { "access-control-allow-origin": "*", "cache-control": "no-cache" },
-    });
-  },
+const hosted = await host({
+  port: Number(process.env.PORT ?? 4330),
+  stores: Object.fromEntries((Object.keys(stores) as StoreName[]).map((name) => [name, storeFolder(name)])),
+  home: join(import.meta.dir, "home"),
+  site: join(import.meta.dir, "dist"),
 });
-console.log(`glass at http://127.0.0.1:${port}/`);
+
+console.log(`glass at ${hosted.url}, its engine at ${hosted.url}engine`);

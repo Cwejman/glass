@@ -50,6 +50,9 @@ export function serving(engine: Engine, { attach, send }: Serving) {
       case "unsubscribe":
         subscriptions.delete(message.subscription);
         return null;
+
+      default:
+        throw new Error(`the engine has no op ${(message as { op: unknown }).op}`);
     }
   }
 
