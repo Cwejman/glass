@@ -1,0 +1,7 @@
+{"body":{"from":"./stores/glass/","key":"glass"},"id":"1M75KJTEZD45000","instance":["1M72KWNBFNBG000"],"name":"glass","prev":null}
+{"body":{"from":"./stores/main/","key":"main"},"id":"1M75KJTEZD45001","instance":["1M72KWNBFNBG000"],"name":"main","prev":null}
+{"body":{"from":"./stores/paper/","key":"paper"},"id":"1M75KJTEZD45002","instance":["1M72KWNBFNBG000"],"name":"paper","prev":null}
+{"body":{"from":"./stores/paper-readings/","key":"paper-readings"},"id":"1M75KJTEZD45003","instance":["1M72KWNBFNBG000"],"name":"paper-readings","prev":null}
+{"body":{"attachments":[{"$holds":true,"$ref":"1M75KJTEZD45000"},{"$holds":true,"$ref":"1M75KJTEZD45001"},{"$holds":true,"$ref":"1M75KJTEZD45002"},{"$holds":true,"$ref":"1M75KJTEZD45003"}],"entry":{"$holds":false,"$ref":"1M6YD90YH1TJ00Z"},"says":"This project's site: what the page starts the engine from."},"id":"1M75KJTEZD45004","instance":[],"name":"start","prev":null}
+{"body":{"shape":{"$ref":"1M75HB35AC75003"}},"id":"1M75KJTEZD45005","instance":["1M75HB35AC75001"],"name":"glass","prev":null}
+{"body":{"contents":[{"$ref":"1M75KJTEZD45004"}],"dependencies":[{"$ref":"1M75KJTEZD45005"}],"shape":{"$ref":"1M75HB35AC75003"}},"id":"1M75KJTEZD45006","instance":["1M75HB35AC75002"],"name":"site","prev":null}

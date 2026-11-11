@@ -12,7 +12,7 @@ const port = Number(process.env.PORT ?? 4330);
 function fileOf(path: string) {
   const [, first, name, ...rest] = path.split("/");
 
-  if (first === "stores" && name && name in stores)
+  if (first === "stores" && name && Object.hasOwn(stores, name))
     return Bun.file(join(storeFolder(name as StoreName), ...rest));
 
   return Bun.file(join(site, path.endsWith("/") ? `${path}index.html` : path));

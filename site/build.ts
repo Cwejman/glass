@@ -9,6 +9,9 @@ import { storeFolder, stores, type StoreName } from "../stores.ts";
 const repo = join(import.meta.dir, "..");
 const dist = join(import.meta.dir, "dist");
 
+// The site's store is made first, so what is shipped starts from what the field holds.
+await import("./make.ts");
+
 rmSync(dist, { recursive: true, force: true });
 
 const built = await Bun.build({
@@ -25,11 +28,10 @@ const names = Object.keys(stores) as StoreName[];
 
 for (const name of names) cpSync(storeFolder(name), join(dist, "stores", name), { recursive: true });
 
-// The page names every store it ships, each at the address it is copied to.
+// The page names the site's store, which says what else to attach and what to boot into.
 const page = await Bun.file(join(import.meta.dir, "index.html")).text();
-if (!page.includes('data-stores=""')) throw new Error("site/index.html has no empty data-stores to fill");
-const named = names.map((name) => `${name}=./stores/${name}/`).join(" ");
+if (!page.includes('data-site=""')) throw new Error("site/index.html has no empty data-site to fill");
 
-await Bun.write(join(dist, "index.html"), page.replace('data-stores=""', `data-stores="${named}"`));
+await Bun.write(join(dist, "index.html"), page.replace('data-site=""', 'data-site="site=./stores/site/"'));
 
 for (const output of built.outputs) console.log(output.path.slice(repo.length + 1));

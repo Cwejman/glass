@@ -13,6 +13,7 @@ export const stores = {
   glass: "components",
   paper: "author/paper",
   "paper-readings": "author/paper-readings",
+  site: "site",
 } as const;
 
 export type StoreName = keyof typeof stores;

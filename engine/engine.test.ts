@@ -752,6 +752,19 @@ describe("the real stores", async () => {
 
   const wikiRoot = "The primitives";
 
+  test("the site's start offers every other store and names an entry in the field", async () => {
+    const [startId] = await engine.read({ named: "start", store: "site" });
+    const start = await engine.read({ holon: startId! });
+    const offered = (start!.body.attachments as { key: string }[]).map(({ key }) => key).sort();
+
+    expect(offered).toEqual(
+      Object.keys(opened)
+        .filter((key) => key !== "site")
+        .sort(),
+    );
+    expect((await engine.read({ holon: (start!.body.entry as { $ref: string }).$ref }))?.name).toBe("entry");
+  });
+
   test("every store has one root, and a store at its level is its root alone", async () => {
     const named = await Promise.all(
       (await engine.read({ named: "store", store: "glass" })).map((id) => engine.read({ holon: id })),
