@@ -46,6 +46,11 @@
         "list": "json"
       },
       "optional": true
+    },
+    "named": {
+      "says": "Whether it is drawn only where a slot names it, as a widget a board names is, and never found for a slot by itself; it may still be chosen. Not unless it says.",
+      "shape": "boolean",
+      "optional": true
     }
   }
 }

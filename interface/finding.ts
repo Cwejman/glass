@@ -39,10 +39,14 @@ export function candidates(
   });
 }
 
+// A component drawn only where a slot names it, as a widget is, is never found for one:
+// it may still be chosen, as among the candidates the menu offers.
+const foundable = (component: HolonRead) => component.body.named !== true;
+
 // The one found: for a holon, one that takes its type before the wildcard. For a way
 // of looking, one given ways of looking, else a list that takes nothing in particular.
 export function match(components: readonly HolonRead[], reads: Reading, holon: HolonRead | null, kind: Kind) {
-  const fitting = candidates(components, reads, holon, kind);
+  const fitting = candidates(components, reads, holon, kind).filter(foundable);
   const particular = (component: HolonRead) => takesOf(component).length > 0;
 
   if ("gather" in reads) {

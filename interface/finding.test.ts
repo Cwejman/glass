@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import type { HolonRead } from "../engine/reads.ts";
 import { candidates, match } from "./finding.ts";
 
-const component = (name: string, takes: string[], kinds: string[], argument?: string) =>
+const component = (name: string, takes: string[], kinds: string[], argument?: string, named?: boolean) =>
   ({
     id: name,
     name,
@@ -10,7 +10,7 @@ const component = (name: string, takes: string[], kinds: string[], argument?: st
     instance: [],
     store: "glass",
     version: "",
-    body: { takes, kinds, ...(argument ? { argument } : {}) },
+    body: { takes, kinds, ...(argument ? { argument } : {}), ...(named ? { named } : {}) },
   }) as unknown as HolonRead;
 
 const brief = component("Brief", ["brief"], ["full", "face"]);
@@ -48,4 +48,14 @@ test("a way of looking is drawn by what is given ways of looking, else the list"
 
 test("nothing found is nothing", () => {
   expect(match([brief], { holon: "x" }, holon("note"), "full")).toBeUndefined();
+});
+
+test("what is drawn only where named is never found, though it may be chosen", () => {
+  const count = component("Count", [], ["full", "face"], "list", true);
+  const before = [count, ...all];
+
+  expect(match(before, { list: ["x"] }, null, "full")).toBe(list);
+  expect(match(before, { gather: asked }, null, "face")).toBe(collection);
+  expect(match([count, wildcard], { holon: "x" }, holon("note"), "full")).toBe(wildcard);
+  expect(candidates(before, { list: ["x"] }, null, "full")).toContain(count);
 });
