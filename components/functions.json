@@ -125,7 +125,7 @@
   },
   {
     "name": "lexicon",
-    "says": "Every word the field says, in lower case, each once, where it is first said: worked out from the words each time, never kept beside them.",
+    "says": "Every word the field's words say, cut and folded as full text search cuts them, each once: a pattern answered from each store's word order, never kept beside the words.",
     "takes": [],
     "written": "lexicon.expr"
   },
@@ -306,7 +306,7 @@
   {
     "name": "words",
     "native": "words",
-    "says": "The words of the text given, lower case.",
+    "says": "The words of the text given, cut as a word said in a pattern cuts them: runs of letters and numbers, lower cased, a Latin accent folded and a possessive's 's let go.",
     "takes": ["value"]
   },
   {
@@ -356,6 +356,12 @@
     "native": "find",
     "says": "What a pattern finds: ?x, or a record of variables, {x: ?x}, for every way its clauses hold, each distinct. A clause is a fact [e, a, v], any of the three a variable; not(…), clauses that must not hold; or(…), branches of which any may, each one clause or and(…); or a test, a lambda of the variables its words name.",
     "takes": ["value", "clauses"]
+  },
+  {
+    "name": "said",
+    "native": "said",
+    "says": "A clause of a pattern: a word said, said(e, a, w), the strings the holon e holds under the key a cut into words as full text search cuts them, lower cased and their marks folded, w one of them; a variable in w's place is bound to each word said.",
+    "takes": ["value", "value", "value"]
   },
   {
     "name": "explain",

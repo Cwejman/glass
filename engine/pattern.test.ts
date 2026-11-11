@@ -148,3 +148,73 @@ describe("a fact asked once for all its bindings", () => {
     expect(steps[1]!.served).toContain("once for all, joined by ?h");
   });
 });
+
+describe("a word said, as full text search answers it", () => {
+  const d = "D00000000000000";
+  const e = "E00000000000000";
+  const written = indexOf(
+    [holon(d, { text: "Glass, the engine." }), holon(e, { text: "glass", note: "An engine" })].map(
+      (each) => ({
+        store: "s",
+        holon: each,
+      }),
+    ),
+    () => ({}),
+  );
+  const said = (h: unknown, k: unknown, w: unknown): Clause => ({ fact: [h, k, w], words: true });
+  const found = (where: Clause[], name: string) =>
+    solve(where, written, { test: () => true })
+      .map((binding) => JSON.stringify(binding[name]))
+      .sort();
+
+  test("a word matches every string under that key that says it, whatever its case and marks", () => {
+    expect(found([said(v("h"), "text", "glass")], "h")).toEqual([`{"$ref":"${d}"}`, `{"$ref":"${e}"}`]);
+    expect(found([said(v("h"), "text", "engine")], "h")).toEqual([`{"$ref":"${d}"}`]);
+  });
+
+  test("a variable in the word's place is bound to each word said", () => {
+    expect(found([said({ $ref: d }, "text", v("w"))], "w")).toEqual(['"engine"', '"glass"', '"the"']);
+  });
+
+  test("a word said joins with any other clause", () => {
+    expect(found([said(v("h"), "text", v("w")), said(v("h"), "note", v("w"))], "w")).toEqual([]);
+    expect(found([said(v("h"), "note", "engine"), said(v("h"), "text", v("w"))], "w")).toEqual(['"glass"']);
+  });
+
+  test("the plan says a word said was served by key and word", () => {
+    const steps: Step[] = [];
+    solve([said(v("h"), "text", "glass")], written, { test: () => true }, steps);
+    expect(steps[0]!.served).toBe("by key and word");
+  });
+});
+
+describe("a word said, its word bound before it", () => {
+  const f = "F00000000000000";
+  const g = "G00000000000000";
+  const written = indexOf(
+    [holon(f, { text: ["cat", "Cat dog"], label: "Cat", key: "text" }), holon(g, { label: "two words" })].map(
+      (each) => ({ store: "s", holon: each }),
+    ),
+    () => ({}),
+  );
+  const said = (h: unknown, k: unknown, w: unknown): Clause => ({ fact: [h, k, w], words: true });
+  const found = (where: Clause[], name: string) =>
+    solve(where, written, { test: () => true }).map((binding) => JSON.stringify(binding[name]));
+
+  test("a word is said once by a holon, however many of its strings say it", () => {
+    expect(found([said({ $ref: f }, "text", "cat")], "w")).toHaveLength(1);
+  });
+
+  test("a word bound before is folded as the index folds it, and one that is several words matches nothing", () => {
+    expect(found([fact(v("h"), "label", v("l")), said(v("h"), "text", v("l"))], "h")).toEqual([
+      `{"$ref":"${f}"}`,
+    ]);
+    expect(found([fact({ $ref: g }, "label", v("l")), said(v("h"), "text", v("l"))], "h")).toEqual([]);
+  });
+
+  test("a key bound by another clause is waited for", () => {
+    expect(found([said(v("h"), v("k"), "dog"), fact(v("h"), "key", v("k"))], "h")).toEqual([
+      `{"$ref":"${f}"}`,
+    ]);
+  });
+});

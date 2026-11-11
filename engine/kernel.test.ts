@@ -12,6 +12,7 @@ import { gather, groups, level } from "./expression.ts";
 import { fieldOf } from "./field.ts";
 import { kernel, type Value } from "./kernel.ts";
 import { partsOf } from "./references.ts";
+import { wordsOf as cut } from "./words.ts";
 
 const opened: Record<string, Store> = await openStores();
 
@@ -106,6 +107,17 @@ describe("cases from OpenLight, in glass's field", () => {
     expect(lexicons).toEqual([]);
   });
 
+  test("a word said is found whatever its case, where the exact string is not", () => {
+    const said = (ask`find(?w, said(?w, "text", "Glass"))` as unknown[]).length;
+    const exact = (ask`find(?w, [?w, "text", "glass"])` as unknown[]).length;
+    expect(said).toBeGreaterThan(exact);
+  });
+
+  test("a word said is one word, and is said only within a pattern", () => {
+    expect(() => ask`find(?w, said(?w, "text", "glass engine"))`).toThrow(/one word/);
+    expect(() => ask`said(@"The wiki", "name", "wiki")`).toThrow(/clause of a pattern/);
+  });
+
   test("the lexicon: every word the field says, each once", () => {
     const lexicon = ask`lexicon()` as string[];
     expect(lexicon).toContain("holarchy");
@@ -180,7 +192,7 @@ describe("cases from glass", () => {
 
       return Object.values(holon.body)
         .filter((value) => typeof value === "string")
-        .reduce((n, text) => n + (text as string).split(/\s+/).filter(Boolean).length, 0);
+        .reduce((n, text) => n + cut(text).length, 0);
     };
 
     const truth = Math.round([...seen].reduce((n, id) => n + wordsOf(id), 0) * 1.85);

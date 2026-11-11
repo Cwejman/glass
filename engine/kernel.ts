@@ -26,6 +26,7 @@ import type { Everything } from "./expression.ts";
 import { answeringAll, indexOf, mouldIn as mouldsIn, type Answering, type FactValue } from "./facts.ts";
 import { mouldOf, type Mould } from "./moulds.ts";
 import { bindable, isVar, orProblem, solve, usedBeside, type Clause, type Step } from "./pattern.ts";
+import { wordsOf } from "./words.ts";
 import { isRef, references } from "./references.ts";
 
 export type Value = null | boolean | number | string | Value[] | { [key: string]: Value };
@@ -90,10 +91,14 @@ const same = (a: unknown, b: unknown) => keyOf(a) === keyOf(b);
 const isRecord = (value: unknown): value is Record<string, Value> =>
   typeof value === "object" && value !== null && !Array.isArray(value) && !isRef(value) && !isClosure(value);
 
-// The words of a text, or of each text in a list of them.
-const words = (text: unknown): string[] =>
+// The words of a text, or of each text in a list of them, cut as the index cuts them.
+const words = (text: unknown): string[] => (Array.isArray(text) ? text.flatMap(words) : wordsOf(text));
+
+// What a search or contains asks, as it was asked before words were cut as the index cuts
+// them: the text lower cased and parted at its spaces, each part found within what is said.
+const asked = (text: unknown): string[] =>
   Array.isArray(text)
-    ? text.flatMap(words)
+    ? text.flatMap(asked)
     : typeof text === "string"
       ? text.toLocaleLowerCase().split(/\s+/).filter(Boolean)
       : [];
@@ -143,7 +148,7 @@ const values: Record<string, Act> = {
   words: ([text]) => words(text),
   contains: ([text, wanted]) => {
     const said = typeof text === "string" ? text.toLocaleLowerCase() : "";
-    return words(wanted).every((word) => said.includes(word));
+    return asked(wanted).every((word) => said.includes(word));
   },
   kind: ([value]) => {
     if (value === null) return "null";
@@ -306,7 +311,7 @@ export function kernel(context: Context) {
     points: along("down", false),
     pointers: along("up", false),
     search: ([text]) => {
-      const wanted = words(text);
+      const wanted = asked(text);
       if (!wanted.length) return [];
 
       return keep(
@@ -314,7 +319,7 @@ export function kernel(context: Context) {
       );
     },
     named: ([text]) => {
-      const wanted = words(text);
+      const wanted = asked(text);
       if (!wanted.length) return [];
 
       return keep((id) => {
@@ -414,6 +419,11 @@ export function kernel(context: Context) {
       return walked;
     },
 
+    // A word said is a clause of a pattern, and nothing outside one.
+    said: () => {
+      throw new Error("said(e, a, w) is a clause of a pattern, asked within find");
+    },
+
     // Not is one lattice with and and or: of a set of holons, everything else the field
     // holds; of a truth, its opposite.
     not: ([value]) => {
@@ -486,6 +496,17 @@ export function kernel(context: Context) {
       return { fact: (form.list as unknown[]).map(term) as [unknown, unknown, unknown] };
 
     if (nativeOf(form) === "not") return { not: given.map((each) => clauseOf(each, scope, depth)) };
+
+    if (nativeOf(form) === "said") {
+      if (given.length !== 3) throw new Error("a word said is said(e, a, w): a holon, a key, and a word");
+
+      const terms = given.map(term) as [unknown, unknown, unknown];
+      const several = isVar(terms[2]) ? 0 : wordsOf(terms[2]).length;
+      if (several > 1)
+        throw new Error(`a word said is one word, and ${JSON.stringify(terms[2])} is ${several}`);
+
+      return { fact: terms, words: true };
+    }
 
     if (nativeOf(form) === "or") {
       const branches = given.map((branch) =>

@@ -8,7 +8,9 @@
 //
 // A store answers a clause, [e, a, v] with any of them known, from its index: the same
 // facts kept in four orders, by holon, by key, by key and value, and by the holon a
-// value refers to. It is a pure function of the store's holons at a commit and of the
+// value refers to. A fifth is kept for words: each string under a key cut into the words
+// it says, as full text search keeps them, so a word said is a fact like any other; it
+// is made for a key the first time a word is asked of it, and kept. It is a pure function of the store's holons at a commit and of the
 // types they are read through, which may stand in another store, and of the key the
 // store is attached by; so it is built wherever it runs, and shipping it beside the
 // blocks asks first that holding be read from $holds alone. Another kind of store
@@ -18,6 +20,7 @@ import type { Holon } from "../integrations/glass/store.ts";
 import type { Known } from "./expression.ts";
 import { mouldOf, type Mould } from "./moulds.ts";
 import { isRef, references } from "./references.ts";
+import { wordsOf } from "./words.ts";
 
 export type Scalar = string | number | boolean;
 export type FactValue = Scalar | { $ref: string };
@@ -27,7 +30,8 @@ export type Fact = { e: string; a: string; v: FactValue; k?: string };
 
 // What a clause knows before it is answered: a holon, a key, a value, any or none; or
 // that it can match nothing, as when what stands for a holon is not one.
-export type Asked = { e?: string; a?: string; v?: FactValue; nothing?: true };
+// Asked of the words a string says, the value is one word, and the key must be known.
+export type Asked = { e?: string; a?: string; v?: FactValue; words?: true; nothing?: true };
 
 // What a store's integration gives the engine: answers to a clause, and how many there
 // would be, so the cheapest clause is answered first.
@@ -78,7 +82,7 @@ const pushed = <K, V>(map: Map<K, V[]>, key: K, value: V) => {
   else map.set(key, [value]);
 };
 
-// A store's index of its facts, in four orders; by holon, both as the holon says them
+// A store's index of its facts, in four orders and the words; by holon, both as the holon says them
 // and each key apart, so what a holon says under one key is counted as it is.
 export function indexOf(held: readonly Known[], mouldFor: (holon: Holon) => Mould): Answering {
   const all: Fact[] = [];
@@ -101,6 +105,51 @@ export function indexOf(held: readonly Known[], mouldFor: (holon: Holon) => Moul
     }
   }
 
+  // The words said under each key, as facts of their own, by holon and by word: made for a
+  // key the first time a word is asked of it.
+  const spoken = new Map<
+    string,
+    { all: Fact[]; byHolon: Map<string, Fact[]>; byWord: Map<string, Fact[]> }
+  >();
+
+  function wordsUnder(a: string) {
+    const kept = spoken.get(a);
+    if (kept) return kept;
+
+    const made = { all: [] as Fact[], byHolon: new Map<string, Fact[]>(), byWord: new Map<string, Fact[]>() };
+
+    // Each word once for each holon, however many of its strings under the key say it.
+    const saying = new Map<string, Set<string>>();
+    for (const { e, v } of byKey.get(a) ?? []) {
+      const words = saying.get(e) ?? new Set<string>();
+      wordsOf(v).forEach((word) => words.add(word));
+      saying.set(e, words);
+    }
+
+    for (const [e, words] of saying) {
+      for (const word of words) {
+        const fact = { e, a, v: word, k: valueKey(word) };
+        made.all.push(fact);
+        pushed(made.byHolon, e, fact);
+        pushed(made.byWord, word, fact);
+      }
+    }
+
+    spoken.set(a, made);
+    return made;
+  }
+
+  // The words a key's strings say, ordered as narrowly as what is asked allows.
+  function wordOrder({ e, a, v }: Asked): [string, Fact[]] {
+    if (a === undefined) throw new Error("a word said names the key whose strings say it");
+
+    const under = wordsUnder(a);
+    if (e !== undefined) return ["by holon, key and word", under.byHolon.get(e) ?? []];
+    if (typeof v === "string") return ["by key and word", under.byWord.get(v) ?? []];
+
+    return ["by key, as words", under.all];
+  }
+
   // What is asked is said once, and each fact held to it.
   const matches = ({ e, a, v }: Asked) => {
     const k = v === undefined ? undefined : valueKey(v);
@@ -112,8 +161,10 @@ export function indexOf(held: readonly Known[], mouldFor: (holon: Holon) => Moul
   };
 
   // The order that answers a clause most narrowly, and what it finds before the rest is held to.
-  function order({ e, a, v, nothing }: Asked): [string, Fact[]] {
+  function order(asked: Asked): [string, Fact[]] {
+    const { e, a, v, nothing } = asked;
     if (nothing) return ["nothing, as it can match none", []];
+    if (asked.words) return wordOrder(asked);
     if (e !== undefined && a !== undefined) return ["by holon and key", byHolonKey.get(e)?.get(a) ?? []];
     if (e !== undefined) return ["by holon", byHolon.get(e) ?? []];
     if (a !== undefined && v !== undefined)

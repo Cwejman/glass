@@ -1,4 +1,5 @@
-// The lexicon: every word the field says, in lower case, each once, where it is first
-// said. Worked out from the words each time it is asked, never kept beside them.
+// The lexicon: every word the field's words say, cut and folded as full text search cuts
+// them, each once, in the order the index keeps them. A pattern, answered from each
+// store's word order, never kept beside the words.
 
-find(?w, [?w, "instance", ?t], [?t, "name", "word"]) | map(w => w.text) | words | distinct
+find(?x, [?w, "instance", ?t], [?t, "name", "word"], said(?w, "text", ?x))

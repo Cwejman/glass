@@ -4,7 +4,8 @@
 // by the variables it shares with what came before.
 //
 // A clause is one of four:
-//   a fact      [e, a, v], any of the three a variable, the rest values
+//   a fact      [e, a, v], any of the three a variable, the rest values; or a word said,
+//               said(e, a, w), the strings under a cut into words, w one of them
 //   not         clauses that must not hold for the bindings made, its own variables free
 //   or          branches of clauses, any of which may hold, each binding the same variables
 //   a test      a function given the values of the variables its words name, kept if true
@@ -15,13 +16,16 @@
 import type { Answering, Asked, Fact, FactValue } from "./facts.ts";
 import { keyOfFact, valueKey } from "./facts.ts";
 import { isRef } from "./references.ts";
+import { wordsOf } from "./words.ts";
 
 export type Var = { "?": string };
 export type Clause =
-  | { fact: [unknown, unknown, unknown] }
+  | { fact: [unknown, unknown, unknown]; words?: true }
   | { not: Clause[] }
   | { or: Clause[][] }
   | { test: unknown; names: string[] };
+
+type FactClause = Extract<Clause, { fact: unknown }>;
 
 export type Binding = Record<string, FactValue>;
 
@@ -61,16 +65,32 @@ function varsOf(clause: Clause, into = new Set<string>()): Set<string> {
 }
 
 const said = (clause: Clause): string => {
-  if ("fact" in clause)
-    return `[${clause.fact.map((term) => (isVar(term) ? `?${term["?"]}` : isRef(term) ? `@${term.$ref}` : JSON.stringify(term))).join(", ")}]`;
+  if ("fact" in clause) {
+    const terms = clause.fact.map((term) =>
+      isVar(term) ? `?${term["?"]}` : isRef(term) ? `@${term.$ref}` : JSON.stringify(term),
+    );
+    return clause.words ? `said(${terms.join(", ")})` : `[${terms.join(", ")}]`;
+  }
   if ("not" in clause) return `not(${clause.not.map(said).join(", ")})`;
   if ("or" in clause) return `or(${clause.or.map((branch) => branch.map(said).join(" and ")).join(", ")})`;
 
   return `test(${clause.names.join(", ")})`;
 };
 
+// A value as the one word it says, cut and folded as the index cuts them; null where it
+// says no word or several, which no word said can match.
+const oneWord = (value: unknown): string | null => {
+  const words = wordsOf(value);
+  return words.length === 1 ? words[0]! : null;
+};
+
+// A value's key where it stands in a fact's place: in a word said's third place, the
+// word it says, so Cat and cat are one; one that is no word, a key nothing has.
+const keyAt = (value: FactValue, i: number, words?: true) =>
+  words && i === 2 ? valueKey(oneWord(value) ?? "\u0000no word") : valueKey(value);
+
 // What a fact asks, given one binding: its values, and its variables where bound.
-function askedOf([e, a, v]: [unknown, unknown, unknown], binding: Binding): Asked {
+function askedOf([e, a, v]: [unknown, unknown, unknown], binding: Binding, words?: true): Asked {
   const value = (term: unknown) => (isVar(term) ? binding[term["?"]] : term);
   const [held, key, valued] = [value(e), value(a), value(v)];
 
@@ -78,10 +98,15 @@ function askedOf([e, a, v]: [unknown, unknown, unknown], binding: Binding): Aske
   if ((held !== undefined && !isRef(held)) || (key !== undefined && typeof key !== "string"))
     return { nothing: true };
 
+  // A word asked that is not one word matches nothing.
+  const asked = words && valued !== undefined ? oneWord(valued) : (valued as FactValue | undefined);
+  if (asked === null) return { nothing: true };
+
   return {
     ...(isRef(held) ? { e: held.$ref } : {}),
     ...(typeof key === "string" ? { a: key } : {}),
-    ...(valued !== undefined ? { v: valued as FactValue } : {}),
+    ...(asked !== undefined ? { v: asked } : {}),
+    ...(words ? { words } : {}),
   };
 }
 
@@ -91,7 +116,7 @@ const placeOf = (fact: Fact, i: number): FactValue =>
 const placeKey = (fact: Fact, i: number) => (i === 0 ? fact.e : i === 1 ? valueKey(fact.a) : keyOfFact(fact));
 
 // A binding made larger by one fact, or nothing where the fact disagrees with it.
-function bindFact(terms: unknown[], fact: Fact, binding: Binding): Binding | undefined {
+function bindFact(terms: unknown[], fact: Fact, binding: Binding, words?: true): Binding | undefined {
   const made = { ...binding };
 
   for (const [i, term] of terms.entries()) {
@@ -99,7 +124,7 @@ function bindFact(terms: unknown[], fact: Fact, binding: Binding): Binding | und
 
     const name = term["?"];
     if (name in made) {
-      if (valueKey(made[name]!) !== placeKey(fact, i)) return undefined;
+      if (keyAt(made[name]!, i, words) !== placeKey(fact, i)) return undefined;
     } else made[name] = placeOf(fact, i);
   }
 
@@ -201,14 +226,23 @@ export function solve(
   // or, where that costs more, once for them all, with only what it says itself, and
   // joined here by the variables they share. Bound to nothing before it, it is asked
   // once and joined with every binding.
-  const howAsked = (terms: [unknown, unknown, unknown], binding: Binding) => {
+  const howAsked = ({ fact: terms, words }: FactClause, binding: Binding) => {
     const shared = sharedPlaces(terms, bound);
-    const each = stores.count(askedOf(terms, binding));
+
+    // A word said is asked only once its key is known; with a key yet to be bound it waits,
+    // and it is never asked once for all bindings, each of which may name another key.
+    const keyed = !isVar(terms[1]);
+    if (words && !keyed && !((terms[1] as Var)["?"] in binding))
+      return { once: false, shared, cost: Number.POSITIVE_INFINITY };
+    const each = stores.count(askedOf(terms, binding, words));
 
     if (bound.size && !shared.length) return { once: false, shared, cost: each * bindings.length };
 
     const eachTime = bindings.length * (each + asking);
-    const once = shared.length ? stores.count(askedOf(terms, {})) + asking + bindings.length : Infinity;
+    const once =
+      shared.length && (keyed || !words)
+        ? stores.count(askedOf(terms, {}, words)) + asking + bindings.length
+        : Infinity;
 
     return once < eachTime ? { once: true, shared, cost: once } : { once: false, shared, cost: eachTime };
   };
@@ -216,7 +250,7 @@ export function solve(
   // What a step would cost: a fact as it is best asked; an or, its branches' cheapest
   // facts together, once what it reads is bound.
   const cost = (clause: Clause, binding: Binding): number => {
-    if ("fact" in clause) return howAsked(clause.fact, binding).cost;
+    if ("fact" in clause) return howAsked(clause, binding).cost;
     if ("or" in clause) {
       if (!readsOutside(clause).every((name) => bound.has(name))) return Infinity;
 
@@ -243,9 +277,9 @@ export function solve(
     let served = "each branch";
     const joined: Binding[] = [];
 
-    const join = (terms: unknown[], found: Fact[], binding: Binding) => {
+    const join = (terms: unknown[], found: Fact[], binding: Binding, words?: true) => {
       for (const fact of found) {
-        const made = bindFact(terms, fact, binding);
+        const made = bindFact(terms, fact, binding, words);
         if (made) joined.push(made);
       }
 
@@ -255,17 +289,17 @@ export function solve(
         );
     };
 
-    const eachOf = (terms: [unknown, unknown, unknown], binding: Binding) => {
-      const found = stores.answer(askedOf(terms, binding));
+    const eachOf = ({ fact: terms, words }: FactClause, binding: Binding) => {
+      const found = stores.answer(askedOf(terms, binding, words));
       answered += found.length;
-      join(terms, found, binding);
+      join(terms, found, binding, words);
     };
 
     if ("fact" in next) {
-      const { once, shared } = howAsked(next.fact, sample);
+      const { once, shared } = howAsked(next, sample);
 
       if (once) {
-        const unbound = askedOf(next.fact, {});
+        const unbound = askedOf(next.fact, {}, next.words);
         const found = stores.answer(unbound);
         answered = found.length;
         served = `${stores.served(unbound)}, once for all, joined by ${shared.map(([name]) => `?${name}`).join(", ")}`;
@@ -283,14 +317,15 @@ export function solve(
           if (shared.every(([name]) => name in binding))
             join(
               next.fact,
-              byKey.get(shared.map(([name]) => valueKey(binding[name]!)).join("\u0000")) ?? [],
+              byKey.get(shared.map(([name, i]) => keyAt(binding[name]!, i, next.words)).join("\u0000")) ?? [],
               binding,
+              next.words,
             );
-          else eachOf(next.fact, binding);
+          else eachOf(next, binding);
         }
       } else {
-        served = stores.served(askedOf(next.fact, sample));
-        for (const binding of bindings) eachOf(next.fact, binding);
+        served = stores.served(askedOf(next.fact, sample, next.words));
+        for (const binding of bindings) eachOf(next, binding);
       }
     } else if ("or" in next) {
       for (const binding of bindings)
