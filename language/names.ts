@@ -15,13 +15,15 @@ type Known = {
   named(name: string): string[];
   storeOf(id: string): string | undefined;
   holdersOf(id: string): string[];
+  isRoot(id: string): boolean;
 };
 
-// The holons a route reaches: the first name among all, or among a store's level; each
-// next name among what the one before holds.
+// The holons a route reaches: the first name among all, or among a store's level, what
+// nothing in it holds but its root; each next name among what the one before holds.
 function reached({ store, names }: Route, known: Known) {
   const atLevel = (id: string) =>
-    known.storeOf(id) === store && !known.holdersOf(id).some((whole) => known.storeOf(whole) === store);
+    known.storeOf(id) === store &&
+    !known.holdersOf(id).some((whole) => known.storeOf(whole) === store && !known.isRoot(whole));
 
   let found = known.named(names[0]!).filter((id) => store === undefined || atLevel(id));
 
@@ -54,6 +56,8 @@ export function namesIn(all: Everything): Names {
     named: (name) => byName.get(name) ?? [],
     storeOf: (id) => all.known.get(id)?.store,
     holdersOf: (id) => (all.holders.get(id) ?? []).filter(({ holds }) => holds).map(({ from }) => from),
+    isRoot: (id) =>
+      all.known.get(id)?.holon.instance.some((type) => all.known.get(type)?.holon.name === "store") ?? false,
   };
 
   return {
@@ -117,6 +121,7 @@ export async function namesAsked(read: Engine["read"], text: string): Promise<Na
     named: (name) => ids.get(name) ?? [],
     storeOf: (id) => holons.get(id)?.store,
     holdersOf: (id) => holders.get(id) ?? [],
+    isRoot: (id) => holons.get(id)?.types.includes("store") ?? false,
   };
 
   const reachedBy = new Map(routes.map((route) => [keyOf(route), reached(route, known)]));

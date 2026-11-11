@@ -112,6 +112,18 @@
     "takes": ["holon"]
   },
   {
+    "name": "roots",
+    "says": "The stores by their roots: each store's one holon of the type store, which holds its top.",
+    "takes": [],
+    "written": "roots.expr"
+  },
+  {
+    "name": "unified",
+    "says": "The field as one: what nothing holds once each store's root is set aside, the wholes of every store side by side.",
+    "takes": [],
+    "written": "unified.expr"
+  },
+  {
     "name": "since",
     "native": "since",
     "says": "What the store given has written since the moment given, as its log says: each holon still in the field that a commit after that moment brought in or said again. A moment is written as the log writes one, 2026-11-11 or 2026-11-11T12:00, so a day is its start.",

@@ -703,6 +703,33 @@ describe("attachments", () => {
     }
   });
 
+  test("a holon nothing holds, landing in a store with a root, joins what the root holds", async () => {
+    const at = Date.parse("2026-11-11T00:00:00Z");
+    const storeType: Holon = {
+      id: idAt(at, 0),
+      instance: [],
+      name: "store",
+      mould: { contents: { says: "What it holds.", shape: { set: "ref" }, holds: true } },
+      body: {},
+    };
+    const root: Holon = {
+      id: idAt(at, 1),
+      instance: [storeType.id],
+      name: "a",
+      body: { contents: [{ $ref: storeType.id }] },
+    };
+    const { store } = await commit(await empty(), { holons: [storeType, root], says: "rooted" });
+    const engine = startEngine([
+      { key: "a", store, write: true },
+      { key: "pulled", store: await pulledStore() },
+    ]);
+
+    const { ids } = await engine.commit({ holons: [noteOf("~1", "loose")] });
+    const contents = (await engine.read({ holon: root.id }))!.body.contents as { $ref: string }[];
+
+    expect(contents.map(({ $ref }) => $ref)).toEqual([storeType.id, ids["~1"]!]);
+  });
+
   test("what goes leaves every store that keeps it, and nothing left may point at it", async () => {
     const engine = await engineOf("a");
     const kept = (await engine.commit({ holons: [noteOf("~1", "to go")] })).ids["~1"]!;
@@ -724,6 +751,24 @@ describe("the real stores", async () => {
   for (const [key, store] of Object.entries(opened)) await engine.attach(key, store);
 
   const wikiRoot = "The primitives";
+
+  test("every store has one root, and a store at its level is its root alone", async () => {
+    const named = await Promise.all(
+      (await engine.read({ named: "store", store: "glass" })).map((id) => engine.read({ holon: id })),
+    );
+    const storeType = named.find((holon) => holon?.mould)!.id;
+    const storeFn = named.find((holon) => holon?.types.includes("function"))!.id;
+    const roots = await Promise.all(
+      (await engine.read({ instances: storeType })).map((id) => engine.read({ holon: id })),
+    );
+
+    for (const key of Object.keys(opened)) {
+      const own = roots.filter((root) => root?.store === key);
+
+      expect(own.length).toBe(1);
+      expect(await engine.read({ level: { call: { $ref: storeFn }, with: [key] } })).toEqual([own[0]!.id]);
+    }
+  });
 
   test("a function of one's own that holds a pattern gathers as the interface asks it", async () => {
     const [awaiting] = await engine.read({ named: "awaiting", store: "main" });

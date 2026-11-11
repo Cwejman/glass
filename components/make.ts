@@ -1,6 +1,6 @@
 // Makes the glass store: what the client ships, as holons. Its types, its functions,
-// the kinds of slot, its material, its components with their code built here, and the
-// mount it boots into. A holon keeps its name from one making to the next, found by
+// the kinds of slot, its material, its components with their code built here, the
+// mount it boots into, its own shape, and its root. A holon keeps its name from one making to the next, found by
 // what it is called, and one that has not changed is not written again.
 // Usage: bun components/make.ts
 
@@ -9,6 +9,8 @@ import { join } from "node:path";
 import { parse, type Names } from "../language/text.ts";
 import { canonical } from "../integrations/glass/canonical.ts";
 import { commit, type Holon } from "../integrations/glass/store.ts";
+import { mouldOf, type Mould } from "../engine/moulds.ts";
+import { references } from "../engine/references.ts";
 import { holonsOf, open, storeFolder } from "../stores.ts";
 
 const here = import.meta.dir;
@@ -155,6 +157,31 @@ for (const [name, kind] of [
 
   make("whole", name, { holds });
 }
+
+// Glass's own shape is open: it names no type, so any holon may be written where it is kept.
+make("shape", "glass's own", {});
+
+// The store's root: the shape it keeps, and what it holds, the top of its field, each
+// held by nothing else made here. It needs no other store to be whole.
+// What a holon made here holds, as its types' moulds say and each reference says for itself.
+const mouldOfMade = (holon: Holon) =>
+  mouldOf(holon.instance.map((type) => made.find(({ id }) => id === type)?.mould as Mould | undefined));
+const held = new Set(
+  made.flatMap((holon) =>
+    references(holon.body, mouldOfMade(holon))
+      .filter(({ holds }) => holds)
+      .map(({ id }) => id),
+  ),
+);
+const shape = named("shape", "glass's own");
+
+make("store", "glass", {
+  shape: { $ref: shape },
+  contents: made
+    .filter(({ id }) => !held.has(id) && id !== shape)
+    .map(({ id }) => ({ $ref: id }))
+    .concat({ $ref: shape }),
+});
 
 const beforeById = new Map(before.map((holon) => [holon.id, canonical(holon)]));
 const changed = made.filter((holon) => beforeById.get(holon.id) !== canonical(holon));

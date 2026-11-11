@@ -33,7 +33,7 @@ What the store holds:
 - measures on what was said, sessions and passages graded with a note, none of them a conclusion: read them to reason about what to read. Briefs the work has overtaken are measured too, as stale;
 - threads: the questions held open in the field, raised by any voice, the author's, a session's or an agent's, each standing open, leaning, settled or let go; `author/thread.ts` raises and moves them.
 
-Almost nothing stands loose. The main store has ten roots: the lexicon, what was said, the wiki, its markdown forms, the threads, the measures, a whole for statistics and functions, one for the sessions, one for the types, and the author's voice, which speaks across them. A session holds its own, and a source what stands upon it.
+Almost nothing stands loose. Each store has one root, a holon of the type store, which holds its top and names the stores it stands on; the main store's holds ten wholes: the lexicon, what was said, the wiki, its markdown forms, the threads, the measures, a whole for statistics and functions, one for the sessions, one for the types, and the author's voice, which speaks across them. A session holds its own, and a source what stands upon it.
 
 Its first 81 commits are its birth, a slice each in the order things came. The conversion to blocks came after 117; each old commit is still in the log, with its old hash, what it held and what it took out, and the field at any of them can be drawn again.
 
@@ -44,8 +44,8 @@ Beside the main store stand three more, each a whole in the `.glass/` of its own
 Read through the engine, in the language. `engine/ask.ts` attaches every store the repository holds to a local engine, as the browser does, and asks it one expression: calls of functions, a holon after `@` by its id, its name or a route of names through what holds it, a lambda `m => …`, `m.key` for what m holds under key, and `a | f(b)` for f(a, b). A string comes back as it is, so prose reads as prose, and a holon as its id, its name and what it is. The functions are listed with what each says in `components/functions.json`, and the language at the top of `language/text.ts`.
 
 ```
-bun engine/ask.ts 'level(store("main")) | map(h => {name: h.name, tokens: measure(h)})'
-                                                       the main store's roots, measured
+bun engine/ask.ts '@main:main.contents | map(h => {name: h.name, tokens: measure(h)})'
+                                                       what the main store's root holds, measured
 bun engine/ask.ts 'outline(@"The wiki", 3)'         a whole's structure, measured, without its prose
 bun engine/ask.ts 'text(@"The wiki")'               the wiki whole, as prose
 bun engine/ask.ts 'digest(@Sessions, 4000) | map(run => {first: first(run).name, tokens: measure(run)})'

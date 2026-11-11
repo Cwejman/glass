@@ -163,6 +163,7 @@ async function routeOf(field: Field, holons: Holon[], into: string | undefined) 
   }
 
   const route = new Map<string, string[]>();
+  const loose = new Set<string>();
 
   function placeOf(id: string, seen: ReadonlySet<string>): string[] {
     const known = kept.get(id) ?? route.get(id);
@@ -177,6 +178,7 @@ async function routeOf(field: Field, holons: Holon[], into: string | undefined) 
     ];
     if (fromHolders.length) return fromHolders;
 
+    if (into || writable.length === 1) loose.add(id);
     if (into) return [into];
     if (writable.length === 1) return writable;
 
@@ -187,7 +189,50 @@ async function routeOf(field: Field, holons: Holon[], into: string | undefined) 
 
   for (const { id } of holons) route.set(id, placeOf(id, new Set()));
 
-  return { route, kept };
+  return { route, kept, loose };
+}
+
+// A store's root, if it has one: its holon of the type named store, whose mould holds
+// contents. Asked only where a holon nothing holds lands, since it reads the store whole.
+async function rootOf(field: Field, key: string) {
+  const holons = (await field.storeHolons(key)).map(({ holon }) => holon);
+  const typeIds = [...new Set(holons.flatMap(({ instance }) => instance))];
+  const types = await Promise.all(typeIds.map((id) => holonOf(field, id)));
+  const storeTypes = new Set(
+    typeIds.filter((_, i) => types[i]?.name === "store" && types[i]?.mould?.contents !== undefined),
+  );
+
+  return holons.find(({ instance }) => instance.some((type) => storeTypes.has(type)));
+}
+
+// The holons of a commit, with each store's root said again where a holon nothing holds
+// lands in it, so a store's root goes on holding all its top.
+async function withRoots(
+  field: Field,
+  holons: Holon[],
+  route: Map<string, string[]>,
+  loose: ReadonlySet<string>,
+) {
+  const joining = new Map<string, string[]>();
+
+  for (const id of loose)
+    for (const key of route.get(id)!) joining.set(key, [...(joining.get(key) ?? []), id]);
+
+  const roots: Holon[] = [];
+
+  for (const [key, ids] of joining) {
+    const root = await rootOf(field, key);
+    if (!root || holons.some(({ id }) => id === root.id)) continue;
+
+    const contents = [
+      ...((root.body.contents ?? []) as { $ref: string }[]),
+      ...ids.map(($ref) => ({ $ref })),
+    ];
+    roots.push({ ...root, body: { ...root.body, contents } });
+    route.set(root.id, [key]);
+  }
+
+  return [...holons, ...roots];
 }
 
 // Why a commit may not be written where it would go, if it may not: a holon kept, or
@@ -278,12 +323,13 @@ export function startEngine(given: readonly Attached[] = []): Engine {
 
     read: (query) => read(field, query),
 
-    commit: ({ holons, gone = [], says = "A change", into }) =>
+    commit: ({ holons: asked, gone = [], says = "A change", into }) =>
       inTurn(async () => {
         if (into && !field.stores.some(({ key }) => key === into))
           throw new Error(`nothing is attached as ${into}`);
 
-        const { route, kept } = await routeOf(field, holons, into);
+        const { route, kept, loose } = await routeOf(field, asked, into);
+        const holons = await withRoots(field, asked, route, loose);
         const goneTo = new Map(
           await Promise.all(
             gone.map(async (id) => [id, (await keepersOf(field, id)).map(({ key }) => key)] as const),

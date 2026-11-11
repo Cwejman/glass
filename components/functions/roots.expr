@@ -1,0 +1,3 @@
+// The stores by their roots: each store's one holon of the type store.
+
+find(?s, [?s, "instance", ?t], [?t, "name", "store"])

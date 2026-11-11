@@ -121,7 +121,7 @@ describe("reading", () => {
     expect(page.querySelector(".reader p")).toBeNull();
   });
 
-  test("what is attached is kept in the home once, and a store's face leads to its level", async () => {
+  test("what is attached is kept in the home once, and a store's face leads to its root", async () => {
     const { page, engine } = await open("https://glass.test/");
 
     await settled(() => storesShown(page).includes("main"));
@@ -136,7 +136,7 @@ describe("reading", () => {
     )!;
     main.click();
 
-    await settled(() => location.search === "?look=store(%22main%22)");
+    await settled(() => location.search.startsWith("?place=main/main&id="));
     await settled(() => faceNamed(page, "The wiki"));
   });
 

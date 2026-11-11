@@ -33,7 +33,7 @@ const cases: [string, string, string][] = [
     `find(?b, [?b, "instance", @main:types/brief], [?b, "instance", @main:types/step])`,
   ],
   [
-    "a store's level",
+    "a store's level, its root, found among all it holds",
     `level(store("main"))`,
     `find(?h, [?h, "store", "main"], not([?w, "$holds", ?h], [?w, "store", "main"]))`,
   ],

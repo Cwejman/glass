@@ -115,11 +115,13 @@ describe("cases from OpenLight, in glass's field", () => {
 
   test("history as values: what the store's last commit says", () => {
     expect(ask`log("main") | last | get("says")`).toBe(logs.get("main")!.at(-1)!.says);
+    expect(ask`route(@main:"The wiki") | map(h => h.name)`).toEqual(["The wiki"]);
+    expect(ask`route(@glass:types/function) | map(h => h.name)`).toEqual(["types", "function"]);
   });
 });
 
 describe("cases from glass", () => {
-  test("a store at its level: what nothing in it holds", () => {
+  test("a store at its level: what nothing in it holds, its root", () => {
     const level = ask`
       store("main")
         | filter(h => eq(size(filter(in(h), e => and(e.holds, eq(e.from.store, "main")))), 0))
@@ -135,7 +137,7 @@ describe("cases from glass", () => {
       )
       .map(({ id }) => id);
     sameSet(ids(level), truth);
-    expect(ids(level).length).toBe(10);
+    expect(ids(level).length).toBe(1);
   });
 
   test("count: the words beneath a brief", () => {
@@ -331,8 +333,17 @@ describe("what the language is", () => {
     expect(ask`named([])`).toEqual([]);
   });
 
-  test("a store's level is its roots", () => {
-    expect(ids(ask`level(store("main"))`).length).toBe(10);
+  test("the top seen as the stores by their roots, or as one field", () => {
+    expect(ask`roots() | map(r => r.store) | sort(k => k)`).toEqual(Object.keys(opened).sort());
+    expect(ask`unified() | size`).toBe(
+      ask`roots() | map(r => size(r.contents)) | fold(0, (n, m) => add(n, m))`,
+    );
+  });
+
+  test("a store's level is its root, which holds its top", () => {
+    expect(ids(ask`level(store("main"))`).length).toBe(1);
+    expect(ask`level(store("main")) | first | get("contents") | size`).toBe(10);
+    expect(ask`level(store("main")) | first | get("dependencies") | map(d => d.name)`).toEqual(["glass"]);
     expect([...(ask`stores()` as string[])].sort()).toEqual(Object.keys(opened).sort());
   });
 });

@@ -1,0 +1,11 @@
+{
+  "name": "shape",
+  "says": "What a field is once read: the types that may be written into it. A shape that names none is open, as glass's own is: any holon may be written there.",
+  "mould": {
+    "admits": {
+      "says": "The types that may be written into a field of this shape; none named, any may.",
+      "shape": { "set": "ref" },
+      "optional": true
+    }
+  }
+}
