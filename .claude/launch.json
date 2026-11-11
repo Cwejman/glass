@@ -15,9 +15,7 @@
     {
       "name": "glass",
       "runtimeExecutable": "/Users/jcwejman/.bun/bin/bun",
-      "runtimeArgs": [
-        "/Users/jcwejman/git/glass/src/serve.ts"
-      ],
+      "runtimeArgs": ["/Users/jcwejman/git/glass/site/serve.ts"],
       "port": 4330
     }
   ]

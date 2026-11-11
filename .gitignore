@@ -1,4 +1,5 @@
 .DS_Store
 .stale/
+.playwright-mcp/
 node_modules/
-site/
+site/dist/
