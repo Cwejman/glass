@@ -3,6 +3,7 @@
 // a few blocks. Only a question about everything fetches everything, and then once.
 
 import type { Holon, Store } from "../integrations/glass/store.ts";
+import type { Source } from "./source.ts";
 import {
   everythingOf,
   expressionProblem,
@@ -18,7 +19,14 @@ import { idsIn, type Answer, type HolonRead, type Read, type Whole } from "./rea
 import { partsOf } from "./references.ts";
 
 // A store as this engine uses it: what it is called here, and whether it may be written.
-export type Attached = { key: string; store: Store; write?: boolean };
+// One it reads is any source; one it writes is glass's own store.
+export type Attached =
+  | { key: string; store: Source; write?: false }
+  | { key: string; store: Store; write: true };
+
+export type Writable = Extract<Attached, { write: true }>;
+
+export const isWritable = (attached: Attached): attached is Writable => attached.write === true;
 
 export type Field = {
   stores: readonly Attached[];

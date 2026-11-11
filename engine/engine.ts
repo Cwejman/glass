@@ -12,7 +12,17 @@
 // whoever asks need not wait to refer to what it is making.
 
 import { act, idAt, isId, nextId, openStore, type Holon, type Store } from "../integrations/glass/store.ts";
-import { fieldOf, holonOf, keepersOf, read, type Attached, type Field } from "./field.ts";
+import {
+  fieldOf,
+  holonOf,
+  isWritable,
+  keepersOf,
+  read,
+  type Attached,
+  type Field,
+  type Writable,
+} from "./field.ts";
+import type { Source } from "./source.ts";
 import { bodyProblem, mouldOf, mouldProblem, type Mould } from "./moulds.ts";
 import type { Answer, HolonRead, Read, Whole } from "./reads.ts";
 import { references } from "./references.ts";
@@ -24,7 +34,8 @@ export type Change = { holons: Holon[]; gone?: string[]; says?: string; into?: s
 export type Committed = { commit: string; ids: Record<string, string> };
 
 export type Engine = {
-  attach(key: string, store: Store, options?: { write?: boolean }): Promise<void>;
+  attach(key: string, store: Source, options?: { write?: false }): Promise<void>;
+  attach(key: string, store: Store, options: { write: true }): Promise<void>;
   read<R extends Read>(query: R): Promise<Answer<R>>;
   commit(change: Change): Promise<Committed>;
   onChange(listener: () => void): () => void;
@@ -255,7 +266,7 @@ function refusalOf(
 
 // Each handle given its id: one run, each store's share together, from past every
 // moment the stores written have used.
-function mintFor(targets: readonly Attached[], holons: Holon[], route: ReadonlyMap<string, string[]>) {
+function mintFor(targets: readonly Writable[], holons: Holon[], route: ReadonlyMap<string, string[]>) {
   const ids = new Map<string, string>();
   let next = targets
     .map(({ store }) => store.minter()())
@@ -276,7 +287,7 @@ function mintFor(targets: readonly Attached[], holons: Holon[], route: ReadonlyM
 
 // The stores whose head moved since they were opened, each as it now stands. One that
 // cannot be read again is left as it was.
-async function movedStores(targets: readonly Attached[]) {
+async function movedStores(targets: readonly Writable[]) {
   const now = await Promise.all(
     targets.map(async ({ key, store }) => {
       const reopened = await openStore(store.files, store.blocks).catch(() => store);
@@ -308,7 +319,10 @@ export function startEngine(given: readonly Attached[] = []): Engine {
   // The field with some stores replaced by what they are now.
   const withStores = (now: ReadonlyMap<string, Store>) =>
     fieldOf(
-      field.stores.map((attached) => ({ ...attached, store: now.get(attached.key) ?? attached.store })),
+      field.stores.map((attached) => {
+        const next = now.get(attached.key);
+        return next && isWritable(attached) ? { ...attached, store: next } : attached;
+      }),
       field,
     );
 
@@ -318,7 +332,8 @@ export function startEngine(given: readonly Attached[] = []): Engine {
         if (field.stores.some((attached) => attached.key === key))
           throw new Error(`a store is already attached as ${key}`);
 
-        become(fieldOf([...field.stores, { key, store, write }], field));
+        const attached: Attached = write ? { key, store: store as Store, write } : { key, store };
+        become(fieldOf([...field.stores, attached], field));
       }),
 
     read: (query) => read(field, query),
@@ -345,25 +360,27 @@ export function startEngine(given: readonly Attached[] = []): Engine {
         const refused = refusalOf(targets, [...route, ...goneTo], kept);
         if (refused) throw new Error(refused);
 
-        const ids = mintFor(targets, holons, route);
+        // Every store written is one attached to be written, as the refusal made sure.
+        const writing = targets.filter(isWritable);
+        const ids = mintFor(writing, holons, route);
         const landing = holons.map((holon) => withIds(holon, ids));
         const problem = await changeProblem(field, landing, gone);
         if (problem) throw new Error(problem);
 
-        const given = targets.map(({ key, store }) => ({
+        const given = writing.map(({ key, store }) => ({
           store,
           holons: landing.filter((_, i) => route.get(holons[i]!.id)!.includes(key)),
         }));
 
         try {
           const done = await act(given, { says, gone, born: [...ids.values()] });
-          become(withStores(new Map(targets.map(({ key }, i) => [key, done.stores[i]!]))));
+          become(withStores(new Map(writing.map(({ key }, i) => [key, done.stores[i]!]))));
 
           return { commit: done.act, ids: Object.fromEntries(ids) };
         } catch (error) {
           // An act cut short may have moved some stores: those whose head moved are read
           // again as they now stand, and the field changes only if one did.
-          const moved = await movedStores(targets);
+          const moved = await movedStores(writing);
           if (moved.size) become(withStores(moved));
           throw error;
         }
