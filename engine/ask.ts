@@ -36,7 +36,7 @@ if (!text) {
 
 // The engine, its home held in memory, every store the repository holds attached as itself.
 async function engineHere(): Promise<Engine> {
-  const engine = startEngine(await openStore(memoryFiles()));
+  const engine = startEngine([{ key: "home", store: await openStore(memoryFiles()), write: true }]);
 
   for (const [key, store] of Object.entries(await openStores())) await engine.attach(key, store);
 

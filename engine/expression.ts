@@ -9,6 +9,7 @@
 //   { "arg": i }                 within a function of one's own, what it was given
 
 import { isId, type Holon } from "../integrations/glass/store.ts";
+import type { LogEntry } from "../integrations/glass/store.ts";
 import { kernelOf } from "./kernel.ts";
 import { mouldOf, type Mould } from "./moulds.ts";
 import { isRef, references } from "./references.ts";
@@ -27,6 +28,8 @@ export type Known = { store: string; holon: Holon };
 export type Everything = {
   known: ReadonlyMap<string, Known>;
   holders: ReadonlyMap<string, readonly Holder[]>;
+  // Each store's log, where an expression asks of history.
+  logs?: ReadonlyMap<string, LogEntry[]>;
 };
 
 export type Holder = { from: string; key: string; holds: boolean };

@@ -78,6 +78,7 @@ type TitleOf = (id: string) => Promise<string>;
 export async function partSaid(functions: Functions, part: Expression, titleOf: TitleOf): Promise<Said> {
   if ("$ref" in part) return { field: "", value: await titleOf(part.$ref) };
   if ("arg" in part) return { field: "", value: `argument ${part.arg + 1}` };
+  if (!("call" in part) || !part.call) return { field: "", value: await plainly(part, titleOf) };
 
   const fn = functions.get(part.call.$ref);
   const field = fn?.title ?? (await titleOf(part.call.$ref));
@@ -88,6 +89,24 @@ export async function partSaid(functions: Functions, part: Expression, titleOf: 
     value: values.join(fn?.native === "and" ? " and " : fn?.native === "or" ? " or " : ", "),
     ...(fn?.native ? { native: fn.native } : {}),
   };
+}
+
+// What is no call of a function, as a pattern's variables and clauses, a list or a
+// record, said plainly, a holon in it by its title.
+async function plainly(value: unknown, titleOf: TitleOf): Promise<string> {
+  if (Array.isArray(value))
+    return `[${(await Promise.all(value.map((each) => plainly(each, titleOf)))).join(", ")}]`;
+  if (typeof value !== "object" || value === null) return JSON.stringify(value);
+
+  const record = value as Record<string, unknown>;
+  if (typeof record.$ref === "string") return titleOf(record.$ref);
+  if (typeof record["?"] === "string") return `?${record["?"]}`;
+  if ("list" in record) return plainly(record.list, titleOf);
+
+  const fields = await Promise.all(
+    Object.entries(record).map(async ([key, inner]) => `${key}: ${await plainly(inner, titleOf)}`),
+  );
+  return `{${fields.join(", ")}}`;
 }
 
 async function valueSaid(functions: Functions, given: Argument, titleOf: TitleOf) {

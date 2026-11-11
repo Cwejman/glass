@@ -693,7 +693,7 @@ const kernels = new WeakMap<Everything, ReturnType<typeof kernel>>();
 
 export function kernelOf(all: Everything) {
   let made = kernels.get(all);
-  if (!made) kernels.set(all, (made = kernel({ all })));
+  if (!made) kernels.set(all, (made = kernel({ all, logs: all.logs })));
 
   return made;
 }

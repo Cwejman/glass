@@ -2,7 +2,7 @@
 
 import { describe, expect, test } from "bun:test";
 import { memoryFiles } from "../integrations/glass/files.ts";
-import { commit, idAt, nextId, openStore, type Holon, type Store } from "../integrations/glass/store.ts";
+import { act, commit, idAt, nextId, openStore, type Holon, type Store } from "../integrations/glass/store.ts";
 import { openStores } from "../stores.ts";
 import { startEngine, type Engine } from "./engine.ts";
 import { gather, groups, level, type Expression, type Grouped } from "./expression.ts";
@@ -67,6 +67,7 @@ const takes: Record<string, string[]> = {
   not: ["set"],
   group: ["set", "axis"],
   flat: ["set"],
+  since: ["store", "words"],
 };
 
 const pulledHolons: Holon[] = [
@@ -140,7 +141,7 @@ async function pulledStore() {
 
 async function started() {
   const pulled = await pulledStore();
-  const engine = startEngine(await openStore(memoryFiles()));
+  const engine = startEngine([{ key: "home", store: await openStore(memoryFiles()), write: true }]);
 
   await engine.attach("pulled", pulled);
   return { engine, pulled };
@@ -345,7 +346,7 @@ describe("the engine", () => {
       says: "the note said again",
       at: "2999-01-01T00:00:00.000Z",
     });
-    const engine = startEngine(await openStore(memoryFiles()));
+    const engine = startEngine([{ key: "home", store: await openStore(memoryFiles()), write: true }]);
     await engine.attach("pulled", store);
 
     const since = (moment: string) => engine.read({ value: call("since", "pulled", moment) });
@@ -353,6 +354,9 @@ describe("the engine", () => {
     expect(await since("2998-01-01T00:00:00.000Z")).toEqual([{ $ref: note }]);
     expect(((await since("2000-01-01T00:00:00.000Z")) as unknown[]).length).toBe(pulledHolons.length);
     expect(await since("3000-01-01T00:00:00.000Z")).toEqual([]);
+    expect(await engine.read({ gather: call("since", "pulled", "2998-01-01T00:00:00.000Z") })).toEqual([
+      note,
+    ]);
     expect(await engine.read({ value: call("since", "nowhere", "2000-01-01T00:00:00.000Z") })).toEqual([]);
   });
 
@@ -393,7 +397,7 @@ describe("the engine", () => {
     const files = pulled.files as ReturnType<typeof memoryFiles>;
     const asked: string[] = [];
     const counting = { ...files, read: (path: string) => (asked.push(path), files.read(path)) };
-    const engine = startEngine(await openStore(memoryFiles()));
+    const engine = startEngine([{ key: "home", store: await openStore(memoryFiles()), write: true }]);
 
     await engine.attach("pulled", await openStore(counting));
     await engine.read({ holon: note });
@@ -522,7 +526,7 @@ describe("the engine", () => {
           ? Promise.reject(new Error("the network is down"))
           : files.read(path),
     };
-    const engine = startEngine(await openStore(memoryFiles()));
+    const engine = startEngine([{ key: "home", store: await openStore(memoryFiles()), write: true }]);
 
     await engine.attach("pulled", await openStore(flaky));
 
@@ -536,7 +540,7 @@ describe("the engine", () => {
   test("the first store to hold a holon is the one read, in everything as in one", async () => {
     const pulled = await pulledStore();
     const other = await pulledStore();
-    const engine = startEngine(await openStore(memoryFiles()));
+    const engine = startEngine([{ key: "home", store: await openStore(memoryFiles()), write: true }]);
 
     await engine.attach("first", pulled);
     await engine.attach("second", other);
@@ -590,9 +594,131 @@ describe("the engine", () => {
   });
 });
 
+describe("attachments", () => {
+  const empty = () => openStore(memoryFiles());
+  const noteOf = (id: string, title: string): Holon => ({ id, instance: [typeNote], body: { title } });
+
+  async function engineOf(...writable: string[]) {
+    const stores = await Promise.all(
+      writable.map(async (key) => ({ key, store: await empty(), write: true })),
+    );
+    return startEngine([...stores, { key: "pulled", store: await pulledStore() }]);
+  }
+
+  const storeOf = async (engine: Engine, id: string) => (await engine.read({ holon: id }))?.store;
+
+  test("an engine keeps no store of its own, and writes only where it was let", async () => {
+    const engine = startEngine([{ key: "pulled", store: await pulledStore() }]);
+
+    expect((await engine.read({ holon: note }))?.store).toBe("pulled");
+    await expect(engine.commit({ holons: [noteOf("~1", "nowhere")] })).rejects.toThrow("into which store");
+    await expect(engine.commit({ holons: [noteOf(note, "edited")] })).rejects.toThrow("only read");
+  });
+
+  test("a holon nothing holds goes where the commit says, or to the one store that may be written", async () => {
+    const one = await engineOf("a");
+    const { ids } = await one.commit({ holons: [noteOf("~1", "into a")] });
+    expect(await storeOf(one, ids["~1"]!)).toBe("a");
+
+    const two = await engineOf("a", "b");
+    await expect(two.commit({ holons: [noteOf("~1", "where")] })).rejects.toThrow("into which store");
+
+    const into = await two.commit({ holons: [noteOf("~1", "into b")], into: "b" });
+    expect(await storeOf(two, into.ids["~1"]!)).toBe("b");
+  });
+
+  test("a new holon resides where the whole that holds it is", async () => {
+    const engine = await engineOf("a", "b");
+    const whole = (
+      await engine.commit({
+        holons: [{ id: "~whole", instance: [typeBrief], body: { prose: [] } }],
+        into: "b",
+      })
+    ).ids["~whole"]!;
+
+    const { ids } = await engine.commit({
+      holons: [
+        { id: whole, instance: [typeBrief], body: { prose: [{ $ref: "~part" }] } },
+        { id: "~part", instance: [typeParagraph], body: { words: [{ $ref: wordA }] } },
+      ],
+    });
+
+    expect(await storeOf(engine, ids["~part"]!)).toBe("b");
+  });
+
+  test("a commit that changes nothing, or writes where it may not, is refused, and the engine goes on", async () => {
+    const engine = await engineOf("a");
+    let heard = 0;
+    engine.onChange(() => heard++);
+
+    await expect(engine.commit({ holons: [] })).rejects.toThrow("changes nothing");
+    await expect(engine.commit({ holons: [noteOf(note, "edited")] })).rejects.toThrow(
+      "belongs to pulled, which is only read",
+    );
+    await expect(engine.commit({ holons: [noteOf("~1", "x")], into: "pulled" })).rejects.toThrow(
+      "cannot go into pulled",
+    );
+    expect(heard).toBe(0);
+
+    const { ids } = await engine.commit({ holons: [noteOf("~1", "after")] });
+    expect(await storeOf(engine, ids["~1"]!)).toBe("a");
+  });
+
+  test("an edit is written where the holon is kept, as one act in every store it touches", async () => {
+    const engine = await engineOf("a", "b");
+    const inA = (await engine.commit({ holons: [noteOf("~1", "a")], into: "a" })).ids["~1"]!;
+    const inB = (await engine.commit({ holons: [noteOf("~1", "b")], into: "b" })).ids["~1"]!;
+
+    const { commit: done } = await engine.commit({
+      holons: [noteOf(inA, "a again"), noteOf(inB, "b again")],
+    });
+    const lastAct = async (key: string) =>
+      ((await engine.read({ log: key })) as { act: string }[]).at(-1)!.act;
+
+    expect(await lastAct("a")).toBe(done);
+    expect(await lastAct("b")).toBe(done);
+    expect((await engine.read({ holon: inA }))?.body.title).toBe("a again");
+  });
+
+  test("a holon kept in two stores is written in both", async () => {
+    const shared = noteOf(idAt(Date.parse("2026-11-11T00:00:00Z"), 0), "shared");
+    const { stores } = await act(
+      [
+        { store: await empty(), holons: [shared] },
+        { store: await empty(), holons: [shared] },
+      ],
+      { says: "kept in both" },
+    );
+    const engine = startEngine([
+      { key: "a", store: stores[0]!, write: true },
+      { key: "b", store: stores[1]!, write: true },
+      { key: "pulled", store: await pulledStore() },
+    ]);
+
+    await engine.commit({ holons: [noteOf(shared.id, "said again")] });
+
+    for (const store of [stores[0]!, stores[1]!]) {
+      const now = await openStore(store.files);
+      expect((await now.read(shared.id))?.version.body.title).toBe("said again");
+    }
+  });
+
+  test("what goes leaves every store that keeps it, and nothing left may point at it", async () => {
+    const engine = await engineOf("a");
+    const kept = (await engine.commit({ holons: [noteOf("~1", "to go")] })).ids["~1"]!;
+    const pointing = await engine.commit({
+      holons: [{ id: "~1", instance: [typeBrief], body: { prose: [], about: { $ref: kept } } }],
+    });
+
+    await expect(engine.commit({ holons: [], gone: [kept] })).rejects.toThrow("would be gone");
+    await engine.commit({ holons: [], gone: [kept, pointing.ids["~1"]!] });
+    expect(await engine.read({ holon: kept })).toBe(null);
+  });
+});
+
 // Real usage: the stores this repository holds, through the same code.
 describe("the real stores", async () => {
-  const engine = startEngine(await openStore(memoryFiles()));
+  const engine = startEngine([{ key: "home", store: await openStore(memoryFiles()), write: true }]);
   const opened: Record<string, Store> = await openStores();
 
   for (const [key, store] of Object.entries(opened)) await engine.attach(key, store);

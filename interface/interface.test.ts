@@ -74,7 +74,7 @@ const stores = Object.entries(await openStores());
 async function open(address: string, homeFiles = memoryFiles(), servedAt = "./") {
   history.replaceState(null, "", address);
 
-  const engine = startEngine(await openStore(homeFiles));
+  const engine = startEngine([{ key: "home", store: await openStore(homeFiles), write: true }]);
 
   for (const [key, store] of stores) await engine.attach(key, store);
 

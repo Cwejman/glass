@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 
 // The engine on its own thread in the browser, so it never holds up the drawing.
-// Its home lives in the browser's storage, and so do the blocks it has pulled.
+// The reader's home lives in the browser's storage, and so do the blocks it has pulled.
 
 import { canonical } from "../integrations/glass/canonical.ts";
 import { servedFiles } from "../integrations/glass/files.ts";
@@ -13,7 +13,10 @@ import type { Message, Reply } from "./protocol.ts";
 declare const self: DedicatedWorkerGlobalScope;
 
 const pulled = idbFiles("glass-pulled-blocks");
-const started = idbFiles("glass-home").then(openStore).then(startEngine);
+// The home is the reader's own store, attached to be written; everything else is read.
+const started = idbFiles("glass-home")
+  .then(openStore)
+  .then((home) => startEngine([{ key: "home", store: home, write: true }]));
 
 const subscriptions = new Map<number, { read: Read; last: string }>();
 let changes = 0;

@@ -100,7 +100,7 @@ async function keepAttached(engine: Connection, type: string | undefined, attach
     return [{ id: was.id, instance: was.instance, name: was.name, body: { ...was.body, from: body.from } }];
   });
 
-  if (holons.length) await engine.commit({ holons, says: "What is attached" });
+  if (holons.length) await engine.commit({ holons, says: "What is attached", into: "home" });
 }
 
 export async function mount(
@@ -160,6 +160,7 @@ export async function mount(
     await engine.commit({
       holons: [{ id: held?.id ?? "~history", instance: [historyType], name: "History", body: { visits } }],
       says: "A visit",
+      into: "home",
     });
   }
 
@@ -208,6 +209,7 @@ export async function mount(
           ...made,
         ],
         says: "The reader's own",
+        into: "home",
       });
 
       if ((await rootOf()) !== drawnRoot) await draw();

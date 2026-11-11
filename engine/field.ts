@@ -17,7 +17,8 @@ import { mouldOf, type Mould } from "./moulds.ts";
 import { idsIn, type Answer, type HolonRead, type Read, type Whole } from "./reads.ts";
 import { partsOf } from "./references.ts";
 
-export type Attached = { key: string; store: Store };
+// A store as this engine uses it: what it is called here, and whether it may be written.
+export type Attached = { key: string; store: Store; write?: boolean };
 
 export type Field = {
   stores: readonly Attached[];
@@ -71,14 +72,22 @@ export function fieldOf(stores: readonly Attached[], before?: Field): Field {
   return { stores, everything, storeHolons };
 }
 
-// The store that holds an id, known without fetching anything.
-const standing = (field: Field, id: string) => field.stores.find(({ store }) => store.mayHold(id));
+// Every attached store that keeps a holon now, in the order they were attached: those
+// that may hold its id, asked whether they do.
+export async function keepersOf(field: Field, id: string) {
+  const asked = await Promise.all(
+    field.stores
+      .filter(({ store }) => store.mayHold(id))
+      .map(async (attached) => ({ attached, latest: await attached.store.read(id) })),
+  );
 
+  return asked.flatMap(({ attached, latest }) => (latest ? [{ ...attached, latest }] : []));
+}
+
+// A holon as the first store that keeps it has it.
 async function find(field: Field, id: string) {
-  const attached = standing(field, id);
-  const latest = attached && (await attached.store.read(id));
-
-  return latest ? { key: attached.key, ...latest } : null;
+  const [first] = await keepersOf(field, id);
+  return first ? { key: first.key, ...first.latest } : null;
 }
 
 export async function holonOf(field: Field, id: string) {
@@ -147,24 +156,29 @@ async function readWhole(
   return { root, holons };
 }
 
-// What an expression gives, worked out over everything the field holds. Each store's
-// history is fetched only for an expression that asks of it.
-async function valueOf(field: Field, all: Everything, expression: Expr) {
-  const problem = expressionProblem(expression);
-  if (problem) throw new Error(problem);
-
+// Everything the field holds, with each store's log where an expression asks of
+// history: fetched only then.
+async function withHistory(field: Field, all: Everything, expression: unknown): Promise<Everything> {
   const asksOfHistory = idsIn(expression).some((id) =>
     ["log", "since"].includes(
       String((all.known.get(id)?.holon.body as { native?: unknown } | undefined)?.native),
     ),
   );
-  if (!asksOfHistory) return plain(kernelOf(all).evaluate(expression));
+  if (!asksOfHistory) return all;
 
   const logs = new Map(
     await Promise.all(field.stores.map(async ({ key, store }) => [key, await store.log()] as const)),
   );
 
-  return plain(kernel({ all, logs }).evaluate(expression));
+  return { ...all, logs };
+}
+
+// What an expression gives, worked out over everything the field holds.
+async function valueOf(field: Field, all: Everything, expression: Expr) {
+  const problem = expressionProblem(expression);
+  if (problem) throw new Error(problem);
+
+  return plain(kernelOf(await withHistory(field, all, expression)).evaluate(expression));
 }
 
 async function answer(field: Field, query: Read): Promise<unknown> {
@@ -177,8 +191,8 @@ async function answer(field: Field, query: Read): Promise<unknown> {
   }
 
   if ("versions" in query) {
-    const attached = standing(field, query.versions);
-    return attached ? attached.store.versions(query.versions) : [];
+    const [first] = await keepersOf(field, query.versions);
+    return first ? first.store.versions(query.versions) : [];
   }
 
   if ("named" in query || "instances" in query) {
@@ -193,9 +207,9 @@ async function answer(field: Field, query: Read): Promise<unknown> {
 
   const all = await field.everything();
 
-  if ("gather" in query) return gather(all, query.gather);
-  if ("level" in query) return level(all, query.level);
-  if ("groups" in query) return groups(all, query.groups);
+  if ("gather" in query) return gather(await withHistory(field, all, query.gather), query.gather);
+  if ("level" in query) return level(await withHistory(field, all, query.level), query.level);
+  if ("groups" in query) return groups(await withHistory(field, all, query.groups), query.groups);
   if ("value" in query) return valueOf(field, all, query.value);
 
   return all.holders.get(query.holders) ?? [];
