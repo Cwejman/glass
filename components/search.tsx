@@ -494,6 +494,7 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
       reads,
       (one ?? null) as HolonRead | null,
       "full",
+      given.value !== undefined,
     ) as HolonOf<ComponentBody>[];
   };
 
@@ -566,20 +567,24 @@ export default async function draw(given: Given<never, SearchSettings>, space: S
   // How much is in view, said beneath where one stands: how many holons a way
   // of looking gathers, and how many of them stand at its level, or, grouped, in
   // how many collections.
-  const grouped = given.gathers ? await space.read({ groups: given.gathers }) : null;
-  const atLevel = given.gathers && !grouped ? await space.read({ level: given.gathers }) : [];
+  // A way of looking that gives no set gives a value, and says so.
+  const gathersSet = given.gathers && given.value === undefined;
+  const grouped = gathersSet ? await space.read({ groups: given.gathers! }) : null;
+  const atLevel = gathersSet && !grouped ? await space.read({ level: given.gathers! }) : [];
   const counted = (n: number, what: string) => `${n} ${what}${n === 1 ? "" : "s"}`;
   const status = !given.gathers
     ? ""
-    : grouped?.groups.length
-      ? [
-          `${counted(given.list?.length ?? 0, "holon")}: ${counted(grouped.groups.length, "collection")}`,
-          ...(grouped.rest.length ? [`${grouped.rest.length} more`] : []),
-        ].join(", ")
-      : [
-          counted(given.list?.length ?? 0, "holon"),
-          ...(atLevel.length < (given.list?.length ?? 0) ? [`${atLevel.length} at this level`] : []),
-        ].join(", ");
+    : !gathersSet
+      ? "a value, not a set of holons"
+      : grouped?.groups.length
+        ? [
+            `${counted(given.list?.length ?? 0, "holon")}: ${counted(grouped.groups.length, "collection")}`,
+            ...(grouped.rest.length ? [`${grouped.rest.length} more`] : []),
+          ].join(", ")
+        : [
+            counted(given.list?.length ?? 0, "holon"),
+            ...(atLevel.length < (given.list?.length ?? 0) ? [`${atLevel.length} at this level`] : []),
+          ].join(", ");
 
   const listed = (<ul class="search-found" role="listbox" />) as HTMLElement;
   const element = (

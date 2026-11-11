@@ -31,14 +31,18 @@ const calls = (
 ): value is { call: { $ref: string }; with?: Argument[] } =>
   typeof value !== "string" && "call" in value && functions.get(value.call.$ref)?.native === name;
 
+// What an argument is where it is no plain value: a part of the expression, as a call or
+// a holon; an argument may be a string, a number, a truth or nothing as well.
+const isPart = (argument: unknown): argument is Expression =>
+  typeof argument === "object" && argument !== null;
+
 // The holons a set is made of, where it is made of holons only.
 export function holonsOf(functions: Functions, set: Argument | undefined): { $ref: string }[] | undefined {
-  if (set === undefined || typeof set === "string") return undefined;
+  if (!isPart(set)) return undefined;
   if ("$ref" in set) return [set];
 
   const allHolons =
-    calls(functions, set, "or") &&
-    (set.with ?? []).every((each) => typeof each !== "string" && "$ref" in each);
+    calls(functions, set, "or") && (set.with ?? []).every((each) => isPart(each) && "$ref" in each);
 
   return allHolons ? (set.with as { $ref: string }[]) : undefined;
 }
@@ -77,6 +81,7 @@ type TitleOf = (id: string) => Promise<string>;
 
 // A part said as its field and its value.
 export async function partSaid(functions: Functions, part: Expression, titleOf: TitleOf): Promise<Said> {
+  if (!isPart(part)) return { field: "", value: JSON.stringify(part) };
   if ("$ref" in part) return { field: "", value: await titleOf(part.$ref) };
   if ("arg" in part) return { field: "", value: `argument ${part.arg + 1}` };
   if (!("call" in part) || !part.call) return { field: "", value: await plainly(functions, part, titleOf) };
@@ -140,6 +145,7 @@ async function printed(functions: Functions, expression: unknown, titleOf: Title
 
 async function valueSaid(functions: Functions, given: Argument, titleOf: TitleOf) {
   if (typeof given === "string") return given;
+  if (!isPart(given)) return JSON.stringify(given);
 
   const holons = holonsOf(functions, given);
   if (holons) return (await Promise.all(holons.map(({ $ref }) => titleOf($ref)))).join(" or ");

@@ -24,6 +24,10 @@ export type Read =
   | { groups: Expression }
   | { value: Expr };
 
+// What a way of looking that gives no set is refused with, so a reader can read it as a
+// value instead.
+export const notASet = "what is looked at is a set of holons, and this gives something else";
+
 export type Answer<R extends Read> = R extends { holon: string }
   ? HolonRead | null
   : R extends { whole: string }

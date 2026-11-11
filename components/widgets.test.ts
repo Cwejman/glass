@@ -104,3 +104,33 @@ test("a board opens each widget as its own slot, by the component it names, at i
   ]);
   expect(drawn.querySelectorAll(".widget.span-3")).toHaveLength(1);
 });
+
+test("a value is drawn as what it is: a number, words, a list, a record, a holon as a face", async () => {
+  const { default: value } = await import("./value.tsx");
+  opened.length = 0;
+  const of = (given: unknown) =>
+    value({ value: given, kind: "full" } as unknown as Given<never>, space) as HTMLElement;
+
+  expect(of(8).querySelector(".value-number")!.textContent).toBe("8");
+  expect(of("words as written").textContent).toBe("words as written");
+  expect([...of(["a", "b"]).querySelectorAll("li")].map((item) => item.textContent)).toEqual(["a", "b"]);
+  expect([...of({ stands: "open" }).querySelectorAll("dt")].map((term) => term.textContent)).toEqual([
+    "stands",
+  ]);
+
+  of([{ $ref: "a" }]);
+  expect(opened).toEqual([{ where: "a", opening: { offer: { kind: "face" } } }]);
+});
+
+test("a value is drawn so far and no more, and a function by what it takes", async () => {
+  const { default: value } = await import("./value.tsx");
+  const of = (given: unknown) =>
+    value({ value: given, kind: "full" } as unknown as Given<never>, space) as HTMLElement;
+
+  expect(of(Array.from({ length: 500 }, (_, i) => i)).textContent).toContain("200 more not drawn");
+  expect(of({ a: { b: { c: { d: { e: 1 } } } } }).textContent).toContain('{"e":1}');
+  expect(of({ function: "a, b" }).textContent).toBe("a function of a, b");
+  expect(
+    (value({ value: { one: 1 }, kind: "face" } as unknown as Given<never>, space) as HTMLElement).textContent,
+  ).toBe("1 field");
+});

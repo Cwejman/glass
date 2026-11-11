@@ -10,9 +10,10 @@ const takesOf = (component: HolonRead) => component.body.takes as string[];
 const drawsIn = (component: HolonRead, kind: Kind) => (component.body.kinds as string[]).includes(kind);
 
 // Given that kind of thing, in that kind of slot. A way of looking reads as the list
-// it gathers, so what draws a list draws it too.
-function able(component: HolonRead, reads: Reading, kind: Kind) {
-  const given = "holon" in reads ? "holon" : "list" in reads ? "list" : "expression";
+// it gathers, so what draws a list draws it too; one that gives no set gives a value,
+// drawn only by what takes a value, or the selection.
+function able(component: HolonRead, reads: Reading, kind: Kind, value = false) {
+  const given = value ? "value" : "holon" in reads ? "holon" : "list" in reads ? "list" : "expression";
   const argument = argumentOf(component);
 
   return (
@@ -28,8 +29,9 @@ export function candidates(
   reads: Reading,
   holon: HolonRead | null,
   kind: Kind,
+  value = false,
 ) {
-  const fitting = components.filter((component) => able(component, reads, kind));
+  const fitting = components.filter((component) => able(component, reads, kind, value));
 
   if (!("holon" in reads)) return fitting;
 
@@ -45,8 +47,16 @@ const foundable = (component: HolonRead) => component.body.named !== true;
 
 // The one found: for a holon, one that takes its type before the wildcard. For a way
 // of looking, one given ways of looking, else a list that takes nothing in particular.
-export function match(components: readonly HolonRead[], reads: Reading, holon: HolonRead | null, kind: Kind) {
-  const fitting = candidates(components, reads, holon, kind).filter(foundable);
+export function match(
+  components: readonly HolonRead[],
+  reads: Reading,
+  holon: HolonRead | null,
+  kind: Kind,
+  value = false,
+) {
+  const fitting = candidates(components, reads, holon, kind, value).filter(foundable);
+
+  if (value) return fitting.find((component) => argumentOf(component) === "value");
   const particular = (component: HolonRead) => takesOf(component).length > 0;
 
   if ("gather" in reads) {

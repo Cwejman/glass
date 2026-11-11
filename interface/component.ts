@@ -27,6 +27,8 @@ export type Given<B = Holon["body"], S = Settings> = {
   holon?: HolonOf<B>;
   list?: string[];
   gathers?: Expression;
+  // What a way of looking gives where it gives no set: a number, words, a list, a record.
+  value?: unknown;
   kind: Kind;
   offered: Offer;
   settings: S;

@@ -10,7 +10,7 @@
 import type { Holon } from "../integrations/glass/store.ts";
 import type { Expression } from "../engine/expression.ts";
 import { bodyProblem, type Mould } from "../engine/moulds.ts";
-import { askedOf, formOf, idsIn, type HolonRead, type Read } from "../engine/reads.ts";
+import { askedOf, formOf, idsIn, notASet, type HolonRead, type Read } from "../engine/reads.ts";
 import { references } from "../engine/references.ts";
 import type { Place } from "./address.ts";
 import type {
@@ -27,6 +27,10 @@ import type {
 } from "./component.ts";
 import type { Connection } from "./connection.ts";
 import { candidates, match } from "./finding.ts";
+
+// What a way of looking gives that is a set: holons, each by its id.
+const isSet = (value: unknown) =>
+  Array.isArray(value) && value.every((item) => typeof (item as { $ref?: unknown })?.$ref === "string");
 
 // What a slot is asked to draw.
 export type Call = {
@@ -130,17 +134,22 @@ export function drawing(
   // The component a slot names, where it can draw there; one named that cannot is
   // said so in the slot, rather than quietly replaced. Where the nesting guard turned
   // the slot into a face, the slot did not ask for that, so it is not at fault.
-  function componentFor(call: Call, holon: HolonRead | null, guarded: boolean): HolonRead | string {
+  function componentFor(
+    call: Call,
+    holon: HolonRead | null,
+    guarded: boolean,
+    value = false,
+  ): HolonRead | string {
     const kind = kindOf(call);
     const found = () =>
-      match(components, call.reads, holon, kind) ??
+      match(components, call.reads, holon, kind, value) ??
       `nothing draws ${describe(call.reads, holon)} as a ${kind} slot`;
 
     if (!call.called) return found();
 
     const named = components.find(({ id }) => id === call.called);
 
-    if (named && candidates([named], call.reads, holon, kind).length) return named;
+    if (named && candidates([named], call.reads, holon, kind, value).length) return named;
     if (guarded) return found();
     if (!named) return "the component named here is not in the field, or is not among those run";
 
@@ -156,6 +165,8 @@ export function drawing(
     let reads: (() => void)[] = [];
     let holon: HolonRead | null = null;
     let gathered: string[] = [];
+    // What a way of looking gives where it gives no set, read as a value instead.
+    let valued: { value: unknown } | null = null;
     let stopWatching: (() => void) | undefined;
 
     // What takes a while says so, rather than standing empty. What arrives soon never shows it.
@@ -326,12 +337,17 @@ export function drawing(
 
       const handed = holon
         ? [holon.id, ...holon.instance, ...references(holon.body).map(({ id }) => id)]
-        : [...list!, ...("gather" in call.reads ? idsIn(call.reads.gather) : [])];
+        : [
+            ...list!,
+            ...("gather" in call.reads ? idsIn(call.reads.gather) : []),
+            ...(valued ? idsIn(valued.value) : []),
+          ];
 
       const given: Given = {
         ...(holon ? { holon } : {}),
         ...(list ? { list } : {}),
         ...("gather" in call.reads ? { gathers: call.reads.gather as Expression } : {}),
+        ...(valued ? { value: valued.value } : {}),
         kind: kindOf(call),
         offered: call.offered,
         settings: call.settings,
@@ -368,6 +384,42 @@ export function drawing(
       return element;
     }
 
+    // A way of looking's refusal, said once wherever the engine runs, is how a value is
+    // told from a set; it is the engine's word, kept in one place beside the reads.
+    async function watchValue(gathers: unknown) {
+      try {
+        const watching = await engine.subscribe<Read>(
+          { value: gathers },
+          (value) => {
+            // A value that comes to be a set is drawn again, as the set it gathers.
+            if (isSet(value)) return void draw(host, asked);
+
+            valued = { value };
+            void render();
+          },
+          (error) => {
+            if (!closed)
+              host.replaceChildren(note(`${describe(asked.reads, null)} cannot be read: ${error.message}`));
+          },
+        );
+
+        if (closed) return watching.close();
+
+        stopWatching = watching.close;
+        valued = { value: watching.value };
+      } catch (error) {
+        if (!closed)
+          host.replaceChildren(
+            note(
+              `${describe(asked.reads, null)} cannot be read: ${error instanceof Error ? error.message : String(error)}`,
+            ),
+          );
+        return;
+      }
+
+      await render();
+    }
+
     async function render() {
       if (closed) return;
 
@@ -397,7 +449,7 @@ export function drawing(
       if (kindOf(call) === "face" && (holon || "gather" in call.reads)) host.tabIndex = 0;
       else host.removeAttribute("tabindex");
 
-      const component = componentFor(call, holon, guarded);
+      const component = componentFor(call, holon, guarded, !!valued);
 
       if (typeof component === "string") {
         host.replaceChildren(note(component));
@@ -456,9 +508,11 @@ export function drawing(
           void render();
         },
         (error) => {
-          if (!closed) {
-            host.replaceChildren(note(`${describe(asked.reads, null)} cannot be read: ${error.message}`));
-          }
+          if (closed) return;
+
+          // A way of looking that stops giving a set is drawn again, as the value it gives.
+          if (error.message === notASet) void draw(host, asked);
+          else host.replaceChildren(note(`${describe(asked.reads, null)} cannot be read: ${error.message}`));
         },
       );
 
@@ -472,12 +526,15 @@ export function drawing(
       if ("gather" in asked.reads) gathered = watching.value as string[];
       else holon = watching.value as HolonRead | null;
     } catch (error) {
-      if (!closed)
-        host.replaceChildren(
-          note(
-            `${describe(asked.reads, null)} cannot be read: ${error instanceof Error ? error.message : String(error)}`,
-          ),
-        );
+      const said = error instanceof Error ? error.message : String(error);
+
+      // A way of looking that gives no set is read as the value it gives, and watched so.
+      if (said === notASet && "gather" in asked.reads && !closed) {
+        await watchValue(asked.reads.gather);
+        return;
+      }
+
+      if (!closed) host.replaceChildren(note(`${describe(asked.reads, null)} cannot be read: ${said}`));
       return;
     }
 

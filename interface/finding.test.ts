@@ -59,3 +59,12 @@ test("what is drawn only where named is never found, though it may be chosen", (
   expect(match([count, wildcard], { holon: "x" }, holon("note"), "full")).toBe(wildcard);
   expect(candidates(before, { list: ["x"] }, null, "full")).toContain(count);
 });
+
+test("a value no set is drawn by what takes a value, never by a list", () => {
+  const value = component("Value", [], ["full", "face"], "value");
+  const withValue = [value, ...all];
+
+  expect(match(withValue, { gather: asked }, null, "full", true)).toBe(value);
+  expect(candidates(withValue, { gather: asked }, null, "full", true)).toEqual([value, reader]);
+  expect(match(withValue, { gather: asked }, null, "face")).toBe(collection);
+});

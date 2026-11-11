@@ -7,6 +7,7 @@
 //   { "$ref": H }                the holon H, as a set of one
 //   { "call": F, "with": [ … ] } the function F, given its arguments
 //   { "arg": i }                 within a function of one's own, what it was given
+import { notASet } from "./reads.ts";
 
 import { isId, type Holon } from "../integrations/glass/store.ts";
 import type { LogEntry } from "../integrations/glass/store.ts";
@@ -164,8 +165,7 @@ export function gather(all: Everything, expression: Expression, nested = 0): str
   called(all, expression);
 
   const value = kernelOf(all).evaluate(expression);
-  if (!Array.isArray(value) || !value.every(isRef))
-    throw new Error("what is looked at is a set of holons, and this gives something else");
+  if (!Array.isArray(value) || !value.every(isRef)) throw new Error(notASet);
 
   const place = placeOf(all);
   const set = [...new Set(value.map(({ $ref }) => $ref))]

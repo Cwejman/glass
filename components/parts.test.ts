@@ -53,3 +53,12 @@ test("what a lambda gives is said by the language: records, quoted keys, a lambd
     "h => (x => x).k",
   );
 });
+
+test("a number or nothing given to a function is said as it is", async () => {
+  const said = await partSaid(
+    functions,
+    { call: { $ref: "FILTER" }, with: [{ $ref: "THREAD" }, 12 as never, null as never] },
+    titleOf,
+  );
+  expect(said.value).toBe("thread, 12, null");
+});

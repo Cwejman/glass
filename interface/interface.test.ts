@@ -463,3 +463,14 @@ describe("the home", () => {
     );
   });
 });
+
+describe("a value looked at", () => {
+  test("a way of looking that gives no set is drawn as its value, its search standing above it", async () => {
+    const { page } = await open("https://glass.test/?look=size(type(@glass:types/component))");
+
+    await settled(() => !!page.querySelector(".value-number"));
+
+    expect(Number(page.querySelector(".value-number")!.textContent)).toBeGreaterThan(0);
+    expect(page.textContent).toContain("a value, not a set of holons");
+  });
+});
