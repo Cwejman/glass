@@ -1,0 +1,11 @@
+{"body":{"after":".","text":"whole"},"id":"1M76EP92GS4R0E2","instance":["1M6YBY3G0000005"],"prev":null}
+{"body":{"words":[{"$ref":"1M76EP92GS4R0D8"},{"$ref":"1M76EP92GS4R0D9"},{"$ref":"1M76EP92GS4R0DA"},{"$ref":"1M76EP92GS4R0DB"},{"$ref":"1M76EP92GS4R0DC"},{"$ref":"1M76EP92GS4R0DD"},{"$ref":"1M76EP92GS4R0DE"},{"$ref":"1M76EP92GS4R0DF"},{"$ref":"1M76EP92GS4R0DG"},{"$ref":"1M76EP92GS4R0DH"},{"$ref":"1M76EP92GS4R0DJ"},{"$ref":"1M76EP92GS4R0DK"},{"$ref":"1M76EP92GS4R0DM"},{"$ref":"1M76EP92GS4R0DN"},{"$ref":"1M76EP92GS4R0DP"},{"$ref":"1M76EP92GS4R0DQ"},{"$ref":"1M76EP92GS4R0DR"},{"$ref":"1M76EP92GS4R0DS"},{"$ref":"1M76EP92GS4R0DT"},{"$ref":"1M76EP92GS4R0DV"},{"$ref":"1M76EP92GS4R0DW"},{"$ref":"1M76EP92GS4R0DX"},{"$ref":"1M76EP92GS4R0DY"},{"$ref":"1M76EP92GS4R0DZ"},{"$ref":"1M76EP92GS4R0E0"},{"$ref":"1M76EP92GS4R0E1"},{"$ref":"1M76EP92GS4R0E2"}]},"id":"1M76EP92GS4R0E3","instance":["1M6YBY3G0000004"],"prev":null}
+{"body":{"text":"This"},"id":"1M76EP92GS4R0E4","instance":["1M6YBY3G0000005"],"prev":null}
+{"body":{"text":"trade"},"id":"1M76EP92GS4R0E5","instance":["1M6YBY3G0000005"],"prev":null}
+{"body":{"text":"is"},"id":"1M76EP92GS4R0E6","instance":["1M6YBY3G0000005"],"prev":null}
+{"body":{"text":"the"},"id":"1M76EP92GS4R0E7","instance":["1M6YBY3G0000005"],"prev":null}
+{"body":{"text":"author's"},"id":"1M76EP92GS4R0E8","instance":["1M6YBY3G0000005"],"prev":null}
+{"body":{"text":"to"},"id":"1M76EP92GS4R0E9","instance":["1M6YBY3G0000005"],"prev":null}
+{"body":{"after":".","text":"see"},"id":"1M76EP92GS4R0EA","instance":["1M6YBY3G0000005"],"prev":null}
+{"body":{"words":[{"$ref":"1M76EP92GS4R0E4"},{"$ref":"1M76EP92GS4R0E5"},{"$ref":"1M76EP92GS4R0E6"},{"$ref":"1M76EP92GS4R0E7"},{"$ref":"1M76EP92GS4R0E8"},{"$ref":"1M76EP92GS4R0E9"},{"$ref":"1M76EP92GS4R0EA"}]},"id":"1M76EP92GS4R0EB","instance":["1M6YBY3G0000004"],"prev":null}
+{"body":{"sentences":[{"$ref":"1M76EP92GS4R0E3"},{"$ref":"1M76EP92GS4R0EB"}]},"id":"1M76EP92GS4R0EC","instance":["1M6YBY3G0000002"],"prev":null}
