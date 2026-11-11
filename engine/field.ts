@@ -13,7 +13,7 @@ import {
   type Everything,
   type Known,
 } from "./expression.ts";
-import { kernel, kernelOf, plain, type Expr } from "./kernel.ts";
+import { kernel, kernelOf, plain, type Expr, type Shelf } from "./kernel.ts";
 import { mouldOf, type Mould } from "./moulds.ts";
 import { idsIn, type Answer, type HolonRead, type Read, type Whole } from "./reads.ts";
 import { partsOf } from "./references.ts";
@@ -35,6 +35,9 @@ export type Field = {
   // How a store's holons are read, handed on as it is to the next field where the store is
   // unchanged, so a field never holds the one before it.
   readerOf: (key: string) => (() => Promise<Known[]>) | undefined;
+  // Each store's index as last made, the same shelf from field to field, so a store a
+  // commit changed is patched from the index before it.
+  shelf: Shelf;
 };
 
 const once = <T>(make: () => Promise<T>) => {
@@ -54,10 +57,15 @@ const once = <T>(make: () => Promise<T>) => {
 // What each store holds is asked once, and carried over to the next field.
 export function fieldOf(stores: readonly Attached[], before?: Field): Field {
   const carried = new Map<string, () => Promise<Known[]>>();
+  const shelf: Shelf = before?.shelf ?? new Map();
 
   const ofStore = ({ key, store }: Attached) =>
     once(async () =>
-      [...(await store.all()).values()].map(({ version }) => ({ store: key, holon: asHolon(version) })),
+      [...(await store.all()).values()].map(({ version, block }) => ({
+        store: key,
+        holon: asHolon(version),
+        block,
+      })),
     );
 
   for (const attached of stores) {
@@ -75,10 +83,10 @@ export function fieldOf(stores: readonly Attached[], before?: Field): Field {
     // A holon two stores claim is the first's, as when one is read alone.
     for (const each of held.flat()) if (!known.has(each.holon.id)) known.set(each.holon.id, each);
 
-    return everythingOf(known, new Map(stores.map(({ key }, i) => [key, held[i]!])));
+    return everythingOf(known, new Map(stores.map(({ key }, i) => [key, held[i]!])), shelf);
   });
 
-  return { stores, everything, storeHolons, readerOf: (key) => carried.get(key) };
+  return { stores, everything, storeHolons, readerOf: (key) => carried.get(key), shelf };
 }
 
 // Every attached store that keeps a holon now, in the order they were attached: those

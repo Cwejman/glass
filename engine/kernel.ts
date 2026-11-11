@@ -23,7 +23,15 @@
 import { canonical } from "../integrations/glass/canonical.ts";
 import { writtenBy, type LogEntry } from "../integrations/glass/store.ts";
 import type { Everything, Known } from "./expression.ts";
-import { answeringAll, indexOf, mouldIn as mouldsIn, type Answering, type FactValue } from "./facts.ts";
+import {
+  answeringAll,
+  indexOf,
+  mouldIn as mouldsIn,
+  patchedIndex,
+  type Answering,
+  type FactValue,
+  type Index,
+} from "./facts.ts";
 import { mouldOf, type Mould } from "./moulds.ts";
 import { bindable, isVar, orProblem, solve, usedBeside, type Clause, type Step } from "./pattern.ts";
 import { wordsOf } from "./words.ts";
@@ -704,38 +712,112 @@ export function answeringOf(all: Everything): Answering {
 
 type Held = readonly Known[];
 
-// A store's index, kept beside the very holons it was made of: what each type they are
-// read through was, and which of them another store claims first. While all three stand,
-// a store the field carried unchanged keeps its index from field to field.
-const storeIndexes = new WeakMap<
-  Held,
-  { index: Answering; types: Map<string, Known | undefined>; shadowed: string }
->();
+// A holon's version as its store says it: the block it was read from, or, where the
+// store says none, the very holon as it was read. A type's version names its store as
+// well, as another store may come to claim it first.
+type Version = string | Known;
+const versionOf = (known: Known): Version => known.block ?? known;
+const typeVersionOf = (known: Known | undefined): Version | undefined =>
+  known && (known.block === undefined ? known : `${known.store}\u0000${known.block}`);
 
-function storeIndex(held: Held, all: Everything): Answering {
-  const own = held.filter((each) => all.known.get(each.holon.id) === each);
-  const shadowed =
-    own.length === held.length
-      ? ""
-      : held
-          .filter((each) => all.known.get(each.holon.id) !== each)
-          .map(({ holon }) => holon.id)
-          .join(" ");
+// A store's index, kept beside what it was made of: each holon it was made of by its
+// version, each type they are read through by its version, and the holons another store
+// claimed first. Kept by the key the store is attached by on a shelf each field hands to
+// the next, so a store a commit changed is patched from the index before it. The shelf
+// is the one thing a read writes: what it keeps is worked out, never said, so an old
+// field asked late leaves only a longer patch for the next.
+export type Kept = {
+  index: Index;
+  versions: ReadonlyMap<string, Version>;
+  types: ReadonlyMap<string, Version | undefined>;
+  claimedElsewhere: string;
+};
 
-  const kept = storeIndexes.get(held);
-  if (kept && kept.shadowed === shadowed && [...kept.types].every(([id, was]) => all.known.get(id) === was))
-    return kept.index;
+export type Shelf = Map<string, Kept>;
 
-  const types = new Map(own.flatMap(({ holon }) => holon.instance).map((id) => [id, all.known.get(id)]));
-  const index = indexOf(own, mouldsIn(all.known));
+// How each store's index came to be, the first time a field asked it: kept as it was,
+// patched by what changed, or made fresh.
+export type Made = "kept" | "patched" | "fresh";
+const howMade = new WeakMap<Everything["known"], Map<string, Made>>();
 
-  storeIndexes.set(held, { index, types, shadowed });
-  return index;
+export function howIndexed(all: Everything): ReadonlyMap<string, Made> {
+  answeringOf(all);
+  return howMade.get(all.known)!;
+}
+
+// So many of a store's holons changed, or more, and its index is made fresh: a patch
+// costs a little for each holon it says again, and copies every order once.
+const mostPatched = 1 / 4;
+
+// A store's holons as an index is made of them: those it claims first, each by its
+// version, and the types they are read through; and, against what was kept, the holons
+// to be said again: those whose version changed, came or went, or whose type changed.
+function changesOf(held: Held, all: Everything, kept: Kept | undefined) {
+  const own: Known[] = [];
+  const claimedElsewhere: string[] = [];
+  const versions = new Map<string, Version>();
+  const types = new Map<string, Version | undefined>();
+  const dirty = new Set<string>();
+  // How many of those kept are held still, so those gone are looked for only if any are.
+  let stillHeld = 0;
+
+  for (const each of held) {
+    const id = each.holon.id;
+    if (all.known.get(id) !== each) {
+      claimedElsewhere.push(id);
+      continue;
+    }
+
+    own.push(each);
+    for (const type of each.holon.instance)
+      if (!types.has(type)) types.set(type, typeVersionOf(all.known.get(type)));
+
+    const version = versionOf(each);
+    versions.set(id, version);
+    const was = kept?.versions.get(id);
+    if (was !== undefined) stillHeld++;
+    if (was !== version) dirty.add(id);
+  }
+
+  if (kept) {
+    if (stillHeld < kept.versions.size)
+      for (const id of kept.versions.keys()) if (!versions.has(id)) dirty.add(id);
+
+    const changedTypes = new Set([...types].filter(([id, version]) => kept.types.get(id) !== version).map(([id]) => id));
+    if (changedTypes.size)
+      for (const { holon } of own) if (holon.instance.some((type) => changedTypes.has(type))) dirty.add(holon.id);
+  }
+
+  return { own, dirty, versions, types, claimedElsewhere: claimedElsewhere.join(" ") };
+}
+
+function storeIndex(key: string, held: Held, all: Everything): { index: Index; how: Made } {
+  const kept = all.shelf.get(key);
+  const { own, dirty, versions, types, claimedElsewhere } = changesOf(held, all, kept);
+
+  const keep = (index: Index, how: Made) => {
+    all.shelf.set(key, { index, versions, types, claimedElsewhere });
+    return { index, how };
+  };
+
+  if (!kept) return keep(indexOf(own, mouldsIn(all.known)), "fresh");
+  if (!dirty.size) return keep(kept.index, "kept");
+
+  const patched =
+    dirty.size <= Math.max(own.length, kept.versions.size) * mostPatched
+      ? patchedIndex(kept.index, own, dirty, mouldsIn(all.known))
+      : undefined;
+
+  return patched ? keep(patched, "patched") : keep(indexOf(own, mouldsIn(all.known)), "fresh");
 }
 
 // Each store's index, by the key it is attached by.
-export const storeIndexesOf = (all: Everything): Map<string, Answering> =>
-  new Map([...all.held].map(([key, held]) => [key, storeIndex(held, all)]));
+export function storeIndexesOf(all: Everything): Map<string, Answering> {
+  const indexes = [...all.held].map(([key, held]) => [key, storeIndex(key, held, all)] as const);
+  if (!howMade.has(all.known)) howMade.set(all.known, new Map(indexes.map(([key, { how }]) => [key, how])));
+
+  return new Map(indexes.map(([key, { index }]) => [key, index]));
+}
 
 // The kernel over everything a field holds, made once, so what it has worked out of the
 // field, as what each holon says, is kept while the field stands.

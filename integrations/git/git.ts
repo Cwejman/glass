@@ -367,7 +367,8 @@ const objectHolon = ({ hash, kind, size, content }: Read) =>
 const refHolon = ({ name, hash, kind }: Ref) => {
   const id = idOfName(`ref ${name}`);
   const body = kind === "commit" ? { commit: ref(hash) } : { names: ref(hash) };
-  return latestOf({ id, instance: [types.ref.id], name, body }, id);
+  // Its version known by what it names, which is all that changes of it.
+  return latestOf({ id, instance: [types.ref.id], name, body }, hash);
 };
 
 type Ref = { name: string; hash: string; kind: Called };

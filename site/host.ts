@@ -12,7 +12,7 @@ import { startEngine } from "../engine/engine.ts";
 import type { Message } from "../engine/protocol.ts";
 import { serving } from "../engine/serving.ts";
 import { folderFiles } from "../integrations/glass/folder.ts";
-import { openStore } from "../integrations/glass/store.ts";
+import { openStore, type Store } from "../integrations/glass/store.ts";
 
 type Hosting = {
   port: number;
@@ -26,7 +26,17 @@ type Hosting = {
 const enginePath = "/engine";
 const homeKey = "home";
 
-const open = (folder: string) => openStore(folderFiles(folder));
+// A store opened from its folder, keeping the blocks read before: a block is named by its
+// hash, so one read is never wrong, and a store renewed after a commit reads only the new.
+function opener() {
+  const read = new Map<string, Store["blocks"]>();
+
+  return (folder: string) => {
+    const blocks = read.get(folder) ?? new Map();
+    read.set(folder, blocks);
+    return openStore(folderFiles(folder), blocks);
+  };
+}
 
 // Only the host's own pages may speak to its engine: any page on the web could open a
 // socket to this machine otherwise.
@@ -131,6 +141,7 @@ export async function host({ port, stores, home, site }: Hosting) {
     throw new Error(`no store may be called ${homeKey}: home is the host's own`);
 
   const letHomeGo = holdHome(home);
+  const open = opener();
   const engine = await startEngine([
     ...(await Promise.all(
       Object.entries(stores).map(async ([key, folder]) => ({ key, store: await open(folder) })),

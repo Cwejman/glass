@@ -11,7 +11,7 @@ import { notASet } from "./reads.ts";
 
 import { isId, type Holon } from "../integrations/glass/store.ts";
 import type { LogEntry } from "../integrations/glass/store.ts";
-import { kernelOf } from "./kernel.ts";
+import { kernelOf, type Shelf } from "./kernel.ts";
 import { mouldOf, type Mould } from "./moulds.ts";
 import { isRef, references } from "./references.ts";
 
@@ -23,7 +23,9 @@ export type Axis = (typeof axes)[number];
 
 export type Takes = "set" | "sets" | "words" | "store" | "axis";
 
-export type Known = { store: string; holon: Holon };
+// A holon as the field knows it: the store it is read from, and the block its version
+// was read from, where the store says, so a version is known again without reading it.
+export type Known = { store: string; holon: Holon; block?: string };
 
 // Everything the field holds, as a value to ask.
 export type Everything = {
@@ -34,6 +36,8 @@ export type Everything = {
   // Each store's holons as the field carries them, the same list while the store is
   // unchanged, so what is worked out of a store can be kept beside it.
   held: ReadonlyMap<string, readonly Known[]>;
+  // Each store's index as last made, handed from field to field.
+  shelf: Shelf;
 };
 
 export type Holder = { from: string; key: string; holds: boolean };
@@ -41,7 +45,11 @@ export type Holder = { from: string; key: string; holds: boolean };
 const mouldIn = (known: Everything["known"], holon: Holon) =>
   mouldOf(holon.instance.map((type) => known.get(type)?.holon.mould as Mould | undefined));
 
-export function everythingOf(known: Everything["known"], held: Everything["held"]): Everything {
+export function everythingOf(
+  known: Everything["known"],
+  held: Everything["held"],
+  shelf: Shelf = new Map(),
+): Everything {
   const holders = new Map<string, Holder[]>();
 
   for (const { holon } of known.values()) {
@@ -57,7 +65,7 @@ export function everythingOf(known: Everything["known"], held: Everything["held"
     }
   }
 
-  return { known, holders, held };
+  return { known, holders, held, shelf };
 }
 
 const nesting = 32;
