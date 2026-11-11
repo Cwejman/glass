@@ -7,7 +7,8 @@
 
 import { join } from "node:path";
 import { canonical } from "../integrations/glass/canonical.ts";
-import { commit, type Holon } from "../integrations/glass/store.ts";
+import type { Holon } from "../integrations/glass/store.ts";
+import { localEngine } from "../engine/local.ts";
 import { holonsOf, open, storeFolder, stores, typeNamed, typesOf } from "../stores.ts";
 
 type Site = { name: string; entry: string };
@@ -63,7 +64,7 @@ const beforeById = new Map(before.map((holon) => [holon.id, canonical(holon)]));
 const changed = made.filter((holon) => beforeById.get(holon.id) !== canonical(holon));
 
 if (changed.length) {
-  await commit(store, {
+  await (await localEngine({ writes: ["site"] })).commit({
     holons: changed,
     says: `The site's start: ${changed.map(({ name }) => name).join(", ")}`,
   });

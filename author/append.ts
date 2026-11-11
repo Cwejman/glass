@@ -7,7 +7,7 @@
 //   { "add": [{ "title": "...", "opens": "...", "restsOn": ["..."] }],
 //     "edit": [{ "title": "...", "opens": "..." }] }
 
-import { commit } from "../integrations/glass/store.ts";
+import { localEngine } from "../engine/local.ts";
 import { holonsOf, open, storeFolder, type Holon } from "../stores.ts";
 import { markedWriter, proseWriter } from "./prose.ts";
 
@@ -89,13 +89,12 @@ if (running) {
   changed.add(running);
 }
 
-const done = await commit(store, {
+const done = await (await localEngine({ writes: ["main"] })).commit({
   holons: [...changed, ...writer.born],
   says: `${session.name}: utterance ${order}`,
 });
 console.log({
   utterance: order,
   holons: changed.size + writer.born.length,
-  blocks: done.blocks,
-  bytes: done.bytes,
+  commit: done.commit,
 });

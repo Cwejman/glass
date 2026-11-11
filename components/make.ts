@@ -8,7 +8,8 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parse, type Names } from "../language/text.ts";
 import { canonical } from "../integrations/glass/canonical.ts";
-import { commit, type Holon } from "../integrations/glass/store.ts";
+import type { Holon } from "../integrations/glass/store.ts";
+import { localEngine } from "../engine/local.ts";
 import { mouldOf, type Mould } from "../engine/moulds.ts";
 import { references } from "../engine/references.ts";
 import { holonsOf, open, storeFolder } from "../stores.ts";
@@ -187,11 +188,11 @@ const beforeById = new Map(before.map((holon) => [holon.id, canonical(holon)]));
 const changed = made.filter((holon) => beforeById.get(holon.id) !== canonical(holon));
 
 if (changed.length) {
-  const { blocks, bytes } = await commit(store, {
+  const done = await (await localEngine({ writes: ["glass"] })).commit({
     holons: changed,
     says: `The field glass ships: ${changed.map(({ name }) => name).join(", ")}`,
   });
-  console.log(`${changed.length} holons written, ${blocks} blocks, ${bytes} bytes`);
+  console.log(`${changed.length} holons written, in ${done.commit}`);
 } else {
   console.log("nothing changed");
 }

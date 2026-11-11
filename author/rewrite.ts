@@ -23,7 +23,7 @@
 
 import { mouldOf, type Mould } from "../engine/moulds.ts";
 import { partsOf, references } from "../engine/references.ts";
-import { commit } from "../integrations/glass/store.ts";
+import { localEngine } from "../engine/local.ts";
 import { markedWriter, proseWriter } from "./prose.ts";
 import { holonsOf, open, storeFolder, type Holon } from "../stores.ts";
 
@@ -238,7 +238,7 @@ const gone = nothingElseHolds();
 
 const born = writer.born.sort((a, b) => (a.id < b.id ? -1 : 1));
 
-const { blocks, bytes } = await commit(store, {
+const done = await (await localEngine({ writes: ["main"] })).commit({
   holons: [...changed, ...born],
   gone,
   says: patch.flatMap((edit) => ("says" in edit ? [edit.says] : [])).join(" ") || "Briefs rewritten",
@@ -246,4 +246,4 @@ const { blocks, bytes } = await commit(store, {
 
 for (const { id, name, instance } of born)
   if (instance[0] === types.brief) console.log(`born: ${id} ${name}`);
-console.log({ changed: changed.size, born: born.length, gone: gone.length, blocks, bytes });
+console.log({ changed: changed.size, born: born.length, gone: gone.length, commit: done.commit });

@@ -11,7 +11,7 @@
 //   { "move": "its name", "stands": "leaning", "asks": "..." }   where one stands, said again
 //   { "says": "..." }                                     what the commit says of itself
 
-import { commit } from "../integrations/glass/store.ts";
+import { localEngine } from "../engine/local.ts";
 import { holonsOf, open, storeFolder, typeNamed, typesOf, type Holon } from "../stores.ts";
 
 type Raise = {
@@ -124,7 +124,7 @@ const says =
     ...moved.map(({ name, body }) => `${name}: ${body.stands}.`),
   ].join(" ");
 
-const done = await commit(store, { holons: [...born, ...moved, ...holding], says });
+const done = await (await localEngine({ writes: ["main"] })).commit({ holons: [...born, ...moved, ...holding], says });
 
 console.log({
   raised: born.map(({ name }) => name),

@@ -11,7 +11,7 @@
 //   "letGo": ["the title of an earlier path"]
 // }
 
-import { commit } from "../integrations/glass/store.ts";
+import { localEngine } from "../engine/local.ts";
 import { holonsOf, open, storeFolder, type Holon } from "../stores.ts";
 import { markedWriter, proseWriter } from "./prose.ts";
 
@@ -103,5 +103,5 @@ sessions.body.sessions.push(ref(sessionId));
 const changed = [sessions, ...letGo];
 const born = [...writer.born, sessionHolon].sort((a, b) => (a.id < b.id ? -1 : 1));
 
-const { blocks, bytes } = await commit(store, { holons: [...changed, ...born], says: session.name });
-console.log({ holons: changed.length + born.length, blocks, bytes });
+const done = await (await localEngine({ writes: ["main"] })).commit({ holons: [...changed, ...born], says: session.name });
+console.log({ holons: changed.length + born.length, commit: done.commit });

@@ -15,16 +15,12 @@
 // attaches this repository's history, read through git, as the store git.
 
 import { readFileSync } from "node:fs";
-import { startEngine, type Engine } from "./engine.ts";
+import type { Engine } from "./engine.ts";
+import { localEngine } from "./local.ts";
 import { isRef } from "./references.ts";
 import type { Value } from "./kernel.ts";
 import { namesAsked } from "../language/names.ts";
 import { parse } from "../language/text.ts";
-import { memoryFiles } from "../integrations/glass/files.ts";
-import { openStore } from "../integrations/glass/store.ts";
-import { join } from "node:path";
-import { gitSource } from "../integrations/git/git.ts";
-import { openStores } from "../stores.ts";
 
 const args = process.argv.slice(2);
 const flag = (name: string) => args.includes(name);
@@ -37,17 +33,9 @@ if (!text) {
   process.exit(1);
 }
 
-// The engine, its home held in memory, every store the repository holds attached as itself.
-async function engineHere(): Promise<Engine> {
-  const engine = startEngine([{ key: "home", store: await openStore(memoryFiles()), write: true }]);
-
-  for (const [key, store] of Object.entries(await openStores())) await engine.attach(key, store);
-
-  // This repository's own history, read through git, where asked.
-  if (flag("--git")) await engine.attach("git", gitSource(join(import.meta.dir, "..")));
-
-  return engine;
-}
+// The engine here, every store the repository holds attached as itself, and this
+// repository's own history, read through git, where asked.
+const engineHere = () => localEngine({ git: flag("--git") });
 
 // A holon as one line: its id, its name, and what it is.
 async function said(engine: Engine, id: string) {
