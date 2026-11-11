@@ -5,22 +5,8 @@ import { markedWriter, proseWriter } from "./prose.ts";
 const type = (id: string, name: string): Holon => ({ id, instance: [], name, mould: {}, body: {} });
 
 function writer() {
-  const types = [
-    "lexicon",
-    "lexeme",
-    "word",
-    "sentence",
-    "paragraph",
-    "break",
-    "item",
-    "link",
-    "codespan",
-    "strong",
-    "emphasis",
-  ];
+  const types = ["word", "sentence", "paragraph", "break", "item", "link", "codespan", "strong", "emphasis"];
   const holons: Holon[] = types.map((name, i) => type(`T${i}`, name));
-
-  holons.push({ id: "L", instance: ["T0"], name: "lexicon", body: { lexemes: [] } });
 
   let next = idAt(1_800_000_000_000);
 
@@ -106,11 +92,13 @@ test("a paragraph wholly marked keeps its links", () => {
   expect(ids(emphasis!.body.words).map(byId).map(typeOf)).toContain("link");
 });
 
-test("new words bring new lexemes, once", () => {
-  const { prose } = writer();
+test("a word is its text and its marks alone: the lexicon is worked out, never written", () => {
+  const { prose, byId, typeOf } = writer();
 
   prose.flow("Word word WORD.");
 
-  expect(prose.lexiconGrew()).toBe(true);
-  expect(prose.lexicon.body.lexemes.length).toBe(1);
+  expect(prose.born.map(typeOf)).not.toContain("lexeme");
+  expect(
+    prose.born.filter((holon) => typeOf(holon) === "word").every((word) => !("lexeme" in byId(word.id).body)),
+  ).toBe(true);
 });

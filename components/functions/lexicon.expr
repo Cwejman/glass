@@ -1,0 +1,4 @@
+// The lexicon: every word the field says, in lower case, each once, where it is first
+// said. Worked out from the words each time it is asked, never kept beside them.
+
+find(?w, [?w, "instance", ?t], [?t, "name", "word"]) | map(w => w.text) | words | distinct

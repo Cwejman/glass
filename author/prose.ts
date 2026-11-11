@@ -1,5 +1,6 @@
-// Text into holons: a paragraph is its sentences, a sentence is its words, and
-// a word points at its lexeme. New words bring new lexemes.
+// Text into holons: a paragraph is its sentences, a sentence is its words, and a word is
+// its text and its marks. Where else a word is said, and the lexicon, are worked out from
+// the field's words when asked, never written beside them.
 //
 // In the text, {typed|meant} marks a correction, and _ inside the braces stands
 // for a space. Marks and spaces around a word are kept on the word.
@@ -44,33 +45,13 @@ const splitSentences = (paragraph: string) => paragraph.split(/(?<=[.?!])\s+(?=\
 // everything it was asked to make belongs in one commit.
 export function proseWriter(holons: Holon[], mint: () => string) {
   const types = typesOf(holons);
-  const lexicon = holons.find((h) => h.name === "lexicon" && h.instance[0] === typeNamed(types, "lexicon"))!;
-  const lexemes = new Map(
-    holons
-      .filter((h) => h.instance[0] === typeNamed(types, "lexeme"))
-      .map((h) => [h.body.text as string, h.id]),
-  );
   const born: Holon[] = [];
-  let lexiconGrew = false;
 
   const put = (type: string, body: Record<string, unknown>, name?: string) => {
     const holon: Holon = { id: mint(), instance: [typeNamed(types, type)], ...(name ? { name } : {}), body };
     born.push(holon);
     return holon.id;
   };
-
-  function lexeme(text: string) {
-    const key = text.toLowerCase();
-
-    if (!lexemes.has(key)) {
-      const id = put("lexeme", { text: key });
-      lexemes.set(key, id);
-      lexicon.body.lexemes.push(ref(id));
-      lexiconGrew = true;
-    }
-
-    return lexemes.get(key)!;
-  }
 
   function word(token: string) {
     const fix = token.match(/^(.*?)\{(.*)\|(.*)\}(.*)$/);
@@ -88,7 +69,6 @@ export function proseWriter(holons: Holon[], mint: () => string) {
 
     if (before) body.before = before;
     if (after) body.after = after;
-    body.lexeme = ref(lexeme(text.replace(/[’']s$/, "")));
 
     return put("word", body);
   }
@@ -107,7 +87,7 @@ export function proseWriter(holons: Holon[], mint: () => string) {
       .filter(Boolean)
       .map((line) => (/^[-*]{2,}$/.test(line) ? put("break", { mark: line }) : paragraph(line)));
 
-  return { types, born, put, word, flow, lexicon, lexiconGrew: () => lexiconGrew };
+  return { types, born, put, word, flow };
 }
 
 // The marks written prose carries: a link, whose target is an id or an address; code;

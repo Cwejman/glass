@@ -196,8 +196,13 @@ export function kernel(context: Context) {
       ? (all.holders.get(value.$ref) ?? []).map(({ from, key, holds }) => ({ key, from: ref(from), holds }))
       : [];
 
-  const isWordLike = (instance: string[]) =>
-    instance.some((type) => ["word", "lexeme"].includes(known.get(type)?.holon.name ?? ""));
+  const typeNamedAs = (names: string[]) => (instance: string[]) =>
+    instance.some((type) => names.includes(known.get(type)?.holon.name ?? ""));
+
+  // A word is said by what holds it; a lexeme, kept from before the lexicon was a
+  // function, says nothing of its own and is never found by a search.
+  const isWord = typeNamedAs(["word"]);
+  const isWordLike = typeNamedAs(["word", "lexeme"]);
 
   // What may be said of a holon as text: its name, its own strings but its code, and
   // the words it holds. A word is said by what holds it, so a search lands on a sentence.
@@ -222,8 +227,8 @@ export function kernel(context: Context) {
     for (const [key, value] of Object.entries(holon.body)) if (mould[key]?.shape !== "code") walk(value);
 
     for (const { id: part, holds } of references(holon.body, mould)) {
-      const body = holds ? known.get(part)?.holon.body : undefined;
-      if (body?.lexeme) said.push(body.text);
+      const held = holds ? known.get(part)?.holon : undefined;
+      if (held && isWord(held.instance)) said.push(held.body.text);
     }
 
     const text = said.join(" ").toLocaleLowerCase();

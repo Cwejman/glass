@@ -185,8 +185,6 @@ for (const edit of patch) {
   }
 }
 
-if (writer.lexiconGrew()) changed.add(writer.lexicon);
-
 const mouldFor = (holon: Holon) =>
   mouldOf(holon.instance.map((type) => byId.get(type)?.mould as Mould | undefined));
 

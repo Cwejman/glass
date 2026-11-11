@@ -89,8 +89,6 @@ if (running) {
   changed.add(running);
 }
 
-if (writer.lexiconGrew()) changed.add(writer.lexicon);
-
 const done = await commit(store, {
   holons: [...changed, ...writer.born],
   says: `${session.name}: utterance ${order}`,

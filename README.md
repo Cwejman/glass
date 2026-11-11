@@ -25,7 +25,7 @@ A version is `{id, prev, instance, name?, mould?, body}`, with `prev` the hash o
 
 What the store holds:
 - the types;
-- one lexicon of every word;
+- the lexicon, a function over the field's words, `lexicon()`, where it was once a holon of every lexeme;
 - the wiki that was markdown, to the word, with its links as references and markdown's surface kept apart;
 - the author's words before the store, a day to a brief, under `said/2026-10-30.md` to `said/2026-11-06.md`: "As it was said", a root of its own, whose face the wiki's flow shows by pointing;
 - the second session of 2026-11-06, utterance by utterance, with its paths of evolution, and the forks that met it; the third session, of 2026-11-07 and 2026-11-08; a fourth and a fifth, of 2026-11-08, kept in brief; a sixth, of 2026-11-09, kept whole; a seventh, of 2026-11-09 and 2026-11-10, an eighth, of 2026-11-10, a ninth, of 2026-11-10 and 2026-11-11, and a tenth, of 2026-11-11, kept whole in the author's words;

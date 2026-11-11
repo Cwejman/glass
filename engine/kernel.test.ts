@@ -101,6 +101,17 @@ describe("cases from OpenLight, in glass's field", () => {
     for (const id of found.slice(0, 20)) expect(ask`says(${at(id)})` as string).toContain("holarchy");
   });
 
+  test("search never finds a lexicon, which holds lexemes, not words", () => {
+    const lexicons = ids(ask`search("holarchy")`).filter((id) => ask`${at(id)}.lexemes` !== null);
+    expect(lexicons).toEqual([]);
+  });
+
+  test("the lexicon: every word the field says, each once", () => {
+    const lexicon = ask`lexicon()` as string[];
+    expect(lexicon).toContain("holarchy");
+    expect(new Set(lexicon).size).toBe(lexicon.length);
+  });
+
   test("order and a window: the two latest sessions", () => {
     const sessions = named("Sessions");
     const latest = ask`@Sessions.sessions | sort(s => s.on) | reverse | take(2)`;

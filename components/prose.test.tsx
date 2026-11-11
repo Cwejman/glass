@@ -12,7 +12,7 @@ const holon = (id: string, type: string, body: Record<string, unknown>) =>
 
 const ref = ($ref: string) => ({ $ref });
 
-const word = (id: string, text: string, more = {}) => holon(id, "word", { text, lexeme: ref("L"), ...more });
+const word = (id: string, text: string, more = {}) => holon(id, "word", { text, ...more });
 
 const holons: Whole["holons"] = Object.fromEntries(
   [

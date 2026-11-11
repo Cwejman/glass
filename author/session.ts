@@ -100,7 +100,7 @@ const letGo = session.letGo.map((title) => {
 
 sessions.body.sessions.push(ref(sessionId));
 
-const changed = [sessions, ...letGo, ...(writer.lexiconGrew() ? [writer.lexicon] : [])];
+const changed = [sessions, ...letGo];
 const born = [...writer.born, sessionHolon].sort((a, b) => (a.id < b.id ? -1 : 1));
 
 const { blocks, bytes } = await commit(store, { holons: [...changed, ...born], says: session.name });

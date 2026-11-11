@@ -12,7 +12,7 @@ export const refsOf = (list: unknown) => ((list ?? []) as { $ref: string }[]).ma
 
 // A mark standing as a word of its own, as a comma after a link, keeps to what is before it.
 const keepsClose = (holon: HolonRead | undefined) =>
-  holon?.body.lexeme !== undefined && /^[.,;:!?)\]]+$/.test(holon.body.text);
+  !!holon?.types.includes("word") && /^[.,;:!?)\]]+$/.test(holon.body.text);
 
 // Words and what stands among them, each set apart by a space.
 function spaced(holons: Holons, ids: string[]): Child[] {
@@ -50,7 +50,7 @@ export function inline(holons: Holons, id: string): Child {
 
   const { body, types } = holon;
 
-  if (body.lexeme) return [body.before ?? "", body.text, body.after ?? ""].join("");
+  if (types.includes("word")) return [body.before ?? "", body.text, body.after ?? ""].join("");
   if (types.includes("codespan") || types.includes("closed")) return <code>{body.text}</code>;
 
   const inside = spaced(holons, [...refsOf(body.sentences), ...refsOf(body.words)]);
