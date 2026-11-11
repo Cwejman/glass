@@ -26,7 +26,9 @@ Bun.serve({
     const file = fileOf(path);
     if (!path.startsWith("/") || path.includes("..") || !(await file.exists()))
       return new Response("not here", { status: 404 });
-    return new Response(file, { headers: { "access-control-allow-origin": "*", "cache-control": "no-cache" } });
+    return new Response(file, {
+      headers: { "access-control-allow-origin": "*", "cache-control": "no-cache" },
+    });
   },
 });
 console.log(`glass at http://127.0.0.1:${port}/`);

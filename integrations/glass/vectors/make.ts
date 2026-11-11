@@ -112,6 +112,10 @@ const lineB1 = `{"at":"${at1}","blocks":${actBlocks},"checkpoint":{"blocks":[["$
 const lineA2 = `{"at":"${at2}","blocks":[],"gone":["${third}"],"own":[],"predecessor":"${sha(lineA1)}","says":"${goneSays}"}`;
 const lineB2 = `{"at":"${at2}","blocks":[],"gone":["${third}"],"own":[],"predecessor":"${sha(lineB1)}","says":"${goneSays}"}`;
 
+// Gone said in runs: after the first commit, the two holons that follow the type are
+// taken out together, and the line says them as one run, the first and how many.
+const runLine = `{"at":"2026-11-08T00:01:00.000Z","blocks":[],"gone":[["${word}",2]],"predecessor":"${r1}","says":"two taken out"}`;
+
 const vectors = {
   steps,
   land: {
@@ -191,6 +195,15 @@ const vectors = {
       ],
       content: actOf(at2, "[]", `["${third}"]`, goneSays),
     },
+  },
+  goneRun: {
+    says: "two taken out",
+    at: "2026-11-08T00:01:00.000Z",
+    gone: [word, gone],
+    log: [line1, runLine],
+    ref: `${sha(runLine)} 0\n`,
+    field: { [T]: "type" },
+    act: actOf("2026-11-08T00:01:00.000Z", "[]", `[["${word}",2]]`, "two taken out"),
   },
   history: { "0": { [T]: "type", [word]: "one", [gone]: "two" }, "1": steps[1]!.field },
   versions: { id: word, texts: ["one, edited", "one"] },

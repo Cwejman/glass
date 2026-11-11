@@ -33,7 +33,7 @@ export type BlockEntry = { first: string | null; hash: string; moved: string[]; 
 
 type Checkpoint = {
   blocks: TableBlock[];
-  gone: string[];
+  gone: Gone;
   moved: [id: string, hash: string][];
 };
 
@@ -42,7 +42,7 @@ type Checkpoint = {
 type Line = {
   at: string;
   blocks: BlockEntry[];
-  gone: string[];
+  gone: Gone;
   predecessor?: string | null;
   parent?: string | null;
   own?: string[];
@@ -52,6 +52,55 @@ type Line = {
   held?: [id: string, place: number][];
   oldHash?: string;
 };
+
+// What a line or a checkpoint takes out: ids, and runs of ids that follow one another,
+// a first and how many, as a whole taken away lies; a lone id is said as itself.
+type Gone = (string | [first: string, count: number])[];
+
+// The most ids one run of gone may name: far past any whole yet taken away, and short
+// of what a reader could not hold.
+const longestRun = 2 ** 20;
+
+// Every id gone names. A run is of two or more, within the six characters of a count.
+export function goneIds(gone: Gone = []) {
+  return gone.flatMap((each) => {
+    if (typeof each === "string") return [each];
+
+    const [first, count] = each;
+    if (
+      !Number.isInteger(count) ||
+      count < 2 ||
+      count > longestRun ||
+      decode(first.slice(9)) + count > 32 ** 6
+    )
+      throw new Error(`a run of gone ids is not one: ${first} and ${count}`);
+
+    const ids = [first];
+    while (ids.length < count) ids.push(nextId(ids.at(-1)!));
+
+    return ids;
+  });
+}
+
+// Ids said as gone: in order, each run of two or more as its first and how many.
+export function goneOf(ids: Iterable<string>): Gone {
+  const said: Gone = [];
+  let last: string | undefined;
+
+  for (const id of [...new Set(ids)].sort()) {
+    const run = said.at(-1);
+
+    if (last !== undefined && nextId(last) === id) {
+      said[said.length - 1] = typeof run === "string" ? [run, 2] : [run![0], run![1] + 1];
+    } else {
+      said.push(id);
+    }
+
+    last = id;
+  }
+
+  return said;
+}
 
 // A block in the table: its hash, its first new holon, and how many new ones it holds
 // from there; a block entered before 2026-11-11 has no count.
@@ -141,11 +190,11 @@ const tableOf = ({
 }: {
   blocks: Table["blocks"];
   moved: Iterable<[string, string]>;
-  gone: Iterable<string>;
+  gone: Iterable<Gone[number]>;
 }): Table => ({
   blocks: [...blocks],
   moved: new Map(moved),
-  gone: new Set(gone),
+  gone: new Set(goneIds([...gone])),
 });
 
 // The line before, as a line names it.
@@ -171,7 +220,7 @@ function apply(table: Table, line: Pick<Line, "blocks" | "gone" | "own">) {
   }
 
   sortBlocks(table);
-  for (const id of line.gone) if (mayHold(table, id)) table.gone.add(id);
+  for (const id of goneIds(line.gone)) if (mayHold(table, id)) table.gone.add(id);
 }
 
 const byId =
@@ -379,7 +428,7 @@ export async function openStore(files: Files, blocks = new Map<string, Promise<M
         at: line.at,
         says: line.says,
         blocks: ownBlocks(line),
-        gone: line.gone ?? [],
+        gone: goneIds(line.gone),
       })),
     );
 
@@ -404,7 +453,7 @@ export async function openStore(files: Files, blocks = new Map<string, Promise<M
 
     for (const { line } of entries.slice(0, index + 1)) {
       for (const [id, place] of line.held!) held.set(id, placed[place]!);
-      for (const id of line.gone) held.delete(id);
+      for (const id of goneIds(line.gone)) held.delete(id);
     }
 
     const out = new Map<string, Latest>();
@@ -494,7 +543,7 @@ async function writeLine(store: Store, fields: Pick<Line, "at" | "blocks" | "gon
 
     line.checkpoint = {
       blocks: sortBlocks(state).blocks,
-      gone: [...state.gone].sort(),
+      gone: goneOf(state.gone),
       moved: [...state.moved].sort(byId(([id]) => id)),
     };
   }
@@ -651,7 +700,7 @@ export async function act(given: Given[], { says, at = new Date().toISOString(),
   const blocks = [
     ...new Map(written.flatMap(({ entries }) => entries).map((entry) => [canonical(entry), entry])).values(),
   ].sort(byId(({ hash }) => hash));
-  const content = { at, blocks, gone: taken, says };
+  const content = { at, blocks, gone: goneOf(taken), says };
 
   const publish = [];
   for (const [i, { store }] of given.entries()) {
@@ -714,7 +763,7 @@ export async function land(store: Store, other: Store) {
   const onlyOurs = oursSince.filter((line) => !saidThere.has(sayingOf(line)));
   const incoming = theirsSince.filter((line) => !saidHere.has(sayingOf(line)));
 
-  const changes = (line: Line) => [...ownBlocks(line).flatMap((block) => block.moved), ...line.gone];
+  const changes = (line: Line) => [...ownBlocks(line).flatMap((block) => block.moved), ...goneIds(line.gone)];
   const moments = (line: Line) =>
     ownBlocks(line).flatMap((block) => (block.first ? [momentOf(block.first)] : []));
 

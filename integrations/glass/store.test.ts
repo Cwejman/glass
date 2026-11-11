@@ -7,6 +7,8 @@ import { memoryFiles, servedFiles } from "./files.ts";
 import {
   act,
   commit,
+  goneIds,
+  goneOf,
   isId,
   land,
   nextId,
@@ -568,4 +570,55 @@ test("an act refuses one store given twice, and one that touches no store", asyn
       { says: "nothing" },
     ),
   ).rejects.toThrow("touches no store");
+});
+
+test("what is taken out in a run is said as a run, and every id of it reads as gone", async () => {
+  const { says, at, gone, log, ref, field, act: wanted } = vectors.goneRun;
+  const { store, act: done } = await commit(await build(1), { holons: [], says, at, gone });
+
+  expect(logOf(store)).toEqual(log);
+  expect(text(memoryOf(store).get("refs/main"))).toBe(ref);
+  expect(done).toBe(wanted);
+  expect(await textsOf(await reopened(store))).toEqual(field);
+  expect((await store.log()).at(-1)!.gone).toEqual(gone);
+});
+
+test("gone is said in maximal runs, read back whole, and a run that is no run refused", async () => {
+  const first = "1M6XGF9K0000300";
+  const ids = [first, nextId(first), nextId(nextId(first)), "1M6XGF9K0000400", "1M6XGFAM0000000"];
+
+  expect(goneOf(ids)).toEqual([[first, 3], "1M6XGF9K0000400", "1M6XGFAM0000000"]);
+  expect(goneIds(goneOf(ids))).toEqual(ids);
+  expect(() => goneIds([[first, 1]])).toThrow("not one");
+  expect(() => goneIds([[first, 1e9]])).toThrow("not one");
+});
+
+test("a checkpoint says what is gone in runs, and a store opened from it reads them gone", async () => {
+  const store = await fresh();
+  const mint = store.minter();
+  const holons: Holon[] = Array.from({ length: 300 }, (_, i) => ({
+    id: mint(),
+    instance: [],
+    body: { text: `${i} ${"x".repeat(300)}` },
+  }));
+  let next = (await commit(store, { holons, says: "many" })).store;
+  next = (await commit(next, { holons: [], says: "most go", gone: holons.slice(0, 250).map(({ id }) => id) }))
+    .store;
+
+  // Lines past a block's size open a volume, whose checkpoint carries the runs.
+  for (let i = 0; i < 40; i++) {
+    next = (
+      await commit(next, {
+        holons: [{ ...holons[299]!, body: { text: `${i}` } }],
+        says: `${i} ${"y".repeat(2000)}`,
+      })
+    ).store;
+  }
+
+  const volumes = [...memoryOf(next).keys()].filter((path) => path.startsWith("log/"));
+  expect(volumes.length).toBeGreaterThan(1);
+
+  const opened = await reopened(next);
+  expect((await opened.all()).size).toBe(50);
+  expect(await opened.read(holons[100]!.id)).toBe(null);
 });

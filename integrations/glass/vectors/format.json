@@ -269,6 +269,23 @@
    "content": "7f27e1c062b62756d5fb457c276595a7864900b757cf6737e249880f7028e44c"
   }
  },
+ "goneRun": {
+  "says": "two taken out",
+  "at": "2026-11-08T00:01:00.000Z",
+  "gone": [
+   "1M6XGF6G0000101",
+   "1M6XGF6G0000102"
+  ],
+  "log": [
+   "{\"at\":\"2026-11-08T00:00:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF6G0000100\",\"hash\":\"e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce\",\"moved\":[],\"new\":3}],\"checkpoint\":{\"blocks\":[[\"e20d67a67531cc0a4876ff46dc6270ae1b9b6377cbe20be6f22e6c7eb34612ce\",\"1M6XGF6G0000100\",3]],\"gone\":[],\"moved\":[]},\"gone\":[],\"predecessor\":null,\"says\":\"first\"}",
+   "{\"at\":\"2026-11-08T00:01:00.000Z\",\"blocks\":[],\"gone\":[[\"1M6XGF6G0000101\",2]],\"predecessor\":\"55871c421374a9321445cfda6a70c2983c7d0c59bc8520f2404c68dfdb382c6a\",\"says\":\"two taken out\"}"
+  ],
+  "ref": "478b5bee4f7519b3c07a7b0af88634dd95bc279f45e1c201445c6b34bb5e7862 0\n",
+  "field": {
+   "1M6XGF6G0000100": "type"
+  },
+  "act": "a7299df14895f538c5d8a572aeb72fab88fbb28b9b8fc3745df745626981255d"
+ },
  "history": {
   "0": {
    "1M6XGF6G0000100": "type",
