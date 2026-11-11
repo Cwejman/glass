@@ -32,6 +32,9 @@ export type Field = {
   stores: readonly Attached[];
   everything: () => Promise<Everything>;
   storeHolons: (key: string) => Promise<Known[]>;
+  // How a store's holons are read, handed on as it is to the next field where the store is
+  // unchanged, so a field never holds the one before it.
+  readerOf: (key: string) => (() => Promise<Known[]>) | undefined;
 };
 
 const once = <T>(make: () => Promise<T>) => {
@@ -60,7 +63,7 @@ export function fieldOf(stores: readonly Attached[], before?: Field): Field {
   for (const attached of stores) {
     const same = before?.stores.find(({ key, store }) => key === attached.key && store === attached.store);
 
-    carried.set(attached.key, same ? () => before!.storeHolons(attached.key) : ofStore(attached));
+    carried.set(attached.key, (same && before?.readerOf(attached.key)) || ofStore(attached));
   }
 
   const storeHolons = (key: string) => carried.get(key)?.() ?? Promise.resolve([]);
@@ -72,10 +75,10 @@ export function fieldOf(stores: readonly Attached[], before?: Field): Field {
     // A holon two stores claim is the first's, as when one is read alone.
     for (const each of held.flat()) if (!known.has(each.holon.id)) known.set(each.holon.id, each);
 
-    return everythingOf(known);
+    return everythingOf(known, new Map(stores.map(({ key }, i) => [key, held[i]!])));
   });
 
-  return { stores, everything, storeHolons };
+  return { stores, everything, storeHolons, readerOf: (key) => carried.get(key) };
 }
 
 // Every attached store that keeps a holon now, in the order they were attached: those

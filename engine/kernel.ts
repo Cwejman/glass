@@ -22,7 +22,7 @@
 
 import { canonical } from "../integrations/glass/canonical.ts";
 import { writtenBy, type LogEntry } from "../integrations/glass/store.ts";
-import type { Everything } from "./expression.ts";
+import type { Everything, Known } from "./expression.ts";
 import { answeringAll, indexOf, mouldIn as mouldsIn, type Answering, type FactValue } from "./facts.ts";
 import { mouldOf, type Mould } from "./moulds.ts";
 import { bindable, isVar, orProblem, solve, usedBeside, type Clause, type Step } from "./pattern.ts";
@@ -691,27 +691,51 @@ export function kernel(context: Context) {
   };
 }
 
-// What the field's stores answer a pattern's facts from: each store's index, built once
-// for everything the field holds, the stores asked as one.
-const indexes = new WeakMap<Everything, Answering>();
+// What the field's stores answer a pattern's facts from: each store's index, the stores
+// asked as one. It is the same for every reading of the same holons, as one of history.
+const indexes = new WeakMap<Everything["known"], Answering>();
 
 export function answeringOf(all: Everything): Answering {
-  let made = indexes.get(all);
-
-  if (!made) {
-    const byStore = new Map<string, Everything["known"] extends ReadonlyMap<string, infer K> ? K[] : never>();
-    for (const each of all.known.values()) {
-      const held = byStore.get(each.store);
-      if (held) held.push(each);
-      else byStore.set(each.store, [each]);
-    }
-
-    made = answeringAll([...byStore.values()].map((held) => indexOf(held, mouldsIn(all.known))));
-    indexes.set(all, made);
-  }
+  let made = indexes.get(all.known);
+  if (!made) indexes.set(all.known, (made = answeringAll([...storeIndexesOf(all).values()])));
 
   return made;
 }
+
+type Held = readonly Known[];
+
+// A store's index, kept beside the very holons it was made of: what each type they are
+// read through was, and which of them another store claims first. While all three stand,
+// a store the field carried unchanged keeps its index from field to field.
+const storeIndexes = new WeakMap<
+  Held,
+  { index: Answering; types: Map<string, Known | undefined>; shadowed: string }
+>();
+
+function storeIndex(held: Held, all: Everything): Answering {
+  const own = held.filter((each) => all.known.get(each.holon.id) === each);
+  const shadowed =
+    own.length === held.length
+      ? ""
+      : held
+          .filter((each) => all.known.get(each.holon.id) !== each)
+          .map(({ holon }) => holon.id)
+          .join(" ");
+
+  const kept = storeIndexes.get(held);
+  if (kept && kept.shadowed === shadowed && [...kept.types].every(([id, was]) => all.known.get(id) === was))
+    return kept.index;
+
+  const types = new Map(own.flatMap(({ holon }) => holon.instance).map((id) => [id, all.known.get(id)]));
+  const index = indexOf(own, mouldsIn(all.known));
+
+  storeIndexes.set(held, { index, types, shadowed });
+  return index;
+}
+
+// Each store's index, by the key it is attached by.
+export const storeIndexesOf = (all: Everything): Map<string, Answering> =>
+  new Map([...all.held].map(([key, held]) => [key, storeIndex(held, all)]));
 
 // The kernel over everything a field holds, made once, so what it has worked out of the
 // field, as what each holon says, is kept while the field stands.

@@ -31,6 +31,9 @@ export type Everything = {
   holders: ReadonlyMap<string, readonly Holder[]>;
   // Each store's log, where an expression asks of history.
   logs?: ReadonlyMap<string, LogEntry[]>;
+  // Each store's holons as the field carries them, the same list while the store is
+  // unchanged, so what is worked out of a store can be kept beside it.
+  held: ReadonlyMap<string, readonly Known[]>;
 };
 
 export type Holder = { from: string; key: string; holds: boolean };
@@ -38,7 +41,7 @@ export type Holder = { from: string; key: string; holds: boolean };
 const mouldIn = (known: Everything["known"], holon: Holon) =>
   mouldOf(holon.instance.map((type) => known.get(type)?.holon.mould as Mould | undefined));
 
-export function everythingOf(known: Everything["known"]): Everything {
+export function everythingOf(known: Everything["known"], held: Everything["held"]): Everything {
   const holders = new Map<string, Holder[]>();
 
   for (const { holon } of known.values()) {
@@ -54,7 +57,7 @@ export function everythingOf(known: Everything["known"]): Everything {
     }
   }
 
-  return { known, holders };
+  return { known, holders, held };
 }
 
 const nesting = 32;
@@ -138,10 +141,10 @@ function substituted(expression: Expression, given: Argument[]): Expression {
 }
 
 // Where each holon stands in the field, so a set comes back in the field's order.
-const places = new WeakMap<Everything, Map<string, number>>();
+const places = new WeakMap<Everything["known"], Map<string, number>>();
 const placeOf = (all: Everything) => {
-  let made = places.get(all);
-  if (!made) places.set(all, (made = new Map([...all.known.keys()].map((id, i) => [id, i]))));
+  let made = places.get(all.known);
+  if (!made) places.set(all.known, (made = new Map([...all.known.keys()].map((id, i) => [id, i]))));
 
   return made;
 };
@@ -185,14 +188,14 @@ export type Grouped = {
   rest: string[];
 };
 
-const nativesHeld = new WeakMap<Everything, Map<string, string>>();
+const nativesHeld = new WeakMap<Everything["known"], Map<string, string>>();
 
 function nativeIds(all: Everything) {
-  let found = nativesHeld.get(all);
+  let found = nativesHeld.get(all.known);
 
   if (!found) {
     found = new Map();
-    nativesHeld.set(all, found);
+    nativesHeld.set(all.known, found);
 
     for (const { holon } of all.known.values()) {
       const native = (holon.body as Definition).native;
