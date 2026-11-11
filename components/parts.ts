@@ -7,6 +7,7 @@
 
 import type { Argument, Axis, Expression } from "../engine/expression.ts";
 import type { Offer, Space } from "../interface/component.ts";
+import { print } from "../language/text.ts";
 
 // A function as a part reads it.
 export type Called = { id: string; title: string; takes: string[]; native?: string; type?: string };
@@ -78,7 +79,7 @@ type TitleOf = (id: string) => Promise<string>;
 export async function partSaid(functions: Functions, part: Expression, titleOf: TitleOf): Promise<Said> {
   if ("$ref" in part) return { field: "", value: await titleOf(part.$ref) };
   if ("arg" in part) return { field: "", value: `argument ${part.arg + 1}` };
-  if (!("call" in part) || !part.call) return { field: "", value: await plainly(part, titleOf) };
+  if (!("call" in part) || !part.call) return { field: "", value: await plainly(functions, part, titleOf) };
 
   const fn = functions.get(part.call.$ref);
   const field = fn?.title ?? (await titleOf(part.call.$ref));
@@ -92,21 +93,49 @@ export async function partSaid(functions: Functions, part: Expression, titleOf: 
 }
 
 // What is no call of a function, as a pattern's variables and clauses, a list or a
-// record, said plainly, a holon in it by its title.
-async function plainly(value: unknown, titleOf: TitleOf): Promise<string> {
-  if (Array.isArray(value))
-    return `[${(await Promise.all(value.map((each) => plainly(each, titleOf)))).join(", ")}]`;
+// record, said plainly, a holon in it by its title; a lambda, or a record of the
+// language, said by the language itself.
+async function plainly(functions: Functions, value: unknown, titleOf: TitleOf): Promise<string> {
+  const said = (inner: unknown) => plainly(functions, inner, titleOf);
+
+  if (Array.isArray(value)) return `[${(await Promise.all(value.map(said))).join(", ")}]`;
   if (typeof value !== "object" || value === null) return JSON.stringify(value);
 
   const record = value as Record<string, unknown>;
   if (typeof record.$ref === "string") return titleOf(record.$ref);
   if (typeof record["?"] === "string") return `?${record["?"]}`;
-  if ("list" in record) return plainly(record.list, titleOf);
+  if ("list" in record) return said(record.list);
+  if ("fn" in record || "record" in record) return printed(functions, record, titleOf);
 
   const fields = await Promise.all(
-    Object.entries(record).map(async ([key, inner]) => `${key}: ${await plainly(inner, titleOf)}`),
+    Object.entries(record).map(async ([key, inner]) => `${key}: ${await said(inner)}`),
   );
   return `{${fields.join(", ")}}`;
+}
+
+// Every id an expression names, the functions it calls among them.
+const idsNamed = (value: unknown): string[] =>
+  Array.isArray(value)
+    ? value.flatMap(idsNamed)
+    : value !== null && typeof value === "object"
+      ? typeof (value as { $ref?: unknown }).$ref === "string"
+        ? [(value as { $ref: string }).$ref]
+        : Object.values(value).flatMap(idsNamed)
+      : [];
+
+// What the language says of an expression, every holon it names called by its title, so
+// one of a single word reads by it and any other by its id.
+async function printed(functions: Functions, expression: unknown, titleOf: TitleOf) {
+  const titles = new Map<string, string>();
+
+  for (const id of idsNamed(expression)) titles.set(id, functions.get(id)?.title ?? (await titleOf(id)));
+
+  return print(expression, {
+    functions: (name) => [...titles].filter(([, title]) => title === name).map(([id]) => id),
+    holons: () => [],
+    isFunction: (id) => titles.has(id),
+    nameOf: (id) => titles.get(id),
+  });
 }
 
 async function valueSaid(functions: Functions, given: Argument, titleOf: TitleOf) {
