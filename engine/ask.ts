@@ -11,7 +11,8 @@
 // A string comes back as it is, so prose reads as prose. A holon is shown as its id,
 // its name and what it is, one to a line where there are many; anything else as JSON,
 // a holon within it as its id and name. A list is cut after a hundred, saying how many
-// it holds; --all shows every one, and --json gives the value as the engine does.
+// it holds; --all shows every one, and --json gives the value as the engine does; --git
+// attaches this repository's history, read through git, as the store git.
 
 import { readFileSync } from "node:fs";
 import { startEngine, type Engine } from "./engine.ts";
@@ -21,6 +22,8 @@ import { namesAsked } from "../language/names.ts";
 import { parse } from "../language/text.ts";
 import { memoryFiles } from "../integrations/glass/files.ts";
 import { openStore } from "../integrations/glass/store.ts";
+import { join } from "node:path";
+import { gitSource } from "../integrations/git/git.ts";
 import { openStores } from "../stores.ts";
 
 const args = process.argv.slice(2);
@@ -39,6 +42,9 @@ async function engineHere(): Promise<Engine> {
   const engine = startEngine([{ key: "home", store: await openStore(memoryFiles()), write: true }]);
 
   for (const [key, store] of Object.entries(await openStores())) await engine.attach(key, store);
+
+  // This repository's own history, read through git, where asked.
+  if (flag("--git")) await engine.attach("git", gitSource(join(import.meta.dir, "..")));
 
   return engine;
 }

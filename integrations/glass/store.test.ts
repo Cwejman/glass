@@ -7,6 +7,10 @@ import { memoryFiles, servedFiles } from "./files.ts";
 import {
   act,
   commit,
+  derivedId,
+  derivedOf,
+  idAt,
+  isDerived,
   goneIds,
   goneOf,
   isId,
@@ -621,4 +625,16 @@ test("a checkpoint says what is gone in runs, and a store opened from it reads t
   const opened = await reopened(next);
   expect((await opened.all()).size).toBe(50);
   expect(await opened.read(holons[100]!.id)).toBe(null);
+});
+
+test("an id derived from what is read is what the vectors say, leads back, and no moment glass mints reaches it", () => {
+  for (const [facet, hex, id] of vectors.ids.derived) {
+    expect(derivedId(facet, hex)).toBe(id);
+    expect(derivedOf(id)).toEqual({ facet, prefix: hex.slice(0, 18) });
+    expect(isId(id)).toBe(true);
+    expect(isDerived(id)).toBe(true);
+  }
+
+  expect(isDerived(idAt(Date.now()))).toBe(false);
+  expect(derivedOf(idAt(Date.now()))).toBe(null);
 });

@@ -116,6 +116,26 @@ const lineB2 = `{"at":"${at2}","blocks":[],"gone":["${third}"],"own":[],"predece
 // taken out together, and the line says them as one run, the first and how many.
 const runLine = `{"at":"2026-11-08T00:01:00.000Z","blocks":[],"gone":[["${word}",2]],"predecessor":"${r1}","says":"two taken out"}`;
 
+// Ids derived from what an integration reads: the top bit set, beyond any moment glass
+// mints, two bits of facet, then the first 72 bits of the source's own hash, written as
+// fifteen characters of the same alphabet. Made here by hand, with BigInt.
+const alphabet = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+const derived = (facet: number, hex: string) => {
+  let n = (1n << 74n) | (BigInt(facet) << 72n) | BigInt(`0x${hex.slice(0, 18)}`);
+  let text = "";
+  for (let i = 0; i < 15; i++) {
+    text = alphabet[Number(n % 32n)] + text;
+    n /= 32n;
+  }
+  return text;
+};
+const derivedCases = [
+  [0, "da39a3ee5e6b4b0d3255bfef95601890afd80709"],
+  [1, "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"],
+  [2, "4b825dc642cb6eb9a060e54bf8d69288fbee4904"],
+  [3, "ffffffffffffffffffffffffffffffffffffffff"],
+].map(([facet, hex]) => [facet, hex, derived(facet as number, hex as string)]);
+
 const vectors = {
   steps,
   land: {
@@ -208,6 +228,7 @@ const vectors = {
   history: { "0": { [T]: "type", [word]: "one", [gone]: "two" }, "1": steps[1]!.field },
   versions: { id: word, texts: ["one, edited", "one"] },
   ids: {
+    derived: derivedCases,
     next: [
       ["1M6XGF6G000000V", "1M6XGF6G000000W"],
       ["1M6XGF6G00000ZZ", "1M6XGF6G0000100"],

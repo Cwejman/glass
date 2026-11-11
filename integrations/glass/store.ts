@@ -172,6 +172,34 @@ export function writtenBy({ blocks }: Pick<LogEntry, "blocks">) {
   });
 }
 
+// An id derived from what an integration reads, not minted: the top bit set, which no
+// moment glass mints reaches before the year 2527, two bits saying what of the source it
+// names, then the first 72 bits of the source's own hash. The same thing read anywhere is
+// the same id, and the id leads back to it.
+export function derivedId(facet: number, hex: string) {
+  let n = (1n << 74n) | (BigInt(facet & 3) << 72n) | BigInt(`0x${hex.slice(0, 18).padEnd(18, "0")}`);
+  let text = "";
+
+  for (let i = 0; i < 15; i++) {
+    text = alphabet[Number(n % 32n)] + text;
+    n /= 32n;
+  }
+
+  return text;
+}
+
+const valueOf = (id: string) => [...id].reduce((n, char) => n * 32n + BigInt(alphabet.indexOf(char)), 0n);
+
+export const isDerived = (id: string) => isId(id) && valueOf(id) >> 74n === 1n;
+
+// What a derived id names: its facet and the hash's first eighteen characters.
+export function derivedOf(id: string) {
+  if (!isDerived(id)) return null;
+
+  const n = valueOf(id);
+  return { facet: Number((n >> 72n) & 3n), prefix: (n & ((1n << 72n) - 1n)).toString(16).padStart(18, "0") };
+}
+
 export const isId = (value: unknown): value is string =>
   typeof value === "string" && /^[0-9A-HJKMNP-TV-Z]{15}$/.test(value);
 
