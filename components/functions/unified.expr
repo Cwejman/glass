@@ -1,4 +1,0 @@
-// The field as one: what nothing holds once each store's root, and what it says it
-// stands on, are set aside, so the wholes of every store stand side by side.
-
-level(not(or(roots(), find(?d, [?d, "instance", ?t], [?t, "name", "dependency"]))))

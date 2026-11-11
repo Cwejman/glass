@@ -1,3 +1,0 @@
-// Whether a holon is an instance of the type given.
-
-(h, type) => has(h.instance, type)
