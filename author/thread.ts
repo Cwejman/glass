@@ -12,7 +12,7 @@
 //   { "says": "..." }                                     what the commit says of itself
 
 import { commit } from "../integrations/glass/store.ts";
-import { holonsOf, open, storeFolder, type Holon } from "../stores.ts";
+import { holonsOf, open, storeFolder, typeNamed, typesOf, type Holon } from "../stores.ts";
 
 type Raise = {
   name: string;
@@ -34,9 +34,9 @@ const holons = await holonsOf(store);
 const byId = new Map(holons.map((holon) => [holon.id, holon]));
 const mint = store.minter();
 
-const typeNamed = (name: string) => holons.find((holon) => holon.name === name && holon.mould)!.id;
-const threadType = typeNamed("thread");
-const threads = holons.find((holon) => holon.instance[0] === typeNamed("threads"))!;
+const types = typesOf(holons);
+const threadType = typeNamed(types, "thread");
+const threads = holons.find((holon) => holon.instance[0] === typeNamed(types, "threads"))!;
 const threadNamed = (name: string) =>
   holons.find((holon) => holon.instance[0] === threadType && holon.name === name);
 

@@ -8,7 +8,7 @@
 // few steps back, and the tip's tree all the way down. Anything older is read when asked.
 
 import { derivedId, derivedOf, isDerived, type Latest, type LogEntry, type Version } from "../glass/store.ts";
-import type { Source } from "../../engine/source.ts";
+import type { Source } from "../source.ts";
 
 type Kind = "commit" | "tree" | "blob";
 
@@ -72,16 +72,42 @@ const latestOf = (holon: Version["body"] & object, hash: string): Latest => ({
   version: { ...(holon as Version), prev: null },
 });
 
+// What git says when asked, or a refusal in its words: a failure is never read as nothing.
+// Git is asked in its own plain words, whatever the reader's language, so they can be read.
+const spawn = (dir: string, args: string[], asked?: string[]) =>
+  Bun.spawnSync(["git", "-C", dir, ...args], {
+    env: { ...process.env, LC_ALL: "C" },
+    ...(asked ? { stdin: new TextEncoder().encode(`${asked.join("\n")}\n`) } : {}),
+  });
+
+const refusal = (dir: string, said: string) =>
+  new Error(
+    said.includes("not a git repository")
+      ? `${dir} is no git repository`
+      : `git could not read ${dir}: ${said}`,
+  );
+
+function git(dir: string, args: string[], asked?: string[]) {
+  const run = spawn(dir, args, asked);
+  if (run.exitCode === 0) return run.stdout;
+  throw refusal(dir, run.stderr.toString().trim());
+}
+
+// The commit HEAD names; nothing where it names none yet, which git says by saying nothing.
+function headOf(dir: string) {
+  const run = spawn(dir, ["rev-parse", "-q", "--verify", "HEAD"]);
+  const said = run.stderr.toString().trim();
+
+  if (run.exitCode === 0) return run.stdout.toString().trim();
+  if (!said) return "";
+  throw refusal(dir, said);
+}
+
 // Objects asked of git in one go: each hash given, its kind and its bytes.
 function catFile(dir: string, hashes: string[]) {
   if (!hashes.length) return new Map<string, { hash: string; kind: Kind; content: Uint8Array }>();
 
-  const run = Bun.spawnSync(["git", "-C", dir, "cat-file", "--batch"], {
-    stdin: new TextEncoder().encode(`${hashes.join("\n")}\n`),
-  });
-  if (run.exitCode !== 0) throw new Error(`git could not read ${dir}: ${run.stderr.toString()}`);
-
-  const out = run.stdout;
+  const out = git(dir, ["cat-file", "--batch"], hashes);
   const found = new Map<string, { hash: string; kind: Kind; content: Uint8Array }>();
   let at = 0;
 
@@ -104,12 +130,8 @@ function catFile(dir: string, hashes: string[]) {
 function sizesOf(dir: string, hashes: string[]) {
   if (!hashes.length) return new Map<string, number>();
 
-  const run = Bun.spawnSync(["git", "-C", dir, "cat-file", "--batch-check"], {
-    stdin: new TextEncoder().encode(`${hashes.join("\n")}\n`),
-  });
-
   return new Map(
-    run.stdout
+    git(dir, ["cat-file", "--batch-check"], hashes)
       .toString()
       .trim()
       .split("\n")
@@ -159,57 +181,68 @@ function commitOf(content: Uint8Array) {
   };
 }
 
-// An object read as a holon of the field.
-function holonOf(hash: string, kind: Kind, content: Uint8Array) {
-  const id = idOfObject(hash);
-
-  if (kind === "commit") {
-    const { tree, parents, author, at, message } = commitOf(content);
-    return {
-      id,
-      instance: [types.commit.id],
-      name: message.split("\n")[0]!.slice(0, 80),
-      body: { message, author, at, tree: ref(tree), parents: parents.map((parent) => ref(parent)) },
-    };
-  }
-
-  if (kind === "tree") {
-    const entries = entriesOf(content).map(({ name, mode, hash: under }) => ({
-      name,
-      mode,
-      entry: ref(under, true),
-    }));
-    return { id, instance: [types.tree.id], body: { entries } };
-  }
-
-  return blobOf(hash, content.length);
-}
-
 const blobOf = (hash: string, size: number) => ({
   id: idOfObject(hash),
   instance: [types.blob.id],
   body: { size },
 });
 
-// The refs git names: HEAD and every branch and tag, each with the commit it names.
+// An object read as a holon of the field, by its kind.
+const holonOfKind: Record<Kind, (hash: string, content: Uint8Array) => Version["body"] & object> = {
+  commit: (hash, content) => {
+    const { tree, parents, author, at, message } = commitOf(content);
+    return {
+      id: idOfObject(hash),
+      instance: [types.commit.id],
+      name: message.split("\n")[0]!.slice(0, 80),
+      body: { message, author, at, tree: ref(tree), parents: parents.map((parent) => ref(parent)) },
+    };
+  },
+  tree: (hash, content) => ({
+    id: idOfObject(hash),
+    instance: [types.tree.id],
+    body: {
+      entries: entriesOf(content).map(({ name, mode, hash: under }) => ({
+        name,
+        mode,
+        entry: ref(under, true),
+      })),
+    },
+  }),
+  blob: (hash, content) => blobOf(hash, content.length),
+};
+
+// An object of a kind the field does not read, as a tag object, is not a holon here: a
+// tag is read through its ref, which names the commit it peels to.
+const objectHolon = (hash: string, kind: string, content: Uint8Array) =>
+  Object.hasOwn(holonOfKind, kind) ? holonOfKind[kind as Kind](hash, content) : null;
+
+// A ref as a holon: its name, and the commit it names.
+const refHolon = (name: string, hash: string) => {
+  const id = idOfName(`ref ${name}`);
+  return latestOf({ id, instance: [types.ref.id], name, body: { commit: ref(hash) } }, id);
+};
+
+// The refs git names: HEAD and every branch and tag, each with the commit it names. A
+// HEAD with no commit yet names nothing, and is not there.
 function refsOf(dir: string) {
-  const run = Bun.spawnSync([
-    "git",
-    "-C",
-    dir,
+  const lines = git(dir, [
     "for-each-ref",
-    "--format=%(objectname) %(refname)",
+    "--format=%(objectname) %(*objectname) %(refname)",
     "refs/heads",
     "refs/tags",
-  ]);
-  const head = Bun.spawnSync(["git", "-C", dir, "rev-parse", "HEAD"]).stdout.toString().trim();
-  const lines = run.stdout.toString().trim().split("\n").filter(Boolean);
+  ])
+    .toString()
+    .trim()
+    .split("\n")
+    .filter(Boolean);
 
+  // An annotated tag names a tag object; the ref names the commit it peels to.
   return [
-    { name: "HEAD", hash: head },
+    { name: "HEAD", hash: headOf(dir) },
     ...lines.map((line) => {
-      const [hash, name] = line.split(" ");
-      return { name: name!, hash: hash! };
+      const [hash, peeled, name] = line.split(" ");
+      return { name: name!, hash: peeled || hash! };
     }),
   ].filter(({ hash }) => hash);
 }
@@ -221,18 +254,19 @@ export function gitSource(dir: string, { depth = 30 } = {}): Source {
     const typed = typeHolons.find((holon) => holon.id === id);
     if (typed) return latestOf(typed, id);
 
-    const named = refsOf(dir).find(({ name }) => idOfName(`ref ${name}`) === id);
-    if (named)
-      return latestOf(
-        { id, instance: [types.ref.id], name: named.name, body: { commit: ref(named.hash) } },
-        id,
-      );
-
+    // A name is asked of the refs, an object of git by its hash; git is asked only which.
     const what = derivedOf(id);
-    if (!what || what.facet !== object) return null;
+
+    if (what?.facet === named) {
+      const found = refsOf(dir).find(({ name }) => idOfName(`ref ${name}`) === id);
+      return found ? refHolon(found.name, found.hash) : null;
+    }
+
+    if (what?.facet !== object) return null;
 
     const [found] = catFile(dir, [what.prefix]).values();
-    return found ? latestOf(holonOf(found.hash, found.kind, found.content), found.hash) : null;
+    const holon = found && objectHolon(found.hash, found.kind, found.content);
+    return holon ? latestOf(holon, found.hash) : null;
   };
 
   async function all() {
@@ -240,8 +274,8 @@ export function gitSource(dir: string, { depth = 30 } = {}): Source {
     const refs = refsOf(dir);
 
     for (const { name, hash } of refs) {
-      const id = idOfName(`ref ${name}`);
-      held.set(id, latestOf({ id, instance: [types.ref.id], name, body: { commit: ref(hash) } }, id));
+      const holon = refHolon(name, hash);
+      held.set(holon.version.id, holon);
     }
 
     // The commits a few steps back from every ref, then the tip's tree all the way down.
@@ -260,10 +294,11 @@ export function gitSource(dir: string, { depth = 30 } = {}): Source {
         if (kind !== "commit") continue;
         seen.add(hash);
 
-        const holon = holonOf(hash, kind, content);
+        const holon = holonOfKind.commit(hash, content);
+        const { tree, parents } = commitOf(content);
         held.set(holon.id, latestOf(holon, hash));
-        tip ??= commitOf(content).tree;
-        commits.push(...commitOf(content).parents);
+        tip ??= tree;
+        commits.push(...parents);
       }
     }
 
@@ -275,8 +310,8 @@ export function gitSource(dir: string, { depth = 30 } = {}): Source {
       const blobs: string[] = [];
       level = [];
 
-      for (const { hash, kind, content } of found.values()) {
-        const holon = holonOf(hash, kind, content);
+      for (const { hash, content } of found.values()) {
+        const holon = holonOfKind.tree(hash, content);
         held.set(holon.id, latestOf(holon, hash));
 
         for (const entry of entriesOf(content)) (entry.mode === "40000" ? level : blobs).push(entry.hash);

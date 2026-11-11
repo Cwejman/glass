@@ -6,12 +6,13 @@ import { GlobalRegistrator } from "@happy-dom/global-registrator";
 import { afterEach, beforeAll, describe, expect, test } from "bun:test";
 import { join } from "node:path";
 import { startEngine, type Engine } from "../engine/engine.ts";
+import { serving } from "../engine/serving.ts";
 import type { HolonRead, Read } from "../engine/reads.ts";
 import { memoryFiles } from "../integrations/glass/files.ts";
 import { openStore } from "../integrations/glass/store.ts";
 import { openStores } from "../stores.ts";
 import type { Component } from "./component.ts";
-import type { Connection } from "./connection.ts";
+import { connect, type Connection, type Port } from "./connection.ts";
 import { mount } from "./interface.ts";
 
 beforeAll(() => {
@@ -21,30 +22,16 @@ beforeAll(() => {
 const glassBrief = "1M6YBY3G00010TX";
 const primitives = "1M6YBY3G00011HF";
 
-// The engine, spoken to directly, as the worker would answer.
+// The engine served as the worker serves it, spoken to over a port in memory, each
+// reply copied as a worker's message is.
 function connected(engine: Engine): Connection {
-  return {
-    attach: async () => null,
-    read: engine.read,
-    holon: (id: string) => engine.read({ holon: id }),
-    commit: engine.commit,
+  const port: Port = { postMessage: (message) => void served.receive(message), onmessage: null };
+  const served = serving(engine, {
+    attach: async () => undefined,
+    send: (reply) => port.onmessage?.(new MessageEvent("message", { data: structuredClone(reply) })),
+  });
 
-    async subscribe<R extends Read>(query: R, listener: (value: any) => void) {
-      let last = JSON.stringify(await engine.read(query));
-
-      const stop = engine.onChange(() => {
-        void engine.read(query).then((value) => {
-          const text = JSON.stringify(value);
-          if (text === last) return;
-
-          last = text;
-          listener(value);
-        });
-      });
-
-      return { value: JSON.parse(last), close: stop };
-    },
-  } as unknown as Connection;
+  return connect(port);
 }
 
 // Each component module, by the name it declares, as the field makes them.

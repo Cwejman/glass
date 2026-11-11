@@ -4,7 +4,7 @@
 
 import { join } from "node:path";
 import { folderFiles } from "./integrations/glass/folder.ts";
-import { openStore, type Holon, type Store } from "./integrations/glass/store.ts";
+import { asHolon, openStore, type Holon, type Store } from "./integrations/glass/store.ts";
 
 export type { Holon, Store };
 
@@ -33,6 +33,25 @@ export const openStores = async () =>
     ),
   );
 
+// The types among holons, each id by the name it is asked by: the first of a name. Only
+// names are in it, so a type called constructor is a type like any other.
+export function typesOf(holons: Holon[]) {
+  const types: Record<string, string> = Object.create(null);
+
+  for (const holon of holons) {
+    if (holon.mould && holon.name && !(holon.name in types)) types[holon.name] = holon.id;
+  }
+
+  return types;
+}
+
+// A type by its name, or a refusal that says which is missing.
+export function typeNamed(types: Record<string, string>, name: string) {
+  const id = types[name];
+  if (!id) throw new Error(`there is no type ${name}`);
+  return id;
+}
+
 // Every holon a store holds, as the author's tools and the components' making read them.
 export const holonsOf = async (store: Store) =>
-  [...(await store.all()).values()].map(({ version: { prev: _, ...holon } }) => holon as Holon);
+  [...(await store.all()).values()].map(({ version }) => asHolon(version));

@@ -8,7 +8,7 @@
 import { join } from "node:path";
 import { canonical } from "../integrations/glass/canonical.ts";
 import { commit, type Holon } from "../integrations/glass/store.ts";
-import { holonsOf, open, storeFolder, stores } from "../stores.ts";
+import { holonsOf, open, storeFolder, stores, typeNamed, typesOf } from "../stores.ts";
 
 type Site = { name: string; entry: string };
 
@@ -18,7 +18,8 @@ const before = await holonsOf(store);
 const glass = await holonsOf(await open(storeFolder("glass")));
 const mint = store.minter();
 
-const glassType = (name: string) => glass.find((holon) => holon.name === name && holon.mould)!.id;
+const glassTypes = typesOf(glass);
+const glassType = (name: string) => typeNamed(glassTypes, name);
 const glassNamed = (name: string, type: string) =>
   glass.find((holon) => holon.name === name && holon.instance[0] === glassType(type))!.id;
 // A holon of the site's is known by what it is and what it is called.

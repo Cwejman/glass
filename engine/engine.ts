@@ -22,7 +22,7 @@ import {
   type Field,
   type Writable,
 } from "./field.ts";
-import type { Source } from "./source.ts";
+import type { Source } from "../integrations/source.ts";
 import { bodyProblem, mouldOf, mouldProblem, type Mould } from "./moulds.ts";
 import type { Answer, HolonRead, Read, Whole } from "./reads.ts";
 import { references } from "./references.ts";

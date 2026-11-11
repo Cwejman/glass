@@ -2,8 +2,8 @@
 // or a commit makes the next one. One holon, or one whole with what it holds, costs
 // a few blocks. Only a question about everything fetches everything, and then once.
 
-import type { Holon, Store } from "../integrations/glass/store.ts";
-import type { Source } from "./source.ts";
+import { asHolon, type Holon, type Store } from "../integrations/glass/store.ts";
+import type { Source } from "../integrations/source.ts";
 import {
   everythingOf,
   expressionProblem,
@@ -48,15 +48,13 @@ const once = <T>(make: () => Promise<T>) => {
   };
 };
 
-const strip = ({ prev: _, ...holon }: Holon & { prev?: unknown }): Holon => holon;
-
 // What each store holds is asked once, and carried over to the next field.
 export function fieldOf(stores: readonly Attached[], before?: Field): Field {
   const carried = new Map<string, () => Promise<Known[]>>();
 
   const ofStore = ({ key, store }: Attached) =>
     once(async () =>
-      [...(await store.all()).values()].map(({ version }) => ({ store: key, holon: strip(version) })),
+      [...(await store.all()).values()].map(({ version }) => ({ store: key, holon: asHolon(version) })),
     );
 
   for (const attached of stores) {
@@ -100,7 +98,7 @@ async function find(field: Field, id: string) {
 
 export async function holonOf(field: Field, id: string) {
   const found = await find(field, id);
-  return found && strip(found.version);
+  return found && asHolon(found.version);
 }
 
 // The names of what a holon is. A holon is a type by having a mould.
@@ -117,7 +115,7 @@ async function viewOf(field: Field, key: string, block: string, holon: Holon): P
 
 async function readHolon(field: Field, id: string) {
   const found = await find(field, id);
-  return found ? viewOf(field, found.key, found.block, strip(found.version)) : null;
+  return found ? viewOf(field, found.key, found.block, asHolon(found.version)) : null;
 }
 
 // A holon and everything it holds, layer by layer, so a brief drawn by its words is
@@ -146,7 +144,7 @@ async function readWhole(
     for (const found of read) {
       if (!found) continue;
 
-      const holon = strip(found.version);
+      const holon = asHolon(found.version);
       const types = await Promise.all(holon.instance.map(typeOf));
 
       holons[holon.id] = { ...holon, store: found.key, version: found.block, types: typeNames(holon, types) };

@@ -27,6 +27,9 @@ export type Holon = {
 // A holon as it stood: prev is the hash of the block holding the version before.
 export type Version = Holon & { prev: string | null };
 
+// A version as the holon it is, without where its history leads.
+export const asHolon = ({ prev: _, ...holon }: Version): Holon => holon;
+
 export type Latest = { block: string; version: Version };
 
 export type BlockEntry = { first: string | null; hash: string; moved: string[]; new: number };

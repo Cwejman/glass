@@ -40,11 +40,13 @@ export function socketPort(url: string): Port {
 export function connect(worker: Port) {
   let next = 1;
   const waiting = new Map<number, { resolve: (value: unknown) => void; reject: (error: Error) => void }>();
-  const listeners = new Map<number, (value: unknown) => void>();
+  const listeners = new Map<number, { told: (value: unknown) => void; failed: (error: Error) => void }>();
 
   worker.onmessage = ({ data }) => {
     if ("subscription" in data) {
-      listeners.get(data.subscription)?.(data.value);
+      const listener = listeners.get(data.subscription);
+      if ("error" in data) listener?.failed(new Error(data.error));
+      else listener?.told(data.value);
       return;
     }
 
@@ -63,12 +65,14 @@ export function connect(worker: Port) {
 
   const read = <R extends Read>(query: R) => send({ op: "read", read: query }) as Promise<Answer<R>>;
 
+  // A subscription is told each new value, and told when what it reads can no longer be read.
   async function subscribe<R extends Read>(
     query: R,
     listener: (value: Answer<R>) => void,
+    failed: (error: Error) => void,
   ): Promise<Subscription<Answer<R>>> {
     const id = next++;
-    listeners.set(id, listener as (value: unknown) => void);
+    listeners.set(id, { told: listener as (value: unknown) => void, failed });
 
     try {
       const { value } = (await send({ op: "subscribe", read: query }, id)) as { value: Answer<R> };

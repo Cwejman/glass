@@ -233,7 +233,16 @@ export function drawing(
         if (!isDeclared && !isHanded) refuse(`reads ${form}, which it does not declare it reads`);
         within(askedOf(query), `reads ${form} of`);
 
-        const subscription = await engine.subscribe<Read>(query, () => current() && void render());
+        // Told of a change, it is drawn again. Told it can no longer be read, it says so
+        // and keeps watching, so it is drawn again when the read comes back.
+        const subscription = await engine.subscribe<Read>(
+          query,
+          () => current() && void render(),
+          (error) => {
+            if (current())
+              host.replaceChildren(note(`${component.name} cannot read ${form}: ${error.message}`));
+          },
+        );
 
         if (current()) reads.push(subscription.close);
         else subscription.close();
@@ -438,12 +447,20 @@ export function drawing(
       const query: Read =
         "gather" in asked.reads ? { gather: asked.reads.gather } : { holon: asked.reads.holon };
 
-      const watching = await engine.subscribe<Read>(query, (value) => {
-        if ("gather" in asked.reads) gathered = value as string[];
-        else holon = value as HolonRead | null;
+      const watching = await engine.subscribe<Read>(
+        query,
+        (value) => {
+          if ("gather" in asked.reads) gathered = value as string[];
+          else holon = value as HolonRead | null;
 
-        void render();
-      });
+          void render();
+        },
+        (error) => {
+          if (!closed) {
+            host.replaceChildren(note(`${describe(asked.reads, null)} cannot be read: ${error.message}`));
+          }
+        },
+      );
 
       if (closed) {
         watching.close();

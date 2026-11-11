@@ -5,18 +5,9 @@
 // for a space. Marks and spaces around a word are kept on the word.
 
 import type { Holon } from "../integrations/glass/store.ts";
+import { typeNamed, typesOf } from "../stores.ts";
 
 const ref = (to: string) => ({ $ref: to });
-
-const typeIds = (holons: Holon[]) => {
-  const ids: Record<string, string> = {};
-
-  for (const holon of holons) {
-    if (holon.mould && holon.name && !ids[holon.name]) ids[holon.name] = holon.id;
-  }
-
-  return ids;
-};
 
 // Splits text into word tokens, keeping lone marks on the word beside them.
 function tokens(sentence: string) {
@@ -52,16 +43,18 @@ const splitSentences = (paragraph: string) => paragraph.split(/(?<=[.?!])\s+(?=\
 // A writer over the field as it stands. Holons it makes take names in order, so
 // everything it was asked to make belongs in one commit.
 export function proseWriter(holons: Holon[], mint: () => string) {
-  const types = typeIds(holons);
-  const lexicon = holons.find((h) => h.name === "lexicon" && h.instance[0] === types.lexicon)!;
+  const types = typesOf(holons);
+  const lexicon = holons.find((h) => h.name === "lexicon" && h.instance[0] === typeNamed(types, "lexicon"))!;
   const lexemes = new Map(
-    holons.filter((h) => h.instance[0] === types.lexeme).map((h) => [h.body.text as string, h.id]),
+    holons
+      .filter((h) => h.instance[0] === typeNamed(types, "lexeme"))
+      .map((h) => [h.body.text as string, h.id]),
   );
   const born: Holon[] = [];
   let lexiconGrew = false;
 
   const put = (type: string, body: Record<string, unknown>, name?: string) => {
-    const holon: Holon = { id: mint(), instance: [types[type]!], ...(name ? { name } : {}), body };
+    const holon: Holon = { id: mint(), instance: [typeNamed(types, type)], ...(name ? { name } : {}), body };
     born.push(holon);
     return holon.id;
   };

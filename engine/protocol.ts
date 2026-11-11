@@ -16,4 +16,5 @@ export type Message = { id: number } & Request;
 export type Reply =
   | { id: number; ok: true; value: unknown }
   | { id: number; ok: false; error: string }
-  | { subscription: number; value: unknown };
+  | { subscription: number; value: unknown }
+  | { subscription: number; error: string };

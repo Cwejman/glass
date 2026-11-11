@@ -7,6 +7,8 @@ import { canonical } from "../integrations/glass/canonical.ts";
 import type { Engine, Read } from "./engine.ts";
 import type { Message, Reply } from "./protocol.ts";
 
+const wordsOf = (error: unknown) => (error instanceof Error ? error.message : String(error));
+
 type Serving = {
   // How a store named by an address is attached here, if this host attaches at all.
   attach: (key: string, url: string) => Promise<void>;
@@ -14,7 +16,9 @@ type Serving = {
 };
 
 export function serving(engine: Engine, { attach, send }: Serving) {
-  const subscriptions = new Map<number, { read: Read; last: string }>();
+  // Each subscription: what it reads, what it was told last, and the change it was last
+  // read again for, so a read overtaken by a later one is never told.
+  const subscriptions = new Map<number, { read: Read; last: string; asked: number }>();
   let changes = 0;
 
   async function answer(message: Message) {
@@ -39,7 +43,7 @@ export function serving(engine: Engine, { attach, send }: Serving) {
           value = await engine.read(message.read);
         } while (seen !== changes);
 
-        subscriptions.set(message.id, { read: message.read, last: canonical(value) });
+        subscriptions.set(message.id, { read: message.read, last: canonical(value), asked: seen });
         return { subscription: message.id, value };
       }
 
@@ -55,15 +59,25 @@ export function serving(engine: Engine, { attach, send }: Serving) {
     changes++;
 
     for (const [subscription, entry] of subscriptions) {
+      const asked = (entry.asked = changes);
+      const heard = () => subscriptions.has(subscription) && entry.asked === asked;
+
       engine.read(entry.read).then(
         (value) => {
           const text = canonical(value);
-          if (text === entry.last || !subscriptions.has(subscription)) return;
+          if (!heard() || text === entry.last) return;
 
           entry.last = text;
           send({ subscription, value });
         },
-        (error) => console.error(`subscription ${subscription}:`, error),
+        // What can no longer be read is told, so what was read last is not taken as now;
+        // and what was told last is forgotten, so the read coming back is told too.
+        (error) => {
+          if (!heard()) return;
+
+          entry.last = "";
+          send({ subscription, error: wordsOf(error) });
+        },
       );
     }
   });
@@ -73,7 +87,7 @@ export function serving(engine: Engine, { attach, send }: Serving) {
       try {
         send({ id: message.id, ok: true, value: await answer(message) });
       } catch (error) {
-        send({ id: message.id, ok: false, error: error instanceof Error ? error.message : String(error) });
+        send({ id: message.id, ok: false, error: wordsOf(error) });
       }
     },
 
