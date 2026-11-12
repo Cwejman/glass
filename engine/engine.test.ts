@@ -3,12 +3,10 @@
 import { describe, expect, test } from "bun:test";
 import { memoryFiles } from "../integrations/glass/files.ts";
 import { act, commit, idAt, nextId, openStore, type Holon, type Store } from "../integrations/glass/store.ts";
-import { openStores } from "../stores.ts";
+import { holonsOf, openStores } from "../stores.ts";
 import { startEngine, type Engine } from "./engine.ts";
-import { gather, groups, level, type Expression, type Grouped } from "./expression.ts";
-import { fieldOf } from "./field.ts";
+import type { Expression, Grouped } from "./expression.ts";
 import { bodyProblem, mouldProblem, type Mould } from "./moulds.ts";
-import { partsOf, references } from "./references.ts";
 
 // A small pulled store: types, and a brief holding a paragraph that holds words,
 // the brief pointing at a note.
@@ -149,16 +147,46 @@ async function started() {
 
 const homeHolon = (engine: Engine, id: string) => engine.read({ holon: id });
 
+// A type of one's own committed, with the mould given, and what makes an instance of it:
+// the engine judges each, and reads back what it holds.
+async function typeOfMould(mould: unknown) {
+  const { engine } = await started();
+  const typed = (body: Holon["body"]) =>
+    engine.commit({ holons: [{ id: "~h", instance: [type], body }] as Holon[] });
+  const made = await engine.commit({
+    holons: [{ id: "~t", instance: [], name: "of one's own", mould, body: {} }] as Holon[],
+  });
+  const type = made.ids["~t"]!;
+
+  return { engine, typed };
+}
+
+const field = (says: string, shape: unknown, more = {}) => ({ says, shape, ...more });
+
 describe("references", () => {
-  test("a reference holds as it says, or as the mould says", () => {
-    const mould = { parts: { holds: true } };
+  test("a reference holds as it says, or as the mould says", async () => {
+    const { engine, typed } = await typeOfMould({
+      parts: field("Its parts.", { list: "ref" }, { holds: true }),
+      about: field("Of what.", "ref"),
+      held: field("One held.", "ref"),
+    });
     const body = {
       parts: [{ $ref: wordA }, { $ref: wordB, $holds: false }],
       about: { $ref: note },
       held: { $ref: lexeme, $holds: true },
     };
+    const holder = (await typed(body)).ids["~h"]!;
+    const from = async (id: string) =>
+      (await engine.read({ holders: id }))
+        .filter(({ from }) => from === holder)
+        .map(({ key, holds }) => ({ id, key, holds }));
 
-    expect(references(body, mould)).toEqual([
+    expect([
+      ...(await from(wordA)),
+      ...(await from(wordB)),
+      ...(await from(note)),
+      ...(await from(lexeme)),
+    ]).toEqual([
       { id: wordA, key: "parts", holds: true },
       { id: wordB, key: "parts", holds: false },
       { id: note, key: "about", holds: false },
@@ -166,7 +194,11 @@ describe("references", () => {
     ]);
   });
 
-  test("a holon's parts are what it holds, in the order it holds them", () => {
+  test("a holon's parts are what it holds, in the order it holds them", async () => {
+    const { engine, typed } = await typeOfMould({
+      about: field("Of what.", "ref"),
+      prose: field("Its prose.", { list: "ref" }),
+    });
     const body = {
       about: { $ref: note },
       prose: [
@@ -174,108 +206,127 @@ describe("references", () => {
         { $ref: wordB, $holds: true },
       ],
     };
+    const holder = (await typed(body)).ids["~h"]!;
+    const { holons } = await engine.read({ whole: holder });
 
-    expect(partsOf(body)).toEqual([wordA, wordB]);
+    expect(Object.keys(holons)).toEqual([holder, wordA, wordB]);
   });
 });
 
 describe("moulds", () => {
-  const mould: Mould = {
+  const mould = {
     title: { says: "Its title.", shape: "string" },
     items: { says: "Its items.", shape: { list: "ref" }, optional: true },
     span: { says: "From and to.", shape: { from: "ref", to: "ref" }, optional: true },
   };
 
-  test("a body is held against its types", () => {
-    expect(bodyProblem({ title: "x" }, [mould])).toBeUndefined();
-    expect(bodyProblem({ title: "x", items: [{ $ref: note }] }, [mould])).toBeUndefined();
-    expect(
-      bodyProblem({ title: "x", span: { from: { $ref: note }, to: { $ref: note } } }, [mould]),
-    ).toBeUndefined();
+  test("a body is held against its types", async () => {
+    const { typed } = await typeOfMould(mould);
+    const sound = (body: Holon["body"]) => expect(typed(body)).resolves.toBeDefined();
 
-    expect(bodyProblem({}, [mould])).toContain("title is missing");
-    expect(bodyProblem({ title: 1 }, [mould])).toContain("title is not string");
-    expect(bodyProblem({ title: "x", extra: 1 }, [mould])).toContain("extra is not a field");
-    expect(bodyProblem({ title: "x", items: "no" }, [mould])).toContain("items is not a list");
-    expect(bodyProblem({ title: "x", items: ["no"] }, [mould])).toContain("items[0] is not ref");
+    await sound({ title: "x" });
+    await sound({ title: "x", items: [{ $ref: note }] });
+    await sound({ title: "x", span: { from: { $ref: note }, to: { $ref: note } } });
+
+    await expect(typed({})).rejects.toThrow("title is missing");
+    await expect(typed({ title: 1 })).rejects.toThrow("title is not string");
+    await expect(typed({ title: "x", extra: 1 })).rejects.toThrow("extra is not a field");
+    await expect(typed({ title: "x", items: "no" })).rejects.toThrow("items is not a list");
+    await expect(typed({ title: "x", items: ["no"] })).rejects.toThrow("items[0] is not ref");
   });
 
-  test("a list may hold one item twice, a set may not", () => {
-    const both: Mould = {
+  test("a list may hold one item twice, a set may not", async () => {
+    const { typed } = await typeOfMould({
       order: { says: "In order.", shape: { list: "ref" } },
       among: { says: "Each once.", shape: { set: "ref" } },
-    };
+    });
     const twice = [{ $ref: note }, { $ref: note }];
 
-    expect(bodyProblem({ order: twice, among: [{ $ref: note }] }, [both])).toBeUndefined();
-    expect(bodyProblem({ order: [], among: twice }, [both])).toContain("among[1] is already in the set");
-    expect(bodyProblem({ order: [], among: "no" }, [both])).toContain("among is not a set");
+    await expect(typed({ order: twice, among: [{ $ref: note }] })).resolves.toBeDefined();
+    await expect(typed({ order: [], among: twice })).rejects.toThrow("among[1] is already in the set");
+    await expect(typed({ order: [], among: "no" })).rejects.toThrow("among is not a set");
   });
 
-  test("a mould says each field in prose, with a shape there is", () => {
-    expect(mouldProblem(mould)).toBeUndefined();
-    expect(mouldProblem({ a: { shape: "string" } })).toContain("says nothing");
-    expect(mouldProblem({ a: { says: "x", shape: "nonsense" } })).toContain("no shape");
-    expect(mouldProblem("no")).toContain("a set of fields");
+  test("a mould says each field in prose, with a shape there is", async () => {
+    const { engine } = await started();
+    const typeOf = (mould: unknown) =>
+      engine.commit({ holons: [{ id: "~t", instance: [], name: "judged", mould, body: {} }] as Holon[] });
+
+    await expect(typeOf(mould)).resolves.toBeDefined();
+    await expect(typeOf({ a: { shape: "string" } })).rejects.toThrow("says nothing");
+    await expect(typeOf({ a: { says: "x", shape: "nonsense" } })).rejects.toThrow("no shape");
+    await expect(typeOf("no")).rejects.toThrow("a set of fields");
   });
 });
 
 describe("expressions", () => {
-  const all = async () => fieldOf([{ key: "pulled", store: await pulledStore() }]).everything();
+  // An engine over the pulled store, and any others given, asked as the interface asks.
+  async function all(...others: [string, Store][]) {
+    const engine = startEngine([
+      { key: "pulled", store: await pulledStore() },
+      ...others.map(([key, store]) => ({ key, store })),
+    ]);
+    return engine;
+  }
+  const gather = (engine: Engine, expression: Expression) => engine.read({ gather: expression });
+  const level = (engine: Engine, expression: Expression) => engine.read({ level: expression });
+  const groups = (engine: Engine, expression: Expression) => engine.read({ groups: expression });
 
   test("sets compose", async () => {
     const a = await all();
 
-    expect(gather(a, { $ref: note })).toEqual([note]);
-    expect(gather(a, { $ref: "0".repeat(15) })).toEqual([]);
-    expect(gather(a, call("type", { $ref: typeNote }))).toEqual([note]);
-    expect(gather(a, call("children", { $ref: brief }))).toEqual([paragraph]);
-    expect(gather(a, call("parents", { $ref: paragraph }))).toEqual([brief]);
-    expect(gather(a, call("points", { $ref: brief }))).toEqual([note]);
-    expect(gather(a, call("pointers", { $ref: note }))).toEqual([brief]);
+    expect(await gather(a, { $ref: note })).toEqual([note]);
+    expect(await gather(a, { $ref: "0".repeat(15) })).toEqual([]);
+    expect(await gather(a, call("type", { $ref: typeNote }))).toEqual([note]);
+    expect(await gather(a, call("children", { $ref: brief }))).toEqual([paragraph]);
+    expect(await gather(a, call("parents", { $ref: paragraph }))).toEqual([brief]);
+    expect(await gather(a, call("points", { $ref: brief }))).toEqual([note]);
+    expect(await gather(a, call("pointers", { $ref: note }))).toEqual([brief]);
     expect(
-      gather(
+      await gather(
         a,
         call("and", call("type", { $ref: typeNote }), call("not", call("type", { $ref: typeBrief }))),
       ),
     ).toEqual([note]);
-    expect(gather(a, call("or", { $ref: note }, { $ref: brief })).sort()).toEqual([brief, note].sort());
-    expect(gather(a, call("store", "pulled")).length).toBe(pulledHolons.length);
-    expect(gather(a, call("types")).length).toBe(5);
+    expect((await gather(a, call("or", { $ref: note }, { $ref: brief }))).sort()).toEqual(
+      [brief, note].sort(),
+    );
+    expect((await gather(a, call("store", "pulled"))).length).toBe(pulledHolons.length);
+    expect((await gather(a, call("types"))).length).toBe(5);
   });
 
   test("a search lands on what holds the words, never a word itself", async () => {
     const a = await all();
 
-    expect(gather(a, call("search", "plain words"))).toEqual([paragraph]);
-    expect(gather(a, call("search", "standing"))).toEqual([note]);
-    expect(gather(a, call("search", "nowhere to be found"))).toEqual([]);
+    expect(await gather(a, call("search", "plain words"))).toEqual([paragraph]);
+    expect(await gather(a, call("search", "standing"))).toEqual([note]);
+    expect(await gather(a, call("search", "nowhere to be found"))).toEqual([]);
   });
 
   test("what a holon is called is found by its name alone", async () => {
     const a = await all();
 
-    expect(gather(a, call("named", "note a"))).toEqual([note]);
-    expect(gather(a, call("named", "standing"))).toEqual([]);
+    expect(await gather(a, call("named", "note a"))).toEqual([note]);
+    expect(await gather(a, call("named", "standing"))).toEqual([]);
   });
 
   test("a function of one's own stands beside the natives", async () => {
-    expect(gather(await all(), { call: { $ref: ownFn } })).toEqual([brief]);
+    expect(await gather(await all(), { call: { $ref: ownFn } })).toEqual([brief]);
   });
 
   test("what is wrongly called says so", async () => {
     const a = await all();
 
-    expect(() => gather(a, { arg: 0 })).toThrow("an argument");
-    expect(() => gather(a, call("type"))).toThrow("takes set");
-    expect(() => gather(a, call("store", { $ref: note }))).toThrow("takes a store");
-    expect(() => gather(a, { call: { $ref: note } })).toThrow("not a function");
-    expect(() => gather(a, call("group", { $ref: note }, "colour"))).toThrow("groups by");
+    await expect(gather(a, { arg: 0 })).rejects.toThrow("an argument");
+    await expect(gather(a, call("type"))).rejects.toThrow("takes set");
+    await expect(gather(a, call("store", { $ref: note }))).rejects.toThrow("takes a store");
+    await expect(gather(a, { call: { $ref: note } })).rejects.toThrow("not a function");
+    await expect(gather(a, call("group", { $ref: note }, "colour"))).rejects.toThrow("groups by");
   });
 
   test("a grouping gives collections that open as places of their own", async () => {
     const a = await all();
-    const grouped = groups(a, call("group", call("not", call("types")), "type")) as Grouped;
+    const grouped = (await groups(a, call("group", call("not", call("types")), "type"))) as Grouped;
 
     expect(grouped.by).toBe("type");
     expect(grouped.groups.map(({ count }) => count)).toEqual(
@@ -285,53 +336,50 @@ describe("expressions", () => {
     const notes = grouped.groups.find(({ value }) => value === typeNote)!;
 
     expect(notes.count).toBe(1);
-    expect(gather(a, notes.gathers)).toEqual([note]);
-    expect(groups(a, { $ref: note })).toBe(null);
+    expect(await gather(a, notes.gathers)).toEqual([note]);
+    expect(await groups(a, { $ref: note })).toBe(null);
   });
 
   test("a set looked at is seen at its level, what nothing in it holds", async () => {
     const a = await all();
     const set = call("or", ...[brief, paragraph, wordA, note].map(($ref) => ({ $ref })));
 
-    expect(level(a, set).sort()).toEqual([brief, note].sort());
-    expect(gather(a, set)).toContain(wordA);
+    expect((await level(a, set)).sort()).toEqual([brief, note].sort());
+    expect(await gather(a, set)).toContain(wordA);
   });
 
   test("Flat is the deliberate way to see all of a set", async () => {
     const a = await all();
     const set = call("or", ...[brief, paragraph, wordA, note].map(($ref) => ({ $ref })));
 
-    expect(level(a, call("flat", set)).sort()).toEqual([brief, paragraph, wordA, note].sort());
+    expect((await level(a, call("flat", set))).sort()).toEqual([brief, paragraph, wordA, note].sort());
   });
 
   test("a set with nothing held within it is all its own level", async () => {
     const a = await all();
     const words = call("type", { $ref: typeWord });
 
-    expect(level(a, words).sort()).toEqual(gather(a, words).sort());
+    expect((await level(a, words)).sort()).toEqual((await gather(a, words)).sort());
   });
 
   test("a store looked at is seen at its level", async () => {
-    const a = await fieldOf([
-      { key: "pulled", store: await pulledStore() },
-      { key: "other", store: await openStore(memoryFiles()) },
-    ]).everything();
+    const a = await all(["other", await openStore(memoryFiles())]);
 
-    expect(groups(a, call("everything"))).toBe(null);
+    expect(await groups(a, call("everything"))).toBe(null);
 
     const pulled = call("store", "pulled");
 
-    expect(gather(a, pulled)).toContain(wordA);
-    expect(level(a, pulled)).toContain(brief);
-    expect(level(a, pulled)).not.toContain(wordA);
+    expect(await gather(a, pulled)).toContain(wordA);
+    expect(await level(a, pulled)).toContain(brief);
+    expect(await level(a, pulled)).not.toContain(wordA);
   });
 
   test("a grouping takes an axis chosen; none is chosen for it", async () => {
     const a = await all();
 
-    expect(() => gather(a, call("group", call("types"), "auto"))).toThrow("groups by");
+    await expect(gather(a, call("group", call("types"), "auto"))).rejects.toThrow("groups by");
     expect(
-      (groups(a, call("group", call("store", "pulled"), "parent")) as Grouped).groups.some(
+      ((await groups(a, call("group", call("store", "pulled"), "parent"))) as Grouped).groups.some(
         ({ value }) => value === paragraph,
       ),
     ).toBe(true);
@@ -811,12 +859,39 @@ describe("the real stores", async () => {
     expect(level).toEqual(gathered);
   });
 
+  test("a brief is read as one whole", async () => {
+    const [id] = await engine.read({ named: wikiRoot, store: "main" });
+    const { holons } = await engine.read({ whole: id! });
+
+    expect(Object.keys(holons).length).toBeGreaterThan(1000);
+    expect(new Set(Object.values(holons).flatMap(({ types }) => types)).has("word")).toBe(true);
+  });
+
+  test("no two stores claim one holon", async () => {
+    const named = await Promise.all(
+      (await engine.read({ named: "everything", store: "glass" })).map((id) => engine.read({ holon: id })),
+    );
+    const everything = named.find((holon) => holon?.types.includes("function"))!.id;
+    const total = (
+      await Promise.all(Object.values(opened).map(async (store) => (await store.all()).size))
+    ).reduce((a, b) => a + b, 0);
+
+    expect((await engine.read({ gather: { call: { $ref: everything } } })).length).toBe(total);
+  });
+});
+
+// What the engine cannot be asked: every holon the repository holds judged against its
+// types alone, as the moulds module judges a body. Said again through a commit, each
+// would be judged for its references too, which not all lead into the field today, and
+// the whole field committed again is far too slow for a test.
+describe("unit: moulds and references (rewritten with the module)", () => {
   test("every holon judged sound against its types", async () => {
-    const all = await fieldOf(Object.entries(opened).map(([key, store]) => ({ key, store }))).everything();
+    const holons = (await Promise.all(Object.values(await openStores()).map(holonsOf))).flat();
+    const known = new Map(holons.map((holon) => [holon.id, holon]));
     const wrong: string[] = [];
 
-    for (const { holon } of all.known.values()) {
-      const moulds = holon.instance.map((type) => all.known.get(type)?.holon.mould as Mould | undefined);
+    for (const holon of known.values()) {
+      const moulds = holon.instance.map((type) => known.get(type)?.mould as Mould | undefined);
 
       if (moulds.some((mould) => !mould)) wrong.push(`${holon.id}: no type`);
       else if (holon.mould && mouldProblem(holon.mould))
@@ -828,22 +903,5 @@ describe("the real stores", async () => {
     }
 
     expect(wrong.slice(0, 20)).toEqual([]);
-  });
-
-  test("a brief is read as one whole", async () => {
-    const [id] = await engine.read({ named: wikiRoot, store: "main" });
-    const { holons } = await engine.read({ whole: id! });
-
-    expect(Object.keys(holons).length).toBeGreaterThan(1000);
-    expect(new Set(Object.values(holons).flatMap(({ types }) => types)).has("word")).toBe(true);
-  });
-
-  test("no two stores claim one holon", async () => {
-    const all = await fieldOf(Object.entries(opened).map(([key, store]) => ({ key, store }))).everything();
-    const total = (
-      await Promise.all(Object.values(opened).map(async (store) => (await store.all()).size))
-    ).reduce((a, b) => a + b, 0);
-
-    expect(all.known.size).toBe(total);
   });
 });
