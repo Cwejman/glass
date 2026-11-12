@@ -14,9 +14,17 @@ export const refsOf = (list: unknown) => ((list ?? []) as { $ref: string }[]).ma
 const keepsClose = (holon: HolonRead | undefined) =>
   !!holon?.types.includes("word") && /^[.,;:!?)\]]+$/.test(holon.body.text);
 
+// A word whose mark before it closes what came before, as a comma after code, keeps that
+// mark close to it and is set apart after the mark instead.
+const leadsClose = (holon: HolonRead | undefined) =>
+  !!holon?.types.includes("word") && /^[.,;:!?)\]]/.test(holon.body.before ?? "");
+
 // Words and what stands among them, each set apart by a space.
 function spaced(holons: Holons, ids: string[]): Child[] {
-  return ids.flatMap((id, i) => [i > 0 && !keepsClose(holons[id]) ? " " : null, inline(holons, id)]);
+  return ids.flatMap((id, i) => [
+    i > 0 && !keepsClose(holons[id]) && !leadsClose(holons[id]) ? " " : null,
+    inline(holons, id),
+  ]);
 }
 
 // A link that leads into the field says where, so a press on it rises with it. One
@@ -50,7 +58,8 @@ export function inline(holons: Holons, id: string): Child {
 
   const { body, types } = holon;
 
-  if (types.includes("word")) return [body.before ?? "", body.text, body.after ?? ""].join("");
+  if (types.includes("word"))
+    return [body.before ?? "", leadsClose(holon) ? " " : "", body.text, body.after ?? ""].join("");
   if (types.includes("codespan") || types.includes("closed")) return <code>{body.text}</code>;
 
   const inside = spaced(holons, [...refsOf(body.sentences), ...refsOf(body.words)]);
