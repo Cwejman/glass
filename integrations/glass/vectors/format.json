@@ -169,6 +169,10 @@
  },
  "act": {
   "first": {
+   "names": [
+    "a",
+    "b"
+   ],
    "says": "an act across two stores",
    "at": "2026-11-11T00:00:00.000Z",
    "born": [
@@ -198,9 +202,9 @@
       "35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d": "{\"body\":{\"text\":\"in a\"},\"id\":\"1M6XGF9K0000300\",\"instance\":[],\"prev\":null}\n{\"body\":{\"text\":\"in both\"},\"id\":\"1M6XGF9K0000302\",\"instance\":[],\"prev\":null}\n"
      },
      "log": [
-      "{\"at\":\"2026-11-11T00:00:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF9K0000300\",\"hash\":\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\",\"moved\":[\"1M6XGF9K0000302\"],\"new\":1},{\"first\":\"1M6XGF9K0000301\",\"hash\":\"c8ec8a254d52138c4c9294fea9cfffc7557779030aed0704a24b1f41b4b54e29\",\"moved\":[],\"new\":2}],\"checkpoint\":{\"blocks\":[[\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\",\"1M6XGF9K0000300\",1]],\"gone\":[],\"moved\":[[\"1M6XGF9K0000302\",\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\"]]},\"gone\":[],\"own\":[\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\"],\"predecessor\":null,\"says\":\"an act across two stores\"}"
+      "{\"at\":\"2026-11-11T00:00:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF9K0000300\",\"hash\":\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\",\"moved\":[\"1M6XGF9K0000302\"],\"new\":1},{\"first\":\"1M6XGF9K0000301\",\"hash\":\"c8ec8a254d52138c4c9294fea9cfffc7557779030aed0704a24b1f41b4b54e29\",\"moved\":[],\"new\":2}],\"checkpoint\":{\"blocks\":[[\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\",\"1M6XGF9K0000300\",1]],\"gone\":[],\"moved\":[[\"1M6XGF9K0000302\",\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\"]]},\"gone\":[],\"own\":[\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\"],\"predecessor\":null,\"says\":\"an act across two stores\",\"stores\":[\"a\",\"b\"]}"
      ],
-     "ref": "80ac9da3d3a8c2407d01c0876c44cef87aa03b6fb5f7d3ca62ec83f92da78f7c 0\n",
+     "ref": "79ab236f8542767bb5f993cc9fd8c37db218108e79b1f34432f228770987b30c 0\n",
      "field": {
       "1M6XGF9K0000300": "in a",
       "1M6XGF9K0000302": "in both"
@@ -227,9 +231,9 @@
       "c8ec8a254d52138c4c9294fea9cfffc7557779030aed0704a24b1f41b4b54e29": "{\"body\":{\"text\":\"in b\"},\"id\":\"1M6XGF9K0000301\",\"instance\":[],\"prev\":null}\n{\"body\":{\"text\":\"in both\"},\"id\":\"1M6XGF9K0000302\",\"instance\":[],\"prev\":null}\n"
      },
      "log": [
-      "{\"at\":\"2026-11-11T00:00:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF9K0000300\",\"hash\":\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\",\"moved\":[\"1M6XGF9K0000302\"],\"new\":1},{\"first\":\"1M6XGF9K0000301\",\"hash\":\"c8ec8a254d52138c4c9294fea9cfffc7557779030aed0704a24b1f41b4b54e29\",\"moved\":[],\"new\":2}],\"checkpoint\":{\"blocks\":[[\"c8ec8a254d52138c4c9294fea9cfffc7557779030aed0704a24b1f41b4b54e29\",\"1M6XGF9K0000301\",2]],\"gone\":[],\"moved\":[]},\"gone\":[],\"own\":[\"c8ec8a254d52138c4c9294fea9cfffc7557779030aed0704a24b1f41b4b54e29\"],\"predecessor\":null,\"says\":\"an act across two stores\"}"
+      "{\"at\":\"2026-11-11T00:00:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF9K0000300\",\"hash\":\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\",\"moved\":[\"1M6XGF9K0000302\"],\"new\":1},{\"first\":\"1M6XGF9K0000301\",\"hash\":\"c8ec8a254d52138c4c9294fea9cfffc7557779030aed0704a24b1f41b4b54e29\",\"moved\":[],\"new\":2}],\"checkpoint\":{\"blocks\":[[\"c8ec8a254d52138c4c9294fea9cfffc7557779030aed0704a24b1f41b4b54e29\",\"1M6XGF9K0000301\",2]],\"gone\":[],\"moved\":[]},\"gone\":[],\"own\":[\"c8ec8a254d52138c4c9294fea9cfffc7557779030aed0704a24b1f41b4b54e29\"],\"predecessor\":null,\"says\":\"an act across two stores\",\"stores\":[\"a\",\"b\"]}"
      ],
-     "ref": "ab543bc9090970178b6249e24fe0b2700341833e5443925ce1371f1c563eaa3f 0\n",
+     "ref": "3397047ea21ea7e59034870f9eaf2cb72b93b942ffebfc544e266a4f25e46518 0\n",
      "field": {
       "1M6XGF9K0000301": "in b",
       "1M6XGF9K0000302": "in both"
@@ -247,20 +251,20 @@
    "stores": [
     {
      "log": [
-      "{\"at\":\"2026-11-11T00:00:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF9K0000300\",\"hash\":\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\",\"moved\":[\"1M6XGF9K0000302\"],\"new\":1},{\"first\":\"1M6XGF9K0000301\",\"hash\":\"c8ec8a254d52138c4c9294fea9cfffc7557779030aed0704a24b1f41b4b54e29\",\"moved\":[],\"new\":2}],\"checkpoint\":{\"blocks\":[[\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\",\"1M6XGF9K0000300\",1]],\"gone\":[],\"moved\":[[\"1M6XGF9K0000302\",\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\"]]},\"gone\":[],\"own\":[\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\"],\"predecessor\":null,\"says\":\"an act across two stores\"}",
-      "{\"at\":\"2026-11-11T00:01:00.000Z\",\"blocks\":[],\"gone\":[\"1M6XGF9K0000302\"],\"own\":[],\"predecessor\":\"80ac9da3d3a8c2407d01c0876c44cef87aa03b6fb5f7d3ca62ec83f92da78f7c\",\"says\":\"taken out of the field\"}"
+      "{\"at\":\"2026-11-11T00:00:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF9K0000300\",\"hash\":\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\",\"moved\":[\"1M6XGF9K0000302\"],\"new\":1},{\"first\":\"1M6XGF9K0000301\",\"hash\":\"c8ec8a254d52138c4c9294fea9cfffc7557779030aed0704a24b1f41b4b54e29\",\"moved\":[],\"new\":2}],\"checkpoint\":{\"blocks\":[[\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\",\"1M6XGF9K0000300\",1]],\"gone\":[],\"moved\":[[\"1M6XGF9K0000302\",\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\"]]},\"gone\":[],\"own\":[\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\"],\"predecessor\":null,\"says\":\"an act across two stores\",\"stores\":[\"a\",\"b\"]}",
+      "{\"at\":\"2026-11-11T00:01:00.000Z\",\"blocks\":[],\"gone\":[\"1M6XGF9K0000302\"],\"own\":[],\"predecessor\":\"79ab236f8542767bb5f993cc9fd8c37db218108e79b1f34432f228770987b30c\",\"says\":\"taken out of the field\",\"stores\":[\"a\",\"b\"]}"
      ],
-     "ref": "af49045f86cbfd05cc5143f56ef090dcefb7687e613a1882b025c83bd4b011b8 0\n",
+     "ref": "9bbdfb44280afd2f85bd2e11d3f9d14c5e506e44ba7aa4e4e213c8219b33dc3c 0\n",
      "field": {
       "1M6XGF9K0000300": "in a"
      }
     },
     {
      "log": [
-      "{\"at\":\"2026-11-11T00:00:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF9K0000300\",\"hash\":\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\",\"moved\":[\"1M6XGF9K0000302\"],\"new\":1},{\"first\":\"1M6XGF9K0000301\",\"hash\":\"c8ec8a254d52138c4c9294fea9cfffc7557779030aed0704a24b1f41b4b54e29\",\"moved\":[],\"new\":2}],\"checkpoint\":{\"blocks\":[[\"c8ec8a254d52138c4c9294fea9cfffc7557779030aed0704a24b1f41b4b54e29\",\"1M6XGF9K0000301\",2]],\"gone\":[],\"moved\":[]},\"gone\":[],\"own\":[\"c8ec8a254d52138c4c9294fea9cfffc7557779030aed0704a24b1f41b4b54e29\"],\"predecessor\":null,\"says\":\"an act across two stores\"}",
-      "{\"at\":\"2026-11-11T00:01:00.000Z\",\"blocks\":[],\"gone\":[\"1M6XGF9K0000302\"],\"own\":[],\"predecessor\":\"ab543bc9090970178b6249e24fe0b2700341833e5443925ce1371f1c563eaa3f\",\"says\":\"taken out of the field\"}"
+      "{\"at\":\"2026-11-11T00:00:00.000Z\",\"blocks\":[{\"first\":\"1M6XGF9K0000300\",\"hash\":\"35d85fb8df565eee598d15e68cf65486b7b20660946abf8de5c23d9c8ec28a7d\",\"moved\":[\"1M6XGF9K0000302\"],\"new\":1},{\"first\":\"1M6XGF9K0000301\",\"hash\":\"c8ec8a254d52138c4c9294fea9cfffc7557779030aed0704a24b1f41b4b54e29\",\"moved\":[],\"new\":2}],\"checkpoint\":{\"blocks\":[[\"c8ec8a254d52138c4c9294fea9cfffc7557779030aed0704a24b1f41b4b54e29\",\"1M6XGF9K0000301\",2]],\"gone\":[],\"moved\":[]},\"gone\":[],\"own\":[\"c8ec8a254d52138c4c9294fea9cfffc7557779030aed0704a24b1f41b4b54e29\"],\"predecessor\":null,\"says\":\"an act across two stores\",\"stores\":[\"a\",\"b\"]}",
+      "{\"at\":\"2026-11-11T00:01:00.000Z\",\"blocks\":[],\"gone\":[\"1M6XGF9K0000302\"],\"own\":[],\"predecessor\":\"3397047ea21ea7e59034870f9eaf2cb72b93b942ffebfc544e266a4f25e46518\",\"says\":\"taken out of the field\",\"stores\":[\"a\",\"b\"]}"
      ],
-     "ref": "8a408cbe88d33f1f72b0e217baa70f342eb6d544f7273aa33be460d5a4e8971d 0\n",
+     "ref": "e92b5602a0ac726dc38e20e8f420f2dcc5d16a644bc85058da161bc55ef6c46f 0\n",
      "field": {
       "1M6XGF9K0000301": "in b"
      }

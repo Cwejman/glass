@@ -21,7 +21,7 @@ The store is blocks and a log: no other copy of it exists.
 .glass/conversion/ids.json   each old ULID's name, written once
 ```
 
-A version is `{id, prev, instance, name?, mould?, body}`, with `prev` the hash of the block holding the version before. A commit is `{at, blocks, gone, predecessor, says}`, and `own` where an act touched several stores: it names which holons it changed and holds none of their contents, and it is one act in every store it touches, named by the hash of its at, blocks, gone and says; a line written before 2026-11-11 names its `parent`. From the ref and the open volume alone, the latest version of any holon is one block away, checked by its hash; older versions and older commits are fetched only when asked for. `integrations/glass/vectors/README.md` is the format in full.
+A version is `{id, prev, instance, name?, mould?, body}`, with `prev` the hash of the block holding the version before. A commit is `{at, blocks, gone, predecessor, says}`, and `own` and `stores` where an act touched several stores: it names which holons it changed and holds none of their contents, and it is one act in every store it touches, named by the hash of its at, blocks, gone and says; a line written before 2026-11-11 names its `parent`. From the ref and the open volume alone, the latest version of any holon is one block away, checked by its hash; older versions and older commits are fetched only when asked for. `integrations/glass/vectors/README.md` is the format in full.
 
 What the store holds:
 - the types;

@@ -2,13 +2,19 @@
 // its own and reads them back through a store opened afresh.
 
 import { expect, test } from "bun:test";
+import { existsSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { canonical } from "./canonical.ts";
-import { memoryFiles, servedFiles } from "./files.ts";
+import { memoryFiles, servedFiles, type Files } from "./files.ts";
+import { folderFiles } from "./folder.ts";
 import {
   act,
   commit,
   derivedId,
   derivedOf,
+  drop,
+  finish,
   idAt,
   isDerived,
   goneIds,
@@ -462,7 +468,7 @@ test("an act across two stores is one act in each, its blocks each store's own",
   const stores = [await fresh(), await fresh()];
 
   const done = await act(
-    stores.map((store, i) => ({ store, holons: first.stores[i].holons })),
+    stores.map((store, i) => ({ store, name: first.names[i], holons: first.stores[i].holons })),
     { says: first.says, at: first.at, born: first.born },
   );
 
@@ -489,8 +495,8 @@ test("an act across two stores is one act in each, its blocks each store's own",
   expect(writtenBy((await a.log())[0]!)).toEqual([inA, inBoth]);
 
   const gone = await act(
-    done.stores.map((store) => ({ store, holons: [], gone: then.gone })),
-    { says: then.says, at: then.at },
+    done.stores.map((store, i) => ({ store, name: first.names[i], holons: [], gone: then.gone })),
+    { says: then.says, at: then.at, born: [] },
   );
 
   expect(gone.act).toBe(then.content);
@@ -510,17 +516,20 @@ test("an act's new ids are one run across every store, and none in a moment a st
   await expect(
     act(
       [
-        { store: a, holons: [{ id: x, instance: [], body: {} }] },
-        { store: b, holons: [{ id: z, instance: [], body: {} }] },
+        { store: a, name: "a", holons: [{ id: x, instance: [], body: {} }] },
+        { store: b, name: "b", holons: [{ id: z, instance: [], body: {} }] },
       ],
-      { says: "a gap" },
+      { says: "a gap", born: [x, z] },
     ),
   ).rejects.toThrow("not one run");
 
-  const { stores } = await act([{ store: a, holons: [{ id: x, instance: [], body: {} }] }], { says: "x" });
+  const { stores } = await act([{ store: a, holons: [{ id: x, instance: [], body: {} }] }], {
+    says: "x",
+    born: [x],
+  });
 
   await expect(
-    act([{ store: stores[0]!, holons: [{ id: z, instance: [], body: {} }] }], { says: "again" }),
+    act([{ store: stores[0]!, holons: [{ id: z, instance: [], body: {} }] }], { says: "again", born: [z] }),
   ).rejects.toThrow("mint again");
 });
 
@@ -558,20 +567,20 @@ test("an act refuses one store given twice, and one that touches no store", asyn
   await expect(
     act(
       [
-        { store, holons: [] },
-        { store, holons: [] },
+        { store, name: "a", holons: [] },
+        { store, name: "b", holons: [] },
       ],
-      { says: "twice" },
+      { says: "twice", born: [] },
     ),
   ).rejects.toThrow("given twice");
 
   await expect(
     act(
       [
-        { store, holons: [] },
-        { store: await fresh(), holons: [] },
+        { store, name: "a", holons: [] },
+        { store: await fresh(), name: "b", holons: [] },
       ],
-      { says: "nothing" },
+      { says: "nothing", born: [] },
     ),
   ).rejects.toThrow("touches no store");
 });
@@ -637,4 +646,162 @@ test("an id derived from what is read is what the vectors say, leads back, and n
 
   expect(isDerived(idAt(Date.now()))).toBe(false);
   expect(derivedOf(idAt(Date.now()))).toBe(null);
+});
+
+// ---- Writing made safe
+
+// Files that fail, as a crash would, where the test says: what fails is never written.
+const failing = (
+  files: Files,
+  fails: (path: string, how: "write" | "append" | "replace") => boolean,
+): Files => ({
+  ...files,
+  write: (path, content) =>
+    fails(path, "write") ? Promise.reject(new Error("cut")) : files.write(path, content),
+  append: (path, text) =>
+    fails(path, "append") ? Promise.reject(new Error("cut")) : files.append(path, text),
+  replace: (path, text) =>
+    fails(path, "replace") ? Promise.reject(new Error("cut")) : files.replace(path, text),
+});
+
+const note = (store: Store, text: string) => ({
+  holons: [{ id: store.minter()(), instance: [], body: { text } }],
+  says: text,
+});
+
+test("a write cut short leaves the store as its last ref left it, and the next writes over what it left", async () => {
+  const store = await build();
+  const held = new Map(memoryOf(store));
+  const lost = `{"at":"t","blocks":[],"gone":[],"predecessor":"${store.head}","says":"never finished"}\n`;
+  held.set("log/0.jsonl", new TextEncoder().encode(text(held.get("log/0.jsonl")) + lost));
+
+  // The open volume, holding a line past the ref, is replaced whole, and that is cut.
+  const cutVolume = await openStore(
+    failing(memoryFiles(held), (path, how) => how === "replace" && path.startsWith("log/")),
+  );
+  await expect(commit(cutVolume, note(cutVolume, "cut in the log"))).rejects.toThrow("cut");
+
+  const afterVolume = await openStore(memoryFiles(held));
+  expect(afterVolume.head).toBe(store.head);
+  expect(await textsOf(afterVolume)).toEqual(await textsOf(store));
+
+  // The line is written and the ref is not moved.
+  const cutRef = await openStore(failing(memoryFiles(held), (path) => path === "refs/main"));
+  await expect(commit(cutRef, note(cutRef, "cut at the ref"))).rejects.toThrow("cut");
+
+  const afterRef = await openStore(memoryFiles(held));
+  expect(afterRef.head).toBe(store.head);
+  expect(await textsOf(afterRef)).toEqual(await textsOf(store));
+  expect(await afterRef.pending()).toBe(null);
+
+  const { store: next } = await commit(afterRef, note(afterRef, "whole"));
+  expect((await next.log()).map(({ says }) => says)).toEqual(["first", "second", "whole"]);
+  expect(text(held.get("log/0.jsonl")).trim().split("\n").length).toBe(3);
+});
+
+const folder = () => mkdtempSync(join(tmpdir(), "glass-store-"));
+
+test("on a folder, the ref and a volume are replaced whole, and nothing is left beside them", async () => {
+  const dir = folder();
+
+  try {
+    let store = await openStore(folderFiles(dir));
+    for (const step of vectors.steps) store = (await commit(store, step)).store;
+
+    expect(await Bun.file(join(dir, "refs/main")).text()).toBe(vectors.steps.at(-1).ref);
+    expect(readdirSync(dir, { recursive: true }).filter((path) => String(path).endsWith(".tmp"))).toEqual([]);
+    expect(existsSync(join(dir, "lock"))).toBe(false);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("a lock left by a process no longer running is taken over; one held is refused", async () => {
+  const dir = folder();
+
+  try {
+    const ended = Bun.spawn(["true"]);
+    await ended.exited;
+
+    writeFileSync(join(dir, "lock"), JSON.stringify({ pid: ended.pid, began: "2026-11-12T00:00:00.000Z" }));
+    const store = await openStore(folderFiles(dir));
+    const { store: next } = await commit(store, note(store, "after a crash"));
+    expect(existsSync(join(dir, "lock"))).toBe(false);
+
+    writeFileSync(join(dir, "lock"), JSON.stringify({ pid: process.pid, began: "2026-11-12T00:00:00.000Z" }));
+    await expect(commit(next, note(next, "while held"))).rejects.toThrow(`locked by process ${process.pid}`);
+    expect((await openStore(folderFiles(dir))).head).toBe(next.head);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("two writers of one folder store: one act is written, the other refused whole", async () => {
+  const dir = folder();
+
+  try {
+    const [one, two] = [await openStore(folderFiles(dir)), await openStore(folderFiles(dir))];
+    const done = await Promise.allSettled([commit(one, note(one, "one")), commit(two, note(two, "two"))]);
+
+    expect(done.filter(({ status }) => status === "fulfilled").length).toBe(1);
+    const [refused] = done.filter((each): each is PromiseRejectedResult => each.status === "rejected");
+    expect(String(refused!.reason)).toMatch(/locked by process|the store moved/);
+
+    const after = await openStore(folderFiles(dir));
+    expect((await after.log()).length).toBe(1);
+    expect(existsSync(join(dir, "lock"))).toBe(false);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// Two stores, a and b, and an act across both cut short where the test says.
+async function cutShort(fails: (path: string, how: "write" | "append" | "replace") => boolean) {
+  const [a, b] = [memoryFiles(), memoryFiles()];
+  const [inA, inB] = [await openStore(a), await openStore(failing(b, fails))];
+  const mint = inA.minter();
+  const [x, y] = [mint(), mint()];
+
+  await expect(
+    act(
+      [
+        { store: inA, name: "a", holons: [{ id: x, instance: [], body: { text: "in a" } }] },
+        { store: inB, name: "b", holons: [{ id: y, instance: [], body: { text: "in b" } }] },
+      ],
+      { says: "across", born: [x, y] },
+    ),
+  ).rejects.toThrow("cut");
+
+  return { a: await openStore(a), b: await openStore(b) };
+}
+
+test("an act cut short among its refs waits past them, never written over, until finished", async () => {
+  const { a, b } = await cutShort((path) => path === "refs/main");
+  const pending = await b.pending();
+
+  expect(pending?.stores).toEqual(["a", "b"]);
+  expect(pending?.says).toBe("across");
+  expect(await a.toward(pending!.act)).toBe("head");
+  expect(await b.toward(pending!.act)).toBe("pending");
+  await expect(commit(b, note(b, "over it"))).rejects.toThrow(
+    `the act ${pending!.act} ("across") was cut short`,
+  );
+
+  const finished = await finish(b);
+  expect(await finished.toward(pending!.act)).toBe("head");
+  expect(Object.values(await textsOf(finished))).toEqual(["in b"]);
+  expect(await finished.pending()).toBe(null);
+});
+
+test("an act cut short among its lines moved no ref, and is taken out", async () => {
+  const { a, b } = await cutShort((path) => path.startsWith("log/"));
+  const pending = await a.pending();
+
+  expect(pending?.stores).toEqual(["a", "b"]);
+  expect(await b.toward(pending!.act)).toBe("nowhere");
+
+  const dropped = await drop(a);
+  expect(await dropped.pending()).toBe(null);
+  const { store } = await commit(dropped, note(dropped, "after"));
+  expect((await store.log()).map(({ says }) => says)).toEqual(["after"]);
 });

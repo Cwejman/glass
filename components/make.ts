@@ -12,7 +12,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { canonical } from "../integrations/glass/canonical.ts";
 import type { Holon } from "../integrations/glass/store.ts";
-import { handles } from "../engine/act.ts";
+import { handles } from "../engine/handles.ts";
 import { localEngine } from "../engine/local.ts";
 import { holonsOf, open, storeFolder, typeNamed, typesOf } from "../stores.ts";
 

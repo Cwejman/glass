@@ -18,6 +18,7 @@
 
 import { isId, nextId, type Holon, type Store } from "../integrations/glass/store.ts";
 import { holonOf, isWritable, keepersOf, type Attached, type Field } from "./field.ts";
+import { isHandle } from "./handles.ts";
 import { judge, type Problem } from "./judge.ts";
 import { isRoot, mouldOf, references } from "./moulds.ts";
 
@@ -118,15 +119,6 @@ export async function factsOf(field: Field, change: Change): Promise<Facts> {
     referring: await referringTo(field, gone),
     root,
   };
-}
-
-export const isHandle = (value: unknown): value is string =>
-  typeof value === "string" && value.startsWith("~");
-
-// Handles in order, "~1", "~2", for a writer bringing holons into being.
-export function handles() {
-  let count = 0;
-  return () => `~${++count}`;
 }
 
 // ---- Residence

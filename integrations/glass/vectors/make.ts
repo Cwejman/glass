@@ -85,6 +85,7 @@ const after = `{"at":"2026-11-08T00:03:00.000Z","blocks":[{"first":"${W3}","hash
 // An act across two stores, a and b, each empty. Its ids are one run, minted together:
 // a keeps the first and the third, b the second and the third. In a, the first is its
 // own run and the third arrives, moved with no prev; in b the second and third are a run.
+// Each line names both stores, outside what names the act, so the act is one in both.
 const D = "1M6XGF9K0";
 const [first, second, third] = [`${D}000300`, `${D}000301`, `${D}000302`];
 const blockA =
@@ -107,10 +108,12 @@ const at1 = "2026-11-11T00:00:00.000Z";
 const at2 = "2026-11-11T00:01:00.000Z";
 const actSays = "an act across two stores";
 const goneSays = "taken out of the field";
-const lineA1 = `{"at":"${at1}","blocks":${actBlocks},"checkpoint":{"blocks":[["${ha}","${first}",1]],"gone":[],"moved":[["${third}","${ha}"]]},"gone":[],"own":["${ha}"],"predecessor":null,"says":"${actSays}"}`;
-const lineB1 = `{"at":"${at1}","blocks":${actBlocks},"checkpoint":{"blocks":[["${hb}","${second}",2]],"gone":[],"moved":[]},"gone":[],"own":["${hb}"],"predecessor":null,"says":"${actSays}"}`;
-const lineA2 = `{"at":"${at2}","blocks":[],"gone":["${third}"],"own":[],"predecessor":"${sha(lineA1)}","says":"${goneSays}"}`;
-const lineB2 = `{"at":"${at2}","blocks":[],"gone":["${third}"],"own":[],"predecessor":"${sha(lineB1)}","says":"${goneSays}"}`;
+const names = ["a", "b"];
+const touched = `"stores":${JSON.stringify(names)}`;
+const lineA1 = `{"at":"${at1}","blocks":${actBlocks},"checkpoint":{"blocks":[["${ha}","${first}",1]],"gone":[],"moved":[["${third}","${ha}"]]},"gone":[],"own":["${ha}"],"predecessor":null,"says":"${actSays}",${touched}}`;
+const lineB1 = `{"at":"${at1}","blocks":${actBlocks},"checkpoint":{"blocks":[["${hb}","${second}",2]],"gone":[],"moved":[]},"gone":[],"own":["${hb}"],"predecessor":null,"says":"${actSays}",${touched}}`;
+const lineA2 = `{"at":"${at2}","blocks":[],"gone":["${third}"],"own":[],"predecessor":"${sha(lineA1)}","says":"${goneSays}",${touched}}`;
+const lineB2 = `{"at":"${at2}","blocks":[],"gone":["${third}"],"own":[],"predecessor":"${sha(lineB1)}","says":"${goneSays}",${touched}}`;
 
 // Gone said in runs: after the first commit, the two holons that follow the type are
 // taken out together, and the line says them as one run, the first and how many.
@@ -178,6 +181,7 @@ const vectors = {
   },
   act: {
     first: {
+      names,
       says: actSays,
       at: at1,
       born: [first, second, third],

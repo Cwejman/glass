@@ -6,8 +6,14 @@
 // A commit is one act, written to every store it touches: the change is judged, as it
 // may be without writing, and its plan, in act.ts, written by glass's format, or refused
 // with the first problem judging found.
+//
+// An act cut short among its refs waits past the refs it never moved. Only the engine
+// sees every store it names, so before each commit, and as a store is attached to be
+// written, the engine settles it: finished where every store it names is attached to be
+// written and stands at it or waits for it; taken out where none of them moved to it, for
+// then it never happened; and otherwise left, its stores refusing writes, naming it.
 
-import { act, idAt, openStore, type Store } from "../integrations/glass/store.ts";
+import { act, drop, finish, idAt, openStore, type Pending, type Store } from "../integrations/glass/store.ts";
 import { factsOf, planOf, type Change, type Problem } from "./act.ts";
 import { fieldOf, isWritable, read, type Attached, type Field } from "./field.ts";
 import type { Source } from "../integrations/source.ts";
@@ -30,6 +36,8 @@ export type Engine = {
 
 export function startEngine(given: readonly Attached[] = []): Engine {
   let field = fieldOf(given);
+  // The stores an act cut short keeps from being written, each with why.
+  let waiting = new Map<string, string>();
   let turn: Promise<unknown> = Promise.resolve();
   const listeners = new Set<() => void>();
 
@@ -54,6 +62,47 @@ export function startEngine(given: readonly Attached[] = []): Engine {
       field,
     );
 
+  // Every act waiting past a written store's ref settled, as far as the stores attached
+  // allow, and what still waits kept, to refuse writes to its stores.
+  async function settle() {
+    const written = new Map(field.stores.filter(isWritable).map(({ key, store }) => [key, store]));
+    const acts = new Map<string, Pending>();
+    for (const store of written.values()) {
+      const pending = await store.pending();
+      if (pending) acts.set(pending.act, pending);
+    }
+
+    const now = new Map<string, Store>();
+    waiting = new Map();
+
+    for (const pending of acts.values()) {
+      const { act: hash, says, stores: names } = pending;
+      const absent = names.filter((name) => !written.has(name));
+      const stands = absent.length
+        ? []
+        : await Promise.all(names.map((name) => written.get(name)!.toward(hash)));
+      const behind = names.filter((_, i) => stands[i] === "pending");
+
+      if (absent.length) {
+        for (const name of names)
+          waiting.set(
+            name,
+            `the act ${hash} ("${says}") was cut short, and waits on ${absent.join(", ")} to be attached and written`,
+          );
+      } else if (stands.every((stand) => stand === "head" || stand === "pending")) {
+        for (const name of behind) now.set(name, await finish(written.get(name)!));
+      } else if (stands.every((stand) => stand === "pending" || stand === "nowhere")) {
+        for (const name of behind) now.set(name, await drop(written.get(name)!));
+      } else {
+        const moved = names.filter((_, i) => stands[i] === "earlier" || stands[i] === "nowhere");
+        for (const name of behind)
+          waiting.set(name, `the act ${hash} ("${says}") was cut short, and ${moved.join(", ")} moved since`);
+      }
+    }
+
+    if (now.size) become(withStores(now));
+  }
+
   return {
     attach: (key, store, { write = false } = {}) =>
       inTurn(async () => {
@@ -62,6 +111,7 @@ export function startEngine(given: readonly Attached[] = []): Engine {
 
         const attached: Attached = write ? { key, store: store as Store, write } : { key, store };
         become(fieldOf([...field.stores, attached], field));
+        if (write) await settle();
       }),
 
     // A store this engine only reads, taken again as it now stands: what was published
@@ -86,12 +136,20 @@ export function startEngine(given: readonly Attached[] = []): Engine {
 
     commit: (change) =>
       inTurn(async () => {
+        await settle();
+
         const plan = await planIn(field, change);
+        const held = plan.stores.find(({ key }) => waiting.has(key));
+        if (held) throw new Error(`${held.key} refuses writes: ${waiting.get(held.key)}`);
+
         const [problem] = plan.problems;
         if (problem) throw new Error(refusal(problem, change));
 
         try {
-          const done = await act(plan.stores, { says: change.says ?? "A change", born: plan.born });
+          const done = await act(
+            plan.stores.map(({ key, ...share }) => ({ name: key, ...share })),
+            { says: change.says ?? "A change", born: plan.born },
+          );
           become(withStores(new Map(plan.stores.map(({ key }, i) => [key, done.stores[i]!]))));
 
           return { commit: done.act, ids: plan.ids };

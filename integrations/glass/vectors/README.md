@@ -11,9 +11,10 @@ refs/main             "<hash of the last log line> <open volume>"; written last
 log/<n>.jsonl         commits, one per line; each volume opens with a checkpoint
 blocks/<hash>.jsonl   version lines, about 64 KB each, never touched again
 conversion/ids.json   old ULID -> id; written once; no reader needs it
+lock                  held by a writer for the length of an act; never published
 ```
 
-Only the ref changes, and only the open volume grows. Each store is such a folder, a `.glass/` standing alone beside what it is about: the main store's at the repository's root, the others in their modules, as `stores.ts` at the root says.
+Only the ref changes, and only the open volume grows. The ref, and a volume written again, are replaced whole, never overwritten in place: on a folder, written beside, synced and renamed over the old. Each store is such a folder, a `.glass/` standing alone beside what it is about: the main store's at the repository's root, the others in their modules, as `stores.ts` at the root says.
 
 `canonical.json` holds the texts of RFC 8785's examples, and the hash of each.
 
@@ -22,8 +23,8 @@ Only the ref changes, and only the open volume grows. Each store is such a folde
 - **Id:** 15 characters of the alphabet `0-9A-HJKMNP-TV-Z`, so ids sort as text. Nine are the commit's moment in milliseconds. Six are a count, which starts at a chance multiple of 32,768 in each commit and goes up by one. So a commit's new holons are its first id and how many there are. A holon's name is another thing: what it is called, beside its id.
 - **Version:** `{"body":…,"id":id,"instance":[id],"mould"?:…,"name"?:…,"prev":hash|null}`, one per line. `prev` is the hash of the block holding the version before. A block holds at most one version of an id, and lists a commit's new holons first, in name order.
 - **Reference:** `{"$ref":id}`, optionally with `$holds`. An id is unique across stores, so a reference into another store has the same form.
-- **Commit:** `{"at","blocks":[{"first":id|null,"hash","moved":[ids],"new":n}],"gone":[ids],"own"?:[hashes],"predecessor":hash|null,"says"}`, one line in each store's log. `new` counts the block's new holons, from `first`: in each store an act's new holons are that store's own run of the ids the act minted, one run across the act, and whatever else it writes there is `moved`, with the version before in that store as `prev`, or none. `predecessor` is the hash of this store's line before, across volumes; a line written before 2026-11-11 names it `parent`, and a line naming both is refused.
-- **Act:** a commit is one act in every store it touches. `blocks` lists every block the act wrote, in every store, once each, by hash; `gone` takes a holon out of every store that holds it. Where the act touched other stores too, `own` lists the hashes of the blocks this store keeps, `[]` when it only took something out. The act is named by the hash of `{"at","blocks","gone","says"}` alone, the same in every store and for lines written before; the line's own hash names its place in this store's history, and the ref names that.
+- **Commit:** `{"at","blocks":[{"first":id|null,"hash","moved":[ids],"new":n}],"gone":[ids],"own"?:[hashes],"predecessor":hash|null,"says","stores"?:[names]}`, one line in each store's log. `new` counts the block's new holons, from `first`: in each store an act's new holons are that store's own run of the ids the act minted, one run across the act, and whatever else it writes there is `moved`, with the version before in that store as `prev`, or none. `predecessor` is the hash of this store's line before, across volumes; a line written before 2026-11-11 names it `parent`, and a line naming both is refused.
+- **Act:** a commit is one act in every store it touches. `blocks` lists every block the act wrote, in every store, once each, by hash; `gone` takes a holon out of every store that holds it. Where the act touched other stores too, `own` lists the hashes of the blocks this store keeps, `[]` when it only took something out, and `stores` names every store it touched, in order, as the writer knew them; a line written before 2026-11-12 names none. The act is named by the hash of `{"at","blocks","gone","says"}` alone, the same in every store and for lines written before; the line's own hash names its place in this store's history, and the ref names that.
 - **Gone:** a line's `gone` and a checkpoint's say ids in order, each run of two or more that follow one another as `[first, count]`, a lone id as itself, so a whole let go costs its runs. A reader takes every id a run names as gone.
 - **Checkpoint:** the first line of every volume adds `"checkpoint":{"blocks":[[hash,first,new]],"gone":[ids],"moved":[[id,hash]]}`, the whole latest table after that line. A block entered before 2026-11-11 has no `new`. A new volume opens when the lines after the open one's checkpoint reach 64 KB.
 
@@ -44,14 +45,15 @@ A cold read costs the ref and one volume. Over HTTP a block is fetched whole, so
 
 ## Writing
 
-An act is written to every store it touches, given each store and the holons it keeps:
+An act is written to every store it touches, given each store, its name, and the holons it keeps:
 
 1. Mint ids for the new holons, one run across the act, in a moment no store given has used.
-2. Write every store's blocks.
-3. Then append every store's log line, each with its own predecessor, and `own` where the act touched other stores too.
-4. Then write every store's ref.
+2. Lock every store, in the order of their names: a `lock` file made exclusively, naming the writing process and when it began. A lock whose process no longer runs is stale, and is taken out and made again.
+3. Write every store's blocks.
+4. Then append every store's log line, each with its own predecessor, and `own` and `stores` where the act touched other stores too.
+5. Then replace every store's ref, and let the locks go.
 
-An act cut short after its blocks published nothing. One cut short among its refs is in some stores' logs and not others'; finishing it is the engine's. An act is refused if any store's ref has moved since it was read, if one store is given twice, or if it touches no store.
+An act cut short after its blocks published nothing. One cut short among its lines or refs leaves a line past some stores' refs: a whole line naming the head as its predecessor and several `stores` waits there, and is never written over by the format, for its act may have moved another store's ref. Anything else past the ref, a line cut short or one of an act of one store, never happened, and the next line is written over it. Whether an act that waits is finished, its refs moved, or taken out, is the engine's, which sees every store it names. An act is refused if any store's ref has moved since it was read, if one store is given twice, if several are given unnamed, or if it touches no store.
 
 ## Landing
 

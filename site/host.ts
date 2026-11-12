@@ -6,12 +6,12 @@
 // A page is told the engine is here by the host, so the same build published elsewhere
 // starts an engine of its own.
 
-import { mkdirSync, readFileSync, rmSync, watch, writeFileSync } from "node:fs";
+import { mkdirSync, watch } from "node:fs";
 import { join, normalize } from "node:path";
 import { startEngine } from "../engine/engine.ts";
 import type { Message } from "../engine/protocol.ts";
 import { serving } from "../engine/serving.ts";
-import { folderFiles } from "../integrations/glass/folder.ts";
+import { folderFiles, lockAt } from "../integrations/glass/folder.ts";
 import { openStore, type Store } from "../integrations/glass/store.ts";
 
 type Hosting = {
@@ -43,35 +43,15 @@ function opener() {
 const ownHosts = (port: number) => [`127.0.0.1:${port}`, `localhost:${port}`];
 const ownOrigins = (port: number) => ownHosts(port).map((host) => `http://${host}`);
 
-// The home held by this host alone: two engines writing one store would each write over
-// what the other wrote. A hold left by a host no longer running is taken.
-const running = (pid: number) => {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-// The process holding a home, if one does and still runs.
-function holderOf(lock: string) {
-  try {
-    const pid = Number(readFileSync(lock, "utf8"));
-    return pid && running(pid) ? pid : null;
-  } catch {
-    return null;
-  }
-}
-
+// The home held by this host alone, for as long as it runs: two engines writing one
+// store would each write over what the other wrote. Its lock is a store's own kind, so
+// one left by a host no longer running is taken over.
 function holdHome(home: string) {
-  const lock = join(home, "host.lock");
-  const holder = holderOf(lock);
-  if (holder) throw new Error(`another host holds ${home}, as process ${holder}`);
-
-  mkdirSync(home, { recursive: true });
-  writeFileSync(lock, String(process.pid));
-  return () => rmSync(lock, { force: true });
+  try {
+    return lockAt(join(home, "host.lock"));
+  } catch (error) {
+    throw new Error(`another host holds ${home}: ${(error as Error).message}`);
+  }
 }
 
 // A store taken again a moment after its ref moves, so a commit's several writes are one.
@@ -235,7 +215,7 @@ export async function host({ port, stores, home, site }: Hosting) {
     stop() {
       unwatch.forEach((stop) => stop());
       server.stop(true);
-      letHomeGo();
+      void letHomeGo();
     },
   };
 }

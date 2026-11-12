@@ -4,7 +4,8 @@
 // problems it finds as data: which rule, which holon, and what is wrong, said of it.
 
 import { isDerived, isId, type Holon } from "../integrations/glass/store.ts";
-import { isHandle, type Landing } from "./act.ts";
+import type { Landing } from "./act.ts";
+import { isHandle } from "./handles.ts";
 import { bodyProblem, mouldProblem, references, type Mould } from "./moulds.ts";
 
 export type Problem = { rule: string; id?: string; says: string };

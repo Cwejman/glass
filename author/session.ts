@@ -11,7 +11,7 @@
 //   "letGo": ["the title of an earlier path"]
 // }
 
-import { handles } from "../engine/act.ts";
+import { handles } from "../engine/handles.ts";
 import { localEngine } from "../engine/local.ts";
 import { holonsOf, open, storeFolder, type Holon } from "../stores.ts";
 import { markedWriter, proseWriter } from "./prose.ts";

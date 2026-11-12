@@ -1,7 +1,7 @@
 // The engine over stores in memory, and, last, over the real stores in the repository.
 
 import { describe, expect, test } from "bun:test";
-import { memoryFiles } from "../integrations/glass/files.ts";
+import { memoryFiles, type Files } from "../integrations/glass/files.ts";
 import { act, commit, idAt, nextId, openStore, type Holon, type Store } from "../integrations/glass/store.ts";
 import { holonsOf, openStores } from "../stores.ts";
 import { startEngine, type Engine } from "./engine.ts";
@@ -787,10 +787,10 @@ describe("attachments", () => {
     const shared = noteOf(idAt(Date.parse("2026-11-11T00:00:00Z"), 0), "shared");
     const { stores } = await act(
       [
-        { store: await empty(), holons: [shared] },
-        { store: await empty(), holons: [shared] },
+        { store: await empty(), name: "a", holons: [shared] },
+        { store: await empty(), name: "b", holons: [shared] },
       ],
-      { says: "kept in both" },
+      { says: "kept in both", born: [shared.id] },
     );
     const engine = startEngine([
       { key: "a", store: stores[0]!, write: true },
@@ -882,6 +882,86 @@ describe("attachments", () => {
     await expect(engine.commit({ holons: [], gone: [kept] })).rejects.toThrow("would be gone");
     await engine.commit({ holons: [], gone: [kept, pointing.ids["~1"]!] });
     expect(await engine.read({ holon: kept })).toBe(null);
+  });
+
+  // Stores a and b in memory, b's ref or log refusing to be written while cut is set, as
+  // a crash there would leave it, with a note committed into each.
+  async function cutAt(path: string) {
+    const [a, b] = [memoryFiles(), memoryFiles()];
+    let cut = false;
+    const cuts = (at: string) => cut && at.startsWith(path);
+    const cutB: Files = {
+      ...b,
+      append: (at, text) => (cuts(at) ? Promise.reject(new Error("cut")) : b.append(at, text)),
+      replace: (at, text) => (cuts(at) ? Promise.reject(new Error("cut")) : b.replace(at, text)),
+    };
+    const engine = startEngine([
+      { key: "a", store: await openStore(a), write: true },
+      { key: "b", store: await openStore(cutB), write: true },
+      { key: "pulled", store: await pulledStore() },
+    ]);
+    const inA = (await engine.commit({ holons: [noteOf("~1", "a")], into: "a" })).ids["~1"]!;
+    const inB = (await engine.commit({ holons: [noteOf("~1", "b")], into: "b" })).ids["~1"]!;
+
+    cut = true;
+    await expect(
+      engine.commit({ holons: [noteOf(inA, "a again"), noteOf(inB, "b again")], says: "both" }),
+    ).rejects.toThrow("cut");
+    cut = false;
+
+    return { a, b, engine, inA, inB };
+  }
+
+  const lastAct = async (engine: Engine, key: string) =>
+    ((await engine.read({ log: key })) as { act: string; says: string }[]).at(-1);
+
+  test("an act cut short among its refs is finished at the next commit, where every store it names is attached", async () => {
+    const { engine, inB } = await cutAt("refs/");
+    expect((await lastAct(engine, "a"))?.says).toBe("both");
+    expect((await engine.read({ holon: inB }))?.body.title).toBe("b");
+
+    await engine.commit({ holons: [noteOf("~1", "after")], into: "a" });
+
+    const both = ((await engine.read({ log: "a" })) as { act: string }[]).at(-2)!.act;
+    expect((await lastAct(engine, "b"))?.act).toBe(both);
+    expect((await engine.read({ holon: inB }))?.body.title).toBe("b again");
+  });
+
+  test("an act cut short waits, and its stores refuse writes, while a store it names is not attached", async () => {
+    const { a, b, inB } = await cutAt("refs/");
+    const alone = startEngine([
+      { key: "b", store: await openStore(b), write: true },
+      { key: "pulled", store: await pulledStore() },
+    ]);
+
+    await expect(alone.commit({ holons: [noteOf(inB, "over it")] })).rejects.toThrow(
+      /b refuses writes: the act \w+ \("both"\) was cut short, and waits on a/,
+    );
+    expect(await (await openStore(b)).pending()).not.toBe(null);
+
+    const together = startEngine([
+      { key: "a", store: await openStore(a), write: true },
+      { key: "b", store: await openStore(b), write: true },
+      { key: "pulled", store: await pulledStore() },
+    ]);
+    await together.commit({ holons: [noteOf(inB, "after")] });
+    expect(((await together.read({ log: "b" })) as { says: string }[]).map(({ says }) => says)).toEqual([
+      "A change",
+      "both",
+      "A change",
+    ]);
+  });
+
+  test("an act cut short among its lines moved no ref, and is taken out", async () => {
+    const { engine, inA } = await cutAt("log/");
+
+    await engine.commit({ holons: [noteOf("~1", "after")], into: "a" });
+
+    expect(((await engine.read({ log: "a" })) as { says: string }[]).map(({ says }) => says)).toEqual([
+      "A change",
+      "A change",
+    ]);
+    expect((await engine.read({ holon: inA }))?.body.title).toBe("a");
   });
 });
 

@@ -8,7 +8,7 @@
 import { join } from "node:path";
 import { canonical } from "../integrations/glass/canonical.ts";
 import type { Holon } from "../integrations/glass/store.ts";
-import { handles } from "../engine/act.ts";
+import { handles } from "../engine/handles.ts";
 import { localEngine } from "../engine/local.ts";
 import { holonsOf, open, storeFolder, storesHere, typeNamed, typesOf } from "../stores.ts";
 

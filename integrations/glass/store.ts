@@ -7,7 +7,13 @@
 //
 // An act is one commit in every store it touches: each store's line holds the act
 // whole, its predecessor, and, where the act wrote elsewhere too, which blocks are its
-// own. What the act says, apart from where it stands, is the same in every store.
+// own and every store it touched. What the act says, apart from where it stands, is the
+// same in every store.
+//
+// Writing is made safe three ways. Nothing is overwritten in place: the ref and a volume
+// written again are replaced whole. A store is locked for the length of an act. And an
+// act cut short among its refs is seen, by its line past a store's ref, so it is finished
+// or never written over; which, only the engine can know, seeing every store.
 //
 // A store here is a value: what stood at one head. Adding to it gives the next.
 // Reading the latest of any holon costs the ref, the open volume and one block.
@@ -41,7 +47,9 @@ type Checkpoint = {
 };
 
 // A line names the line before it as its predecessor; one written before 2026-11-11
-// names it its parent. Own is said only by an act that touched other stores too.
+// names it its parent. Own and stores are said only by an act that touched other stores
+// too: stores names each store it touched, as the engine writing it knew them, so an act
+// cut short can be finished; a line written before 2026-11-12 names none.
 type Line = {
   at: string;
   blocks: BlockEntry[];
@@ -49,6 +57,7 @@ type Line = {
   predecessor?: string | null;
   parent?: string | null;
   own?: string[];
+  stores?: string[];
   says: string;
   checkpoint?: Checkpoint;
   conversion?: { blocks: string[] };
@@ -356,10 +365,10 @@ export type Store = Awaited<ReturnType<typeof openStore>>;
 
 export async function openStore(files: Files, blocks = new Map<string, Promise<Map<string, Version>>>()) {
   const ref = await readRef(files);
-  const opened = ref
-    ? await tableFromVolume(await readLines(files, ref.volume), ref.head)
-    : { table: emptyTable(), length: 0 };
+  const lines = ref ? await readLines(files, ref.volume) : [];
+  const opened = ref ? await tableFromVolume(lines, ref.head) : { table: emptyTable(), length: 0 };
   const { table, length: openLines } = opened;
+  const head = ref?.head ?? null;
 
   // A block is fetched whole, once, and checked against its hash before it is read.
   function block(hash: string) {
@@ -528,10 +537,24 @@ export async function openStore(files: Files, blocks = new Map<string, Promise<M
     };
   }
 
+  // The act a line past the ref was written for, if one waits there: see pendingOf. The
+  // volume is read again, for a line past the ref may be written after this head was read.
+  const pending = async () =>
+    pendingOf(await lineAfter(files, ref, ref ? await readLines(files, ref.volume) : [], openLines), head);
+
+  // Where this store stands toward an act: at it, its head; written past its ref, and
+  // waiting; earlier in its log, read whole only to know; or nowhere in it.
+  async function toward(act: string): Promise<"head" | "pending" | "earlier" | "nowhere"> {
+    if (openLines && (await actHash(JSON.parse(lines[openLines - 1]!))) === act) return "head";
+    if ((await pending())?.act === act) return "pending";
+    if ((await log()).some((entry) => entry.act === act)) return "earlier";
+    return "nowhere";
+  }
+
   return {
     files,
     blocks,
-    head: ref?.head ?? null,
+    head,
     volume: ref?.volume ?? 0,
     openLines,
     table,
@@ -544,8 +567,60 @@ export async function openStore(files: Files, blocks = new Map<string, Promise<M
     versions,
     allAt,
     minter,
+    pending,
+    toward,
   };
 }
+
+// ---- What lies past the ref
+
+// The first line past a store's ref: past the open volume's last line, or opening the
+// next volume, or, in a store never written, the first of all.
+async function lineAfter(
+  files: Files,
+  ref: { volume: number } | null,
+  lines: readonly string[],
+  openLines: number,
+) {
+  if (ref && lines.length > openLines) return { text: lines[openLines]!, volume: ref.volume };
+
+  const volume = ref ? ref.volume + 1 : 0;
+  const bytes = await files.read(logPath(volume));
+  const [text] = bytes ? linesOf(textOf(bytes)) : [];
+
+  return text === undefined ? null : { text, volume };
+}
+
+// An act that waits past a store's ref: a whole line following its head, written for an
+// act across several stores whose ref here never moved. It may have moved elsewhere, so
+// the line is never written over until the engine, seeing every store it names, finishes
+// it or knows it moved nowhere. Anything else past the ref, a line cut short or one of
+// an act of this store alone, never happened, and is written over.
+export type Pending = { act: string; says: string; stores: string[]; line: string; volume: number };
+
+async function pendingOf(after: { text: string; volume: number } | null, head: string | null) {
+  if (!after) return null;
+
+  let line: Line;
+  try {
+    line = JSON.parse(after.text);
+  } catch {
+    return null;
+  }
+
+  if (predecessorOf(line) !== head || !Array.isArray(line.stores) || line.stores.length < 2) return null;
+
+  return {
+    act: await actHash(line),
+    says: line.says,
+    stores: line.stores,
+    line: after.text,
+    volume: after.volume,
+  };
+}
+
+const waits = ({ act, says, stores }: Pending) =>
+  new Error(`the act ${act} ("${says}") was cut short here: it waits on ${stores.join(", ")}`);
 
 // ---- Writing
 
@@ -559,10 +634,19 @@ async function mustBeCurrent(store: Store) {
 
 // Writes a store's line, past its ref, and gives what publishes it: the ref moved to
 // it, and the store it made. What a commit that never finished left past the ref is
-// written over.
-async function writeLine(store: Store, fields: Pick<Line, "at" | "blocks" | "gone" | "says" | "own">) {
+// written over, the volume replaced whole, unless it is an act that waits.
+async function writeLine(
+  store: Store,
+  fields: Pick<Line, "at" | "blocks" | "gone" | "says" | "own" | "stores">,
+) {
   const open = store.head ? await readLines(store.files, store.volume) : [];
   const kept = open.slice(0, store.openLines);
+  const waiting = await pendingOf(
+    await lineAfter(store.files, store.head ? store : null, open, store.openLines),
+    store.head,
+  );
+  if (waiting) throw waits(waiting);
+
   const grown = kept.slice(1).reduce((size, text) => size + encoded(text).length + 1, 0);
   const opensVolume = !store.head || grown >= blockSize;
   const volume = !store.head ? 0 : opensVolume ? store.volume + 1 : store.volume;
@@ -580,16 +664,20 @@ async function writeLine(store: Store, fields: Pick<Line, "at" | "blocks" | "gon
   }
 
   const text = canonical(line);
+  const asText = (lines: string[]) => lines.map((one) => `${one}\n`).join("");
 
-  if (opensVolume) await store.files.write(logPath(volume), `${text}\n`);
-  else if (open.length > kept.length)
-    await store.files.write(logPath(volume), `${[...kept, text].join("\n")}\n`);
-  else await store.files.append(logPath(volume), `${text}\n`);
+  if (open.length > kept.length)
+    await store.files.replace(logPath(store.volume), asText(opensVolume ? kept : [...kept, text]));
 
-  return async () => {
-    await store.files.write("refs/main", `${await sha(text)} ${volume}\n`);
-    return openStore(store.files, store.blocks);
-  };
+  if (opensVolume) await store.files.replace(logPath(volume), asText([text]));
+  else if (open.length === kept.length) await store.files.append(logPath(volume), asText([text]));
+
+  return () => moveRef(store, text, volume);
+}
+
+async function moveRef(store: Store, line: string, volume: number) {
+  await store.files.replace("refs/main", `${await sha(line)} ${volume}\n`);
+  return openStore(store.files, store.blocks);
 }
 
 // Cuts what a commit writes into blocks, none past the block size unless one line is.
@@ -615,10 +703,12 @@ function cut<T extends { text: string }>(lines: T[]) {
   return pieces;
 }
 
-// A store's share of an act: the holons it keeps, and the ids it takes out.
-export type Given = { store: Store; holons: Holon[]; gone?: string[] };
+// A store's share of an act: the holons it keeps, and the ids it takes out. An act
+// across several stores names each, as the writer knows it.
+export type Given = { store: Store; name?: string; holons: Holon[]; gone?: string[] };
 
-export type Act = { says: string; at?: string; born?: string[] };
+// What an act says, and its new holons, born: those the act minted.
+export type Act = { says: string; at?: string; born: readonly string[] };
 
 // Writes one store's share of an act into its blocks: in this store, the act's new
 // holons it keeps, as far as they run one after another, are its own run; whatever else
@@ -673,14 +763,36 @@ async function writeBlocks(store: Store, places: Place[], minted: ReadonlySet<st
 }
 
 // One act, one commit in every store it touches, given each store and the holons it
-// keeps. Its new holons are those named born, or else every one no store given holds,
-// and they are one run, minted together in a moment no store has used. Every block is
-// written to every store, then each store's line, then each ref, so an act cut short
-// after its blocks published nothing. What each store is given to take out goes from it.
-export async function act(given: Given[], { says, at = new Date().toISOString(), born }: Act) {
+// keeps. Its new holons, born, are one run, minted together in a moment no store has
+// used. Each store is locked, in the order of their names, for the length of the act.
+// Every block is written to every store, then each store's line, then each ref, so an
+// act cut short after its blocks published nothing, and one cut short among its refs
+// waits past the refs not moved. What each store is given to take out goes from it.
+export async function act(given: Given[], saying: Act) {
   if (new Set(given.map(({ store }) => store.files)).size !== given.length)
     throw new Error("one store is given twice in one act");
+  if (given.length > 1 && !given.every(({ name }) => name))
+    throw new Error("an act given several stores names each");
 
+  return locked(
+    [...given].sort(byId(({ name }) => name ?? "")).map(({ store }) => store),
+    () => writeAct(given, saying),
+  );
+}
+
+// What a task does with stores locked, in the order given, each let go after.
+async function locked<T>(stores: readonly Store[], task: () => Promise<T>) {
+  const locks: (() => Promise<void>)[] = [];
+
+  try {
+    for (const store of stores) locks.push(await store.files.lock());
+    return await task();
+  } finally {
+    for (const letGo of locks.reverse()) await letGo();
+  }
+}
+
+async function writeAct(given: Given[], { says, at = new Date().toISOString(), born }: Act) {
   for (const { store, holons } of given) {
     await mustBeCurrent(store);
 
@@ -694,11 +806,7 @@ export async function act(given: Given[], { says, at = new Date().toISOString(),
       Promise.all(holons.map(async (holon) => ({ holon, was: await store.lastVersion(holon.id) }))),
     ),
   );
-  const places = placed.flat();
-  const kept = new Set(places.filter(({ was }) => was).map(({ holon }) => holon.id));
-  const minted = [
-    ...new Set(born ?? places.map(({ holon }) => holon.id).filter((id) => !kept.has(id))),
-  ].sort();
+  const minted = [...new Set(born)].sort();
 
   minted.forEach((id, i) => {
     if (i > 0 && id !== nextId(minted[i - 1]!))
@@ -722,6 +830,14 @@ export async function act(given: Given[], { says, at = new Date().toISOString(),
     throw new Error("the act touches no store: it writes nothing and takes nothing out");
 
   const several = touched.filter(Boolean).length > 1;
+  const names = several
+    ? {
+        stores: given
+          .filter((_, i) => touched[i])
+          .map(({ name }) => name!)
+          .sort(),
+      }
+    : {};
 
   const blocks = [
     ...new Map(written.flatMap(({ entries }) => entries).map((entry) => [canonical(entry), entry])).values(),
@@ -733,7 +849,7 @@ export async function act(given: Given[], { says, at = new Date().toISOString(),
     if (!touched[i]) continue;
 
     const own = several ? { own: written[i]!.entries.map(({ hash }) => hash).sort() } : {};
-    publish.push({ i, moveRef: await writeLine(store, { ...content, ...own }) });
+    publish.push({ i, moveRef: await writeLine(store, { ...content, ...own, ...names }) });
   }
 
   const stores = given.map(({ store }) => store);
@@ -747,9 +863,12 @@ export async function act(given: Given[], { says, at = new Date().toISOString(),
   };
 }
 
-// Adds one commit to one store and gives the store it made: an act that touches it alone.
+// Adds one commit to one store and gives the store it made: an act that touches it alone,
+// whose new holons are those the store keeps no version of.
 export async function commit(store: Store, change: Commit) {
-  const done = await act([{ store, holons: change.holons, gone: change.gone }], change);
+  const was = await Promise.all(change.holons.map(({ id }) => store.lastVersion(id)));
+  const born = change.holons.filter((_, i) => !was[i]).map(({ id }) => id);
+  const done = await act([{ store, holons: change.holons, gone: change.gone }], { ...change, born });
   const next = done.stores[0]!;
 
   return { store: next, commit: next.head!, act: done.act, blocks: done.blocks, bytes: done.bytes };
@@ -767,7 +886,9 @@ export const actHash = (line: Pick<Line, "at" | "blocks" | "gone" | "says">) => 
 // lines chained on again. Nothing in a block changes, so no id or reference does. A
 // commit already landed here is known by what it says. Two copies that changed one
 // holon stop here and ask.
-export async function land(store: Store, other: Store) {
+export const land = (store: Store, other: Store) => locked([store], () => landed(store, other));
+
+async function landed(store: Store, other: Store) {
   await mustBeCurrent(store);
 
   const ours = await store.fullLog();
@@ -812,11 +933,54 @@ export async function land(store: Store, other: Store) {
       await store.files.write(blockPath(hash), bytes);
     }
 
-    const own = line.own ? { own: line.own } : {};
+    const { own, stores } = line;
     at = await (
-      await writeLine(at, { at: line.at, blocks: line.blocks, gone: line.gone, says: line.says, ...own })
+      await writeLine(at, {
+        at: line.at,
+        blocks: line.blocks,
+        gone: line.gone,
+        says: line.says,
+        ...(own && { own }),
+        ...(stores && { stores }),
+      })
     )();
   }
 
   return { landed: incoming.length, store: at };
 }
+
+// ---- An act cut short
+
+// Finishes the act waiting past a store's ref by moving its ref to it: for the engine,
+// once it knows every store the act names stands at it or waits for it.
+export const finish = (store: Store) =>
+  locked([store], async () => {
+    await mustBeCurrent(store);
+
+    const waiting = await store.pending();
+    if (!waiting) throw new Error("no act waits past this store's ref");
+
+    return moveRef(store, waiting.line, waiting.volume);
+  });
+
+// Takes out the act waiting past a store's ref, its volume replaced without it: for the
+// engine, once it knows no store the act names moved to it.
+export const drop = (store: Store) =>
+  locked([store], async () => {
+    await mustBeCurrent(store);
+
+    const waiting = await store.pending();
+    if (!waiting) throw new Error("no act waits past this store's ref");
+
+    const kept =
+      waiting.volume === store.volume && store.head ? await readLines(store.files, store.volume) : [];
+    await store.files.replace(
+      logPath(waiting.volume),
+      kept
+        .slice(0, store.openLines)
+        .map((line) => `${line}\n`)
+        .join(""),
+    );
+
+    return openStore(store.files, store.blocks);
+  });

@@ -4,3 +4,7 @@
 node_modules/
 site/dist/
 site/home/
+
+# a writer's lock on a store, and what a replace leaves if cut short
+**/.glass/lock
+**/.glass/**/*.tmp
