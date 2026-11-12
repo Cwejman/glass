@@ -5,8 +5,9 @@
 
 import { asHolon, type Holon, type LogEntry, type Store } from "../integrations/glass/store.ts";
 import type { Source } from "../integrations/source.ts";
-import { worldOf, type Found, type World } from "./world.ts";
-import type { Shelf } from "./patterns/index.ts";
+import { mouldOf, partsOf } from "./moulds.ts";
+import { worldOf, type Found, type World } from "./read/world.ts";
+import type { Shelf } from "./read/patterns/shelf.ts";
 
 // A store as this engine uses it: what it is called here, and whether it may be written.
 // One it reads is any source; one it writes is glass's own store.
@@ -123,6 +124,67 @@ export async function keptIn(field: Field, id: string): Promise<Found | null> {
 
 export const holonOf = async (field: Field, id: string): Promise<Holon | null> =>
   (await keptIn(field, id))?.holon ?? null;
+
+// ---- A holon, and a whole, as a reader is given them
+
+export type HolonRead = Holon & { store: string; version: string; types: string[] };
+
+// The names of what a holon is, as a reader is given them: "type" where it is one.
+export const typeNames = (holon: Holon, types: readonly (Holon | null | undefined)[]) => [
+  ...(holon.mould ? ["type"] : []),
+  ...types.flatMap((type) => (type?.name ? [type.name] : [])),
+];
+
+export async function readHolon(field: Field, id: string): Promise<HolonRead | null> {
+  const kept = await keptIn(field, id);
+  if (!kept) return null;
+
+  const types = await Promise.all(
+    kept.holon.instance.map(async (type) => (await keptIn(field, type))?.holon ?? null),
+  );
+  return { ...kept.holon, store: kept.store, version: kept.block!, types: typeNames(kept.holon, types) };
+}
+
+// A whole: a holon and what it holds, a layer of blocks at a time, down to a depth,
+// reading but never entering what is of a type named in stop.
+export async function readWhole(field: Field, root: string, stop: readonly string[], depth: number) {
+  const holons: Record<string, HolonRead> = {};
+  const types = new Map<string, Promise<Holon | null>>();
+  const typeOf = (id: string) => {
+    if (!types.has(id))
+      types.set(
+        id,
+        keptIn(field, id).then((kept) => kept?.holon ?? null),
+      );
+    return types.get(id)!;
+  };
+
+  for (let layer = [root], down = 0; layer.length && down <= depth; down++) {
+    const fresh = [...new Set(layer)].filter((id) => !holons[id]);
+    const read = await Promise.all(fresh.map((id) => keepersOf(field, id).then(([first]) => first)));
+    const next: string[] = [];
+
+    for (const found of read) {
+      if (!found) continue;
+
+      const holon = asHolon(found.latest.version);
+      const its = await Promise.all(holon.instance.map(typeOf));
+      holons[holon.id] = {
+        ...holon,
+        store: found.key,
+        version: found.latest.block,
+        types: typeNames(holon, its),
+      };
+
+      const stopped = holon.id !== root && holons[holon.id]!.types.some((type) => stop.includes(type));
+      if (!stopped) next.push(...partsOf(holon.body, mouldOf(its)));
+    }
+
+    layer = next;
+  }
+
+  return { root, holons };
+}
 
 // ---- What is carried
 

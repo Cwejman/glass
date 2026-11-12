@@ -1,6 +1,7 @@
-// The engine as it was asked before reads were expressions: the forms of read the
-// interface and the tests still send, each answered by the engine as it now is. It goes
-// when they ask in the language.
+// Where everything outside the engine enters today: the engine as it was asked before
+// reads were expressions. The interface, serving, the worker, the command line and the
+// tests ask in these forms, and each is answered by the engine as it now is, engine.ts.
+// It goes when they ask in the language, and they meet engine.ts itself.
 //
 // A way of looking, gather, level and groups, was a second kind of expression, read by
 // its shape; it is kept here, read by the same shapes, over the world.
@@ -8,12 +9,12 @@
 import { isId, type LogEntry, type Store, type Version } from "../integrations/glass/store.ts";
 import type { Source } from "../integrations/source.ts";
 import { expressionProblem, isRef, type Expression, type Value } from "../language/expression.ts";
-import type { Change as ChangeOf, Problem } from "./act.ts";
-import { evaluator } from "./core/evaluate.ts";
+import type { Change as ChangeOf, Problem } from "./change/plan.ts";
+import { evaluator } from "./read/evaluate.ts";
 import { engine as engineOf, type Committed } from "./engine.ts";
-import { keepersOf, type Attachment, type Field } from "./field.ts";
-import { answer, readHolon, readWhole, type HolonRead } from "./reading.ts";
-import type { Holder, World } from "./world.ts";
+import { keepersOf, readHolon, readWhole, type Attachment, type Field, type HolonRead } from "./field.ts";
+import { answer } from "./read/answer.ts";
+import type { Holder, World } from "./read/world.ts";
 
 export type { HolonRead, Holder };
 export type Whole = { root: string; holons: Record<string, HolonRead> };

@@ -16,25 +16,36 @@
 // is done one at a time, each making the next field from the one before. Reading and
 // judging ask the field as it stands.
 //
-// Read in this order: field.ts, the field as a value; world.ts, the field read whole as
-// an expression works over it; reading.ts, a read answered by identity or over the
-// world, by core/, the bare language and its natives, and patterns/, facts, the index
-// and the planner; act.ts and judge.ts, a change planned and judged, purely; writing.ts,
-// the one effect; listening.ts, who is told.
+// Drawn in folders as it is said here:
+//
+//   field.ts    the field as a value, a holon or a whole read from it by identity
+//   moulds.ts   what a type says: a mould, what holds, what is wrong with a body
+//   handles.ts  how a change names what is not yet born, "~1"
+//   read/       a read answered (answer.ts), over the world (world.ts), by the bare
+//               language (evaluate.ts) and its natives (natives/), patterns answered
+//               from an index carried from field to field (patterns/)
+//   change/     a commit: what the field knows of it (known.ts), its plan (plan.ts),
+//               the rules it is judged by (rules.ts), and its writing (write.ts)
+//   listen.ts   who is told
+//   serve/      the engine carried: its protocol, serving, a worker in the browser, and
+//               the engine of this machine's stores
+//   compat.ts   the old forms of read, where all outside enters today
 //
 // Whoever is given an engine is given these verbs alone: the interface, the command line,
 // and in time a program. Who asks is not yet said with a read or a change; where what one
 // may read or change is to be governed, it enters there, into evaluation and judging, for
 // no wrapper can narrow what an expression reaches.
 
-import type { Holon } from "../integrations/glass/store.ts";
 import type { Source } from "../integrations/source.ts";
 import type { Expression, Value } from "../language/expression.ts";
-import type { Change, Problem } from "./act.ts";
-import { attached, detached, fieldOf, withStores, type Attachment, type Field } from "./field.ts";
-import { listening, type Changed, type Listener } from "./listening.ts";
-import { answer } from "./reading.ts";
-import { planIn, refusal, settled, write, type Committed } from "./writing.ts";
+import type { Change, Problem } from "./change/plan.ts";
+import { attached, detached, fieldOf, isWritable, withStores, type Attachment, type Field } from "./field.ts";
+import { listening, type Changed, type Listener } from "./listen.ts";
+import { answer } from "./read/answer.ts";
+import { idAt, type Holon } from "../integrations/glass/store.ts";
+import { knownOf } from "./change/known.ts";
+import { planOf } from "./change/plan.ts";
+import { refusal, settled, write, type Committed } from "./change/write.ts";
 
 export type { Attachment, Change, Committed, Listener, Problem };
 
@@ -110,6 +121,19 @@ export function engine(attachments: readonly Attachment[] = []): Engine & { fiel
         become(withStores(field, new Map([[key, store]])));
       }),
   };
+}
+
+// The plan of a change over the field as it stands: what the field knows of it read,
+// then planned purely, its ids minted from after the latest any written store has given,
+// or from now. The clock is read here, at the top, and nowhere beneath.
+async function planIn(field: Field, change: Change) {
+  const start = field.stores
+    .filter(isWritable)
+    .map(({ store }) => store.minter()())
+    .sort()
+    .at(-1);
+
+  return planOf(await knownOf(field, change), change, start ?? idAt(Date.now()));
 }
 
 // What an act touched: every holon it wrote, and every one it took out.

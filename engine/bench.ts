@@ -4,7 +4,7 @@
 // Usage: bun engine/bench.ts
 import { openStores } from "../stores.ts";
 import { fieldOf } from "./field.ts";
-import { evaluator } from "./core/evaluate.ts";
+import { evaluator } from "./read/evaluate.ts";
 import { namesIn } from "../language/names.ts";
 import { parse } from "../language/text.ts";
 const stores = Object.entries(await openStores()).map(([key, store]) => ({ key, store }));

@@ -15,7 +15,7 @@ await import("./make.ts");
 rmSync(dist, { recursive: true, force: true });
 
 const built = await Bun.build({
-  entrypoints: [join(repo, "interface/chassis.ts"), join(repo, "engine/worker.ts")],
+  entrypoints: [join(repo, "interface/chassis.ts"), join(repo, "engine/serve/worker.ts")],
   outdir: dist,
   naming: { entry: "[name].js" },
   format: "esm",
@@ -24,7 +24,8 @@ const built = await Bun.build({
 
 if (!built.success) throw new AggregateError(built.logs, "building the client");
 
-for (const [name, { folder }] of await storesHere()) cpSync(folder, join(dist, "stores", name), { recursive: true });
+for (const [name, { folder }] of await storesHere())
+  cpSync(folder, join(dist, "stores", name), { recursive: true });
 
 // The page names the site's store, which says what else to attach and what to boot into.
 const page = await Bun.file(join(import.meta.dir, "index.html")).text();

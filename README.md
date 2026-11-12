@@ -64,7 +64,7 @@ A brief the work has overtaken carries a measure that says so, its note saying w
 
 A name a holon shares with others is refused with each holon it finds and what holds it, so the route that finds one can be said: `@Glass/"The grounds"`. `--json` gives the engine's answer as it is; `--file` reads the expression from a file.
 
-Writing goes through the engine too. `localEngine({ writes: ["main"] })` in `engine/local.ts` is the same engine with the stores named written through it; its `commit` judges what it is given against the types and writes one act where each holon resides, as the browser's engine does. Every tool that writes uses it, and nothing writes to a store past it (2026-11-11).
+Writing goes through the engine too. `localEngine({ writes: ["main"] })` in `engine/serve/local.ts` is the same engine with the stores named written through it; its `commit` judges what it is given against the types and writes one act where each holon resides, as the browser's engine does. Every tool that writes uses it, and nothing writes to a store past it (2026-11-11).
 
 The probe and the read tool, which read the blocks beside the engine, were retired for it on 2026-11-10. The routes earlier sessions wrote, as `9.1.21-22`, were the probe's, and are read now by what they name.
 
