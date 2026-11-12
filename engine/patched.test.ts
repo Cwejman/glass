@@ -10,11 +10,11 @@ import { commit, openStore, type Holon, type Store } from "../integrations/glass
 import { namesAsked } from "../language/names.ts";
 import { parse } from "../language/text.ts";
 import { openStores } from "../stores.ts";
-import { startEngine, type Engine } from "./engine.ts";
+import { startEngine, type Engine } from "./compat.ts";
 import { fieldOf, type Field } from "./field.ts";
-import { indexOf, mouldIn, type Asked } from "./facts.ts";
-import type { Everything } from "./expression.ts";
-import { howIndexed, storeIndexesOf } from "./kernel.ts";
+import { indexOf, type Asked } from "./patterns/facts.ts";
+import type { World as Everything } from "./world.ts";
+import { howIndexed, storeIndexes as storeIndexesOf } from "./patterns/index.ts";
 
 // glass, for the functions a pattern is asked with.
 const { glass } = await openStores();
@@ -62,9 +62,9 @@ const askedOf = (engine: Engine, keys: string[]) =>
 
 // Everything asked of an index, each order and the words, held against a fresh index.
 function indexAsFresh(all: Everything, key: string) {
-  const held = all.held.get(key)!;
+  const held = all.byStore.get(key)!;
   const also = new Set(held.filter((each) => all.known.get(each.holon.id) !== each));
-  const fresh = indexOf(held, mouldIn(all.known), also);
+  const fresh = indexOf(held, (holon) => all.mouldFor(holon), also);
   const index = storeIndexesOf(all).get(key)!;
   const ids = held.map(({ holon }) => holon.id);
 
@@ -164,7 +164,7 @@ async function read(store: Store, id: string): Promise<Holon> {
 }
 
 const indexed = async (field: Field) => {
-  const all = await field.everything();
+  const all = await field.world();
   storeIndexesOf(all);
   return all;
 };
@@ -283,13 +283,13 @@ describe("unit: the index's carrying (rewritten with the index)", () => {
       [ids[7]!],
     );
 
-    const after = await fieldOf(attached({ types, notes: renewed, other }), before).everything();
+    const after = await fieldOf(attached({ types, notes: renewed, other }), before).world();
 
     expect(howIndexed(after)).toEqual(
       new Map([
-        ["types", "kept"],
+        ["types", "carried"],
         ["notes", "patched"],
-        ["other", "kept"],
+        ["other", "carried"],
       ]),
     );
     for (const key of ["types", "notes", "other"]) indexAsFresh(after, key);
@@ -310,7 +310,7 @@ describe("unit: the index's carrying (rewritten with the index)", () => {
       field = fieldOf(attached({ types, notes: store, other }), field);
     }
 
-    const after = await field.everything();
+    const after = await field.world();
     expect(howIndexed(after).get("notes")).toBe("patched");
     indexAsFresh(after, "notes");
   });
@@ -328,8 +328,8 @@ describe("unit: the index's carrying (rewritten with the index)", () => {
     expect(howIndexed(all)).toEqual(
       new Map([
         ["types", "fresh"],
-        ["notes", "kept"],
-        ["other", "kept"],
+        ["notes", "carried"],
+        ["other", "carried"],
       ]),
     );
 
@@ -337,7 +337,7 @@ describe("unit: the index's carrying (rewritten with the index)", () => {
     const held = await committed(quiet, [
       { ...type, mould: { ...type.mould, about: { says: "Of what, held.", shape: "ref", holds: true } } },
     ]);
-    const after = await fieldOf(attached({ types: held, notes, other }), unchanged).everything();
+    const after = await fieldOf(attached({ types: held, notes, other }), unchanged).world();
 
     expect(storeIndexesOf(after).get("notes")!.answer({ a: "$holds" }).length).toBe(many - 1);
     for (const key of ["types", "notes", "other"]) indexAsFresh(after, key);
@@ -349,11 +349,11 @@ describe("unit: the index's carrying (rewritten with the index)", () => {
     await indexed(alone);
 
     const claimed = fieldOf(attached({ types, first: notes, notes, other }), alone);
-    const all = await claimed.everything();
+    const all = await claimed.world();
     expect(storeIndexesOf(all).get("notes")!.answer({ a: "says" })).toEqual([]);
     indexAsFresh(all, "notes");
 
-    const free = await fieldOf(attached({ types, notes, other }), claimed).everything();
+    const free = await fieldOf(attached({ types, notes, other }), claimed).world();
     for (const key of ["types", "notes", "other"]) indexAsFresh(free, key);
   });
 
@@ -367,7 +367,7 @@ describe("unit: the index's carrying (rewritten with the index)", () => {
       notes,
       holons.map((holon) => ({ ...holon, body: { ...holon.body, says: "all said again" } })),
     );
-    const after = await fieldOf(attached({ types, notes: renewed, other }), before).everything();
+    const after = await fieldOf(attached({ types, notes: renewed, other }), before).world();
 
     expect(howIndexed(after).get("notes")).toBe("fresh");
     indexAsFresh(after, "notes");

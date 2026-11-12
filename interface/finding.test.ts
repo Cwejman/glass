@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import type { HolonRead } from "../engine/reads.ts";
+import type { HolonRead } from "../engine/compat.ts";
 import { candidates, match } from "./finding.ts";
 
 const component = (name: string, takes: string[], kinds: string[], argument?: string, named?: boolean) =>

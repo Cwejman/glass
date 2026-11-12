@@ -4,17 +4,17 @@
 // Usage: bun engine/bench.ts
 import { openStores } from "../stores.ts";
 import { fieldOf } from "./field.ts";
-import { answeringOf, kernel } from "./kernel.ts";
+import { evaluator } from "./core/evaluate.ts";
 import { namesIn } from "../language/names.ts";
 import { parse } from "../language/text.ts";
 const stores = Object.entries(await openStores()).map(([key, store]) => ({ key, store }));
-const all = await fieldOf(stores).everything();
+const all = await fieldOf(stores).world();
 const names = namesIn(all);
 let t = performance.now();
-answeringOf(all);
+all.index();
 console.log(`index built: ${Math.round(performance.now() - t)} ms`);
 const time = (text: string) => {
-  const k = kernel({ all });
+  const k = evaluator(all);
   const e = parse(text, names);
   const t0 = performance.now();
   const v = k.evaluate(e);

@@ -7,7 +7,7 @@
 // A native is one of three: given values; lazy, given what it is given unworked, to work
 // out only what it needs; or reading what it is given as written, as a pattern is.
 
-import { isRef, type Expression, type Value } from "../../../language/expression.ts";
+import { isRef, type Expression, type Value } from "../../language/expression.ts";
 import type { World } from "../world.ts";
 import { closure, isClosure, isRecord, truly, type Rec } from "./values.ts";
 import { natives, type Calling, type Deferred } from "./natives.ts";
@@ -143,7 +143,9 @@ function evaluating(world: World) {
 
 // What a lazy native is given for a value already worked out.
 function valued(value: Value): Deferred {
-  return Object.assign(() => value, { key: (key: string) => (isRecord(value) ? (value as Rec)[key] : undefined) });
+  return Object.assign(() => value, {
+    key: (key: string) => (isRecord(value) ? (value as Rec)[key] : undefined),
+  });
 }
 
 function wordIn(scope: Scope | undefined, word: string): Value {

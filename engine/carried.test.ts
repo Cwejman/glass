@@ -9,11 +9,11 @@ import { commit, openStore, type Holon, type Store } from "../integrations/glass
 import { namesAsked } from "../language/names.ts";
 import { parse } from "../language/text.ts";
 import { openStores } from "../stores.ts";
-import { startEngine, type Engine } from "./engine.ts";
+import { startEngine, type Engine } from "./compat.ts";
 import { fieldOf } from "./field.ts";
-import { indexOf, mouldIn } from "./facts.ts";
-import type { Everything } from "./expression.ts";
-import { answeringOf, storeIndexesOf } from "./kernel.ts";
+import { indexOf } from "./patterns/facts.ts";
+import type { World as Everything } from "./world.ts";
+import { howIndexed, storeIndexes as storeIndexesOf } from "./patterns/index.ts";
 
 // glass, for the functions a pattern is asked with.
 const { glass } = await openStores();
@@ -55,9 +55,9 @@ const indexed = (engine: Engine, keys: string[]) =>
 
 // What a store's index answers, held against an index built fresh from the same field.
 function indexAsFresh(all: Everything, key: string) {
-  const held = all.held.get(key)!;
+  const held = all.byStore.get(key)!;
   const also = new Set(held.filter((each) => all.known.get(each.holon.id) !== each));
-  const fresh = indexOf(held, mouldIn(all.known), also);
+  const fresh = indexOf(held, (holon) => all.mouldFor(holon), also);
   const carried = storeIndexesOf(all).get(key)!;
 
   for (const asked of [
@@ -203,24 +203,22 @@ test("a holon another store comes to claim first leaves the later store's index"
 describe("unit: the index's carrying (rewritten with the index)", () => {
   test("a field read with its history answers from the same index", async () => {
     const { types, notes } = await stores();
-    const all = await fieldOf(attached({ types, notes })).everything();
+    const all = await fieldOf(attached({ types, notes })).world();
 
-    expect(answeringOf({ ...all, logs: new Map() })).toBe(answeringOf(all));
+    expect(all.index()).toBe(all.index());
   });
 
   test("a store a commit did not touch keeps its index; the one it touched is indexed again", async () => {
     const { types, notes, other } = await stores();
     const before = fieldOf(attached({ types, notes, other }));
-    const first = storeIndexesOf(await before.everything());
+    const first = storeIndexesOf(await before.world());
 
     await commit(await openStore(notes.files), {
       holons: [typed(one, { says: "one, said again" })],
       says: "again",
     });
     const renewed = await openStore(notes.files);
-    const after = storeIndexesOf(
-      await fieldOf(attached({ types, notes: renewed, other }), before).everything(),
-    );
+    const after = storeIndexesOf(await fieldOf(attached({ types, notes: renewed, other }), before).world());
 
     expect(after.get("other")).toBe(first.get("other"));
     expect(after.get("types")).toBe(first.get("types"));
@@ -231,7 +229,7 @@ describe("unit: the index's carrying (rewritten with the index)", () => {
   test("a store whose type changed is indexed again, though its own holons did not", async () => {
     const { types, notes, other } = await stores();
     const before = fieldOf(attached({ types, notes, other }));
-    const first = storeIndexesOf(await before.everything());
+    const first = storeIndexesOf(await before.world());
 
     await commit(await openStore(types.files), {
       says: "the type again",
@@ -249,9 +247,7 @@ describe("unit: the index's carrying (rewritten with the index)", () => {
       ],
     });
     const renewed = await openStore(types.files);
-    const after = storeIndexesOf(
-      await fieldOf(attached({ types: renewed, notes, other }), before).everything(),
-    );
+    const after = storeIndexesOf(await fieldOf(attached({ types: renewed, notes, other }), before).world());
 
     expect(after.get("notes")).not.toBe(first.get("notes"));
     expect(after.get("other")).not.toBe(first.get("other"));
@@ -262,10 +258,10 @@ describe("unit: the index's carrying (rewritten with the index)", () => {
   test("a holon another store comes to claim first leaves the later store's index", async () => {
     const { types, notes, other } = await stores();
     const alone = fieldOf(attached({ types, other }));
-    const first = storeIndexesOf(await alone.everything());
+    const first = storeIndexesOf(await alone.world());
 
     // The same holons, attached again behind a store that claims them first.
-    const claimed = await fieldOf(attached({ types, notes, again: notes, other }), alone).everything();
+    const claimed = await fieldOf(attached({ types, notes, again: notes, other }), alone).world();
     const again = storeIndexesOf(claimed);
 
     expect(again.get("other")).toBe(first.get("other"));

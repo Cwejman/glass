@@ -2,7 +2,7 @@
 // cut the same way.
 
 import { expect, test } from "bun:test";
-import { wordsOf } from "./words.ts";
+import { wordsOf } from "./patterns/words.ts";
 
 test("words are cut where no letter or number stands, and lower cased", () => {
   expect(wordsOf("Glass, the engine (and patterns).")).toEqual(["glass", "the", "engine", "and", "patterns"]);

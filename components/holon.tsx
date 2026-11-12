@@ -4,7 +4,7 @@
 // held as words is read as prose. Seen from above, its name and its types.
 
 import type { Holon } from "../integrations/glass/store.ts";
-import type { Whole } from "../engine/reads.ts";
+import type { Whole } from "../engine/compat.ts";
 import { isRef } from "../engine/moulds.ts";
 import type { Given, Space } from "../interface/component.ts";
 import { h, type Child } from "./jsx.ts";

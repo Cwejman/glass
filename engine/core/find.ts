@@ -3,8 +3,16 @@
 // the index; explain says how. These are the natives that read what they are given as
 // written, and are called, never given to another.
 
-import type { Expression, Value } from "../../../language/expression.ts";
-import { bindable, isVar, orProblem, solve, usedBeside, type Clause, type Step } from "../patterns/pattern.ts";
+import type { Expression, Value } from "../../language/expression.ts";
+import {
+  bindable,
+  isVar,
+  orProblem,
+  solve,
+  usedBeside,
+  type Clause,
+  type Step,
+} from "../patterns/pattern.ts";
 import { wordsOf } from "../patterns/words.ts";
 import type { Scope } from "./evaluate.ts";
 import type { Calling, Structural } from "./natives.ts";
@@ -29,7 +37,8 @@ export function patterns(calling: Calling): Record<string, Structural> {
 
       const terms = given.map(term) as [unknown, unknown, unknown];
       const several = isVar(terms[2]) ? 0 : wordsOf(terms[2]).length;
-      if (several > 1) throw new Error(`a word said is one word, and ${JSON.stringify(terms[2])} is ${several}`);
+      if (several > 1)
+        throw new Error(`a word said is one word, and ${JSON.stringify(terms[2])} is ${several}`);
 
       return { fact: terms, words: true };
     }
@@ -38,14 +47,18 @@ export function patterns(calling: Calling): Record<string, Structural> {
       return {
         or: given.map((branch) =>
           nativeOf(branch) === "and"
-            ? (((branch as { with?: Expression[] }).with ?? []) as Expression[]).map((each) => clauseOf(each, scope))
+            ? (((branch as { with?: Expression[] }).with ?? []) as Expression[]).map((each) =>
+                clauseOf(each, scope),
+              )
             : [clauseOf(branch, scope)],
         ),
       };
 
     if (Array.isArray(form?.fn)) return { test: evaluate(expression, scope), names: form.fn as string[] };
 
-    throw new Error("a clause is a fact [e, a, v], not(…), or(…), or a test, a lambda of the variables it reads");
+    throw new Error(
+      "a clause is a fact [e, a, v], not(…), or(…), or a test, a lambda of the variables it reads",
+    );
   }
 
   // What a pattern finds: one variable's values, or a record of several, each distinct,
@@ -55,10 +68,12 @@ export function patterns(calling: Calling): Record<string, Structural> {
     const shape = isVar(spec)
       ? spec["?"]
       : Object.fromEntries(
-          Object.entries(((spec as { record?: Record<string, unknown> })?.record ?? {}) as object).map(([key, each]) => {
-            if (!isVar(each)) throw new Error("what a pattern finds is ?x, or a record of them, {x: ?x}");
-            return [key, each["?"]];
-          }),
+          Object.entries(((spec as { record?: Record<string, unknown> })?.record ?? {}) as object).map(
+            ([key, each]) => {
+              if (!isVar(each)) throw new Error("what a pattern finds is ?x, or a record of them, {x: ?x}");
+              return [key, each["?"]];
+            },
+          ),
         );
     const found = typeof shape === "string" ? [shape] : Object.values(shape);
 
@@ -73,7 +88,12 @@ export function patterns(calling: Calling): Record<string, Structural> {
       if (problem) throw new Error(problem);
     }
 
-    const bindings = solve(where, world.index(), { test: (fn, values) => truly(apply(fn, values as Value[])) }, steps);
+    const bindings = solve(
+      where,
+      world.index(),
+      { test: (fn, values) => truly(apply(fn, values as Value[])) },
+      steps,
+    );
 
     const seen = new Set<string>();
     const out: Value[] = [];
@@ -82,7 +102,9 @@ export function patterns(calling: Calling): Record<string, Structural> {
       const value: Value =
         typeof shape === "string"
           ? ((binding[shape] as Value) ?? null)
-          : Object.fromEntries(Object.entries(shape).map(([key, name]) => [key, (binding[name] as Value) ?? null]));
+          : Object.fromEntries(
+              Object.entries(shape).map(([key, name]) => [key, (binding[name] as Value) ?? null]),
+            );
 
       if (!seen.has(keyOf(value))) {
         seen.add(keyOf(value));

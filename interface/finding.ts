@@ -2,7 +2,7 @@
 // is found can change here alone: whether the field should record the pick instead
 // is not settled.
 
-import type { HolonRead } from "../engine/reads.ts";
+import type { HolonRead } from "../engine/compat.ts";
 import type { Kind, Reading } from "./component.ts";
 
 const argumentOf = (component: HolonRead) => (component.body.argument as string | undefined) ?? "holon";

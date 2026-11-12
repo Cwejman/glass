@@ -14,7 +14,7 @@
 // A component is code, and code runs in the page with all it can reach, so only the
 // components the entry offers and those of the home are run.
 
-import type { HolonRead } from "../engine/reads.ts";
+import type { HolonRead } from "../engine/compat.ts";
 import type { Holon } from "../integrations/glass/store.ts";
 import { namesAsked } from "../language/names.ts";
 import { print, type Names, type Route } from "../language/text.ts";

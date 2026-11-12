@@ -15,10 +15,10 @@
 // attaches this repository's history, read through git, as the store git.
 
 import { readFileSync } from "node:fs";
-import type { Engine } from "./engine.ts";
+import type { Engine } from "./compat.ts";
 import { localEngine } from "./local.ts";
 import { isRef } from "./moulds.ts";
-import type { Value } from "./kernel.ts";
+import type { Value } from "./compat.ts";
 import { namesAsked } from "../language/names.ts";
 import { parse } from "../language/text.ts";
 

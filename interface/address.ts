@@ -8,7 +8,7 @@
 // how it reads back can be tested apart from a page. Both live in the query, so any host
 // that serves files serves every address.
 
-import type { Expression } from "../engine/expression.ts";
+import type { Looking as Expression } from "../engine/compat.ts";
 import { parse, print, routeText, type Names, type Route } from "../language/text.ts";
 
 export type Place = {

@@ -9,7 +9,7 @@ import { memoryFiles } from "../integrations/glass/files.ts";
 import { openStore } from "../integrations/glass/store.ts";
 import { gitSource } from "../integrations/git/git.ts";
 import { openStores } from "../stores.ts";
-import { startEngine, type Engine } from "./engine.ts";
+import { startEngine, type Engine } from "./compat.ts";
 
 type Local = {
   // The stores written through this engine; every other is only read.
@@ -24,9 +24,7 @@ export async function localEngine({ writes = [], git = false }: Local = {}): Pro
   const engine = startEngine([
     ...(writes.length ? [] : [{ key: "home", store: await openStore(memoryFiles()), write: true as const }]),
     ...stores.map(([key, store]) =>
-      writes.includes(key)
-        ? { key, store, write: true as const }
-        : { key, store, write: false as const },
+      writes.includes(key) ? { key, store, write: true as const } : { key, store, write: false as const },
     ),
   ]);
 

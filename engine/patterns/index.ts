@@ -27,8 +27,18 @@ const mostPatched = 1 / 4;
 const keptHere = "kept here, read from another store";
 
 export function indexFor(world: World): Answering {
-  return answeringAll(world.stores.map((key) => storeIndex(world, key).index));
+  return answeringAll([...storeIndexes(world).values()]);
 }
+
+// Each store's index, for this world: what patterns are answered from, and what tests of
+// the carrying read.
+export const storeIndexes = (world: World): ReadonlyMap<string, Index> =>
+  new Map(
+    world.stores.map((key) => [
+      key,
+      made.get(world)?.has(key) ? world.shelf.get(key)!.index : storeIndex(world, key).index,
+    ]),
+  );
 
 // How each store's index was made for this world, for those who test the carrying.
 const made = new WeakMap<World, Map<string, Made>>();

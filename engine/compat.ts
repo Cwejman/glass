@@ -5,10 +5,10 @@
 // A way of looking, gather, level and groups, was a second kind of expression, read by
 // its shape; it is kept here, read by the same shapes, over the world.
 
-import type { LogEntry, Store, Version } from "../../integrations/glass/store.ts";
-import type { Source } from "../../integrations/source.ts";
-import { expressionProblem, isRef, type Expression, type Value } from "../../language/expression.ts";
-import type { Change, Problem } from "./act.ts";
+import { isId, type LogEntry, type Store, type Version } from "../integrations/glass/store.ts";
+import type { Source } from "../integrations/source.ts";
+import { expressionProblem, isRef, type Expression, type Value } from "../language/expression.ts";
+import type { Change as ChangeOf, Problem } from "./act.ts";
 import { evaluator } from "./core/evaluate.ts";
 import { engine as engineOf, type Committed } from "./engine.ts";
 import { keepersOf, type Attachment, type Field } from "./field.ts";
@@ -19,8 +19,17 @@ export type { HolonRead, Holder };
 export type Whole = { root: string; holons: Record<string, HolonRead> };
 export type Attached = Attachment;
 
+// A way of looking, as the interface writes one: a holon, a call of functions given
+// sets, words, a store or an axis, or a function of one's own's argument.
+export type Looking = { $ref: string } | { call: { $ref: string }; with?: Argument[] } | { arg: number };
+export type Argument = Looking | string;
+
 export type Axis = "type" | "parent" | "store";
-export type Grouped = { by: Axis; groups: { value: string; count: number; gathers: Expression }[]; rest: string[] };
+export type Grouped = {
+  by: Axis;
+  groups: { value: string; count: number; gathers: Looking }[];
+  rest: string[];
+};
 
 export type Read =
   | { holon: string }
@@ -30,9 +39,9 @@ export type Read =
   | { holders: string }
   | { log: string }
   | { versions: string }
-  | { gather: Expression }
-  | { level: Expression }
-  | { groups: Expression }
+  | { gather: Looking }
+  | { level: Looking }
+  | { groups: Looking }
   | { value: Expression };
 
 export type Answer<R extends Read> = R extends { holon: string }
@@ -45,13 +54,16 @@ export type Answer<R extends Read> = R extends { holon: string }
         ? LogEntry[] | null
         : R extends { versions: string }
           ? Version[]
-          : R extends { groups: Expression }
+          : R extends { groups: Looking }
             ? Grouped | null
             : R extends { value: Expression }
               ? Value
               : string[];
 
 export const notASet = "what is looked at is a set of holons, and this gives something else";
+
+export type Change = ChangeOf;
+export type { Committed };
 
 export type Engine = {
   attach(key: string, store: Source, options?: { write?: false }): Promise<void>;
@@ -79,7 +91,8 @@ export function startEngine(given: readonly Attached[] = []): Engine {
 
 async function answerOf(field: Field, query: Read): Promise<unknown> {
   if ("holon" in query) return readHolon(field, query.holon);
-  if ("whole" in query) return readWhole(field, query.whole, query.stop ?? [], query.depth ?? Number.POSITIVE_INFINITY);
+  if ("whole" in query)
+    return readWhole(field, query.whole, query.stop ?? [], query.depth ?? Number.POSITIVE_INFINITY);
 
   if ("log" in query) {
     const attachment = field.stores.find(({ key }) => key === query.log);
@@ -102,9 +115,9 @@ async function answerOf(field: Field, query: Read): Promise<unknown> {
   if ("value" in query) return (await answer(field, query.value)).value;
 
   const world = await field.world();
-  if ("gather" in query) return gather(world, query.gather);
-  if ("level" in query) return level(world, query.level);
-  if ("groups" in query) return groups(world, query.groups);
+  if ("gather" in query) return gather(world, query.gather as Expression);
+  if ("level" in query) return level(world, query.level as Expression);
+  if ("groups" in query) return groups(world, query.groups as Expression);
 
   return world.holders(query.holders);
 }
@@ -131,7 +144,9 @@ function definitionOf(world: World, call: Call) {
   if (!fn.native && !fn.gives) throw new Error(`${title} is not a function the engine can run`);
 
   const takes = fn.takes ?? [];
-  const wrong = takes.every((kind) => setKinds.has(kind)) ? argumentsProblem(takes, call.with ?? []) : undefined;
+  const wrong = takes.every((kind) => setKinds.has(kind))
+    ? argumentsProblem(takes, call.with ?? [])
+    : undefined;
   if (wrong) throw new Error(`${title} ${wrong}`);
 
   return fn;
@@ -146,7 +161,8 @@ function argumentsProblem(takes: Takes[], given: readonly Expression[]) {
     const kind = takes[Math.min(i, takes.length - 1)]!;
     const takesSet = kind === "set" || kind === "sets";
 
-    if (takesSet === (typeof argument === "string")) return `takes ${takesSet ? "a set" : `a ${kind}`} as its argument ${i + 1}`;
+    if (takesSet === (typeof argument === "string"))
+      return `takes ${takesSet ? "a set" : `a ${kind}`} as its argument ${i + 1}`;
     if (kind === "axis" && !axes.includes(argument as string)) return `groups by ${axes.join(", ")}`;
   }
 
@@ -166,7 +182,10 @@ function substituted(expression: Expression, given: readonly Expression[]): Expr
   }
   if (!("call" in expression)) return expression;
 
-  return { call: expression.call, ...(expression.with ? { with: expression.with.map((each) => substituted(each, given)) } : {}) };
+  return {
+    call: expression.call,
+    ...(expression.with ? { with: expression.with.map((each) => substituted(each, given)) } : {}),
+  };
 }
 
 export function gather(world: World, expression: Expression): string[] {
@@ -214,7 +233,8 @@ export function groups(world: World, expression: Expression, nested = 0): Groupe
   if (!isCall(expression) || nested >= 32) return null;
 
   const fn = definitionOf(world, expression);
-  if (fn.gives) return byPlace(fn) ? groups(world, substituted(fn.gives, expression.with ?? []), nested + 1) : null;
+  if (fn.gives)
+    return byPlace(fn) ? groups(world, substituted(fn.gives, expression.with ?? []), nested + 1) : null;
   if (fn.native !== "group") return null;
 
   const [inner, by] = (expression.with ?? []) as [Expression, Axis];
@@ -236,7 +256,11 @@ export function groups(world: World, expression: Expression, nested = 0): Groupe
     by,
     groups: [...values]
       .sort(([, a], [, b]) => b.length - a.length)
-      .map(([value, list]) => ({ value, count: list.length, gathers: narrowed(world, inner, by, value) })),
+      .map(([value, list]) => ({
+        value,
+        count: list.length,
+        gathers: narrowed(world, inner, by, value) as Looking,
+      })),
     rest: members.filter((id) => !valued.has(id)),
   };
 }
@@ -245,7 +269,14 @@ function along(world: World, id: string, axis: Axis): readonly string[] {
   if (axis === "type") return world.known.get(id)!.holon.instance;
   if (axis === "store") return world.storesOf(id);
 
-  return [...new Set(world.holders(id).filter(({ holds }) => holds).map(({ from }) => from))];
+  return [
+    ...new Set(
+      world
+        .holders(id)
+        .filter(({ holds }) => holds)
+        .map(({ from }) => from),
+    ),
+  ];
 }
 
 // The function holon each native is first found in, found once for each world.
@@ -265,13 +296,55 @@ function nativeId(world: World, name: string) {
 }
 
 function narrowed(world: World, inner: Expression, by: Axis, value: string): Expression {
-  const call = (name: string, ...given: Expression[]): Expression => ({ call: { $ref: nativeId(world, name)! }, with: given });
-  const calls = (expression: Expression, name: string) => isCall(expression) && expression.call.$ref === nativeId(world, name);
+  const call = (name: string, ...given: Expression[]): Expression => ({
+    call: { $ref: nativeId(world, name)! },
+    with: given,
+  });
+  const calls = (expression: Expression, name: string) =>
+    isCall(expression) && expression.call.$ref === nativeId(world, name);
 
   const narrow =
-    by === "type" ? call("type", { $ref: value }) : by === "parent" ? call("children", { $ref: value }) : call("store", value);
+    by === "type"
+      ? call("type", { $ref: value })
+      : by === "parent"
+        ? call("children", { $ref: value })
+        : call("store", value);
 
   if (calls(inner, "everything")) return narrow;
 
   return call("and", ...(calls(inner, "and") ? ((inner as Call).with ?? []) : [inner]), narrow);
+}
+
+// ---- What the interface asks of a read, by its form
+
+// The words a read is known by, and what it narrows: the language's expression, as the
+// interface and its parts still name it.
+export type { Value };
+export type Expr = Expression;
+
+// The word a read goes by: what it asks, apart from what narrows it.
+export const formOf = (query: Read) =>
+  Object.keys(query).find((key) => !["store", "stop", "depth"].includes(key))!;
+
+// The holons a value names: ids standing alone or as references.
+export function idsIn(value: unknown): string[] {
+  if (isId(value)) return [value];
+  if (Array.isArray(value)) return value.flatMap(idsIn);
+  if (typeof value !== "object" || value === null) return [];
+
+  return Object.values(value).flatMap(idsIn);
+}
+
+// The holons a read asks about.
+export function askedOf(query: Read) {
+  if ("holon" in query) return [query.holon];
+  if ("whole" in query) return [query.whole];
+  if ("holders" in query) return [query.holders];
+  if ("instances" in query) return [query.instances];
+  if ("gather" in query) return idsIn(query.gather);
+  if ("level" in query) return idsIn(query.level);
+  if ("groups" in query) return idsIn(query.groups);
+  if ("value" in query) return idsIn(query.value);
+
+  return [];
 }

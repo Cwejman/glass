@@ -8,9 +8,9 @@
 // here acts on a press.
 
 import type { Holon } from "../integrations/glass/store.ts";
-import type { Expression } from "../engine/expression.ts";
+import type { Expr, Looking as Expression } from "../engine/compat.ts";
 import { bodyProblem, references, type Mould } from "../engine/moulds.ts";
-import { askedOf, formOf, idsIn, notASet, type HolonRead, type Read } from "../engine/reads.ts";
+import { askedOf, formOf, idsIn, notASet, type HolonRead, type Read } from "../engine/compat.ts";
 import type { Place } from "./address.ts";
 import type {
   Component,
@@ -388,7 +388,7 @@ export function drawing(
     async function watchValue(gathers: unknown) {
       try {
         const watching = await engine.subscribe<Read>(
-          { value: gathers },
+          { value: gathers as Expr },
           (value) => {
             // A value that comes to be a set is drawn again, as the set it gathers.
             if (isSet(value)) return void draw(host, asked);

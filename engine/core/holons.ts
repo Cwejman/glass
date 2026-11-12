@@ -3,7 +3,7 @@
 // reader is given them. What refers to a holon is the one thing it cannot say of itself,
 // so the world keeps it.
 
-import { isRef, ref, type Value } from "../../../language/expression.ts";
+import { isRef, ref, type Value } from "../../language/expression.ts";
 import { partsOf, references } from "../moulds.ts";
 import { typeNames } from "../reading.ts";
 import type { Calling, Native } from "./natives.ts";
@@ -33,9 +33,17 @@ export function holons({ world, apply }: Calling): Record<string, Native> {
     if (!kept) return null;
 
     const { holon } = kept;
-    const types = typeNames(holon, holon.instance.map((type) => world.known.get(type)?.holon));
+    const types = typeNames(
+      holon,
+      holon.instance.map((type) => world.known.get(type)?.holon),
+    );
 
-    return { ...(holon as unknown as Record<string, Value>), store: kept.store, version: kept.block ?? null, types };
+    return {
+      ...(holon as unknown as Record<string, Value>),
+      store: kept.store,
+      version: kept.block ?? null,
+      types,
+    };
   };
 
   return {
@@ -44,7 +52,8 @@ export function holons({ world, apply }: Calling): Record<string, Native> {
 
     get([value, key]) {
       const values = own(value);
-      if (values) return String(key) in values ? values[String(key)]! : asValue(holonOf(value)!.body[String(key)]);
+      if (values)
+        return String(key) in values ? values[String(key)]! : asValue(holonOf(value)!.body[String(key)]);
       if (Array.isArray(value)) return typeof key === "number" ? (value[key] ?? null) : null;
       if (isRecord(value)) return (value as Rec)[String(key)] ?? null;
 
@@ -64,13 +73,19 @@ export function holons({ world, apply }: Calling): Record<string, Native> {
 
       return [
         ...holon.instance.map((type) => ({ key: "instance", to: ref(type), holds: false })),
-        ...references(holon.body, world.mouldFor(holon)).map(({ id, key, holds }) => ({ key, to: ref(id), holds })),
+        ...references(holon.body, world.mouldFor(holon)).map(({ id, key, holds }) => ({
+          key,
+          to: ref(id),
+          holds,
+        })),
       ];
     },
 
     // Edges into a holon.
     in: ([value]) =>
-      isRef(value) ? world.holders(value.$ref).map(({ from, key, holds }) => ({ key, from: ref(from), holds })) : [],
+      isRef(value)
+        ? world.holders(value.$ref).map(({ from, key, holds }) => ({ key, from: ref(from), holds }))
+        : [],
 
     holon: ([value]) => (isRef(value) ? reading(value.$ref) : null),
 

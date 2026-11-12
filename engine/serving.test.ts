@@ -3,7 +3,7 @@
 // only when what it reads has changed, and told when it can no longer be read.
 
 import { expect, test } from "bun:test";
-import type { Engine } from "./engine.ts";
+import type { Engine } from "./compat.ts";
 import type { Reply } from "./protocol.ts";
 import { serving } from "./serving.ts";
 

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import type { Expression } from "../engine/expression.ts";
+import type { Looking as Expression } from "../engine/compat.ts";
 import { begins, changedPart, fits, hasEnough, needs, settled, type Frame } from "./building.ts";
 import { call, type Called, type Functions } from "./parts.ts";
 

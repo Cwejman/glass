@@ -4,15 +4,7 @@
 // settled: finished where every store it names stands ready, taken out where none moved,
 // and otherwise its stores refuse writes until they are attached.
 
-import {
-  act,
-  drop,
-  finish,
-  idAt,
-  openStore,
-  type Pending,
-  type Store,
-} from "../../integrations/glass/store.ts";
+import { act, drop, finish, idAt, openStore, type Pending, type Store } from "../integrations/glass/store.ts";
 import { factsOf, planOf, type Change, type Plan, type Problem } from "./act.ts";
 import { isWritable, withStores, type Field } from "./field.ts";
 
@@ -59,7 +51,10 @@ export async function settled(field: Field): Promise<Settled> {
     const absent = names.filter((name) => !writable.has(name));
     if (absent.length) {
       for (const name of names)
-        waiting.set(name, `the act ${hash} ("${says}") was cut short, and waits on ${absent.join(", ")} to be attached and written`);
+        waiting.set(
+          name,
+          `the act ${hash} ("${says}") was cut short, and waits on ${absent.join(", ")} to be attached and written`,
+        );
       continue;
     }
 
@@ -72,7 +67,8 @@ export async function settled(field: Field): Promise<Settled> {
       for (const name of behind) now.set(name, await drop(writable.get(name)!));
     else {
       const moved = names.filter((_, i) => stands[i] === "earlier" || stands[i] === "nowhere");
-      for (const name of behind) waiting.set(name, `the act ${hash} ("${says}") was cut short, and ${moved.join(", ")} moved since`);
+      for (const name of behind)
+        waiting.set(name, `the act ${hash} ("${says}") was cut short, and ${moved.join(", ")} moved since`);
     }
   }
 
@@ -103,8 +99,13 @@ export async function write(field: Field, plan: Plan, change: Change): Promise<W
 // The stores whose head moved since they were opened, each as it now stands.
 async function movedStores(targets: readonly { key: string; store: Store }[]) {
   const now = await Promise.all(
-    targets.map(async ({ key, store }) => [key, await openStore(store.files, store.blocks).catch(() => store), store] as const),
+    targets.map(
+      async ({ key, store }) =>
+        [key, await openStore(store.files, store.blocks).catch(() => store), store] as const,
+    ),
   );
 
-  return new Map(now.filter(([, reopened, was]) => reopened.head !== was.head).map(([key, reopened]) => [key, reopened]));
+  return new Map(
+    now.filter(([, reopened, was]) => reopened.head !== was.head).map(([key, reopened]) => [key, reopened]),
+  );
 }

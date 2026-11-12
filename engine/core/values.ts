@@ -4,8 +4,8 @@
 // Only null and false are false; 0, "" and [] are values like any other. Every native is
 // total: given what it cannot use, it gives null or nothing, never fails.
 
-import { canonical } from "../../../integrations/glass/canonical.ts";
-import { isRef, type Value } from "../../../language/expression.ts";
+import { canonical } from "../../integrations/glass/canonical.ts";
+import { isRef, type Value } from "../../language/expression.ts";
 import { wordsOf } from "../patterns/words.ts";
 
 // A lambda as a value: what it gives, and the words around where it was written. Only
@@ -79,8 +79,10 @@ const number = (value: unknown) => (typeof value === "number" ? value : undefine
 export const values: Record<string, (given: Value[]) => Value> = {
   eq: ([a, b]) => same(a, b),
   lt: ([a, b]) => order(a, b) < 0,
-  add: ([a, b]) => (number(a) !== undefined && number(b) !== undefined ? (a as number) + (b as number) : null),
-  mul: ([a, b]) => (number(a) !== undefined && number(b) !== undefined ? (a as number) * (b as number) : null),
+  add: ([a, b]) =>
+    number(a) !== undefined && number(b) !== undefined ? (a as number) + (b as number) : null,
+  mul: ([a, b]) =>
+    number(a) !== undefined && number(b) !== undefined ? (a as number) * (b as number) : null,
   round: ([a]) => (number(a) !== undefined ? Math.round(a as number) : null),
   kind: ([value]) => kind(value),
 

@@ -2,7 +2,7 @@
 // and which holons it wrote and took out, so what follows from history, what a store
 // wrote since a moment, can be written in the language upon it.
 
-import { writtenBy } from "../../../integrations/glass/store.ts";
+import { writtenBy } from "../../integrations/glass/store.ts";
 import type { Calling, Native } from "./natives.ts";
 
 export function history({ world }: Calling): Record<string, Native> {

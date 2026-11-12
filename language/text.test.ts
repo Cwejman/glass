@@ -47,10 +47,11 @@ const call = (name: string, ...given: unknown[]) => ({
 });
 
 const read = (text: string) => parse(text, names);
+const parsed = (text: string): unknown => read(text);
 
 describe("reading", () => {
   test("a call, a holon by its route, a lambda and a key", () => {
-    expect(read(`type(@types/measure) | filter(m => eq(m.value, 3)) | size`)).toEqual(
+    expect(parsed(`type(@types/measure) | filter(m => eq(m.value, 3)) | size`)).toEqual(
       call(
         "size",
         call("filter", call("type", { $ref: "T00000000MEASRE" }), {
@@ -62,41 +63,41 @@ describe("reading", () => {
   });
 
   test("a holon by a quoted name, and by its id", () => {
-    expect(read(`text(@"The wiki")`)).toEqual(call("text", { $ref: "W0000000000W1K1" }));
-    expect(read(`@P0000000000PARA`)).toEqual({ $ref: "P0000000000PARA" });
+    expect(parsed(`text(@"The wiki")`)).toEqual(call("text", { $ref: "W0000000000W1K1" }));
+    expect(parsed(`@P0000000000PARA`)).toEqual({ $ref: "P0000000000PARA" });
   });
 
   test("a function named alone is the function as a value; called, it is given what follows", () => {
-    expect(read(`map(@"The wiki", text)`)).toEqual(
+    expect(parsed(`map(@"The wiki", text)`)).toEqual(
       call("map", { $ref: "W0000000000W1K1" }, { $ref: functions.text }),
     );
-    expect(read(`everything()`)).toEqual(call("everything"));
+    expect(parsed(`everything()`)).toEqual(call("everything"));
   });
 
   test("a pipe gives what came before as the first argument", () => {
-    expect(read(`everything() | take(2)`)).toEqual(call("take", call("everything"), 2));
-    expect(read(`everything() | size`)).toEqual(call("size", call("everything")));
+    expect(parsed(`everything() | take(2)`)).toEqual(call("take", call("everything"), 2));
+    expect(parsed(`everything() | size`)).toEqual(call("size", call("everything")));
   });
 
   test("lists, records and literals", () => {
-    expect(read(`[1, -2.5, "a \\"b\\"", true, null]`)).toEqual({
+    expect(parsed(`[1, -2.5, "a \\"b\\"", true, null]`)).toEqual({
       list: [1, -2.5, 'a "b"', true, null],
     });
-    expect(read(`m => {note: m.note, "two words": 2}`)).toEqual({
+    expect(parsed(`m => {note: m.note, "two words": 2}`)).toEqual({
       fn: ["m"],
       gives: { record: { note: call("get", { var: "m" }, "note"), "two words": 2 } },
     });
   });
 
   test("lambdas of several words close over the ones around them", () => {
-    expect(read(`(a, b) => map(a, x => eq(x, b))`)).toEqual({
+    expect(parsed(`(a, b) => map(a, x => eq(x, b))`)).toEqual({
       fn: ["a", "b"],
       gives: call("map", { var: "a" }, { fn: ["x"], gives: call("eq", { var: "x" }, { var: "b" }) }),
     });
   });
 
   test("a parenthesis that is not a lambda's words groups", () => {
-    expect(read(`(everything()) | size`)).toEqual(call("size", call("everything")));
+    expect(parsed(`(everything()) | size`)).toEqual(call("size", call("everything")));
   });
 
   test("what cannot be read says where", () => {
@@ -123,7 +124,7 @@ describe("saying, and reading back", () => {
   for (const text of cases) {
     test(text, () => {
       const data = read(text);
-      expect(read(print(data, names))).toEqual(data);
+      expect(parsed(print(data, names))).toEqual(data);
     });
   }
 
@@ -133,7 +134,7 @@ describe("saying, and reading back", () => {
   });
 
   test("a long number is a number; an id is read only after @", () => {
-    expect(read(`[100000000000000]`)).toEqual({ list: [100000000000000] });
+    expect(parsed(`[100000000000000]`)).toEqual({ list: [100000000000000] });
   });
 
   test("a text of many lines says the line where it cannot be read", () => {
@@ -141,7 +142,7 @@ describe("saying, and reading back", () => {
   });
 
   test("?x is a pattern's variable, said and read back", () => {
-    expect(read(`?x`)).toEqual({ "?": "x" });
+    expect(parsed(`?x`)).toEqual({ "?": "x" });
     expect(print(read(`[?x, "said", ?y]`), names)).toBe(`[?x, "said", ?y]`);
   });
 });

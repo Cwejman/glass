@@ -8,7 +8,7 @@
 // offered, given the place pressed, so what can be done there is found as anything is.
 // A mount that may not be written lets a press rise on.
 
-import type { Expression } from "../engine/expression.ts";
+import type { Looking as Expression } from "../engine/compat.ts";
 import type { Place } from "../interface/address.ts";
 import type { Given, Made, Offer, Space } from "../interface/component.ts";
 import { h } from "./jsx.ts";

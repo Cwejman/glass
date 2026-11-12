@@ -9,7 +9,7 @@
 
 import { canonical } from "../integrations/glass/canonical.ts";
 import type { Holon } from "../integrations/glass/store.ts";
-import { expressionProblem } from "./expression.ts";
+import { expressionProblem } from "../language/expression.ts";
 
 export type Shape =
   | "string"
@@ -24,9 +24,9 @@ export type Shape =
   | { set: Shape }
   | { [field: string]: Shape };
 
-export type Field = { says: string; shape: Shape; optional?: boolean; holds?: boolean };
+export type Key = { says: string; shape: Shape; optional?: boolean; holds?: boolean };
 
-export type Mould = Record<string, Field>;
+export type Mould = Record<string, Key>;
 
 type Values = Record<string, unknown>;
 

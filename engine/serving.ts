@@ -4,7 +4,7 @@
 // every interface that reaches it, each its own serving.
 
 import { canonical } from "../integrations/glass/canonical.ts";
-import type { Engine, Read } from "./engine.ts";
+import type { Engine, Read } from "./compat.ts";
 import type { Message, Reply } from "./protocol.ts";
 
 const wordsOf = (error: unknown) => (error instanceof Error ? error.message : String(error));

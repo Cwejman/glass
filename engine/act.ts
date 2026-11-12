@@ -17,7 +17,7 @@
 // taken, unless it is derived from what an integration reads.
 
 import { isId, nextId, type Holon, type Store } from "../integrations/glass/store.ts";
-import { holonOf, isWritable, keepersOf, type Attached, type Field } from "./field.ts";
+import { holonOf, isWritable, keepersOf, type Attachment, type Field } from "./field.ts";
 import { isHandle } from "./handles.ts";
 import { judge, type Problem } from "./judge.ts";
 import { isRoot, mouldOf, references } from "./moulds.ts";
@@ -27,8 +27,8 @@ export type { Problem };
 export type Change = { holons: Holon[]; gone?: string[]; says?: string; into?: string };
 
 // What the field knows of a change.
-export type Facts = {
-  attached: readonly Attached[];
+export type Known = {
+  attached: readonly Attachment[];
   // The stores keeping each holon of the change now, and each that goes.
   kept: ReadonlyMap<string, readonly string[]>;
   // The holons of the field the change refers to, as types or by reference.
@@ -53,7 +53,7 @@ export type Plan = {
 };
 
 // The plan of a change, from what the field knows of it and the first id it may mint.
-export function planOf(facts: Facts, change: Change, start: string): Plan {
+export function planOf(facts: Known, change: Change, start: string): Plan {
   const gone = change.gone ?? [];
   const placed = residence(facts, change);
   const rooted = roots(facts, placed.landing, placed.loose, looseStore(facts.attached, change));
@@ -96,7 +96,7 @@ export function planOf(facts: Facts, change: Change, start: string): Plan {
 }
 
 // What the field knows of a change, read all at once.
-export async function factsOf(field: Field, change: Change): Promise<Facts> {
+export async function factsOf(field: Field, change: Change): Promise<Known> {
   const gone = change.gone ?? [];
   const keepers = async (ids: readonly string[]) =>
     Promise.all(ids.map(async (id) => [id, (await keepersOf(field, id)).map(({ key }) => key)] as const));
@@ -125,7 +125,7 @@ export async function factsOf(field: Field, change: Change): Promise<Facts> {
 
 // The store a holon nothing holds goes to: the one the change names, or the only one
 // written, if either is.
-function looseStore(attached: readonly Attached[], { into }: Change) {
+function looseStore(attached: readonly Attachment[], { into }: Change) {
   if (into) return attached.some(({ key }) => key === into) ? into : undefined;
 
   const writable = attached.filter(isWritable);
@@ -134,7 +134,7 @@ function looseStore(attached: readonly Attached[], { into }: Change) {
 
 // The holons of a change each holds, read through their types: only those no store
 // keeps, for a holon kept resides where it is kept.
-function heldBy(holons: readonly Holon[], { referred, kept }: Pick<Facts, "referred" | "kept">) {
+function heldBy(holons: readonly Holon[], { referred, kept }: Pick<Known, "referred" | "kept">) {
   const byId = new Map(holons.map((holon) => [holon.id, holon]));
   const held = new Map<string, string[]>();
 
@@ -153,7 +153,7 @@ function heldBy(holons: readonly Holon[], { referred, kept }: Pick<Facts, "refer
 }
 
 // Whether a holon no store keeps is held by nothing in the change.
-function anyLoose(holons: readonly Holon[], facts: Pick<Facts, "referred" | "kept">) {
+function anyLoose(holons: readonly Holon[], facts: Pick<Known, "referred" | "kept">) {
   const held = new Set([...heldBy(holons, facts).values()].flat());
   return holons.some(({ id }) => !facts.kept.has(id) && !held.has(id));
 }
@@ -161,7 +161,7 @@ function anyLoose(holons: readonly Holon[], facts: Pick<Facts, "referred" | "kep
 // Where each holon of a change resides. A kept one where it is kept; a new one in every
 // store the holons of the change that hold it reside in; one nothing holds, and one held
 // only within a ring of new holons, in the store loose holons go to.
-function residence(facts: Facts, change: Change) {
+function residence(facts: Known, change: Change) {
   const { holons } = change;
   const order = facts.attached.map(({ key }) => key);
   const into = looseStore(facts.attached, change);
@@ -218,7 +218,7 @@ function residence(facts: Facts, change: Change) {
 
 // The holons of a change with what nothing holds said by its store's root: the root the
 // change itself says, or else the store's, said again. A root holds itself in nothing.
-function roots(facts: Facts, landing: Landing[], loose: readonly string[], into?: string): Landing[] {
+function roots(facts: Known, landing: Landing[], loose: readonly string[], into?: string): Landing[] {
   const byId = new Map(landing.map(({ holon }) => [holon.id, holon]));
   const typeOf = (id: string) => byId.get(id) ?? facts.referred.get(id);
   const joining = loose.filter((id) => !isRoot(byId.get(id)!, typeOf));
@@ -243,7 +243,7 @@ function roots(facts: Facts, landing: Landing[], loose: readonly string[], into?
 // Each handle given its id: one run from the start, each store's share together, in the
 // order the stores are attached; a handle that resides nowhere last, so a refusal can
 // name it. A handle no holon of the change comes under is left as it is.
-function mint(facts: Facts, landing: Landing[], start: string) {
+function mint(facts: Known, landing: Landing[], start: string) {
   const ids: Record<string, string> = {};
   let next = start;
   const give = (handle: string) => {
@@ -299,18 +299,18 @@ async function referredBy(field: Field, holons: readonly Holon[]) {
 async function referringTo(field: Field, gone: readonly string[]) {
   if (!gone.length) return [];
 
-  const all = await field.everything();
+  const world = await field.world();
   const going = new Set(gone);
-  const from = new Set(gone.flatMap((id) => (all.holders.get(id) ?? []).map((holder) => holder.from)));
+  const from = new Set(gone.flatMap((id) => world.holders(id).map((holder) => holder.from)));
 
-  return [...all.known.values()]
+  return [...world.known.values()]
     .map(({ holon }) => holon)
     .filter((holon) => from.has(holon.id) || holon.instance.some((type) => going.has(type)));
 }
 
 // A store's root, read from the store whole.
 async function rootIn(field: Field, key: string) {
-  const holons = (await field.storeHolons(key)).map(({ holon }) => holon);
+  const holons = (await field.holonsOf(key)).map(({ holon }) => holon);
   const typeIds = [...new Set(holons.flatMap(({ instance }) => instance))];
   const types = new Map(
     await Promise.all(typeIds.map(async (id) => [id, await holonOf(field, id)] as const)),

@@ -6,7 +6,7 @@
 
 import { servedFiles } from "../integrations/glass/files.ts";
 import { openStore } from "../integrations/glass/store.ts";
-import { startEngine } from "./engine.ts";
+import { startEngine } from "./compat.ts";
 import { idbFiles } from "./idb.ts";
 import type { Message } from "./protocol.ts";
 import { serving } from "./serving.ts";

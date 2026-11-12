@@ -7,8 +7,8 @@
 // What a read touched is said with its answer: the holons read by identity, or the
 // whole field, so a subscription is answered again only when what it read changes.
 
-import { asHolon, type Holon } from "../../integrations/glass/store.ts";
-import { expressionProblem, isRef, type Expression, type Value } from "../../language/expression.ts";
+import { asHolon, type Holon } from "../integrations/glass/store.ts";
+import { expressionProblem, isRef, type Expression, type Value } from "../language/expression.ts";
 import { evaluator } from "./core/evaluate.ts";
 import { isClosure } from "./core/values.ts";
 import { keepersOf, keptIn, type Field } from "./field.ts";
@@ -23,7 +23,12 @@ export async function answer(field: Field, expression: Expression): Promise<Answ
   const problem = expressionProblem(expression);
   if (problem) throw new Error(problem);
 
-  return (await byIdentity(field, expression)) ?? { value: await overWorld(field, expression), touched: "everything" };
+  return (
+    (await byIdentity(field, expression)) ?? {
+      value: await overWorld(field, expression),
+      touched: "everything",
+    }
+  );
 }
 
 // ---- Over the world
@@ -63,21 +68,30 @@ async function byIdentity(field: Field, expression: Expression): Promise<Answere
   const native = await nativeIn(field, expression.call.$ref);
   if (native === "holon") {
     const read = await readHolon(field, first.$ref);
-    return { value: read as Value, touched: { holons: [first.$ref, expression.call.$ref, ...(read?.instance ?? [])] } };
+    return {
+      value: read as Value,
+      touched: { holons: [first.$ref, expression.call.$ref, ...(read?.instance ?? [])] },
+    };
   }
 
   const stopAt = stop === undefined ? [] : asStrings(stop);
   if (native === "whole" && stopAt) {
     const whole = await readWhole(field, first.$ref, stopAt, depth ?? Number.POSITIVE_INFINITY);
     const types = Object.values(whole.holons).flatMap(({ instance }) => instance);
-    return { value: whole as unknown as Value, touched: { holons: [expression.call.$ref, ...Object.keys(whole.holons), ...types] } };
+    return {
+      value: whole as unknown as Value,
+      touched: { holons: [expression.call.$ref, ...Object.keys(whole.holons), ...types] },
+    };
   }
 
   return undefined;
 }
 
 const asStrings = (value: Expression) =>
-  typeof value === "object" && value !== null && "list" in value && value.list.every((each) => typeof each === "string")
+  typeof value === "object" &&
+  value !== null &&
+  "list" in value &&
+  value.list.every((each) => typeof each === "string")
     ? (value.list as string[])
     : undefined;
 
@@ -103,7 +117,9 @@ export async function readHolon(field: Field, id: string): Promise<HolonRead | n
   const kept = await keptIn(field, id);
   if (!kept) return null;
 
-  const types = await Promise.all(kept.holon.instance.map(async (type) => (await keptIn(field, type))?.holon ?? null));
+  const types = await Promise.all(
+    kept.holon.instance.map(async (type) => (await keptIn(field, type))?.holon ?? null),
+  );
   return { ...kept.holon, store: kept.store, version: kept.block!, types: typeNames(kept.holon, types) };
 }
 
@@ -113,7 +129,11 @@ export async function readWhole(field: Field, root: string, stop: readonly strin
   const holons: Record<string, HolonRead> = {};
   const types = new Map<string, Promise<Holon | null>>();
   const typeOf = (id: string) => {
-    if (!types.has(id)) types.set(id, keptIn(field, id).then((kept) => kept?.holon ?? null));
+    if (!types.has(id))
+      types.set(
+        id,
+        keptIn(field, id).then((kept) => kept?.holon ?? null),
+      );
     return types.get(id)!;
   };
 
@@ -127,7 +147,12 @@ export async function readWhole(field: Field, root: string, stop: readonly strin
 
       const holon = asHolon(found.latest.version);
       const its = await Promise.all(holon.instance.map(typeOf));
-      holons[holon.id] = { ...holon, store: found.key, version: found.latest.block, types: typeNames(holon, its) };
+      holons[holon.id] = {
+        ...holon,
+        store: found.key,
+        version: found.latest.block,
+        types: typeNames(holon, its),
+      };
 
       const stopped = holon.id !== root && holons[holon.id]!.types.some((type) => stop.includes(type));
       if (!stopped) next.push(...partsOf(holon.body, mouldOf(its)));

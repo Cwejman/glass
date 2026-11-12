@@ -3,7 +3,7 @@
 // in a flow that is not prose, a brief mounted there among them, shows its face in a
 // slot of its own. As a face: its name and its first paragraph.
 
-import type { HolonRead } from "../engine/reads.ts";
+import type { HolonRead } from "../engine/compat.ts";
 import type { Given, Offer, Space } from "../interface/component.ts";
 import { functionsIn } from "./parts.ts";
 import { h, type Child } from "./jsx.ts";

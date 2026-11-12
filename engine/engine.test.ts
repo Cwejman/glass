@@ -4,8 +4,8 @@ import { describe, expect, test } from "bun:test";
 import { memoryFiles, type Files } from "../integrations/glass/files.ts";
 import { act, commit, idAt, nextId, openStore, type Holon, type Store } from "../integrations/glass/store.ts";
 import { holonsOf, openStores } from "../stores.ts";
-import { startEngine, type Engine } from "./engine.ts";
-import type { Expression, Grouped } from "./expression.ts";
+import { startEngine, type Engine } from "./compat.ts";
+import type { Looking as Expression, Grouped } from "./compat.ts";
 import { bodyProblem, mouldProblem, type Mould } from "./moulds.ts";
 
 // A small pulled store: types, and a brief holding a paragraph that holds words,

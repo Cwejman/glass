@@ -9,11 +9,12 @@ import { commit, openStore, type Holon, type Store } from "../integrations/glass
 import { namesAsked } from "../language/names.ts";
 import { parse } from "../language/text.ts";
 import { openStores } from "../stores.ts";
-import { startEngine, type Engine } from "./engine.ts";
-import type { Everything, Expression, Grouped } from "./expression.ts";
-import { indexOf, mouldIn, type Asked } from "./facts.ts";
+import { startEngine, type Engine } from "./compat.ts";
+import type { Looking as Expression, Grouped } from "./compat.ts";
+import type { World as Everything } from "./world.ts";
+import { indexOf, type Asked } from "./patterns/facts.ts";
 import { fieldOf, type Field } from "./field.ts";
-import { answeringOf, howIndexed, storeIndexesOf } from "./kernel.ts";
+import { howIndexed, storeIndexes as storeIndexesOf } from "./patterns/index.ts";
 
 const { glass } = await openStores();
 
@@ -96,10 +97,10 @@ async function storesAsFresh(engine: Engine, given: Record<string, Store>) {
 // A store's index held against one made fresh: what it says of its own holons and the
 // store fact of every holon it keeps.
 function indexAsFresh(all: Everything, key: string) {
-  const held = all.held.get(key)!;
+  const held = all.byStore.get(key)!;
   const own = held.filter((each) => all.known.get(each.holon.id) === each);
   const also = held.filter((each) => all.known.get(each.holon.id) !== each);
-  const fresh = indexOf(held, mouldIn(all.known), new Set(also));
+  const fresh = indexOf(held, (holon) => all.mouldFor(holon), new Set(also));
   const index = storeIndexesOf(all).get(key)!;
 
   const asked: Asked[] = [
@@ -174,8 +175,8 @@ test("a store keeping a holon another reads first is patched as one made fresh",
 describe("unit: the index's carrying (rewritten with the index)", () => {
   test("its facts are said once, and its store once for each store it is kept in", async () => {
     const { shared, types, a, b } = await stores();
-    const all = await fieldOf(attached({ types, a, b })).everything();
-    const field = answeringOf(all);
+    const all = await fieldOf(attached({ types, a, b })).world();
+    const field = all.index();
 
     expect(field.answer({ e: shared, a: "says" })).toHaveLength(1);
     expect(field.answer({ e: shared, a: "store" }).map(({ v }) => v)).toEqual(["a", "b"]);
@@ -186,7 +187,7 @@ describe("unit: the index's carrying (rewritten with the index)", () => {
   test("a store keeping a holon another reads first is patched as one made fresh", async () => {
     const { shared, types, a, b } = await stores();
     const before: Field = fieldOf(attached({ types, a, b }));
-    storeIndexesOf(await before.everything());
+    storeIndexesOf(await before.world());
 
     const first = [...(await b.all()).keys()].find((id) => id !== shared)!;
     const { prev: _, ...holon } = (await b.read(first))!.version;
@@ -195,11 +196,12 @@ describe("unit: the index's carrying (rewritten with the index)", () => {
       holons: [{ ...holon, body: { says: "b, said again" } }],
     });
 
-    const after = await fieldOf(attached({ types, a, b: await openStore(b.files) }), before).everything();
+    const after = await fieldOf(attached({ types, a, b: await openStore(b.files) }), before).world();
 
     expect(howIndexed(after).get("b")).toBe("patched");
     expect(
-      answeringOf(after)
+      after
+        .index()
         .answer({ e: shared, a: "store" })
         .map(({ v }) => v),
     ).toEqual(["a", "b"]);

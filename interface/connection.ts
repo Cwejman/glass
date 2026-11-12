@@ -3,9 +3,9 @@
 // reached through a port: its own thread in the browser, or a socket to an engine running
 // elsewhere, as one on this machine.
 
-import type { Change, Committed } from "../engine/engine.ts";
+import type { Change, Committed } from "../engine/compat.ts";
 import type { Message, Reply, Request } from "../engine/protocol.ts";
-import type { Answer, Read } from "../engine/reads.ts";
+import type { Answer, Read } from "../engine/compat.ts";
 
 export type Subscription<T> = { value: T; close: () => void };
 

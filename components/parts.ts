@@ -5,7 +5,7 @@
 // Everything. The words are the functions' own names, so a function of one's own reads
 // as glass's do.
 
-import type { Argument, Axis, Expression } from "../engine/expression.ts";
+import type { Argument, Axis, Expr, Looking as Expression } from "../engine/compat.ts";
 import type { Offer, Space } from "../interface/component.ts";
 import { print } from "../language/text.ts";
 
@@ -135,7 +135,7 @@ async function printed(functions: Functions, expression: unknown, titleOf: Title
 
   for (const id of idsNamed(expression)) titles.set(id, functions.get(id)?.title ?? (await titleOf(id)));
 
-  return print(expression, {
+  return print(expression as Expr, {
     functions: (name) => [...titles].filter(([, title]) => title === name).map(([id]) => id),
     holons: () => [],
     isFunction: (id) => titles.has(id),

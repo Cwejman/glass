@@ -4,7 +4,7 @@
 // the columns it spans. A widget given a board draws that board whole within it. Seen
 // from above, a board is its name and how many it watches.
 
-import type { Expression } from "../engine/expression.ts";
+import type { Looking as Expression } from "../engine/compat.ts";
 import type { Given, Space, Where } from "../interface/component.ts";
 import { h } from "./jsx.ts";
 

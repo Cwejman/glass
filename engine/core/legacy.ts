@@ -4,8 +4,8 @@
 // written so. The old search is among them: it found words within what a holon says by
 // substring, where a word said is now a clause of a pattern.
 
-import { writtenBy } from "../../../integrations/glass/store.ts";
-import { isRef, ref, type Value } from "../../../language/expression.ts";
+import { writtenBy } from "../../integrations/glass/store.ts";
+import { isRef, ref, type Value } from "../../language/expression.ts";
 import { references } from "../moulds.ts";
 import type { Calling, Native } from "./natives.ts";
 import { inOrder } from "./sets.ts";
@@ -17,23 +17,25 @@ export function legacy({ world, apply }: Calling): Record<string, Native> {
   const holonOf = (id: string) => world.known.get(id)?.holon;
 
   // What the holons given connect to, down what they refer to or up what refers to them.
-  const along = (direction: "down" | "up", holding: boolean) => ([given]: Value[]) => {
-    const reached = new Set<string>();
+  const along =
+    (direction: "down" | "up", holding: boolean) =>
+    ([given]: Value[]) => {
+      const reached = new Set<string>();
 
-    for (const id of ids(given)) {
-      const holon = holonOf(id);
-      const edges =
-        direction === "down"
-          ? holon
-            ? references(holon.body, world.mouldFor(holon))
-            : []
-          : world.holders(id).map(({ from, key, holds }) => ({ id: from, key, holds }));
+      for (const id of ids(given)) {
+        const holon = holonOf(id);
+        const edges =
+          direction === "down"
+            ? holon
+              ? references(holon.body, world.mouldFor(holon))
+              : []
+            : world.holders(id).map(({ from, key, holds }) => ({ id: from, key, holds }));
 
-      for (const edge of edges) if (edge.holds === holding) reached.add(edge.id);
-    }
+        for (const edge of edges) if (edge.holds === holding) reached.add(edge.id);
+      }
 
-    return inOrder(world.place, reached);
-  };
+      return inOrder(world.place, reached);
+    };
 
   // What a search asked, as it was asked: lower cased, parted at its spaces.
   const asked = (text: unknown): string[] =>
@@ -98,7 +100,9 @@ export function legacy({ world, apply }: Calling): Record<string, Native> {
     search: ([text]) => {
       const wanted = asked(text);
       if (!wanted.length) return [];
-      return keep((id) => !isWordLike(holonOf(id)!.instance) && wanted.every((word) => says(id).includes(word)));
+      return keep(
+        (id) => !isWordLike(holonOf(id)!.instance) && wanted.every((word) => says(id).includes(word)),
+      );
     },
     named: ([text]) => {
       const wanted = asked(text);

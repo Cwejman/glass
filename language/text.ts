@@ -24,7 +24,7 @@
 //   @Sessions.sessions | sort(s => s.on) | reverse | take(2) | map(text)
 
 import { isId } from "../integrations/glass/store.ts";
-import type { Expr } from "../engine/kernel.ts";
+import type { Expression as Expr } from "./expression.ts";
 
 // A route of names through the wholes that hold each in turn: from anywhere, or, given
 // a store, from that store's level, what nothing in it holds.

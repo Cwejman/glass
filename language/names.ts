@@ -6,8 +6,8 @@
 // so whoever reads the field by text needs nothing but what the engine answers. Either
 // way a route is walked the same way, over what is known of the holons it passes.
 
-import type { Engine, HolonRead } from "../engine/engine.ts";
-import type { Everything } from "../engine/expression.ts";
+import type { Engine, HolonRead } from "../engine/compat.ts";
+import type { World } from "../engine/world.ts";
 import { isRoot } from "../engine/moulds.ts";
 import { namesUsed, type Names, type Route } from "./text.ts";
 
@@ -38,7 +38,7 @@ function reached({ store, names }: Route, known: Known) {
 
 const keyOf = (route: Route) => JSON.stringify([route.store ?? null, route.names]);
 
-export function namesIn(all: Everything): Names {
+export function namesIn(all: World): Names {
   const byName = new Map<string, string[]>();
 
   for (const { holon } of all.known.values()) {
@@ -56,7 +56,11 @@ export function namesIn(all: Everything): Names {
   const known: Known = {
     named: (name) => byName.get(name) ?? [],
     storeOf: (id) => all.known.get(id)?.store,
-    holdersOf: (id) => (all.holders.get(id) ?? []).filter(({ holds }) => holds).map(({ from }) => from),
+    holdersOf: (id) =>
+      all
+        .holders(id)
+        .filter(({ holds }) => holds)
+        .map(({ from }) => from),
     isRoot: (id) => {
       const holon = all.known.get(id)?.holon;
       return holon !== undefined && isRoot(holon, (type) => all.known.get(type)?.holon);

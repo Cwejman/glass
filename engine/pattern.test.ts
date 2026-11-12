@@ -3,8 +3,8 @@
 
 import { describe, expect, test } from "bun:test";
 import type { Holon } from "../integrations/glass/store.ts";
-import { indexOf } from "./facts.ts";
-import { solve, type Clause, type Step } from "./pattern.ts";
+import { indexOf } from "./patterns/facts.ts";
+import { solve, type Clause, type Step } from "./patterns/pattern.ts";
 
 const holon = (id: string, body: Holon["body"], instance: string[] = ["T00000000000000"]): Holon => ({
   id,

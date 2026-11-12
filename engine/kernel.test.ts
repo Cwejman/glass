@@ -8,9 +8,9 @@ import { namesAsked } from "../language/names.ts";
 import { parse } from "../language/text.ts";
 import type { Holon, Store } from "../integrations/glass/store.ts";
 import { holonsOf, openStores } from "../stores.ts";
-import { startEngine } from "./engine.ts";
-import type { Expression } from "./expression.ts";
-import { wordsOf as cut } from "./words.ts";
+import { startEngine } from "./compat.ts";
+import type { Looking as Expression } from "./compat.ts";
+import { wordsOf as cut } from "./patterns/words.ts";
 
 const opened: Record<string, Store> = await openStores();
 const engine = startEngine(Object.entries(opened).map(([key, store]) => ({ key, store })));

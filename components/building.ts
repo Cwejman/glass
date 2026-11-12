@@ -2,7 +2,7 @@
 // takes, one argument after another, and the part of an expression that comes of it.
 // These are pure, so what a press would lead to can be known without a page.
 
-import type { Argument, Expression } from "../engine/expression.ts";
+import type { Argument, Looking as Expression } from "../engine/compat.ts";
 import { canonical } from "../integrations/glass/canonical.ts";
 import { call, holonsOf, native, type Called, type Functions } from "./parts.ts";
 

@@ -2,7 +2,7 @@
 // that speaks to it depends on how it is built. Run, await and cancel join them
 // when programs are built.
 
-import type { Change, Read } from "./engine.ts";
+import type { Change, Read } from "./compat.ts";
 
 export type Request =
   | { op: "attach"; key: string; url: string }

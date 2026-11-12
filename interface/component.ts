@@ -2,8 +2,8 @@
 // with a space to work in, and which may lay a style of its own. This is the one
 // contract every component draws against.
 
-import type { Expression } from "../engine/expression.ts";
-import type { Answer, HolonRead, Read } from "../engine/reads.ts";
+import type { Looking as Expression } from "../engine/compat.ts";
+import type { Answer, HolonRead, Read } from "../engine/compat.ts";
 import type { Holon } from "../integrations/glass/store.ts";
 import type { Place } from "./address.ts";
 

@@ -1,4 +1,4 @@
-import type { HolonRead } from "../engine/reads.ts";
+import type { HolonRead } from "../engine/compat.ts";
 import type { Given, Space } from "../interface/component.ts";
 import { print, type Names } from "../language/text.ts";
 import { h } from "./jsx.ts";

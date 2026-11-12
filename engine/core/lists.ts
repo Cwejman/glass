@@ -2,13 +2,14 @@
 // speed, since written as folds over lists that never change each would copy its list
 // once for every item.
 
-import type { Value } from "../../../language/expression.ts";
+import type { Value } from "../../language/expression.ts";
 import type { Calling, Native } from "./natives.ts";
 import { keyOf, list, order, same, truly } from "./values.ts";
 
 export function lists({ apply }: Calling): Record<string, Native> {
   return {
-    fold: ([items, start, fn]) => list(items).reduce<Value>((acc, item) => apply(fn, [acc, item]), start ?? null),
+    fold: ([items, start, fn]) =>
+      list(items).reduce<Value>((acc, item) => apply(fn, [acc, item]), start ?? null),
     concat: (given) => given.flatMap(list),
 
     map: ([items, fn]) => list(items).map((item) => apply(fn, [item])),

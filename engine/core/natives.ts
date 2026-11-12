@@ -3,7 +3,7 @@
 // Those under legacy are kept only while functions written in the field still call
 // them, and go as those are written again upon the rest.
 
-import type { Expression, Value } from "../../../language/expression.ts";
+import type { Expression, Value } from "../../language/expression.ts";
 import type { World } from "../world.ts";
 import type { Scope } from "./evaluate.ts";
 import { patterns } from "./find.ts";

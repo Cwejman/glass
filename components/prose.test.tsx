@@ -1,6 +1,6 @@
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
 import { beforeAll, expect, test } from "bun:test";
-import type { HolonRead, Whole } from "../engine/reads.ts";
+import type { HolonRead, Whole } from "../engine/compat.ts";
 import { block, inline } from "./prose.tsx";
 
 beforeAll(() => {

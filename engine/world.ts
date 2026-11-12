@@ -3,7 +3,7 @@
 // patterns made when a pattern first asks, and the histories the field has read. It is
 // a value of one field, given what it needs, never the field itself.
 
-import type { Holon, LogEntry } from "../../integrations/glass/store.ts";
+import type { Holon, LogEntry } from "../integrations/glass/store.ts";
 import { mouldOf, references, type Mould } from "./moulds.ts";
 import { indexFor, type Shelf } from "./patterns/index.ts";
 import type { Answering } from "./patterns/facts.ts";

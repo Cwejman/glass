@@ -3,7 +3,7 @@
 // holds. A set is a holon or a list of holons, the empty list the empty set, and what a
 // set gives comes in the field's order.
 
-import { isRef, ref, type Value } from "../../../language/expression.ts";
+import { isRef, ref, type Value } from "../../language/expression.ts";
 import type { Calling, Lazy } from "./natives.ts";
 import { list, truly } from "./values.ts";
 
@@ -27,7 +27,10 @@ export function sets({ world }: Calling): Record<string, Lazy> {
 
       if (!meet.length) return last;
       const [smallest, ...rest] = meet.sort((a, b) => a.size - b.size);
-      return inOrder(world.place, [...smallest!].filter((id) => rest.every((set) => set.has(id))));
+      return inOrder(
+        world.place,
+        [...smallest!].filter((id) => rest.every((set) => set.has(id))),
+      );
     },
 
     or(given) {

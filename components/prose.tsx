@@ -3,7 +3,7 @@
 // a slot, so a brief of thousands of words is one drawing. What is not prose, standing
 // in a flow, is left to whatever the caller opens for it.
 
-import type { HolonRead, Whole } from "../engine/reads.ts";
+import type { HolonRead, Whole } from "../engine/compat.ts";
 import { h, type Child } from "./jsx.ts";
 
 type Holons = Whole["holons"];
