@@ -416,7 +416,7 @@ describe("what the language is", () => {
 
   test("a store's level is its root, which holds its top", async () => {
     expect(ids(await ask`level(store("main"))`).length).toBe(1);
-    expect(await ask`level(store("main")) | first | get("contents") | size`).toBe(10);
+    expect(await ask`level(store("main")) | first | get("contents") | size`).toBe(11);
     expect(await ask`level(store("main")) | first | get("dependencies") | map(d => d.name)`).toEqual([
       "glass",
     ]);
