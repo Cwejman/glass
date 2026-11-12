@@ -4,7 +4,7 @@
 // elsewhere, as one on this machine.
 
 import type { Change, Committed } from "../engine/compat.ts";
-import type { Message, Reply, Request } from "../engine/protocol.ts";
+import type { Message, Reply, Request } from "../engine/serve/protocol.ts";
 import type { Answer, Read } from "../engine/compat.ts";
 
 export type Subscription<T> = { value: T; close: () => void };

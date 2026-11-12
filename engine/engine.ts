@@ -8,7 +8,6 @@
 //   read       work an expression out over the field
 //   judge      weigh a change against the field, writing nothing
 //   commit     judge a change and write it, one act in every store it touches
-//   subscribe  read, and read again whenever what was read may have changed
 //   onChange   hear that the field changed, whatever changed
 //   moved      take a store another moved as it now stands
 //
@@ -26,7 +25,6 @@
 //               from an index carried from field to field (patterns/)
 //   change/     a commit: what the field knows of it (known.ts), its plan (plan.ts),
 //               the rules it is judged by (rules.ts), and its writing (write.ts)
-//   listen.ts   who is told
 //   serve/      the engine carried: its protocol, serving, a worker in the browser, and
 //               the engine of this machine's stores
 //   compat.ts   the old forms of read, where all outside enters today
@@ -40,14 +38,13 @@ import type { Source } from "../integrations/source.ts";
 import type { Expression, Value } from "../language/expression.ts";
 import type { Change, Problem } from "./change/plan.ts";
 import { attached, detached, fieldOf, isWritable, withStores, type Attachment, type Field } from "./field.ts";
-import { listening, type Changed, type Listener } from "./listen.ts";
 import { answer } from "./read/answer.ts";
 import { idAt, type Holon } from "../integrations/glass/store.ts";
 import { knownOf } from "./change/known.ts";
 import { planOf } from "./change/plan.ts";
 import { refusal, settled, write, type Committed } from "./change/write.ts";
 
-export type { Attachment, Change, Committed, Listener, Problem };
+export type { Attachment, Change, Committed, Problem };
 
 export type Engine = {
   attach(attachment: Attachment): Promise<void>;
@@ -55,7 +52,6 @@ export type Engine = {
   read(expression: Expression): Promise<Value>;
   judge(change: Change): Promise<Problem[]>;
   commit(change: Change): Promise<Committed>;
-  subscribe(expression: Expression, listener: Listener): () => void;
   // Told whenever the field changes, whatever changed.
   onChange(listener: () => void): () => void;
   // A store moved by another, taken as it now stands: told by whoever watches it.
@@ -67,12 +63,13 @@ export type Engine = {
 export function engine(attachments: readonly Attachment[] = []): Engine & { field(): Field } {
   let field = fieldOf(attachments);
   const inTurn = turns();
-  const listeners = listening(() => field);
+  const listeners = new Set<() => void>();
 
-  function become(next: Field, changed: Changed = "everything") {
+  // The next field, and whoever listens told.
+  function become(next: Field) {
     if (next === field) return;
     field = next;
-    listeners.changed(changed);
+    for (const listener of listeners) listener();
   }
 
   // A commit's one try: what was cut short settled, the change planned over the field as
@@ -87,7 +84,7 @@ export function engine(attachments: readonly Attachment[] = []): Engine & { fiel
     if (plan.problems.length) throw refusal(plan.problems, change);
 
     const written = await write(field, plan, change);
-    become(written.field, touchedBy(plan.stores, change));
+    become(written.field);
     return written;
   }
 
@@ -100,7 +97,7 @@ export function engine(attachments: readonly Attachment[] = []): Engine & { fiel
 
     detach: (key) => inTurn(async () => become(detached(field, key))),
 
-    read: async (expression) => (await answer(field, expression)).value,
+    read: (expression) => answer(field, expression),
 
     judge: async (change) => (await planIn(field, change)).problems,
 
@@ -116,9 +113,10 @@ export function engine(attachments: readonly Attachment[] = []): Engine & { fiel
         }
       }),
 
-    subscribe: (expression, listener) => listeners.add(expression, listener),
-
-    onChange: (listener) => listeners.onChange(listener),
+    onChange: (listener) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
 
     field: () => field,
 
@@ -145,12 +143,6 @@ async function planIn(field: Field, change: Change) {
 
   return planOf(await knownOf(field, change), change, start ?? idAt(Date.now()));
 }
-
-// What an act touched: every holon it wrote, and every one it took out.
-const touchedBy = (
-  stores: readonly { holons: readonly Holon[]; gone?: readonly string[] }[],
-  change: Change,
-) => [...stores.flatMap(({ holons }) => holons.map(({ id }) => id)), ...(change.gone ?? [])];
 
 // One task at a time, each after the one before has ended, however it ended.
 function turns() {

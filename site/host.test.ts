@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { folderFiles } from "../integrations/glass/folder.ts";
 import { commit, openStore } from "../integrations/glass/store.ts";
-import type { Reply } from "../engine/protocol.ts";
+import type { Reply } from "../engine/serve/protocol.ts";
 import { host } from "./host.ts";
 
 const root = mkdtempSync(join(tmpdir(), "glass-host-"));

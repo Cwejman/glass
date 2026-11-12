@@ -12,7 +12,7 @@
 //   { "says": "..." }                                     what the commit says of itself
 
 import { handles } from "../engine/handles.ts";
-import { localEngine } from "../engine/local.ts";
+import { localEngine } from "../engine/serve/local.ts";
 import { holonsOf, open, storeFolder, typeNamed, typesOf, type Holon } from "../stores.ts";
 
 type Raise = {

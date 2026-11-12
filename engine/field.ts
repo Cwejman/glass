@@ -35,43 +35,34 @@ export type Field = {
 
 export const fieldOf = (stores: readonly Attachment[], before?: Field): Field => {
   const shelf: Shelf = new Map(before?.shelf);
-  const readers = new Map(
-    stores.map((attachment) => [attachment.key, carried(attachment, before, readersOf, holonsIn)]),
-  );
-  const histories = new Map(
-    stores.map((attachment) => [attachment.key, carried(attachment, before, historiesOf, logIn)]),
-  );
-  const read = new Map<string, LogEntry[]>(
-    stores.flatMap(({ key }) =>
-      histories.get(key) === historiesOf.get(before!)?.get(key) && before?.logsRead(key)
-        ? [[key, before.logsRead(key)!]]
-        : [],
-    ),
-  );
-  const holonsOf = (key: string) => readers.get(key)?.() ?? Promise.resolve([]);
+  const holonsOf = (key: string) => {
+    const attachment = stores.find((one) => one.key === key);
+    return attachment ? holonsIn(attachment) : Promise.resolve([]);
+  };
+  const logsRead = (key: string) => {
+    const attachment = stores.find((one) => one.key === key);
+    return attachment ? logsKept.get(attachment.store) : [];
+  };
 
   const field: Field = {
     stores,
     holonsOf,
     shelf,
     logOf: async (key) => {
-      const log = (await histories.get(key)?.()) ?? [];
-      read.set(key, log);
-      return log;
+      const attachment = stores.find((one) => one.key === key);
+      return attachment ? logIn(attachment.store) : [];
     },
-    logsRead: (key) => read.get(key),
+    logsRead,
     world: once(async () =>
       worldOf({
         stores: stores.map(({ key }) => key),
         byStore: await Promise.all(stores.map(({ key }) => holonsOf(key))),
-        logs: (key) => read.get(key),
+        logs: logsRead,
         shelf,
       }),
     ),
   };
 
-  readersOf.set(field, readers);
-  historiesOf.set(field, histories);
   return field;
 };
 
@@ -188,32 +179,37 @@ export async function readWhole(field: Field, root: string, stop: readonly strin
 
 // ---- What is carried
 
-type Reading<T> = () => Promise<T>;
-const readersOf = new WeakMap<Field, Map<string, Reading<readonly Found[]>>>();
-const historiesOf = new WeakMap<Field, Map<string, Reading<LogEntry[]>>>();
+// What is read of a store is kept with the store: a store is a value, so what was read
+// of it holds for every field it stands in, until it is written and becomes another.
+const holonsKept = new WeakMap<object, Map<string, Promise<readonly Found[]>>>();
+const logsKept = new WeakMap<object, LogEntry[]>();
 
-// How something of a store is read: carried from the field before where the store is the
-// very one it was, read afresh, once, where it is new or has moved.
-function carried<T>(
-  attachment: Attachment,
-  before: Field | undefined,
-  readings: WeakMap<Field, Map<string, Reading<T>>>,
-  read: (attachment: Attachment) => Promise<T>,
-): Reading<T> {
-  const was = before?.stores.find(({ key }) => key === attachment.key);
-  const same = was?.store === attachment.store ? readings.get(before!)?.get(attachment.key) : undefined;
+// A store's holons, read whole once, under the key it is attached by.
+function holonsIn({ key, store }: Attachment): Promise<readonly Found[]> {
+  const byKey = holonsKept.get(store) ?? new Map<string, Promise<readonly Found[]>>();
+  holonsKept.set(store, byKey);
 
-  return same ?? once(() => read(attachment));
+  if (!byKey.has(key))
+    byKey.set(
+      key,
+      store.all().then(
+        (all) =>
+          [...all.values()].map(({ version, block }) => ({ store: key, holon: asHolon(version), block })),
+        (error) => {
+          byKey.delete(key);
+          throw error;
+        },
+      ),
+    );
+
+  return byKey.get(key)!;
 }
 
-const holonsIn = async ({ key, store }: Attachment): Promise<readonly Found[]> =>
-  [...(await store.all()).values()].map(({ version, block }) => ({
-    store: key,
-    holon: asHolon(version),
-    block,
-  }));
-
-const logIn = ({ store }: Attachment) => store.log();
+// A store's history, read once.
+async function logIn(store: object & { log(): Promise<LogEntry[]> }) {
+  if (!logsKept.has(store)) logsKept.set(store, await store.log());
+  return logsKept.get(store)!;
+}
 
 // Made once when first asked; a failure is not kept, so what failed for a moment can
 // be asked again.

@@ -9,8 +9,8 @@
 import { mkdirSync, watch } from "node:fs";
 import { join, normalize } from "node:path";
 import { startEngine } from "../engine/compat.ts";
-import type { Message } from "../engine/protocol.ts";
-import { serving } from "../engine/serving.ts";
+import type { Message } from "../engine/serve/protocol.ts";
+import { serving } from "../engine/serve/serving.ts";
 import { folderFiles, lockAt } from "../integrations/glass/folder.ts";
 import { openStore, type Store } from "../integrations/glass/store.ts";
 

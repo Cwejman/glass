@@ -7,7 +7,7 @@
 // way a route is walked the same way, over what is known of the holons it passes.
 
 import type { Engine, HolonRead } from "../engine/compat.ts";
-import type { World } from "../engine/world.ts";
+import type { World } from "../engine/read/world.ts";
 import { isRoot } from "../engine/moulds.ts";
 import { namesUsed, type Names, type Route } from "./text.ts";
 

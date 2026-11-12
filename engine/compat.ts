@@ -113,7 +113,7 @@ async function answerOf(field: Field, query: Read): Promise<unknown> {
     return held.filter(matches).map(({ holon }) => holon.id);
   }
 
-  if ("value" in query) return (await answer(field, query.value)).value;
+  if ("value" in query) return answer(field, query.value);
 
   const world = await field.world();
   if ("gather" in query) return gather(world, query.gather as Expression);

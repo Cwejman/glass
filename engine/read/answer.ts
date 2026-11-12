@@ -7,9 +7,6 @@
 // A read, in order: answer (here) chooses; byIdentity reads blocks through the field;
 // overWorld asks the world (world.ts) of the evaluator (evaluate.ts), whose natives
 // (natives/) read the world and, for patterns, its index (patterns/).
-//
-// What a read touched is said with its answer: the holons read by identity, or the
-// whole field, so a subscription is answered again only when what it read changes.
 
 import { expressionProblem, isRef, type Expression, type Value } from "../../language/expression.ts";
 import { evaluator } from "./evaluate.ts";
@@ -17,20 +14,11 @@ import { isClosure } from "./values.ts";
 import { keptIn, readHolon, readWhole, type Field } from "../field.ts";
 import { isLack } from "./world.ts";
 
-export type Touched = { holons: readonly string[] } | "everything";
-
-export type Answered = { value: Value; touched: Touched };
-
-export async function answer(field: Field, expression: Expression): Promise<Answered> {
+export async function answer(field: Field, expression: Expression): Promise<Value> {
   const problem = expressionProblem(expression);
   if (problem) throw new Error(problem);
 
-  return (
-    (await byIdentity(field, expression)) ?? {
-      value: await overWorld(field, expression),
-      touched: "everything",
-    }
-  );
+  return (await byIdentity(field, expression)) ?? overWorld(field, expression);
 }
 
 // ---- Over the world
@@ -61,7 +49,7 @@ function outward(value: Value): Value {
 // ---- By identity
 
 // holon(@id) or whole(@id, depth, stop), answered from blocks, if that is what was asked.
-async function byIdentity(field: Field, expression: Expression): Promise<Answered | undefined> {
+async function byIdentity(field: Field, expression: Expression): Promise<Value | undefined> {
   if (typeof expression !== "object" || expression === null || !("call" in expression)) return undefined;
 
   const [first, depth, stop] = expression.with ?? [];
@@ -70,20 +58,13 @@ async function byIdentity(field: Field, expression: Expression): Promise<Answere
   const native = await nativeIn(field, expression.call.$ref);
   if (native === "holon") {
     const read = await readHolon(field, first.$ref);
-    return {
-      value: read as Value,
-      touched: { holons: [first.$ref, expression.call.$ref, ...(read?.instance ?? [])] },
-    };
+    return read as Value;
   }
 
   const stopAt = stop === undefined ? [] : asStrings(stop);
   if (native === "whole" && stopAt) {
     const whole = await readWhole(field, first.$ref, stopAt, depth ?? Number.POSITIVE_INFINITY);
-    const types = Object.values(whole.holons).flatMap(({ instance }) => instance);
-    return {
-      value: whole as unknown as Value,
-      touched: { holons: [expression.call.$ref, ...Object.keys(whole.holons), ...types] },
-    };
+    return whole as unknown as Value;
   }
 
   return undefined;

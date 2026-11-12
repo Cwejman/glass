@@ -6,7 +6,7 @@ import { GlobalRegistrator } from "@happy-dom/global-registrator";
 import { afterEach, beforeAll, describe, expect, test } from "bun:test";
 import { join } from "node:path";
 import { startEngine, type Engine } from "../engine/compat.ts";
-import { serving } from "../engine/serving.ts";
+import { serving } from "../engine/serve/serving.ts";
 import type { HolonRead, Read } from "../engine/compat.ts";
 import { memoryFiles } from "../integrations/glass/files.ts";
 import { openStore } from "../integrations/glass/store.ts";
