@@ -489,8 +489,8 @@ test("an act across two stores is one act in each, its blocks each store's own",
   expect(writtenBy((await a.log())[0]!)).toEqual([inA, inBoth]);
 
   const gone = await act(
-    done.stores.map((store) => ({ store, holons: [] })),
-    { says: then.says, at: then.at, gone: then.gone },
+    done.stores.map((store) => ({ store, holons: [], gone: then.gone })),
+    { says: then.says, at: then.at },
   );
 
   expect(gone.act).toBe(then.content);

@@ -615,9 +615,10 @@ function cut<T extends { text: string }>(lines: T[]) {
   return pieces;
 }
 
-export type Given = { store: Store; holons: Holon[] };
+// A store's share of an act: the holons it keeps, and the ids it takes out.
+export type Given = { store: Store; holons: Holon[]; gone?: string[] };
 
-export type Act = { says: string; at?: string; gone?: string[]; born?: string[] };
+export type Act = { says: string; at?: string; born?: string[] };
 
 // Writes one store's share of an act into its blocks: in this store, the act's new
 // holons it keeps, as far as they run one after another, are its own run; whatever else
@@ -675,8 +676,8 @@ async function writeBlocks(store: Store, places: Place[], minted: ReadonlySet<st
 // keeps. Its new holons are those named born, or else every one no store given holds,
 // and they are one run, minted together in a moment no store has used. Every block is
 // written to every store, then each store's line, then each ref, so an act cut short
-// after its blocks published nothing. Gone takes a holon out of every store that holds it.
-export async function act(given: Given[], { says, at = new Date().toISOString(), gone = [], born }: Act) {
+// after its blocks published nothing. What each store is given to take out goes from it.
+export async function act(given: Given[], { says, at = new Date().toISOString(), born }: Act) {
   if (new Set(given.map(({ store }) => store.files)).size !== given.length)
     throw new Error("one store is given twice in one act");
 
@@ -711,13 +712,7 @@ export async function act(given: Given[], { says, at = new Date().toISOString(),
   const written: Awaited<ReturnType<typeof writeBlocks>>[] = [];
   for (const [i, { store }] of given.entries()) written.push(await writeBlocks(store, placed[i]!, mintedSet));
 
-  const holding = await Promise.all(
-    given.map(async ({ store }) =>
-      (await Promise.all(gone.map(async (id) => ((await store.read(id)) ? id : null)))).filter(
-        (id): id is string => id !== null,
-      ),
-    ),
-  );
+  const holding = given.map(({ gone = [] }) => gone);
   const taken = [...new Set(holding.flat())].sort();
 
   const touched = given.map(
@@ -754,7 +749,7 @@ export async function act(given: Given[], { says, at = new Date().toISOString(),
 
 // Adds one commit to one store and gives the store it made: an act that touches it alone.
 export async function commit(store: Store, change: Commit) {
-  const done = await act([{ store, holons: change.holons }], change);
+  const done = await act([{ store, holons: change.holons, gone: change.gone }], change);
   const next = done.stores[0]!;
 
   return { store: next, commit: next.head!, act: done.act, blocks: done.blocks, bytes: done.bytes };

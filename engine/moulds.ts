@@ -8,7 +8,7 @@
 // judgements: they answer in words, or with nothing.
 
 import { canonical } from "../integrations/glass/canonical.ts";
-import { isId, type Holon } from "../integrations/glass/store.ts";
+import type { Holon } from "../integrations/glass/store.ts";
 import { expressionProblem } from "./expression.ts";
 
 export type Shape =
@@ -47,13 +47,15 @@ export function mouldOf(types: readonly (Pick<Holon, "mould"> | null | undefined
 // ---- References
 
 // A holon connects to others from its body. A reference is written the same way
-// wherever it stands, `{ "$ref": id }`, so it is seen without knowing the type.
+// wherever it stands, `{ "$ref": id }`, so it is seen without knowing the type. Any
+// string under $ref is a reference here, a handle or a mistake as well as an id: whether
+// it is an id is judged, so a wrong one is refused rather than passed over.
 export type Reference = { id: string; key: string; holds: boolean };
 
 type Ref = { $ref: string; $holds?: boolean };
 
 export const isRef = (value: unknown): value is Ref =>
-  typeof value === "object" && value !== null && isId((value as { $ref?: unknown }).$ref);
+  typeof value === "object" && value !== null && typeof (value as { $ref?: unknown }).$ref === "string";
 
 // A reference holds, making the other a part, or only points. It says so itself with
 // $holds, or else its key's field in the mould says.
@@ -88,7 +90,8 @@ export const partsOf = (body: Holon["body"], mould: Mould = {}) =>
 // ---- Roots
 
 // A store's root is its holon of the type store: the type so named, with a mould. It
-// holds the store's top and names what the store stands on.
+// holds the store's top and names what the store stands on. The type is known by its
+// name for now, the one word read literally; roots found by address come with names.
 export const isRoot = (holon: Holon, typeOf: (id: string) => Holon | null | undefined) =>
   holon.instance.some((id) => {
     const type = typeOf(id);

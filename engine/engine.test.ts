@@ -697,6 +697,39 @@ describe("attachments", () => {
     expect(await engine.read({ log: "a" })).toEqual([]);
   });
 
+  test("a reference that is no id is refused", async () => {
+    const engine = await engineOf("a");
+
+    await expect(
+      engine.commit({
+        holons: [{ id: "~1", instance: [typeBrief], body: { prose: [{ $ref: "garbage" }] } }],
+      }),
+    ).rejects.toThrow("which is not an id");
+  });
+
+  test("what goes must be kept", async () => {
+    const engine = await engineOf("a");
+    const madeUp = idAt(Date.parse("2026-11-12T00:00:00Z"));
+
+    await expect(engine.commit({ holons: [], gone: [madeUp] })).rejects.toThrow("so it cannot go");
+  });
+
+  test("a change is judged without being written, every problem at once", async () => {
+    const engine = await engineOf("a");
+    const problems = await engine.judge({
+      holons: [
+        { id: "~1", instance: [], body: {} },
+        { id: "~2", instance: [typeNote], body: { title: 1 } },
+      ],
+    });
+
+    expect(problems.map(({ rule, id }) => [rule, id])).toEqual([
+      ["typedOrAType", "~1"],
+      ["bodyFits", "~2"],
+    ]);
+    expect(await engine.read({ log: "a" })).toEqual([]);
+  });
+
   test("a new holon resides where the whole that holds it is", async () => {
     const engine = await engineOf("a", "b");
     const whole = (
@@ -798,6 +831,29 @@ describe("attachments", () => {
     const contents = (await engine.read({ holon: root.id }))!.body.contents as { $ref: string }[];
 
     expect(contents.map(({ $ref }) => $ref)).toEqual([storeType.id, ids["~1"]!]);
+  });
+
+  test("a holon nothing holds joins the root the change itself says", async () => {
+    const at = Date.parse("2026-11-11T00:00:00Z");
+    const storeType: Holon = {
+      id: idAt(at, 0),
+      instance: [],
+      name: "store",
+      mould: { contents: { says: "What it holds.", shape: { set: "ref" }, holds: true } },
+      body: {},
+    };
+    const root: Holon = { id: idAt(at, 1), instance: [storeType.id], name: "a", body: { contents: [] } };
+    const { store } = await commit(await empty(), { holons: [storeType, root], says: "rooted" });
+    const engine = startEngine([
+      { key: "a", store, write: true },
+      { key: "pulled", store: await pulledStore() },
+    ]);
+
+    const { ids } = await engine.commit({ holons: [{ ...root, name: "a, renamed" }, noteOf("~1", "loose")] });
+    const now = (await engine.read({ holon: root.id }))!;
+
+    expect(now.name).toBe("a, renamed");
+    expect(now.body.contents).toEqual([{ $ref: ids["~1"]! }]);
   });
 
   test("a store only read is taken again as it now stands, and one written never is", async () => {

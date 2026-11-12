@@ -3,17 +3,17 @@
 // may be written, and takes attaches and commits one at a time, each making the next
 // field from the one before, and tells whoever listens that the field has changed.
 //
-// A commit is one act, written to every store it touches. Which store keeps what, the
-// ids of what is new, and whether the change may be made are the act's, in act.ts; the
-// writing is glass's format's.
+// A commit is one act, written to every store it touches: the change is judged, as it
+// may be without writing, and its plan, in act.ts, written by glass's format, or refused
+// with the first problem judging found.
 
-import { act, openStore, type Store } from "../integrations/glass/store.ts";
-import { actOf, type Change } from "./act.ts";
-import { fieldOf, isWritable, read, type Attached, type Field, type Writable } from "./field.ts";
+import { act, idAt, openStore, type Store } from "../integrations/glass/store.ts";
+import { factsOf, planOf, type Change, type Problem } from "./act.ts";
+import { fieldOf, isWritable, read, type Attached, type Field } from "./field.ts";
 import type { Source } from "../integrations/source.ts";
 import type { Answer, HolonRead, Read, Whole } from "./reads.ts";
 
-export type { Attached, Change, HolonRead, Read, Whole };
+export type { Attached, Change, HolonRead, Problem, Read, Whole };
 
 export type Committed = { commit: string; ids: Record<string, string> };
 
@@ -22,24 +22,11 @@ export type Engine = {
   attach(key: string, store: Store, options: { write: true }): Promise<void>;
   renew(key: string, store: Source): Promise<void>;
   read<R extends Read>(query: R): Promise<Answer<R>>;
+  // Every problem a change would be refused for, written nowhere.
+  judge(change: Change): Promise<Problem[]>;
   commit(change: Change): Promise<Committed>;
   onChange(listener: () => void): () => void;
 };
-
-// The stores whose head moved since they were opened, each as it now stands. One that
-// cannot be read again is left as it was.
-async function movedStores(targets: readonly Writable[]) {
-  const now = await Promise.all(
-    targets.map(async ({ key, store }) => {
-      const reopened = await openStore(store.files, store.blocks).catch(() => store);
-      return [key, reopened] as const;
-    }),
-  );
-
-  return new Map(
-    now.filter(([key, store]) => store.head !== targets.find((one) => one.key === key)!.store.head),
-  );
-}
 
 export function startEngine(given: readonly Attached[] = []): Engine {
   let field = fieldOf(given);
@@ -95,23 +82,23 @@ export function startEngine(given: readonly Attached[] = []): Engine {
 
     read: (query) => read(field, query),
 
+    judge: async (change) => planIn(field, change).then(({ problems }) => problems),
+
     commit: (change) =>
       inTurn(async () => {
-        const { writes, gone, born, ids } = await actOf(field, change);
-        const writing = writes.map(({ key }) => field.stores.find((one) => one.key === key) as Writable);
+        const plan = await planIn(field, change);
+        const [problem] = plan.problems;
+        if (problem) throw new Error(refusal(problem, change));
 
         try {
-          const done = await act(
-            writes.map(({ holons }, i) => ({ store: writing[i]!.store, holons })),
-            { says: change.says ?? "A change", gone, born },
-          );
-          become(withStores(new Map(writing.map(({ key }, i) => [key, done.stores[i]!]))));
+          const done = await act(plan.stores, { says: change.says ?? "A change", born: plan.born });
+          become(withStores(new Map(plan.stores.map(({ key }, i) => [key, done.stores[i]!]))));
 
-          return { commit: done.act, ids };
+          return { commit: done.act, ids: plan.ids };
         } catch (error) {
           // An act cut short may have moved some stores: those whose head moved are read
           // again as they now stand, and the field changes only if one did.
-          const moved = await movedStores(writing);
+          const moved = await movedStores(plan.stores);
           if (moved.size) become(withStores(moved));
           throw error;
         }
@@ -122,4 +109,38 @@ export function startEngine(given: readonly Attached[] = []): Engine {
       return () => listeners.delete(listener);
     },
   };
+}
+
+// A change's plan over the field: its ids minted past every moment the stores written
+// have used, or from now where none is written.
+async function planIn(field: Field, change: Change) {
+  const start = field.stores
+    .filter(isWritable)
+    .map(({ store }) => store.minter()())
+    .sort()
+    .at(-1);
+
+  return planOf(await factsOf(field, change), change, start ?? idAt(Date.now()));
+}
+
+// A problem in words, the holon it is about named as the change names it.
+function refusal({ id, says }: Problem, { holons }: Change) {
+  if (id === undefined) return says;
+
+  return `${holons.find((holon) => holon.id === id)?.name ?? id}: ${says}`;
+}
+
+// The stores whose head moved since they were opened, each as it now stands. One that
+// cannot be read again is left as it was.
+async function movedStores(targets: readonly { key: string; store: Store }[]) {
+  const now = await Promise.all(
+    targets.map(async ({ key, store }) => {
+      const reopened = await openStore(store.files, store.blocks).catch(() => store);
+      return [key, reopened] as const;
+    }),
+  );
+
+  return new Map(
+    now.filter(([key, store]) => store.head !== targets.find((one) => one.key === key)!.store.head),
+  );
 }
