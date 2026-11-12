@@ -30,19 +30,24 @@ export async function planIn(field: Field, change: Change): Promise<Plan> {
   return planOf(await factsOf(field, change), change, start ?? idAt(Date.now()));
 }
 
-// A problem said as a refusal: the holon by its name where it has one.
-export const refusal = ({ id, says }: Problem, { holons }: Change) =>
-  new Error(id === undefined ? says : `${holons.find((holon) => holon.id === id)?.name ?? id}: ${says}`);
+// A change refused: said by its first problem, the holon by its name where it has one,
+// and carrying every problem found.
+export function refusal(problems: readonly Problem[], { holons }: Change) {
+  const said = ({ id, says }: Problem) =>
+    id === undefined ? says : `${holons.find((holon) => holon.id === id)?.name ?? id}: ${says}`;
+
+  return Object.assign(new Error(said(problems[0]!)), { problems });
+}
 
 export type Settled = { field: Field; waiting: ReadonlyMap<string, string> };
 
 // Every act waiting past a written store's ref, settled as far as the stores attached
 // allow; what cannot be settled leaves its stores refusing writes, and says why.
 export async function settled(field: Field): Promise<Settled> {
-  const written = new Map(field.stores.filter(isWritable).map(({ key, store }) => [key, store]));
+  const writable = new Map(field.stores.filter(isWritable).map(({ key, store }) => [key, store]));
   const acts = new Map<string, Pending>();
 
-  for (const store of written.values()) {
+  for (const store of writable.values()) {
     const pending = await store.pending();
     if (pending) acts.set(pending.act, pending);
   }
@@ -51,20 +56,20 @@ export async function settled(field: Field): Promise<Settled> {
   const waiting = new Map<string, string>();
 
   for (const { act: hash, says, stores: names } of acts.values()) {
-    const absent = names.filter((name) => !written.has(name));
+    const absent = names.filter((name) => !writable.has(name));
     if (absent.length) {
       for (const name of names)
         waiting.set(name, `the act ${hash} ("${says}") was cut short, and waits on ${absent.join(", ")} to be attached and written`);
       continue;
     }
 
-    const stands = await Promise.all(names.map((name) => written.get(name)!.toward(hash)));
+    const stands = await Promise.all(names.map((name) => writable.get(name)!.toward(hash)));
     const behind = names.filter((_, i) => stands[i] === "pending");
 
     if (stands.every((stand) => stand === "head" || stand === "pending"))
-      for (const name of behind) now.set(name, await finish(written.get(name)!));
+      for (const name of behind) now.set(name, await finish(writable.get(name)!));
     else if (stands.every((stand) => stand === "pending" || stand === "nowhere"))
-      for (const name of behind) now.set(name, await drop(written.get(name)!));
+      for (const name of behind) now.set(name, await drop(writable.get(name)!));
     else {
       const moved = names.filter((_, i) => stands[i] === "earlier" || stands[i] === "nowhere");
       for (const name of behind) waiting.set(name, `the act ${hash} ("${says}") was cut short, and ${moved.join(", ")} moved since`);

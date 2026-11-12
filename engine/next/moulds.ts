@@ -24,9 +24,9 @@ export type Shape =
   | { set: Shape }
   | { [field: string]: Shape };
 
-export type Field = { says: string; shape: Shape; optional?: boolean; holds?: boolean };
+export type Key = { says: string; shape: Shape; optional?: boolean; holds?: boolean };
 
-export type Mould = Record<string, Field>;
+export type Mould = Record<string, Key>;
 
 type Values = Record<string, unknown>;
 

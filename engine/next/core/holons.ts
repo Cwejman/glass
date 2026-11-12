@@ -5,6 +5,7 @@
 
 import { isRef, ref, type Value } from "../../../language/expression.ts";
 import { partsOf, references } from "../moulds.ts";
+import { typeNames } from "../reading.ts";
 import type { Calling, Native } from "./natives.ts";
 import { isRecord, list, truly, values, type Rec } from "./values.ts";
 
@@ -32,10 +33,7 @@ export function holons({ world, apply }: Calling): Record<string, Native> {
     if (!kept) return null;
 
     const { holon } = kept;
-    const types = [
-      ...(holon.mould ? ["type"] : []),
-      ...holon.instance.flatMap((type) => world.known.get(type)?.holon.name ?? []),
-    ];
+    const types = typeNames(holon, holon.instance.map((type) => world.known.get(type)?.holon));
 
     return { ...(holon as unknown as Record<string, Value>), store: kept.store, version: kept.block ?? null, types };
   };
@@ -46,7 +44,7 @@ export function holons({ world, apply }: Calling): Record<string, Native> {
 
     get([value, key]) {
       const values = own(value);
-      if (values) return String(key) in values ? values[String(key)]! : plain(holonOf(value)!.body[String(key)]);
+      if (values) return String(key) in values ? values[String(key)]! : asValue(holonOf(value)!.body[String(key)]);
       if (Array.isArray(value)) return typeof key === "number" ? (value[key] ?? null) : null;
       if (isRecord(value)) return (value as Rec)[String(key)] ?? null;
 
@@ -144,14 +142,14 @@ export function holons({ world, apply }: Calling): Record<string, Native> {
 
 // A body's value as the language has it: references as holons, and what a body says of
 // its own references, under $, left out.
-export function plain(value: unknown): Value {
-  if (Array.isArray(value)) return value.map(plain);
+export function asValue(value: unknown): Value {
+  if (Array.isArray(value)) return value.map(asValue);
   if (isRef(value)) return ref(value.$ref);
   if (typeof value === "object" && value !== null)
     return Object.fromEntries(
       Object.entries(value)
         .filter(([key]) => !key.startsWith("$"))
-        .map(([key, inner]) => [key, plain(inner)]),
+        .map(([key, inner]) => [key, asValue(inner)]),
     );
 
   return (value ?? null) as Value;

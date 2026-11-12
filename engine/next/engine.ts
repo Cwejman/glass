@@ -2,19 +2,30 @@
 // the field declares. It keeps no store of its own. It mounts stores so that work can
 // be done, and does these few things:
 //
-//   attach     mount a store, through an integration, to be read or also written
+//   attach     mount a store, through an integration, to be read or also written; an
+//              act some writer cut short in it is settled then
 //   detach     let a store go
 //   read       work an expression out over the field
 //   judge      weigh a change against the field, writing nothing
 //   commit     judge a change and write it, one act in every store it touches
 //   subscribe  read, and read again whenever what was read may have changed
+//   onChange   hear that the field changed, whatever changed
+//   moved      take a store another moved as it now stands
 //
 // What changes the field, attaching, detaching, committing, a store moved by another,
 // is done one at a time, each making the next field from the one before. Reading and
 // judging ask the field as it stands.
 //
-// Whoever is given an engine is given these alone, the interface, the command line, and
-// in time a program, so what one may do can be narrowed by wrapping them.
+// Read in this order: field.ts, the field as a value; world.ts, the field read whole as
+// an expression works over it; reading.ts, a read answered by identity or over the
+// world, by core/, the bare language and its natives, and patterns/, facts, the index
+// and the planner; act.ts and judge.ts, a change planned and judged, purely; writing.ts,
+// the one effect; listening.ts, who is told.
+//
+// Whoever is given an engine is given these verbs alone: the interface, the command line,
+// and in time a program. Who asks is not yet said with a read or a change; where what one
+// may read or change is to be governed, it enters there, into evaluation and judging, for
+// no wrapper can narrow what an expression reaches.
 
 import type { Holon } from "../../integrations/glass/store.ts";
 import type { Source } from "../../integrations/source.ts";
@@ -75,8 +86,7 @@ export function engine(attachments: readonly Attachment[] = []): Engine & { fiel
         const held = plan.stores.find(({ key }) => waiting.has(key));
         if (held) throw new Error(`${held.key} refuses writes: ${waiting.get(held.key)}`);
 
-        const [problem] = plan.problems;
-        if (problem) throw refusal(problem, change);
+        if (plan.problems.length) throw refusal(plan.problems, change);
 
         const written = await write(field, plan, change);
         become(written.field, touchedBy(plan.stores, change));

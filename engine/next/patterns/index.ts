@@ -5,10 +5,10 @@
 // What changed is told by versions: a holon's block, and for its types the store and
 // block of each, so a type changed anywhere re-says the facts of its instances.
 
-import type { Kept, World } from "../world.ts";
+import type { Found, World } from "../world.ts";
 import { answeringAll, indexOf, patchedIndex, type Answering, type Index } from "./facts.ts";
 
-type Version = string | Kept;
+type Version = string | Found;
 
 export type Indexed = {
   index: Index;
@@ -18,7 +18,7 @@ export type Indexed = {
 
 export type Shelf = Map<string, Indexed>;
 
-export type Made = "kept" | "patched" | "fresh";
+export type Made = "carried" | "patched" | "fresh";
 
 // The share of a store that may change and still be patched.
 const mostPatched = 1 / 4;
@@ -35,11 +35,11 @@ const made = new WeakMap<World, Map<string, Made>>();
 export const howIndexed = (world: World): ReadonlyMap<string, Made> => (world.index(), made.get(world)!);
 
 function storeIndex(world: World, key: string) {
-  const shelf = world.field.shelf;
-  const held = world.held.get(key) ?? [];
+  const shelf = world.shelf;
+  const held = world.byStore.get(key) ?? [];
   const before = shelf.get(key);
   const { also, dirty, versions, types } = changesOf(world, held, before);
-  const mould = (holon: Kept["holon"]) => world.mouldFor(holon);
+  const mould = (holon: Found["holon"]) => world.mouldFor(holon);
 
   const keep = (index: Index, how: Made) => {
     shelf.set(key, { index, versions, types });
@@ -48,7 +48,7 @@ function storeIndex(world: World, key: string) {
   };
 
   if (!before) return keep(indexOf(held, mould, also), "fresh");
-  if (!dirty.size) return keep(before.index, "kept");
+  if (!dirty.size) return keep(before.index, "carried");
 
   const patched =
     dirty.size <= Math.max(held.length, before.versions.size) * mostPatched
@@ -58,12 +58,12 @@ function storeIndex(world: World, key: string) {
   return patched ? keep(patched, "patched") : keep(indexOf(held, mould, also), "fresh");
 }
 
-function changesOf(world: World, held: readonly Kept[], before: Indexed | undefined) {
-  const versionOf = (kept: Kept): Version => kept.block ?? kept;
-  const typeVersionOf = (kept: Kept | undefined): Version | undefined =>
+function changesOf(world: World, held: readonly Found[], before: Indexed | undefined) {
+  const versionOf = (kept: Found): Version => kept.block ?? kept;
+  const typeVersionOf = (kept: Found | undefined): Version | undefined =>
     kept && (kept.block === undefined ? kept : `${kept.store}\u0000${kept.block}`);
 
-  const also = new Set<Kept>();
+  const also = new Set<Found>();
   const versions = new Map<string, Version>();
   const types = new Map<string, Version | undefined>();
   const dirty = new Set<string>();

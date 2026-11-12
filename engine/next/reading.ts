@@ -13,7 +13,7 @@ import { evaluator } from "./core/evaluate.ts";
 import { isClosure } from "./core/values.ts";
 import { keepersOf, keptIn, type Field } from "./field.ts";
 import { mouldOf, partsOf } from "./moulds.ts";
-import { isLack, readLog } from "./world.ts";
+import { isLack } from "./world.ts";
 
 export type Touched = { holons: readonly string[] } | "everything";
 
@@ -33,20 +33,20 @@ async function overWorld(field: Field, expression: Expression): Promise<Value> {
 
   for (;;) {
     try {
-      return plain(evaluator(world).evaluate(expression));
+      return outward(evaluator(world).evaluate(expression));
     } catch (thrown) {
       if (!isLack(thrown)) throw thrown;
-      await readLog(field, thrown.lacks.log);
+      await field.logOf(thrown.lacks.log);
     }
   }
 }
 
 // A value as it leaves the engine: a lambda as the words it takes.
-function plain(value: Value): Value {
+function outward(value: Value): Value {
   if (isClosure(value)) return { function: value.fn.join(", ") };
-  if (Array.isArray(value)) return value.map(plain);
+  if (Array.isArray(value)) return value.map(outward);
   if (typeof value === "object" && value !== null && !isRef(value))
-    return Object.fromEntries(Object.entries(value).map(([key, inner]) => [key, plain(inner)]));
+    return Object.fromEntries(Object.entries(value).map(([key, inner]) => [key, outward(inner)]));
 
   return value;
 }
@@ -63,13 +63,14 @@ async function byIdentity(field: Field, expression: Expression): Promise<Answere
   const native = await nativeIn(field, expression.call.$ref);
   if (native === "holon") {
     const read = await readHolon(field, first.$ref);
-    return { value: read as Value, touched: { holons: [first.$ref] } };
+    return { value: read as Value, touched: { holons: [first.$ref, expression.call.$ref, ...(read?.instance ?? [])] } };
   }
 
   const stopAt = stop === undefined ? [] : asStrings(stop);
   if (native === "whole" && stopAt) {
     const whole = await readWhole(field, first.$ref, stopAt, depth ?? Number.POSITIVE_INFINITY);
-    return { value: whole as unknown as Value, touched: { holons: Object.keys(whole.holons) } };
+    const types = Object.values(whole.holons).flatMap(({ instance }) => instance);
+    return { value: whole as unknown as Value, touched: { holons: [expression.call.$ref, ...Object.keys(whole.holons), ...types] } };
   }
 
   return undefined;
@@ -92,7 +93,8 @@ async function nativeIn(field: Field, id: string) {
 
 export type HolonRead = Holon & { store: string; version: string; types: string[] };
 
-const typeNames = (holon: Holon, types: readonly (Holon | null)[]) => [
+// The names of what a holon is, as a reader is given them: "type" where it is one.
+export const typeNames = (holon: Holon, types: readonly (Holon | null | undefined)[]) => [
   ...(holon.mould ? ["type"] : []),
   ...types.flatMap((type) => (type?.name ? [type.name] : [])),
 ];

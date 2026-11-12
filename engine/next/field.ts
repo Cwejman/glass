@@ -3,9 +3,9 @@
 // costs a few blocks. A question over the field reads each store whole, once, and what
 // was read is carried to the next field wherever its store is unchanged.
 
-import { asHolon, type Holon, type Store } from "../../integrations/glass/store.ts";
+import { asHolon, type Holon, type LogEntry, type Store } from "../../integrations/glass/store.ts";
 import type { Source } from "../../integrations/source.ts";
-import { worldOf, type Kept, type World } from "./world.ts";
+import { worldOf, type Found, type World } from "./world.ts";
 import type { Shelf } from "./patterns/index.ts";
 
 // A store as this engine uses it: what it is called here, and whether it may be written.
@@ -21,27 +21,48 @@ export const isWritable = (attachment: Attachment): attachment is Writable => at
 export type Field = {
   stores: readonly Attachment[];
   // A store's holons, all of them, read once.
-  holonsOf(key: string): Promise<readonly Kept[]>;
+  holonsOf(key: string): Promise<readonly Found[]>;
   // Everything attached, read as one, once.
   world(): Promise<World>;
-  // Each store's index as last made, the same shelf from field to field, so an index is
-  // patched from the one before rather than made again.
+  // A store's history, read once; and those read so far, as they stand.
+  logOf(key: string): Promise<LogEntry[]>;
+  logsRead(key: string): LogEntry[] | undefined;
+  // Each store's index as last made: found on the field before, and kept here only, so an
+  // index is patched from the one before rather than made again.
   shelf: Shelf;
 };
 
 export const fieldOf = (stores: readonly Attachment[], before?: Field): Field => {
-  const shelf: Shelf = before?.shelf ?? new Map();
-  const readers = new Map(stores.map((attachment) => [attachment.key, readerOf(attachment, before)]));
+  const shelf: Shelf = new Map(before?.shelf);
+  const readers = new Map(stores.map((attachment) => [attachment.key, carried(attachment, before, readersOf, holonsIn)]));
+  const histories = new Map(stores.map((attachment) => [attachment.key, carried(attachment, before, historiesOf, logIn)]));
+  const read = new Map<string, LogEntry[]>(
+    stores.flatMap(({ key }) => (histories.get(key) === historiesOf.get(before!)?.get(key) && before?.logsRead(key) ? [[key, before.logsRead(key)!]] : [])),
+  );
   const holonsOf = (key: string) => readers.get(key)?.() ?? Promise.resolve([]);
 
   const field: Field = {
     stores,
     holonsOf,
     shelf,
-    world: once(async () => worldOf(field, await Promise.all(stores.map(({ key }) => holonsOf(key))))),
+    logOf: async (key) => {
+      const log = (await histories.get(key)?.()) ?? [];
+      read.set(key, log);
+      return log;
+    },
+    logsRead: (key) => read.get(key),
+    world: once(async () =>
+      worldOf({
+        stores: stores.map(({ key }) => key),
+        byStore: await Promise.all(stores.map(({ key }) => holonsOf(key))),
+        logs: (key) => read.get(key),
+        shelf,
+      }),
+    ),
   };
 
   readersOf.set(field, readers);
+  historiesOf.set(field, histories);
   return field;
 };
 
@@ -85,7 +106,7 @@ export async function keepersOf(field: Field, id: string) {
 }
 
 // A holon as the field reads it: from the first store that keeps it.
-export async function keptIn(field: Field, id: string): Promise<Kept | null> {
+export async function keptIn(field: Field, id: string): Promise<Found | null> {
   const [first] = await keepersOf(field, id);
   return first ? { store: first.key, holon: asHolon(first.latest.version), block: first.latest.block } : null;
 }
@@ -95,25 +116,28 @@ export const holonOf = async (field: Field, id: string): Promise<Holon | null> =
 
 // ---- What is carried
 
-const readersOf = new WeakMap<Field, Map<string, () => Promise<readonly Kept[]>>>();
+type Reading<T> = () => Promise<T>;
+const readersOf = new WeakMap<Field, Map<string, Reading<readonly Found[]>>>();
+const historiesOf = new WeakMap<Field, Map<string, Reading<LogEntry[]>>>();
 
-// How a store's holons are read: carried from the field before where the store is the
-// very one it was, read afresh where it is new or has moved.
-function readerOf(attachment: Attachment, before?: Field) {
+// How something of a store is read: carried from the field before where the store is the
+// very one it was, read afresh, once, where it is new or has moved.
+function carried<T>(
+  attachment: Attachment,
+  before: Field | undefined,
+  readings: WeakMap<Field, Map<string, Reading<T>>>,
+  read: (attachment: Attachment) => Promise<T>,
+): Reading<T> {
   const was = before?.stores.find(({ key }) => key === attachment.key);
-  const carried = was?.store === attachment.store ? readersOf.get(before!)?.get(attachment.key) : undefined;
+  const same = was?.store === attachment.store ? readings.get(before!)?.get(attachment.key) : undefined;
 
-  return (
-    carried ??
-    once(async () =>
-      [...(await attachment.store.all()).values()].map(({ version, block }) => ({
-        store: attachment.key,
-        holon: asHolon(version),
-        block,
-      })),
-    )
-  );
+  return same ?? once(() => read(attachment));
 }
+
+const holonsIn = async ({ key, store }: Attachment): Promise<readonly Found[]> =>
+  [...(await store.all()).values()].map(({ version, block }) => ({ store: key, holon: asHolon(version), block }));
+
+const logIn = ({ store }: Attachment) => store.log();
 
 // Made once when first asked; a failure is not kept, so what failed for a moment can
 // be asked again.

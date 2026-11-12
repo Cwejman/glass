@@ -19,7 +19,7 @@
 // answers the same clauses its own way.
 
 import type { Holon } from "../../../integrations/glass/store.ts";
-import type { Kept as Known } from "../world.ts";
+import type { Found as Known } from "../world.ts";
 import { isRef, mouldOf, references, type Mould } from "../moulds.ts";
 import { wordsOf } from "./words.ts";
 
