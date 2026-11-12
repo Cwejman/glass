@@ -12,6 +12,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { canonical } from "../integrations/glass/canonical.ts";
 import type { Holon } from "../integrations/glass/store.ts";
+import { handles } from "../engine/act.ts";
 import { localEngine } from "../engine/local.ts";
 import { holonsOf, open, storeFolder, typeNamed, typesOf } from "../stores.ts";
 
@@ -19,7 +20,7 @@ const here = import.meta.dir;
 
 const store = await open(await storeFolder("glass"));
 const before = await holonsOf(store);
-const mint = store.minter();
+const handle = handles();
 const types = typesOf(before);
 
 const ofType = (type: string) => before.filter(({ instance }) => instance[0] === typeNamed(types, type));
@@ -33,7 +34,11 @@ const written = (holon: Holon) => {
 
 // A component's code, built whole.
 async function built(path: string) {
-  const { success, outputs, logs } = await Bun.build({ entrypoints: [path], format: "esm", target: "browser" });
+  const { success, outputs, logs } = await Bun.build({
+    entrypoints: [path],
+    format: "esm",
+    target: "browser",
+  });
   if (!success) throw new AggregateError(logs, `building ${path}`);
 
   return outputs[0]!.text();
@@ -50,7 +55,7 @@ for (const file of readdirSync(here).filter((name) => name.endsWith(".tsx") && !
   const { name, ...declaration } = declared;
   const was = component(name);
   const holon: Holon = {
-    id: was?.id ?? mint(),
+    id: was?.id ?? handle(),
     instance: [typeNamed(types, "component")],
     name,
     body: { ...(was?.body ?? {}), ...declaration, code: await built(path) },
@@ -64,7 +69,10 @@ for (const file of readdirSync(here).filter((name) => name.endsWith(".tsx") && !
 if (born.length) {
   const whole = before.find(({ name, instance }) => name === "components" && instance.length === 0)!;
   const holds = (whole.body.holds ?? []) as unknown[];
-  written({ ...whole, body: { ...whole.body, holds: [...holds, ...born.map(({ id }) => ({ $ref: id, $holds: true }))] } });
+  written({
+    ...whole,
+    body: { ...whole.body, holds: [...holds, ...born.map(({ id }) => ({ $ref: id, $holds: true }))] },
+  });
 }
 
 // Each material's stylesheet, from the file of its name, as it is written in lower case.
@@ -73,12 +81,17 @@ for (const file of readdirSync(join(here, "materials")).filter((name) => name.en
   const material = ofType("material").find(({ name }) => name?.toLowerCase() === called);
   if (!material) throw new Error(`no material is called ${called}, for ${file}`);
 
-  written({ ...material, body: { ...material.body, css: readFileSync(join(here, "materials", file), "utf8") } });
+  written({
+    ...material,
+    body: { ...material.body, css: readFileSync(join(here, "materials", file), "utf8") },
+  });
 }
 
 if (changed.length) {
-  const done = await (await localEngine({ writes: ["glass"] })).commit({
-    holons: changed.sort((a, b) => (a.id < b.id ? -1 : 1)),
+  const done = await (
+    await localEngine({ writes: ["glass"] })
+  ).commit({
+    holons: changed,
     says: `The code glass ships: ${changed.map(({ name }) => name).join(", ")}`,
   });
   console.log(`${changed.length} holons written, in ${done.commit}`);

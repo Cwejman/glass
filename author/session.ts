@@ -11,6 +11,7 @@
 //   "letGo": ["the title of an earlier path"]
 // }
 
+import { handles } from "../engine/act.ts";
 import { localEngine } from "../engine/local.ts";
 import { holonsOf, open, storeFolder, type Holon } from "../stores.ts";
 import { markedWriter, proseWriter } from "./prose.ts";
@@ -32,9 +33,9 @@ const ref = (to: string) => ({ $ref: to });
 const session: Session = await Bun.file(process.argv[2]!).json();
 const store = await open(await storeFolder("main"));
 const holons = await holonsOf(store);
-const mint = store.minter();
+const handle = handles();
 
-const writer = proseWriter(holons, mint);
+const writer = proseWriter(holons, handle);
 const { types, put, flow } = writer;
 const marked = markedWriter(writer);
 
@@ -42,7 +43,7 @@ const author = holons.find((h) => h.name === "The author" && h.instance[0] === t
 const sessions = holons.find((h) => h.name === "Sessions" && Array.isArray(h.body.sessions))!;
 
 // A session and its voice name each other, so one name is taken before the other is written.
-const sessionId = mint();
+const sessionId = handle();
 const voice = put("voice", { of: ref(sessionId) }, session.voice);
 
 // The author's words are plain; the session's answers carry their marks.
@@ -101,7 +102,9 @@ const letGo = session.letGo.map((title) => {
 sessions.body.sessions.push(ref(sessionId));
 
 const changed = [sessions, ...letGo];
-const born = [...writer.born, sessionHolon].sort((a, b) => (a.id < b.id ? -1 : 1));
+const born = [...writer.born, sessionHolon];
 
-const done = await (await localEngine({ writes: ["main"] })).commit({ holons: [...changed, ...born], says: session.name });
+const done = await (
+  await localEngine({ writes: ["main"] })
+).commit({ holons: [...changed, ...born], says: session.name });
 console.log({ holons: changed.length + born.length, commit: done.commit });

@@ -12,8 +12,7 @@ import { notASet } from "./reads.ts";
 import { isId, type Holon } from "../integrations/glass/store.ts";
 import type { LogEntry } from "../integrations/glass/store.ts";
 import { kernelOf, type Shelf } from "./kernel.ts";
-import { mouldOf, type Mould } from "./moulds.ts";
-import { isRef, references } from "./references.ts";
+import { isRef, mouldOf, references } from "./moulds.ts";
 
 export type Expression = { $ref: string } | { call: { $ref: string }; with?: Argument[] } | { arg: number };
 export type Argument = Expression | string;
@@ -50,7 +49,7 @@ export const storesOf = (all: Everything, id: string): readonly string[] =>
 export type Holder = { from: string; key: string; holds: boolean };
 
 const mouldIn = (known: Everything["known"], holon: Holon) =>
-  mouldOf(holon.instance.map((type) => known.get(type)?.holon.mould as Mould | undefined));
+  mouldOf(holon.instance.map((type) => known.get(type)?.holon));
 
 export function everythingOf(
   known: Everything["known"],

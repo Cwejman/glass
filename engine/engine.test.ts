@@ -676,6 +676,27 @@ describe("attachments", () => {
     expect(await storeOf(two, into.ids["~1"]!)).toBe("b");
   });
 
+  test("the engine mints what is new, one run in the store, and nothing lands as moved", async () => {
+    const engine = await engineOf("a");
+    const { ids } = await engine.commit({ holons: [noteOf("~1", "one"), noteOf("~2", "two")] });
+    const [line] = (await engine.read({ log: "a" }))!;
+
+    expect(line!.blocks.map(({ first, new: count, moved }) => ({ first, count, moved }))).toEqual([
+      { first: ids["~1"]!, count: 2, moved: [] },
+    ]);
+    expect(ids["~2"]).toBe(nextId(ids["~1"]!));
+  });
+
+  test("an id no store keeps, and the engine did not give, is refused", async () => {
+    const engine = await engineOf("a");
+    const madeUp = idAt(Date.parse("2026-11-12T00:00:00Z"));
+
+    await expect(engine.commit({ holons: [noteOf(madeUp, "minted elsewhere")] })).rejects.toThrow(
+      "the engine did not give it",
+    );
+    expect(await engine.read({ log: "a" })).toEqual([]);
+  });
+
   test("a new holon resides where the whole that holds it is", async () => {
     const engine = await engineOf("a", "b");
     const whole = (

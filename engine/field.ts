@@ -14,9 +14,8 @@ import {
   type Known,
 } from "./expression.ts";
 import { kernel, kernelOf, plain, type Expr, type Shelf } from "./kernel.ts";
-import { mouldOf, type Mould } from "./moulds.ts";
+import { mouldOf, partsOf } from "./moulds.ts";
 import { idsIn, type Answer, type HolonRead, type Read, type Whole } from "./reads.ts";
-import { partsOf } from "./references.ts";
 
 // A store as this engine uses it: what it is called here, and whether it may be written.
 // One it reads is any source; one it writes is glass's own store.
@@ -164,7 +163,7 @@ async function readWhole(
       const stopped = holon.id !== root && holons[holon.id]!.types.some((type) => stop.includes(type));
 
       if (!stopped) {
-        next.push(...partsOf(holon.body, mouldOf(types.map((type) => type?.mould as Mould | undefined))));
+        next.push(...partsOf(holon.body, mouldOf(types)));
       }
     }
 

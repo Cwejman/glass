@@ -41,14 +41,19 @@ function tokens(sentence: string) {
 
 const splitSentences = (paragraph: string) => paragraph.split(/(?<=[.?!])\s+(?=\S)/);
 
-// A writer over the field as it stands. Holons it makes take names in order, so
-// everything it was asked to make belongs in one commit.
-export function proseWriter(holons: Holon[], mint: () => string) {
+// A writer over the field as it stands. Holons it makes come under the handles it is
+// given, so everything it was asked to make belongs in one commit, which gives them ids.
+export function proseWriter(holons: Holon[], handle: () => string) {
   const types = typesOf(holons);
   const born: Holon[] = [];
 
   const put = (type: string, body: Record<string, unknown>, name?: string) => {
-    const holon: Holon = { id: mint(), instance: [typeNamed(types, type)], ...(name ? { name } : {}), body };
+    const holon: Holon = {
+      id: handle(),
+      instance: [typeNamed(types, type)],
+      ...(name ? { name } : {}),
+      body,
+    };
     born.push(holon);
     return holon.id;
   };

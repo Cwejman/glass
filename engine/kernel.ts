@@ -32,10 +32,9 @@ import {
   type FactValue,
   type Index,
 } from "./facts.ts";
-import { mouldOf, type Mould } from "./moulds.ts";
+import { isRef, mouldOf, references } from "./moulds.ts";
 import { bindable, isVar, orProblem, solve, usedBeside, type Clause, type Step } from "./pattern.ts";
 import { wordsOf } from "./words.ts";
-import { isRef, references } from "./references.ts";
 
 export type Value = null | boolean | number | string | Value[] | { [key: string]: Value };
 export type Expr = unknown;
@@ -184,8 +183,7 @@ export function kernel(context: Context) {
 
   const holonOf = (value: unknown) => (isRef(value) ? known.get(value.$ref)?.holon : undefined);
 
-  const mouldIn = (instance: string[]) =>
-    mouldOf(instance.map((type) => known.get(type)?.holon.mould as Mould | undefined));
+  const mouldIn = (instance: string[]) => mouldOf(instance.map((type) => known.get(type)?.holon));
 
   // Edges out of a holon: what it is an instance of, and every reference in its body,
   // in the order the body holds them.
@@ -784,10 +782,13 @@ function changesOf(held: Held, all: Everything, kept: Kept | undefined) {
     if (stillHeld < kept.versions.size)
       for (const id of kept.versions.keys()) if (!versions.has(id)) dirty.add(id);
 
-    const changedTypes = new Set([...types].filter(([id, version]) => kept.types.get(id) !== version).map(([id]) => id));
+    const changedTypes = new Set(
+      [...types].filter(([id, version]) => kept.types.get(id) !== version).map(([id]) => id),
+    );
     if (changedTypes.size)
       for (const each of held)
-        if (!also.has(each) && each.holon.instance.some((type) => changedTypes.has(type))) dirty.add(each.holon.id);
+        if (!also.has(each) && each.holon.instance.some((type) => changedTypes.has(type)))
+          dirty.add(each.holon.id);
   }
 
   return { also, dirty, versions, types };

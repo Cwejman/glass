@@ -8,6 +8,7 @@
 import { join } from "node:path";
 import { canonical } from "../integrations/glass/canonical.ts";
 import type { Holon } from "../integrations/glass/store.ts";
+import { handles } from "../engine/act.ts";
 import { localEngine } from "../engine/local.ts";
 import { holonsOf, open, storeFolder, storesHere, typeNamed, typesOf } from "../stores.ts";
 
@@ -17,7 +18,7 @@ const site: Site = await Bun.file(join(import.meta.dir, "site.json")).json();
 const store = await open(await storeFolder("site"));
 const before = await holonsOf(store);
 const glass = await holonsOf(await open(await storeFolder("glass")));
-const mint = store.minter();
+const handle = handles();
 
 const glassTypes = typesOf(glass);
 const glassType = (name: string) => typeNamed(glassTypes, name);
@@ -25,7 +26,7 @@ const glassNamed = (name: string, type: string) =>
   glass.find((holon) => holon.name === name && holon.instance[0] === glassType(type))!.id;
 // A holon of the site's is known by what it is and what it is called.
 const idOf = (name: string, type: string | null) =>
-  before.find((holon) => holon.name === name && (holon.instance[0] ?? null) === type)?.id ?? mint();
+  before.find((holon) => holon.name === name && (holon.instance[0] ?? null) === type)?.id ?? handle();
 
 const start: Holon = {
   id: idOf("start", glassType("start")),
@@ -58,13 +59,14 @@ const root: Holon = {
   },
 };
 
-// Born first, in the order minted, so they are one run.
-const made = [root, start, dependency].sort((a, b) => (a.id < b.id ? -1 : 1));
+const made = [root, start, dependency];
 const beforeById = new Map(before.map((holon) => [holon.id, canonical(holon)]));
 const changed = made.filter((holon) => beforeById.get(holon.id) !== canonical(holon));
 
 if (changed.length) {
-  await (await localEngine({ writes: ["site"] })).commit({
+  await (
+    await localEngine({ writes: ["site"] })
+  ).commit({
     holons: changed,
     says: `The site's start: ${changed.map(({ name }) => name).join(", ")}`,
   });

@@ -7,6 +7,7 @@
 
 import { readdirSync } from "node:fs";
 import { join, relative } from "node:path";
+import { isRoot } from "./engine/moulds.ts";
 import { folderFiles } from "./integrations/glass/folder.ts";
 import { asHolon, openStore, type Holon, type Store } from "./integrations/glass/store.ts";
 
@@ -44,18 +45,20 @@ export async function storesIn(dir: string): Promise<Map<string, Found>> {
     }),
   );
 
-  const storeTypes = new Set(
-    opened.flatMap(({ holons }) => holons.filter((h) => h.mould && h.name === "store").map((h) => h.id)),
+  const everywhere = new Map(
+    opened.flatMap(({ holons }) => holons.map((holon) => [holon.id, holon] as const)),
   );
 
   const found = new Map<string, Found>();
   for (const { folder, store, holons } of opened) {
-    const roots = holons.filter((h) => h.instance.some((type) => storeTypes.has(type)));
-    if (roots.length !== 1) throw new Error(`the store at ${folder} has ${roots.length ? "more than one root" : "no root"}`);
+    const roots = holons.filter((holon) => isRoot(holon, (id) => everywhere.get(id)));
+    if (roots.length !== 1)
+      throw new Error(`the store at ${folder} has ${roots.length ? "more than one root" : "no root"}`);
 
     const name = roots[0]!.name;
     if (!name) throw new Error(`the root of the store at ${folder} has no name`);
-    if (found.has(name)) throw new Error(`two stores are called ${name}: at ${found.get(name)!.folder} and ${folder}`);
+    if (found.has(name))
+      throw new Error(`two stores are called ${name}: at ${found.get(name)!.folder} and ${folder}`);
 
     found.set(name, { folder, store });
   }
@@ -78,7 +81,9 @@ export async function storeFolder(name: string) {
 // Every store, opened as it stands now, by its name.
 export const openStores = async (): Promise<Record<string, Store>> =>
   Object.fromEntries(
-    await Promise.all([...(await storesHere())].map(async ([name, { folder }]) => [name, await open(folder)] as const)),
+    await Promise.all(
+      [...(await storesHere())].map(async ([name, { folder }]) => [name, await open(folder)] as const),
+    ),
   );
 
 // The types among holons, each id by the name it is asked by: the first of a name. Only

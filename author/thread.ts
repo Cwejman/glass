@@ -11,6 +11,7 @@
 //   { "move": "its name", "stands": "leaning", "asks": "..." }   where one stands, said again
 //   { "says": "..." }                                     what the commit says of itself
 
+import { handles } from "../engine/act.ts";
 import { localEngine } from "../engine/local.ts";
 import { holonsOf, open, storeFolder, typeNamed, typesOf, type Holon } from "../stores.ts";
 
@@ -32,7 +33,7 @@ const steps: Step[] = await Bun.file(process.argv[2]!).json();
 const store = await open(await storeFolder("main"));
 const holons = await holonsOf(store);
 const byId = new Map(holons.map((holon) => [holon.id, holon]));
-const mint = store.minter();
+const handle = handles();
 
 const types = typesOf(holons);
 const threadType = typeNamed(types, "thread");
@@ -95,7 +96,7 @@ for (const step of steps) {
   if (threadNamed(step.name)) throw new Error(`a thread is already named ${step.name}`);
 
   born.push({
-    id: mint(),
+    id: handle(),
     instance: [threadType],
     name: step.name,
     body: {
@@ -124,7 +125,9 @@ const says =
     ...moved.map(({ name, body }) => `${name}: ${body.stands}.`),
   ].join(" ");
 
-const done = await (await localEngine({ writes: ["main"] })).commit({ holons: [...born, ...moved, ...holding], says });
+const done = await (
+  await localEngine({ writes: ["main"] })
+).commit({ holons: [...born, ...moved, ...holding], says });
 
 console.log({
   raised: born.map(({ name }) => name),

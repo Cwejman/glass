@@ -7,6 +7,7 @@
 //   { "add": [{ "title": "...", "opens": "...", "restsOn": ["..."] }],
 //     "edit": [{ "title": "...", "opens": "..." }] }
 
+import { handles } from "../engine/act.ts";
 import { localEngine } from "../engine/local.ts";
 import { holonsOf, open, storeFolder, type Holon } from "../stores.ts";
 import { markedWriter, proseWriter } from "./prose.ts";
@@ -25,7 +26,7 @@ if (!named || !file || !["typed", "spoken", "answered"].includes(as ?? ""))
 const store = await open(await storeFolder("main"));
 const holons = await holonsOf(store);
 
-const writer = proseWriter(holons, store.minter());
+const writer = proseWriter(holons, handles());
 const { types, put, flow } = writer;
 const marked = markedWriter(writer);
 
@@ -89,7 +90,9 @@ if (running) {
   changed.add(running);
 }
 
-const done = await (await localEngine({ writes: ["main"] })).commit({
+const done = await (
+  await localEngine({ writes: ["main"] })
+).commit({
   holons: [...changed, ...writer.born],
   says: `${session.name}: utterance ${order}`,
 });

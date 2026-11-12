@@ -5,7 +5,7 @@
 
 import type { Holon } from "../integrations/glass/store.ts";
 import type { Whole } from "../engine/reads.ts";
-import { isRef } from "../engine/references.ts";
+import { isRef } from "../engine/moulds.ts";
 import type { Given, Space } from "../interface/component.ts";
 import { h, type Child } from "./jsx.ts";
 import { block, inline } from "./prose.tsx";

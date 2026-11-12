@@ -8,6 +8,7 @@
 
 import type { Engine, HolonRead } from "../engine/engine.ts";
 import type { Everything } from "../engine/expression.ts";
+import { isRoot } from "../engine/moulds.ts";
 import { namesUsed, type Names, type Route } from "./text.ts";
 
 // What walking a route needs to know of the field.
@@ -56,8 +57,10 @@ export function namesIn(all: Everything): Names {
     named: (name) => byName.get(name) ?? [],
     storeOf: (id) => all.known.get(id)?.store,
     holdersOf: (id) => (all.holders.get(id) ?? []).filter(({ holds }) => holds).map(({ from }) => from),
-    isRoot: (id) =>
-      all.known.get(id)?.holon.instance.some((type) => all.known.get(type)?.holon.name === "store") ?? false,
+    isRoot: (id) => {
+      const holon = all.known.get(id)?.holon;
+      return holon !== undefined && isRoot(holon, (type) => all.known.get(type)?.holon);
+    },
   };
 
   return {

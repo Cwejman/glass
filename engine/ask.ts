@@ -17,7 +17,7 @@
 import { readFileSync } from "node:fs";
 import type { Engine } from "./engine.ts";
 import { localEngine } from "./local.ts";
-import { isRef } from "./references.ts";
+import { isRef } from "./moulds.ts";
 import type { Value } from "./kernel.ts";
 import { namesAsked } from "../language/names.ts";
 import { parse } from "../language/text.ts";

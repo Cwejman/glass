@@ -9,9 +9,8 @@
 
 import type { Holon } from "../integrations/glass/store.ts";
 import type { Expression } from "../engine/expression.ts";
-import { bodyProblem, type Mould } from "../engine/moulds.ts";
+import { bodyProblem, references, type Mould } from "../engine/moulds.ts";
 import { askedOf, formOf, idsIn, notASet, type HolonRead, type Read } from "../engine/reads.ts";
-import { references } from "../engine/references.ts";
 import type { Place } from "./address.ts";
 import type {
   Component,

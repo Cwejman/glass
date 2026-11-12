@@ -20,8 +20,7 @@
 
 import type { Holon } from "../integrations/glass/store.ts";
 import type { Known } from "./expression.ts";
-import { mouldOf, type Mould } from "./moulds.ts";
-import { isRef, references } from "./references.ts";
+import { isRef, mouldOf, references, type Mould } from "./moulds.ts";
 import { wordsOf } from "./words.ts";
 
 export type Scalar = string | number | boolean;
@@ -145,7 +144,9 @@ function ordered(facts: readonly Fact[]) {
 // What one holon a store keeps says there: all it says, or, where another store's copy
 // of it is the one the field reads, only that it is kept here too, so it is said once.
 const saidHere = (each: Known, mouldFor: (holon: Holon) => Mould, also: ReadonlySet<Known>) =>
-  also.has(each) ? [storeFact(each.holon.id, each.store)] : factsOf(each.holon, each.store, mouldFor(each.holon));
+  also.has(each)
+    ? [storeFact(each.holon.id, each.store)]
+    : factsOf(each.holon, each.store, mouldFor(each.holon));
 
 // A store's index of its facts.
 export function indexOf(
@@ -339,7 +340,13 @@ function patchedIds(ids: readonly string[], dirty: ReadonlySet<string>, now: rea
 }
 
 // The words under a key the dirty holons touched, patched as the facts are.
-function patchedWords(words: Words, a: string, dirty: ReadonlySet<string>, orders: Orders, now: string[]): Words {
+function patchedWords(
+  words: Words,
+  a: string,
+  dirty: ReadonlySet<string>,
+  orders: Orders,
+  now: string[],
+): Words {
   const byHolon = new Map(words.byHolon);
   const removed = [...dirty].flatMap((e) => words.byHolon.get(e) ?? []);
   const added: Fact[] = [];
@@ -429,4 +436,4 @@ export function answeringAll(stores: readonly Answering[]): Answering {
 
 // The moulds a holon's types give, read from what the field knows.
 export const mouldIn = (known: ReadonlyMap<string, Known>) => (holon: Holon) =>
-  mouldOf(holon.instance.map((type) => known.get(type)?.holon.mould as Mould | undefined));
+  mouldOf(holon.instance.map((type) => known.get(type)?.holon));

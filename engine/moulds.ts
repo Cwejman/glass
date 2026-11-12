@@ -2,12 +2,14 @@
 // said in prose beside the shape the engine checks. A field is where holons
 // connect, so it carries both.
 //
-// These are pure judgements: what is wrong with a mould, and with a body held
-// against the moulds of its types. They answer in words, or with nothing.
+// This is the one home of what a type says: the mould a holon's types give together,
+// which of its references hold, what is wrong with a mould, and with a body held
+// against the moulds of its types, and which holon is a store's root. These are pure
+// judgements: they answer in words, or with nothing.
 
 import { canonical } from "../integrations/glass/canonical.ts";
+import { isId, type Holon } from "../integrations/glass/store.ts";
 import { expressionProblem } from "./expression.ts";
-import { isRef } from "./references.ts";
 
 export type Shape =
   | "string"
@@ -28,18 +30,72 @@ export type Mould = Record<string, Field>;
 
 type Values = Record<string, unknown>;
 
-// What a holon's types together say of its fields. A field any of them holds by, holds.
-export function mouldOf(types: readonly (Mould | undefined)[]): Mould {
+// What a holon's types together say of its fields, given the types as the field has
+// them; one the field lacks says nothing. A field any of them holds by, holds.
+export function mouldOf(types: readonly (Pick<Holon, "mould"> | null | undefined)[]): Mould {
   const together: Mould = {};
 
-  for (const mould of types) {
-    for (const [key, field] of Object.entries(mould ?? {})) {
+  for (const type of types) {
+    for (const [key, field] of Object.entries((type?.mould ?? {}) as Mould)) {
       together[key] = { ...field, holds: field.holds || together[key]?.holds };
     }
   }
 
   return together;
 }
+
+// ---- References
+
+// A holon connects to others from its body. A reference is written the same way
+// wherever it stands, `{ "$ref": id }`, so it is seen without knowing the type.
+export type Reference = { id: string; key: string; holds: boolean };
+
+type Ref = { $ref: string; $holds?: boolean };
+
+export const isRef = (value: unknown): value is Ref =>
+  typeof value === "object" && value !== null && isId((value as { $ref?: unknown }).$ref);
+
+// A reference holds, making the other a part, or only points. It says so itself with
+// $holds, or else its key's field in the mould says.
+export const holding = (ref: Ref, field: { holds?: boolean } | undefined) =>
+  ref.$holds ?? field?.holds === true;
+
+// Every reference in a body, in the order the body holds them, under its top key.
+export function references(body: Holon["body"], mould: Readonly<Record<string, { holds?: boolean }>> = {}) {
+  const found: Reference[] = [];
+
+  function walk(value: unknown, key: string) {
+    if (Array.isArray(value)) {
+      for (const item of value) walk(item, key);
+    } else if (isRef(value)) {
+      found.push({ id: value.$ref, key, holds: holding(value, mould[key]) });
+    } else if (typeof value === "object" && value !== null) {
+      for (const inner of Object.values(value)) walk(inner, key);
+    }
+  }
+
+  for (const [key, value] of Object.entries(body)) walk(value, key);
+
+  return found;
+}
+
+// What a holon holds, as parts.
+export const partsOf = (body: Holon["body"], mould: Mould = {}) =>
+  references(body, mould)
+    .filter(({ holds }) => holds)
+    .map(({ id }) => id);
+
+// ---- Roots
+
+// A store's root is its holon of the type store: the type so named, with a mould. It
+// holds the store's top and names what the store stands on.
+export const isRoot = (holon: Holon, typeOf: (id: string) => Holon | null | undefined) =>
+  holon.instance.some((id) => {
+    const type = typeOf(id);
+    return type?.name === "store" && type.mould !== undefined;
+  });
+
+// ---- Judging
 
 const isRecord = (value: unknown): value is Values =>
   typeof value === "object" && value !== null && !Array.isArray(value);

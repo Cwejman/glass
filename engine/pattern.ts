@@ -15,7 +15,7 @@
 
 import type { Answering, Asked, Fact, FactValue } from "./facts.ts";
 import { keyOfFact, valueKey } from "./facts.ts";
-import { isRef } from "./references.ts";
+import { isRef } from "./moulds.ts";
 import { wordsOf } from "./words.ts";
 
 export type Var = { "?": string };

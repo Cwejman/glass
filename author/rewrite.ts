@@ -21,8 +21,8 @@
 // { "mount": "a brief's id" }, a brief placed in the flow as a break, and so no longer among
 // the parts of the brief whose flow it stands in.
 
-import { mouldOf, type Mould } from "../engine/moulds.ts";
-import { partsOf, references } from "../engine/references.ts";
+import { mouldOf, partsOf, references } from "../engine/moulds.ts";
+import { handles } from "../engine/act.ts";
 import { localEngine } from "../engine/local.ts";
 import { markedWriter, proseWriter } from "./prose.ts";
 import { holonsOf, open, storeFolder, type Holon } from "../stores.ts";
@@ -48,9 +48,9 @@ const patch: Edit[] = await Bun.file(process.argv[2]!).json();
 const store = await open(await storeFolder("main"));
 const holons = await holonsOf(store);
 const byId = new Map(holons.map((holon) => [holon.id, holon]));
-const mint = store.minter();
+const handle = handles();
 
-const writer = proseWriter(holons, mint);
+const writer = proseWriter(holons, handle);
 const marked = markedWriter(writer);
 const { types, put } = writer;
 const changed = new Set<Holon>();
@@ -154,7 +154,7 @@ for (const edit of patch) {
     }
   } else if ("new" in edit) {
     const whole = byId.get(edit.under)!;
-    const id = mint();
+    const id = handle();
 
     writer.born.push({
       id,
@@ -185,8 +185,7 @@ for (const edit of patch) {
   }
 }
 
-const mouldFor = (holon: Holon) =>
-  mouldOf(holon.instance.map((type) => byId.get(type)?.mould as Mould | undefined));
+const mouldFor = (holon: Holon) => mouldOf(holon.instance.map((type) => byId.get(type)));
 
 // What a rewrite stops holding leaves the field, with all it alone held; its versions
 // stay in the history. What anything else still refers to stays, and is said so.
@@ -236,14 +235,16 @@ function nothingElseHolds() {
 
 const gone = nothingElseHolds();
 
-const born = writer.born.sort((a, b) => (a.id < b.id ? -1 : 1));
+const born = writer.born;
 
-const done = await (await localEngine({ writes: ["main"] })).commit({
+const done = await (
+  await localEngine({ writes: ["main"] })
+).commit({
   holons: [...changed, ...born],
   gone,
   says: patch.flatMap((edit) => ("says" in edit ? [edit.says] : [])).join(" ") || "Briefs rewritten",
 });
 
 for (const { id, name, instance } of born)
-  if (instance[0] === types.brief) console.log(`born: ${id} ${name}`);
+  if (instance[0] === types.brief) console.log(`born: ${done.ids[id]} ${name}`);
 console.log({ changed: changed.size, born: born.length, gone: gone.length, commit: done.commit });
