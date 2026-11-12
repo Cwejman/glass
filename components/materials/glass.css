@@ -1,7 +1,7 @@
 /* Glass's material: everything drawn is made of these names, and nothing
    else. Colours come in a light and a dark. Type is set as the rule's
    surface sets it by default: the prose in a sans, the headings in a serif
-   that grows over it by a ratio of 1.45, a line of 600px, spaced at 1.45 of
+   that stands half again over it and rises by 1.4 a level, a line of 600px, spaced at 1.45 of
    the serif's size. Each face is sized to the serif's x-height, so the sans
    reads as large as the serif would. */
 
@@ -76,23 +76,24 @@
      and the sans's, matched to it by x-height and lifted a step. */
   --base: 17px;
   --text: calc(var(--base) * 0.967);
-  --ratio: 1.45;
+  --ratio: 1.5;
   --leading: calc(var(--base) * 1.45);
   --leading-close: 1.5;
   --leading-tight: 1.2;
   --lead: 1.12em;
   --aside: 0.93em;
   --code: 0.8em;
-  /* The headings: five levels, each the ratio over the one beneath, the least
-     of them the ratio over the body. The scale is fixed, so a place's title is
-     the same size wherever one comes to it; a sixth level, beyond the five,
-     is drawn as the least. */
+  /* The headings: five levels, the least of them the ratio over the body and
+     each level above it the rise over the one beneath. The scale is fixed, so
+     a place's title is the same size wherever one comes to it; a sixth level,
+     beyond the five, is drawn as the least. */
+  --rise: 1.4;
   --h5: calc(var(--base) * var(--ratio));
   --h6: var(--h5);
-  --h4: calc(var(--h5) * var(--ratio));
-  --h3: calc(var(--h4) * var(--ratio));
-  --h2: calc(var(--h3) * var(--ratio));
-  --title: calc(var(--h2) * var(--ratio));
+  --h4: calc(var(--h5) * var(--rise));
+  --h3: calc(var(--h4) * var(--rise));
+  --h2: calc(var(--h3) * var(--rise));
+  --title: calc(var(--h2) * var(--rise));
   --heading: 1.1rem;
   --small: 0.875rem;
   --smaller: 0.75rem;
