@@ -24,6 +24,9 @@ const built = await Bun.build({
 
 if (!built.success) throw new AggregateError(built.logs, "building the client");
 
+// The faces the material names, served beside the page.
+cpSync(join(import.meta.dir, "fonts"), join(dist, "fonts"), { recursive: true });
+
 for (const [name, { folder }] of await storesHere())
   cpSync(folder, join(dist, "stores", name), { recursive: true });
 
