@@ -75,6 +75,22 @@ export function engine(attachments: readonly Attachment[] = []): Engine & { fiel
     listeners.changed(changed);
   }
 
+  // A commit's one try: what was cut short settled, the change planned over the field as
+  // it stands, refused where it may not be made, else written.
+  async function committed(change: Change) {
+    const { field: now, waiting } = await settled(field);
+    become(now);
+
+    const plan = await planIn(field, change);
+    const held = plan.stores.find(({ key }) => waiting.has(key));
+    if (held) throw new Error(`${held.key} refuses writes: ${waiting.get(held.key)}`);
+    if (plan.problems.length) throw refusal(plan.problems, change);
+
+    const written = await write(field, plan, change);
+    become(written.field, touchedBy(plan.stores, change));
+    return written;
+  }
+
   return {
     attach: (attachment) =>
       inTurn(async () => {
@@ -88,22 +104,16 @@ export function engine(attachments: readonly Attachment[] = []): Engine & { fiel
 
     judge: async (change) => (await planIn(field, change)).problems,
 
+    // A commit, once more where a store it writes moved under it since it was read,
+    // planned again over the store as it now stands.
     commit: (change) =>
       inTurn(async () => {
-        const { field: now, waiting } = await settled(field);
-        become(now);
-
-        const plan = await planIn(field, change);
-        const held = plan.stores.find(({ key }) => waiting.has(key));
-        if (held) throw new Error(`${held.key} refuses writes: ${waiting.get(held.key)}`);
-
-        if (plan.problems.length) throw refusal(plan.problems, change);
-
-        const written = await write(field, plan, change);
-        become(written.field, touchedBy(plan.stores, change));
-        if ("failed" in written) throw written.failed;
-
-        return written.committed;
+        for (let tries = 1; ; tries++) {
+          const before = field;
+          const written = await committed(change);
+          if (!("failed" in written)) return written.committed;
+          if (tries > 1 || field === before) throw written.failed;
+        }
       }),
 
     subscribe: (expression, listener) => listeners.add(expression, listener),
