@@ -16,6 +16,8 @@ export type Judged = {
   // The stores keeping each id of the change now, and each that goes.
   kept: ReadonlyMap<string, readonly string[]>;
   readOnly: ReadonlySet<string>;
+  // The types each store admits, where its shape names any.
+  admits: ReadonlyMap<string, ReadonlySet<string>>;
   // The holons of the field the change refers to, as types or by reference, and those
   // of the field that refer to what goes.
   referred: ReadonlyMap<string, Holon>;
@@ -34,6 +36,7 @@ const rules = {
   typesHaveMoulds,
   bodyFits,
   readOnlyRefuses,
+  storesAdmit,
   referencesResolve,
   nothingRefersToWhatGoes,
 };
@@ -136,6 +139,19 @@ function bodyFits(seen: Seen) {
 
 // A holon kept in a store only read cannot be changed there, nothing new goes into one,
 // and nothing is taken out of one.
+// A store whose shape names the types it admits takes no holon of another type.
+function storesAdmit({ landing, admits }: Seen): Found[] {
+  return landing.flatMap(({ holon, stores }) =>
+    stores.flatMap((key) => {
+      const admitted = admits.get(key);
+      const other = admitted && holon.instance.find((type) => !admitted.has(type));
+      return other
+        ? [{ id: holon.id, says: `${key} admits only the types its shape names, and not ${other}` }]
+        : [];
+    }),
+  );
+}
+
 function readOnlyRefuses({ landing, gone, kept, readOnly }: Seen): Found[] {
   const onlyRead = (keys: readonly string[]) => {
     const read = keys.filter((key) => readOnly.has(key));

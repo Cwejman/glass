@@ -1067,8 +1067,16 @@ describe("a store moved under a commit", () => {
   test("is taken as it now stands, and the commit made once more", async () => {
     const files = memoryFiles();
     const empty = await openStore(files);
-    const typed = await commit(empty, {
-      holons: [{ id: idAt(1_000, 0), instance: [], name: "note", mould: { text: { says: "What it says.", shape: "string" } }, body: {} }],
+    await commit(empty, {
+      holons: [
+        {
+          id: idAt(1_000, 0),
+          instance: [],
+          name: "note",
+          mould: { text: { says: "What it says.", shape: "string" } },
+          body: {},
+        },
+      ],
       says: "a type",
     });
     const ours = await openStore(files);
@@ -1076,9 +1084,15 @@ describe("a store moved under a commit", () => {
 
     // Another writer moves the store after this engine opened it.
     const theirs = await openStore(files);
-    await commit(theirs, { holons: [{ id: idAt(2_000, 0), instance: [typed.ids?.[0] ?? idAt(1_000, 0)], body: { text: "theirs" } }], says: "theirs" });
+    await commit(theirs, {
+      holons: [{ id: idAt(2_000, 0), instance: [idAt(1_000, 0)], body: { text: "theirs" } }],
+      says: "theirs",
+    });
 
-    const done = await engine.commit({ holons: [{ id: "~1", instance: [idAt(1_000, 0)], body: { text: "ours" } }], says: "ours" });
+    const done = await engine.commit({
+      holons: [{ id: "~1", instance: [idAt(1_000, 0)], body: { text: "ours" } }],
+      says: "ours",
+    });
     expect(Object.keys(done.ids)).toEqual(["~1"]);
     expect((await engine.read({ named: "note" })).length).toBe(1);
     expect(await engine.read({ holon: idAt(2_000, 0) })).not.toBeNull();

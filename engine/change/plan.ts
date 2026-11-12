@@ -33,6 +33,8 @@ export type Known = {
   referring: readonly Holon[];
   // The root of the store a holon nothing holds would go to, where one would.
   root?: Holon;
+  // The types each written store admits, where its shape names any.
+  admits: ReadonlyMap<string, ReadonlySet<string>>;
 };
 
 // A holon of the change as it lands: the handle it came under, if it is new, the stores
@@ -108,6 +110,7 @@ const judged = (known: Known, landing: readonly Landing[], gone: readonly string
     gone: [...gone],
     kept: known.kept,
     readOnly: new Set(known.attached.filter(({ write }) => !write).map(({ key }) => key)),
+    admits: known.admits,
     referred: known.referred,
     referring: known.referring,
   });
