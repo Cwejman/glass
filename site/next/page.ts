@@ -13,11 +13,9 @@ import type { Store } from "../../stores/store.ts";
 
 const page = document.getElementById("glass")!;
 
-// Built next to the page from engine/next/browser.ts, stores/strata/browser.ts and
-// stores/strata/compactor-browser.ts.
+// Built next to the page from engine/next/browser.ts and stores/strata/browser.ts.
 const engineCode = new URL("./engine.js", import.meta.url);
 const strataCode = new URL("./strata.js", import.meta.url);
-const compactorCode = new URL("./compactor.js", import.meta.url);
 
 const published = (name: string) => ({
   folder: name,
@@ -31,8 +29,6 @@ try {
   for (const name of ["main", "glass", "paper", "paper-readings"])
     await engine.mount(name, await runtime.run<Store>(strataCode, published(name)));
 
-  // The home is written, so its compactor runs beside it.
-  await runtime.run(compactorCode, { folder: "home" });
   await engine.mount("home", await runtime.run<Store>(strataCode, { folder: "home" }), { write: true });
 
   draw(engine, page, "@glass:entry");

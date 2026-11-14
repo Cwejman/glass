@@ -3,7 +3,6 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Act, Head, Holon, Question, Store } from "../store.ts";
-import { compactor } from "./compactor.ts";
 import { rootAt } from "./root.ts";
 import { folderStorage } from "./storage/folder.ts";
 import { strata } from "./strata.ts";
@@ -162,7 +161,6 @@ describe("compaction", () => {
   test("layers are merged into the trees as acts come, and every head still reads as it did", async () => {
     const waiting = 16;
     const { storage, store } = opened();
-    const compacting = compactor(storage);
     let head: Head | null = null;
     const heads: Head[] = [];
 
@@ -185,7 +183,6 @@ describe("compaction", () => {
       expect(await read(store, latest, { said: { a: "text", word: `word${n}` } })).toHaveLength(1);
     expect(await read(store, heads[3]!, { holon: id(10) })).toEqual([]);
     expect(await read(store, heads[3]!, { holon: id(3) })).toHaveLength(1);
-    await compacting.stop();
   });
 });
 
@@ -198,16 +195,18 @@ test("a subscriber is told the head, and every move of it", async () => {
   await new Promise((resolve) => setTimeout(resolve, 150));
   stop();
 
-  expect(told).toEqual([null, head]);
+  // Compaction moves the head too, to a root of the same act, and a folder may report
+  // only the last of two moves close together.
+  expect(told[0]).toBeNull();
+  expect(told.length).toBeGreaterThan(1);
+  expect(told.slice(1).every((each) => each?.act === head.act)).toBe(true);
 });
 
-test("on a machine, strata and its compactor run on workers side by side", async () => {
+test("on a worker, strata compacts what its acts lay", async () => {
   const folder = mkdtempSync(join(tmpdir(), "glass-strata-"));
   made.push(folder);
   const { workers } = await import("../../runtime/runtime.ts");
-  const runtime = workers();
-  await runtime.run(new URL("./compactor-machine.ts", import.meta.url), { folder });
-  const store = await runtime.run<Store>(new URL("./machine.ts", import.meta.url), { folder });
+  const store = await workers().run<Store>(new URL("./machine.ts", import.meta.url), { folder });
 
   let head: Head | null = null;
   for (let n = 0; n < 5; n++)
@@ -219,21 +218,40 @@ test("on a machine, strata and its compactor run on workers side by side", async
   expect(await read(store, head!, { holon: id(4) })).toHaveLength(1);
 });
 
-test("a compactor disconnected stops compacting", async () => {
-  const folder = mkdtempSync(join(tmpdir(), "glass-strata-"));
-  made.push(folder);
-  const { workers } = await import("../../runtime/runtime.ts");
-  const { disconnect } = await import("../../wire/wire.ts");
-  const compacting = await workers().run(new URL("./compactor-machine.ts", import.meta.url), { folder });
+test("compaction waits while a read is under way", async () => {
+  const { storage } = opened();
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => (release = resolve));
+  let holding = false;
 
-  const storage = folderStorage(folder);
-  const first = await accepted(strata(storage), act(null, [note]));
-  await new Promise((resolve) => setTimeout(resolve, 300));
-  expect((await rootAt(storage, (await storage.head())!)).pending).toHaveLength(0);
+  // A storage that holds the first read asked of it once holding, so that read stays
+  // under way until released.
+  const slow = {
+    ...storage,
+    read: async (...args: Parameters<typeof storage.read>) => {
+      if (holding) {
+        holding = false;
+        await held;
+      }
+      return storage.read(...args);
+    },
+  };
+  const store = strata(slow);
+  const first = await accepted(store, act(null, [note, whole]));
+  await new Promise((resolve) => setTimeout(resolve, 100));
 
-  disconnect(compacting);
-  await new Promise((resolve) => setTimeout(resolve, 300));
-  await accepted(strata(storage), act(first, [whole]));
-  await new Promise((resolve) => setTimeout(resolve, 300));
-  expect((await rootAt(storage, (await storage.head())!)).pending).toHaveLength(1);
+  // The whole's version has not been read yet, so reading it reaches the storage.
+  holding = true;
+  const reading = store.read(first, { holon: id(2) });
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  await accepted(store, act(first, [{ ...note, body: { text: "again" } }]));
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  const whileReading = (await rootAt(storage, (await storage.head())!)).pending.length;
+
+  release();
+  await reading;
+  await new Promise((resolve) => setTimeout(resolve, 200));
+  const afterwards = (await rootAt(storage, (await storage.head())!)).pending.length;
+
+  expect([whileReading, afterwards]).toEqual([1, 0]);
 });

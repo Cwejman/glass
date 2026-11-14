@@ -3,7 +3,7 @@
 // says, writing the versions that commit wrote and letting go of what it took out.
 // References are marked $holds where they hold, as each holon's types say, the types read
 // as they stand now in every store of this repository. Each act is compacted before the
-// next, since no compactor runs beside the conversion.
+// next is offered, so the conversion never runs ahead of its trees.
 //
 //   bun stores/strata/convert.ts <store name> <folder for the strata>
 
@@ -16,7 +16,7 @@ import { folderStorage } from "./storage/folder.ts";
 import { compact } from "./compact.ts";
 import { strata } from "./strata.ts";
 
-export async function convert(name: string, into: string) {
+export async function convert(name: string, into: string, converted: (acts: number) => void = () => {}) {
   const found = await storesHere();
   const old = found.get(name)?.store;
   if (!old) throw new Error(`no store here is called ${name}`);
@@ -27,6 +27,7 @@ export async function convert(name: string, into: string) {
   const storage = folderStorage(into);
   const store = strata(storage);
   let head: Head | null = null;
+  let done = 0;
 
   for (const { line } of entries) {
     const versions = line.held
@@ -52,7 +53,8 @@ export async function convert(name: string, into: string) {
     if (!("accepted" in reply))
       throw new Error(`the act ${act.hash} was not accepted: ${JSON.stringify(reply)}`);
     head = reply.accepted;
-    await compact(storage);
+    while (await compact(storage));
+    converted(++done);
   }
 
   return { acts: entries.length, head };
@@ -111,6 +113,8 @@ function ownBlocks({ blocks, own }: { blocks: { hash: string }[]; own?: string[]
 if (import.meta.main) {
   const [name, into] = process.argv.slice(2);
   const started = performance.now();
-  const { acts, head } = await convert(name!, into!);
+  const { acts, head } = await convert(name!, into!, (done) => {
+    if (done % 25 === 0) console.log(`${done} acts, ${((performance.now() - started) / 1000).toFixed(1)} s`);
+  });
   console.log({ acts, head, seconds: ((performance.now() - started) / 1000).toFixed(1) });
 }
