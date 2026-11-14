@@ -1,13 +1,17 @@
-// What every kind of store gives an engine: the contract the engine stands on.
+// The contract every kind of store gives an engine.
 //
-// A store is whole in itself. It keeps its holons, their history and its index under a
-// head, and each head names the act that made it and the head before it. Everything it
-// is rests where it is kept. To an engine a store is three functions: read the store as
-// of a head, offer an act, and subscribe to be told whenever its head moves, whoever
-// moved it. Each is asynchronous, none blocking.
+// A store is mounted by an engine, which calls it; it never calls the engine. It may run
+// in the same thread or elsewhere, reached over the wire (wire/wire.ts), and the engine
+// uses it the same way.
+//
+// A store is whole in itself: it keeps its holons, their history and their index under
+// a head, and each head names the act that made it and the head before. It has three
+// methods: read as of a head, offer an act, and subscribe to moves of its head, whoever
+// moves it. All are async.
 
-// A holon: its id, what it is an instance of, its name, its mould if it is a type, and
-// its body, where {"$ref": id} refers to another and says whether it holds it.
+// A holon: its id, the types it is an instance of, its name, its mould if it is a type,
+// and its body. In a body, {"$ref": id} refers to another holon and says whether it
+// holds it.
 export type Holon = {
   id: string;
   instance: string[];
@@ -16,21 +20,20 @@ export type Holon = {
   body: Record<string, unknown>;
 };
 
-// Where a store stands: the act it last took, and the page reading it starts from. A
-// store can be read as of any head it has stood at; its latest is where it stands now.
+// A point in a store's history: the act that made it, and the root page a read starts
+// from. A store can be read at any head it has had; the latest is its current state.
 export type Head = { act: string; page: string };
 
 // ---- Reading
 
-// A fact: one thing a holon says, under a key; a clause asks for facts with any of the
-// three known.
+// A fact: one value a holon has under a key. A clause asks for facts by any of the three.
 export type Value = string | number | boolean | { $ref: string };
 export type Fact = { e: string; a: string; v: Value };
 export type Clause = { e?: string; a?: string; v?: Value };
 
-// What may be read as of a head: a holon by its id, or by its address, a whole and a
-// name; the facts a clause asks for, or the holons saying a word under a key; a holon's
-// versions; and the acts that came before the head.
+// What a read can ask, as of a head: a holon by id, or by address, a whole and a name;
+// the facts matching a clause; the holons containing a word under a key; a holon's
+// versions; or the acts before the head.
 export type Question =
   | { holon: string }
   | { address: [whole: string, name: string] }
@@ -41,16 +44,16 @@ export type Question =
 
 // ---- Writing
 
-// One rule broken, naming the holon in the caller's words.
+// One broken rule, naming the holon as the caller named it.
 export type Problem = { rule: string; id?: string; says: string };
 
-// What an act touches: the holons it writes and lets go, and the addresses it places, a
-// whole and a name. Two acts meet where these meet, and only there.
+// What an act touches: the holons it writes or removes, and the addresses, a whole and
+// a name, it places. Two acts conflict only where these overlap.
 export type Touches = { ids: string[]; addresses: [whole: string, name: string][] };
 
-// An act, as it is offered to one store: judged over a head, its ids minted, each
-// reference saying whether it holds. An act across stores is one act in each, sharing
-// its hash and naming the others.
+// An act as offered to one store: judged against a head, its ids minted, each reference
+// saying whether it holds. An act across stores is offered to each, with the same hash,
+// naming the others.
 export type Act = {
   hash: string;
   at: string;
@@ -62,19 +65,20 @@ export type Act = {
   alongside: string[];
 };
 
-// What a store says to an act: accepted, at its new head; refused, every problem at
-// once; or changed, since what it touches changed after it was judged, so it is judged
-// again.
+// A store's reply to an offer: accepted, with the new head; refused, with every problem;
+// or changed, because something it touches changed after it was judged, so it must be
+// judged again.
 export type Reply = { accepted: Head } | { refused: Problem[] } | { changed: Head };
 
 // ---- A store
 
-// A store, as an engine is given it: three functions, whatever keeps it and wherever it
-// runs. Whoever starts a store makes these and hands them on.
+// A store's methods, implemented by each kind of store, such as strata(storage). A read
+// returns bytes in the store's own format, lines of JSON, one per holon, fact, version or
+// act, decoded only by whoever uses them.
 export type Store = {
-  read(head: Head, question: Question): Promise<unknown>;
+  read(head: Head, question: Question): Promise<Uint8Array>;
   offer(act: Act): Promise<Reply>;
-  // Subscribed to: the listener is given where the store stands now, then every later
-  // move of its head; what comes back is how to stop.
+  // The listener is called with the current head, then with every later one. Returns the
+  // function that unsubscribes.
   subscribe(listener: (head: Head | null) => void): Promise<() => void>;
 };
