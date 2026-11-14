@@ -14,7 +14,11 @@ import type { Act, Head, Holon } from "../store.ts";
 import { folderStorage } from "./storage/folder.ts";
 import { strata } from "./strata.ts";
 
-export async function convert(name: string, into: string, converted: (acts: number) => void = () => {}) {
+// Time spent apart: reading the old format and making each act from it, and strata taking
+// the acts.
+export type Spent = { acts: number; reading: number; offering: number };
+
+export async function convert(name: string, into: string, converted: (spent: Spent) => void = () => {}) {
   const found = await storesHere();
   const old = found.get(name)?.store;
   if (!old) throw new Error(`no store here is called ${name}`);
@@ -24,9 +28,11 @@ export async function convert(name: string, into: string, converted: (acts: numb
   const placed = entries.find(({ line }) => line.conversion)?.line.conversion?.blocks ?? [];
   const store = strata(folderStorage(into));
   let head: Head | null = null;
-  let done = 0;
+  const spent: Spent = { acts: 0, reading: 0, offering: 0 };
 
   for (const { line } of entries) {
+    const reading = performance.now();
+
     // Each block of the old store read once for the act, however many of its holons the
     // act writes, and one at a time.
     const blocks = new Map<string, Map<string, OldVersion>>();
@@ -50,14 +56,20 @@ export async function convert(name: string, into: string, converted: (acts: numb
       alongside: line.stores ?? [],
     };
 
+    const offering = performance.now();
+    spent.reading += offering - reading;
+
     const reply = await store.offer(act);
     if (!("accepted" in reply))
       throw new Error(`the act ${act.hash} was not accepted: ${JSON.stringify(reply)}`);
     head = reply.accepted;
-    converted(++done);
+
+    spent.offering += performance.now() - offering;
+    spent.acts++;
+    converted(spent);
   }
 
-  return { acts: entries.length, head };
+  return { ...spent, head };
 
   // The versions in a block of the old store, each line one version.
   async function blockOf(hash: string) {
@@ -112,9 +124,12 @@ function ownBlocks({ blocks, own }: { blocks: { hash: string }[]; own?: string[]
 
 if (import.meta.main) {
   const [name, into] = process.argv.slice(2);
-  const started = performance.now();
-  const { acts, head } = await convert(name!, into!, (done) => {
-    if (done % 25 === 0) console.log(`${done} acts, ${((performance.now() - started) / 1000).toFixed(1)} s`);
+  const seconds = (ms: number) => `${(ms / 1000).toFixed(1)} s`;
+  const said = ({ acts, reading, offering }: Spent) =>
+    `${acts} acts: reading the old format ${seconds(reading)}, strata ${seconds(offering)}`;
+
+  const spent = await convert(name!, into!, (spent) => {
+    if (spent.acts % 25 === 0) console.log(said(spent));
   });
-  console.log({ acts, head, seconds: ((performance.now() - started) / 1000).toFixed(1) });
+  console.log(said(spent), "— done");
 }

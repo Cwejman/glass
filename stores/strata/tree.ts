@@ -11,6 +11,7 @@
 // Keys are strings, made by keyOf from parts, so that one prefix of parts finds every key
 // beginning with it. They sort for equality and prefixes, not for numeric ranges.
 
+import { remembered } from "./remembered.ts";
 import type { Storage } from "./storage/storage.ts";
 
 export type Pointer = [segment: string, offset: number, length: number];
@@ -184,6 +185,9 @@ function resolved(pointer: Pointer, segment: string): Pointer {
   return pointer[0] === "" ? [segment, pointer[1], pointer[2]] : pointer;
 }
 
-async function nodeAt(storage: Storage, [segment, offset, length]: Pointer): Promise<Node> {
-  return JSON.parse(decoder.decode(await storage.read(segment, offset, length)));
+// A node read once is kept: the nodes near a tree's root are read on every lookup.
+function nodeAt(storage: Storage, [segment, offset, length]: Pointer): Promise<Node> {
+  return remembered(`node ${segment} ${offset}`, length, async () =>
+    JSON.parse(decoder.decode(await storage.read(segment, offset, length))),
+  );
 }

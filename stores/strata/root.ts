@@ -30,7 +30,7 @@ const decoder = new TextDecoder();
 const encoder = new TextEncoder();
 
 export function rootAt(storage: Storage, name: string): Promise<Root> {
-  return remembered(`root ${name}`, async () => JSON.parse(decoder.decode(await storage.read(name))));
+  return remembered(`root ${name}`, 1024, async () => JSON.parse(decoder.decode(await storage.read(name))));
 }
 
 export async function headAt(storage: Storage, name: string): Promise<Head> {

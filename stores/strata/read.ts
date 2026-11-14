@@ -42,8 +42,9 @@ export async function answer(storage: Storage, head: Head, question: Question): 
 // A tree's value for a key as of a root, or undefined where it has none.
 export async function found(storage: Storage, root: Root, tree: Tree, key: string) {
   for (const pending of [...root.pending].reverse()) {
-    const change = (await pendingEntries(storage, pending))[tree]?.find(([each]) => each === key);
-    if (change) return change[1] === null ? undefined : change[1];
+    const changes = (await pendingEntries(storage, pending))[tree] ?? [];
+    const at = firstAtOrAfter(changes, key);
+    if (changes[at]?.[0] === key) return changes[at]![1] === null ? undefined : changes[at]![1];
   }
 
   return get(storage, root.trees[tree] ?? null, key);
@@ -53,16 +54,35 @@ export async function found(storage: Storage, root: Root, tree: Tree, key: strin
 export async function foundBetween(storage: Storage, root: Root, tree: Tree, from: string, to: string) {
   const all = new Map(await between(storage, root.trees[tree] ?? null, from, to));
 
-  for (const pending of root.pending)
-    for (const [key, value] of (await pendingEntries(storage, pending))[tree] ?? [])
-      if (key >= from && key < to) value === null ? all.delete(key) : all.set(key, value);
+  for (const pending of root.pending) {
+    const changes = (await pendingEntries(storage, pending))[tree] ?? [];
+    for (let at = firstAtOrAfter(changes, from); at < changes.length && changes[at]![0] < to; at++) {
+      const [key, value] = changes[at]!;
+      value === null ? all.delete(key) : all.set(key, value);
+    }
+  }
 
   return [...all].sort(([a], [b]) => (a < b ? -1 : 1)) as Entry[];
 }
 
+// Where a key is, or would be, in a layer's changes, which are sorted by key: found by
+// halving, since a layer may hold tens of thousands.
+function firstAtOrAfter(changes: [string, unknown][], key: string) {
+  let low = 0;
+  let high = changes.length;
+
+  while (low < high) {
+    const middle = (low + high) >> 1;
+    if (changes[middle]![0] < key) low = middle + 1;
+    else high = middle;
+  }
+
+  return low;
+}
+
 // A pending layer's entries, its versions' pointers made to name the layer.
 export function pendingEntries(storage: Storage, { layer, entries: [offset, length] }: Pending) {
-  return remembered(`entries ${layer} ${offset}`, async () => {
+  return remembered(`entries ${layer} ${offset}`, length, async () => {
     const changes: Changes = JSON.parse(decoder.decode(await storage.read(layer, offset, length)));
     for (const change of changes.ids ?? []) change[1] = within(change[1] as Pointer | null, layer);
     return changes;
@@ -83,7 +103,7 @@ export async function wholesOf(storage: Storage, root: Root, id: string): Promis
 }
 
 function versionBytes(storage: Storage, [layer, offset, length]: Pointer) {
-  return remembered(`version ${layer} ${offset}`, () => storage.read(layer, offset, length));
+  return remembered(`version ${layer} ${offset}`, length, () => storage.read(layer, offset, length));
 }
 
 async function holonLines(storage: Storage, root: Root, ids: string[]) {
