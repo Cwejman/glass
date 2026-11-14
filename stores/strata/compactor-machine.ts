@@ -1,6 +1,7 @@
 // Entry for running strata's compactor on a machine, over a .glass folder, as a module a
-// runtime starts beside the store. It stops watching once nothing is connected to it:
-// in Bun, a worker that closes itself keeps its open handles running.
+// runtime starts beside the store, started by whoever starts the store. It stops
+// watching once nothing is connected to it: in Bun, a worker that closes itself keeps
+// its open handles running.
 
 import { noLongerServed } from "../../wire/wire.ts";
 import { compactor } from "./compactor.ts";

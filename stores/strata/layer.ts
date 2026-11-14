@@ -1,14 +1,15 @@
 // A layer: the blob one act is written as. Its first line is the act: its hash, when it
 // was made, what it says, what it lets go and touches, and the stores it was offered to
 // alongside. Then one line for each holon the act writes, its new version, naming where
-// the version before it lies. Its last line is the act's entries for every tree, sorted,
-// including those that take out what the holons' versions before said.
+// the version before it lies. Its last line is the act's entries for every tree, sorted:
+// only what changed, each fact the old versions said that the new ones do not taken
+// out, and each fact only the new ones say put in.
 //
 // A version's pointer into its own layer leaves the layer empty, as a tree's pointers into
 // their own segment do; it is resolved when the layer's entries are read.
 
 import type { Act, Head, Holon } from "../store.ts";
-import { factEntries, heldBy, type Changes, type Tree } from "./entries.ts";
+import { factChanges, heldBy, type Changes, type Tree } from "./entries.ts";
 import { holonAt, wholesOf, type Version } from "./read.ts";
 import { rootAt, rootBytes, type Pending, type Root } from "./root.ts";
 import type { Storage } from "./storage/storage.ts";
@@ -46,8 +47,7 @@ export async function layerOf(storage: Storage, at: Head | null, act: Act) {
     const length = encoder.encode(line).length;
 
     changes.add({ ids: [[keyOf([holon.id]), ["", offset, length]]] });
-    if (old) changes.add(factEntries(old, null));
-    changes.add(factEntries(holon));
+    changes.add(factChanges(old ?? null, holon));
 
     lines.push(line);
     offset += length + 1;
@@ -57,7 +57,7 @@ export async function layerOf(storage: Storage, at: Head | null, act: Act) {
     const old = before.get(id);
     if (!old) continue;
     changes.add({ ids: [[keyOf([id]), null]] });
-    changes.add(factEntries(old, null));
+    changes.add(factChanges(old, null));
   }
 
   changes.add(await addressChanges(storage, root, act, before));

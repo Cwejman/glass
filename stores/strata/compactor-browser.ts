@@ -1,5 +1,6 @@
 // Entry for running strata's compactor in a browser Worker, beside a store the reader
-// writes. It stops watching once nothing is connected to it.
+// writes, started by whoever starts the store. It stops watching once nothing is
+// connected to it.
 
 import { noLongerServed } from "../../wire/wire.ts";
 import { compactor } from "./compactor.ts";

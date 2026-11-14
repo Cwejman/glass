@@ -33,20 +33,41 @@ export function factsOf(holon: Holon): Fact[] {
   return facts;
 }
 
-// The entries a holon's facts make, in every tree but ids and addresses, each set to
-// true; the same keys set to null remove them.
-export function factEntries(holon: Holon, value: true | null = true): Changes {
-  const changes: Changes = { attribute: [], value: [], refers: [], words: [] };
+// What a holon's new version changes in the trees of facts and words, against the
+// version before it: the keys only the old one had are removed, set to null; the keys
+// only the new one has are set to true; keys both have are left as they are. A holon
+// written for the first time has no version before; one let go has none after.
+export function factChanges(before: Holon | null, after: Holon | null): Changes {
+  const [was, is] = [keysOf(before), keysOf(after)];
+  const changes: Changes = {};
 
-  for (const { e, a, v } of factsOf(holon)) {
-    changes.attribute!.push([keyOf([a, e, v]), value]);
-    changes.value!.push([keyOf([a, v, e]), value]);
-    if (isRef(v)) changes.refers!.push([keyOf([v.$ref, a, e]), value]);
-    if (typeof v === "string")
-      for (const word of wordsOf(v)) changes.words!.push([keyOf([a, word, e]), value]);
+  for (const tree of ["attribute", "value", "refers", "words"] as const) {
+    const removed = [...was[tree]].filter((key) => !is[tree].has(key)).map((key): Change => [key, null]);
+    const added = [...is[tree]].filter((key) => !was[tree].has(key)).map((key): Change => [key, true]);
+    if (removed.length || added.length) changes[tree] = [...removed, ...added];
   }
 
   return changes;
+}
+
+// Every key a holon's facts and words make, tree by tree.
+function keysOf(holon: Holon | null) {
+  const keys = {
+    attribute: new Set<string>(),
+    value: new Set<string>(),
+    refers: new Set<string>(),
+    words: new Set<string>(),
+  };
+  if (!holon) return keys;
+
+  for (const { e, a, v } of factsOf(holon)) {
+    keys.attribute.add(keyOf([a, e, v]));
+    keys.value.add(keyOf([a, v, e]));
+    if (isRef(v)) keys.refers.add(keyOf([v.$ref, a, e]));
+    if (typeof v === "string") for (const word of wordsOf(v)) keys.words.add(keyOf([a, word, e]));
+  }
+
+  return keys;
 }
 
 // The words of a text, as a search finds them: letters and digits only, lower case,

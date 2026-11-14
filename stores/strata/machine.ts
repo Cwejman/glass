@@ -1,25 +1,18 @@
 // Entry for running strata on a machine over a .glass folder: as a module a runtime
-// starts, given the folder, or as a process that hosts it on a Unix socket. Either way
-// its compactor is started beside it, on a worker of its own, and is disconnected once
-// nothing is connected to the store, so its worker ends too: Bun leaves a worker's own
-// workers running when the worker ends.
+// starts, given the folder; or as a process of its own, which hosts it on a Unix socket
+// and, as its own orchestrator, starts its compactor beside it on a worker.
 //
 //   bun stores/strata/machine.ts .glass /tmp/glass/main.sock
 
 import { workers } from "../../runtime/runtime.ts";
 import { host } from "../../wire/socket.ts";
-import { disconnect, noLongerServed } from "../../wire/wire.ts";
 import { folderStorage } from "./storage/folder.ts";
 import { strata } from "./strata.ts";
 
-const compactorCode = new URL("./compactor-machine.ts", import.meta.url);
+export default ({ folder }: { folder: string }) => strata(folderStorage(folder));
 
-export default async function started({ folder }: { folder: string }) {
-  const compacting = await workers().run(compactorCode, { folder });
-  const store = strata(folderStorage(folder));
-
-  noLongerServed(store).then(() => disconnect(compacting));
-  return store;
+if (import.meta.main) {
+  const [folder, address] = process.argv.slice(2);
+  await workers().run(new URL("./compactor-machine.ts", import.meta.url), { folder });
+  host(address!, strata(folderStorage(folder!)));
 }
-
-if (import.meta.main) host(process.argv[3]!, await started({ folder: process.argv[2]! }));

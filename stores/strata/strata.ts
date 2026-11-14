@@ -17,7 +17,7 @@
 //
 // Each place strata runs has an entry that makes its storage: browser.ts over OPFS, with
 // pages held in memory, and machine.ts over a folder. Compaction is not among the store's
-// methods: the entry starts a compactor beside it (compactor.ts).
+// methods: whoever starts a store starts its compactor beside it (compactor.ts).
 
 import type { Act, Head, Question, Reply, Store } from "../store.ts";
 import { changedSince } from "./changed.ts";

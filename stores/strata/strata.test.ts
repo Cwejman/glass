@@ -201,11 +201,13 @@ test("a subscriber is told the head, and every move of it", async () => {
   expect(told).toEqual([null, head]);
 });
 
-test("on a machine, strata runs with its compactor on a worker beside it", async () => {
+test("on a machine, strata and its compactor run on workers side by side", async () => {
   const folder = mkdtempSync(join(tmpdir(), "glass-strata-"));
   made.push(folder);
   const { workers } = await import("../../runtime/runtime.ts");
-  const store = await workers().run<Store>(new URL("./machine.ts", import.meta.url), { folder });
+  const runtime = workers();
+  await runtime.run(new URL("./compactor-machine.ts", import.meta.url), { folder });
+  const store = await runtime.run<Store>(new URL("./machine.ts", import.meta.url), { folder });
 
   let head: Head | null = null;
   for (let n = 0; n < 5; n++)
@@ -217,20 +219,21 @@ test("on a machine, strata runs with its compactor on a worker beside it", async
   expect(await read(store, head!, { holon: id(4) })).toHaveLength(1);
 });
 
-test("once nothing is connected to strata on a worker, its compactor ends too", async () => {
+test("a compactor disconnected stops compacting", async () => {
   const folder = mkdtempSync(join(tmpdir(), "glass-strata-"));
   made.push(folder);
   const { workers } = await import("../../runtime/runtime.ts");
   const { disconnect } = await import("../../wire/wire.ts");
-  const running = await workers().run<Store>(new URL("./machine.ts", import.meta.url), { folder });
-
-  const first = await accepted(running, act(null, [note]));
-  disconnect(running);
-  await new Promise((resolve) => setTimeout(resolve, 300));
+  const compacting = await workers().run(new URL("./compactor-machine.ts", import.meta.url), { folder });
 
   const storage = folderStorage(folder);
-  const waitingBefore = (await rootAt(storage, (await storage.head())!)).pending.length;
+  const first = await accepted(strata(storage), act(null, [note]));
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  expect((await rootAt(storage, (await storage.head())!)).pending).toHaveLength(0);
+
+  disconnect(compacting);
+  await new Promise((resolve) => setTimeout(resolve, 300));
   await accepted(strata(storage), act(first, [whole]));
   await new Promise((resolve) => setTimeout(resolve, 300));
-  expect((await rootAt(storage, (await storage.head())!)).pending).toHaveLength(waitingBefore + 1);
+  expect((await rootAt(storage, (await storage.head())!)).pending).toHaveLength(1);
 });
