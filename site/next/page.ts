@@ -17,7 +17,10 @@ const page = document.getElementById("glass")!;
 const engineCode = new URL("./engine.js", import.meta.url);
 const strataCode = new URL("./strata.js", import.meta.url);
 
-const published = (name: string) => ({ name, served: new URL(`./stores/${name}/`, location.href).href });
+const published = (name: string) => ({
+  folder: name,
+  from: new URL(`./stores/${name}/`, location.href).href,
+});
 
 try {
   const runtime = workers();
@@ -26,7 +29,7 @@ try {
   for (const name of ["main", "glass", "paper", "paper-readings"])
     await engine.mount(name, await runtime.run<Store>(strataCode, published(name)));
 
-  await engine.mount("home", await runtime.run<Store>(strataCode, { name: "home" }), { write: true });
+  await engine.mount("home", await runtime.run<Store>(strataCode, { folder: "home" }), { write: true });
 
   draw(engine, page, "@glass:entry");
 } catch (problem) {
