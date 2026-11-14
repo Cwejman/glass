@@ -1,10 +1,11 @@
-// The contract every storage gives a store: where its bytes rest. A storage knows
-// nothing of holons or acts. It keeps blobs, each named by the SHA-256 of its bytes and
-// never changed once written, and one head: the name of a blob, which only moves.
+// Where strata's bytes rest, in whatever place it runs: the one thing that differs
+// between a machine and a browser. A storage knows nothing of holons or acts. It keeps
+// blobs, each named by the SHA-256 of its bytes and never changed once written, and one
+// head: the name of a blob, which only moves.
 //
 // The head moves only if it still names what the writer last saw, so of writers racing,
 // one wins and the others read the new head and try again. Blobs can be read in part,
-// at an offset, so a store reads the page it needs, not the whole blob.
+// at an offset, so strata reads the page it needs, not the whole blob.
 //
 // folder.ts keeps a storage in a folder on a machine.
 

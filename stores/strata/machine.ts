@@ -3,7 +3,7 @@
 //
 //   bun stores/strata/machine.ts .glass /tmp/glass/main.sock
 
-import { folderStorage } from "../../storage/folder.ts";
+import { folderStorage } from "./storage/folder.ts";
 import { host } from "../../wire/socket.ts";
 import { strata } from "./strata.ts";
 

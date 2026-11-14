@@ -19,7 +19,7 @@
 // pages held in memory, and machine.ts over a folder.
 
 import type { Act, Head, Question, Reply, Store, Touches } from "../store.ts";
-import type { Storage } from "../../storage/storage.ts";
+import type { Storage } from "./storage/storage.ts";
 import { answer } from "./read.ts";
 import { refusals } from "./refusals.ts";
 import { changedSince } from "./changed.ts";
