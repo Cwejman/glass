@@ -1,8 +1,9 @@
 // Compaction: the layers waiting are merged into the trees, one new segment for all of
 // them, and a root is laid that lists them no longer. It runs after every act, and again
 // by itself while layers still wait, so a read seldom checks more than one or two. It
-// touches no holon and blocks no one. If another compaction laid first, this one gives up
-// and starts again from the trees as they are.
+// touches no holon and blocks no one. In one process one runs at a time for a storage;
+// across processes, if another compaction laid first, this one gives up and starts again
+// from the trees as they are.
 
 import type { Head } from "../store.ts";
 import { trees, type Tree } from "./entries.ts";
@@ -11,7 +12,22 @@ import { headNow, rootAt, rootBytes, type Root } from "./root.ts";
 import type { Storage } from "./storage/storage.ts";
 import { merged, within, type Change, type Pointer } from "./tree.ts";
 
-export async function compact(storage: Storage, at: Head): Promise<void> {
+// The storages a compaction is running on in this process. An act that lands while one
+// runs starts no other: the running one finds its layer on its next round.
+const running = new WeakSet<Storage>();
+
+export async function compact(storage: Storage, at: Head) {
+  if (running.has(storage)) return;
+  running.add(storage);
+
+  try {
+    await compactFrom(storage, at);
+  } finally {
+    running.delete(storage);
+  }
+}
+
+async function compactFrom(storage: Storage, at: Head): Promise<void> {
   const root = await rootAt(storage, at.page);
   if (!root.pending.length) return;
 
@@ -24,7 +40,7 @@ export async function compact(storage: Storage, at: Head): Promise<void> {
   await lay(storage, root, pressedTrees, new Set(root.pending.map((pending) => pending.layer)));
 
   const now = await headNow(storage);
-  if (now) return compact(storage, now);
+  if (now) return compactFrom(storage, now);
 }
 
 // The trees with every pending layer's entries merged in, oldest layer first, written as
