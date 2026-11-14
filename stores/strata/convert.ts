@@ -2,7 +2,8 @@
 // by act: each commit of the old log becomes one act, with its hash, its time and what it
 // says, writing the versions that commit wrote and letting go of what it took out.
 // References are marked $holds where they hold, as each holon's types say, the types read
-// as they stand now in every store of this repository.
+// as they stand now in every store of this repository. Each act is compacted before the
+// next, since no compactor runs beside the conversion.
 //
 //   bun stores/strata/convert.ts <store name> <folder for the strata>
 
@@ -12,6 +13,7 @@ import { storesHere } from "../../stores.ts";
 import type { Act, Head, Holon } from "../store.ts";
 import { isRef } from "./entries.ts";
 import { folderStorage } from "./storage/folder.ts";
+import { compact } from "./compact.ts";
 import { strata } from "./strata.ts";
 
 export async function convert(name: string, into: string) {
@@ -22,7 +24,8 @@ export async function convert(name: string, into: string) {
   const types = await typesEverywhere(found);
   const entries = await old.fullLog();
   const placed = entries.find(({ line }) => line.conversion)?.line.conversion?.blocks ?? [];
-  const store = strata(folderStorage(into));
+  const storage = folderStorage(into);
+  const store = strata(storage);
   let head: Head | null = null;
 
   for (const { line } of entries) {
@@ -49,6 +52,7 @@ export async function convert(name: string, into: string) {
     if (!("accepted" in reply))
       throw new Error(`the act ${act.hash} was not accepted: ${JSON.stringify(reply)}`);
     head = reply.accepted;
+    await compact(storage);
   }
 
   return { acts: entries.length, head };

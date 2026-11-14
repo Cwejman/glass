@@ -16,11 +16,11 @@
 // in one process or many, meet at its head.
 //
 // Each place strata runs has an entry that makes its storage: browser.ts over OPFS, with
-// pages held in memory, and machine.ts over a folder.
+// pages held in memory, and machine.ts over a folder. Compaction is not among the store's
+// methods: the entry starts a compactor beside it (compactor.ts).
 
 import type { Act, Head, Question, Reply, Store } from "../store.ts";
 import { changedSince } from "./changed.ts";
-import { compact } from "./compact.ts";
 import { layerOf, rootOver } from "./layer.ts";
 import { answer } from "./read.ts";
 import { refusals } from "./refusals.ts";
@@ -41,9 +41,7 @@ async function read(storage: Storage, head: Head, question: Question) {
   return answer(storage, head, question);
 }
 
-// Writes the act once as its own layer, then lays it over the head. After an accepted
-// act, compaction runs without being awaited. It only has work when acts arrive, so it
-// keeps pace with them and nothing else needs to run it.
+// Writes the act once as its own layer, then lays it over the head.
 async function offer(storage: Storage, act: Act): Promise<Reply> {
   const at = await headNow(storage);
   const refused = await refusals(storage, at, act);
@@ -52,10 +50,7 @@ async function offer(storage: Storage, act: Act): Promise<Reply> {
   const layer = await layerOf(storage, at, act);
   const pending = { layer: await storage.put(layer.bytes), entries: layer.entries };
 
-  const reply = await lay(storage, act, pending, at);
-  if ("accepted" in reply) void compact(storage, reply.accepted).catch(() => {});
-
-  return reply;
+  return lay(storage, act, pending, at);
 }
 
 // Calls the listener with the current head, then with every move of the head, by this

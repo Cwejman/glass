@@ -3,6 +3,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Act, Head, Holon, Question, Store } from "../store.ts";
+import { compactor } from "./compactor.ts";
 import { rootAt } from "./root.ts";
 import { folderStorage } from "./storage/folder.ts";
 import { strata } from "./strata.ts";
@@ -161,6 +162,7 @@ describe("compaction", () => {
   test("layers are merged into the trees as acts come, and every head still reads as it did", async () => {
     const waiting = 16;
     const { storage, store } = opened();
+    const compacting = compactor(storage);
     let head: Head | null = null;
     const heads: Head[] = [];
 
@@ -183,6 +185,7 @@ describe("compaction", () => {
       expect(await read(store, latest, { said: { a: "text", word: `word${n}` } })).toHaveLength(1);
     expect(await read(store, heads[3]!, { holon: id(10) })).toEqual([]);
     expect(await read(store, heads[3]!, { holon: id(3) })).toHaveLength(1);
+    await compacting.stop();
   });
 });
 
@@ -195,9 +198,20 @@ test("a subscriber is told the head, and every move of it", async () => {
   await new Promise((resolve) => setTimeout(resolve, 150));
   stop();
 
-  // Compaction moves the head too, to a root of the same act, and a folder may report
-  // only the last of two moves close together.
-  expect(told[0]).toBeNull();
-  expect(told.length).toBeGreaterThan(1);
-  expect(told.slice(1).every((each) => each?.act === head.act)).toBe(true);
+  expect(told).toEqual([null, head]);
+});
+
+test("on a machine, strata runs with its compactor on a worker beside it", async () => {
+  const folder = mkdtempSync(join(tmpdir(), "glass-strata-"));
+  made.push(folder);
+  const { workers } = await import("../../runtime/runtime.ts");
+  const store = await workers().run<Store>(new URL("./machine.ts", import.meta.url), { folder });
+
+  let head: Head | null = null;
+  for (let n = 0; n < 5; n++) head = await accepted(store, act(head, [{ ...note, id: id(n), name: `n${n}` }]));
+  await new Promise((resolve) => setTimeout(resolve, 300));
+
+  const storage = folderStorage(folder);
+  expect((await rootAt(storage, (await storage.head())!)).pending).toHaveLength(0);
+  expect(await read(store, head!, { holon: id(4) })).toHaveLength(1);
 });

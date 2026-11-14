@@ -1,12 +1,19 @@
 // Entry for running strata on a machine over a .glass folder: as a module a runtime
-// starts, given the folder, or as a process that hosts it on a Unix socket.
+// starts, given the folder, or as a process that hosts it on a Unix socket. Either way
+// its compactor is started beside it, on a worker of its own.
 //
 //   bun stores/strata/machine.ts .glass /tmp/glass/main.sock
 
-import { folderStorage } from "./storage/folder.ts";
+import { workers } from "../../runtime/runtime.ts";
 import { host } from "../../wire/socket.ts";
+import { folderStorage } from "./storage/folder.ts";
 import { strata } from "./strata.ts";
 
-export default ({ folder }: { folder: string }) => strata(folderStorage(folder));
+const compactorCode = new URL("./compactor-machine.ts", import.meta.url);
 
-if (import.meta.main) host(process.argv[3]!, strata(folderStorage(process.argv[2]!)));
+export default async function started({ folder }: { folder: string }) {
+  await workers().run(compactorCode, { folder });
+  return strata(folderStorage(folder));
+}
+
+if (import.meta.main) host(process.argv[3]!, await started({ folder: process.argv[2]! }));
