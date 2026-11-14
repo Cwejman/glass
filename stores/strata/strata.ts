@@ -18,13 +18,14 @@
 // Each place strata runs has an entry that makes its storage: browser.ts over OPFS, with
 // pages held in memory, and machine.ts over a folder.
 
-import type { Act, Head, Question, Reply, Store, Touches } from "../store.ts";
-import type { Storage } from "./storage/storage.ts";
+import type { Act, Head, Question, Reply, Store } from "../store.ts";
+import { changedSince } from "./changed.ts";
+import { compact } from "./compact.ts";
+import { layerOf, rootOver } from "./layer.ts";
 import { answer } from "./read.ts";
 import { refusals } from "./refusals.ts";
-import { changedSince } from "./changed.ts";
-import { headAt, layerOf, rootOver } from "./layer.ts";
-import { pressedUnder } from "./compact.ts";
+import { headAt, headNow, type Pending } from "./root.ts";
+import type { Storage } from "./storage/storage.ts";
 
 // The store's three methods, over the storage given.
 export function strata(storage: Storage): Store {
@@ -41,16 +42,18 @@ async function read(storage: Storage, head: Head, question: Question) {
 }
 
 // Writes the act once as its own layer, then lays it over the head. After an accepted
-// act, one slice of compaction runs without being awaited. Compaction only has work when
-// acts arrive, so it keeps pace with them and nothing else needs to run it.
+// act, compaction runs without being awaited. It only has work when acts arrive, so it
+// keeps pace with them and nothing else needs to run it.
 async function offer(storage: Storage, act: Act): Promise<Reply> {
   const at = await headNow(storage);
   const refused = await refusals(storage, at, act);
   if (refused.length) return { refused };
 
-  const ground = { over: act.over, touches: act.touches, act: act.hash };
-  const reply = await lay(storage, ground, await storage.put(layerOf(act)), at);
-  if ("accepted" in reply) void compact(storage, reply.accepted);
+  const layer = await layerOf(storage, at, act);
+  const pending = { layer: await storage.put(layer.bytes), entries: layer.entries };
+
+  const reply = await lay(storage, act, pending, at);
+  if ("accepted" in reply) void compact(storage, reply.accepted).catch(() => {});
 
   return reply;
 }
@@ -64,41 +67,18 @@ async function subscribe(storage: Storage, listener: (head: Head | null) => void
   return unsubscribe;
 }
 
-// ---- Within
-
-// What a layer was built against: the head it lies over, what it touches, and the act it
-// records, if it records one; a slice of compaction records none.
-type Ground = { over: Head | null; touches: Touches; act?: string };
-
-const touchesNothing: Touches = { ids: [], addresses: [] };
-
-// Lays a layer, a blob already written, over the head with one new root page. If another
-// writer laid first, it is laid over theirs, unless theirs touched the same holons or
-// addresses.
-async function lay(storage: Storage, ground: Ground, layer: string, at: Head | null): Promise<Reply> {
-  if (await changedSince(storage, ground.over, at, ground.touches)) {
-    await storage.remove(layer);
+// Lays an act's layer over the head with one new root. If another writer laid first, it
+// is laid over theirs, unless theirs touched the same holons or addresses: then the
+// layer is taken back, and the engine judges the act again.
+async function lay(storage: Storage, act: Act, pending: Pending, at: Head | null): Promise<Reply> {
+  if (await changedSince(storage, act.over, at, act.touches)) {
+    await storage.remove(pending.layer);
     return { changed: at! };
   }
 
-  const root = await storage.put(rootOver(at, layer, ground.act));
+  const root = await storage.put(await rootOver(storage, at, pending, act));
   if (await storage.moveHead(at?.page ?? null, root)) return { accepted: await headAt(storage, root) };
 
   await storage.remove(root);
-  return lay(storage, ground, layer, await headNow(storage));
-}
-
-// The store's head as it is now: the act and root page the storage's head names.
-async function headNow(storage: Storage): Promise<Head | null> {
-  const root = await storage.head();
-  return root === null ? null : headAt(storage, root);
-}
-
-// Merges one small slice of layers into the trees and lays it like any layer. It touches
-// no holon, and the merged entries stay readable in their layers, so a slice that fails
-// or is never laid loses nothing: the next act retries it.
-async function compact(storage: Storage, at: Head) {
-  const slice = await pressedUnder(storage, at).catch(() => null);
-  if (slice)
-    await lay(storage, { over: at, touches: touchesNothing }, await storage.put(slice), at).catch(() => null);
+  return lay(storage, act, pending, await headNow(storage));
 }
