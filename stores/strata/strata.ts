@@ -19,11 +19,11 @@
 // pages held in memory, and machine.ts over a folder.
 
 import type { Act, Head, Question, Reply, Store, Touches } from "../store.ts";
-import type { Pages, Storage } from "../../storage/storage.ts";
+import type { Storage } from "../../storage/storage.ts";
 import { answer } from "./read.ts";
 import { refusals } from "./refusals.ts";
 import { changedSince } from "./changed.ts";
-import { layerOf, rootOver } from "./layer.ts";
+import { headAt, layerOf, rootOver } from "./layer.ts";
 import { pressedUnder } from "./compact.ts";
 
 // The store's three methods, over the storage given.
@@ -44,11 +44,12 @@ async function read(storage: Storage, head: Head, question: Question) {
 // act, one slice of compaction runs without being awaited. Compaction only has work when
 // acts arrive, so it keeps pace with them and nothing else needs to run it.
 async function offer(storage: Storage, act: Act): Promise<Reply> {
-  const at = await storage.head();
+  const at = await headNow(storage);
   const refused = await refusals(storage, at, act);
   if (refused.length) return { refused };
 
-  const reply = await lay(storage, act, await storage.put(layerOf(act)), at);
+  const ground = { over: act.over, touches: act.touches, act: act.hash };
+  const reply = await lay(storage, ground, await storage.put(layerOf(act)), at);
   if ("accepted" in reply) void compact(storage, reply.accepted);
 
   return reply;
@@ -57,31 +58,40 @@ async function offer(storage: Storage, act: Act): Promise<Reply> {
 // Calls the listener with the current head, then with every move of the head, by this
 // process or another.
 async function subscribe(storage: Storage, listener: (head: Head | null) => void) {
-  const unsubscribe = storage.watchHead(listener);
-  listener(await storage.head());
+  const told = async (root: string | null) => listener(root === null ? null : await headAt(storage, root));
+  const unsubscribe = storage.watchHead(told);
+  await told(await storage.head());
   return unsubscribe;
 }
 
 // ---- Within
 
-// What a layer was built against: the root it lies over, and what it touches.
-type Ground = { over: Head | null; touches: Touches };
+// What a layer was built against: the head it lies over, what it touches, and the act it
+// records, if it records one; a slice of compaction records none.
+type Ground = { over: Head | null; touches: Touches; act?: string };
 
 const touchesNothing: Touches = { ids: [], addresses: [] };
 
-// Lays a layer over the head with one new root page. If another writer laid first, it is
-// laid over theirs, unless theirs touched the same holons or addresses.
-async function lay(storage: Storage, ground: Ground, layer: Pages, at: Head | null): Promise<Reply> {
+// Lays a layer, a blob already written, over the head with one new root page. If another
+// writer laid first, it is laid over theirs, unless theirs touched the same holons or
+// addresses.
+async function lay(storage: Storage, ground: Ground, layer: string, at: Head | null): Promise<Reply> {
   if (await changedSince(storage, ground.over, at, ground.touches)) {
-    await storage.drop(layer);
+    await storage.remove(layer);
     return { changed: at! };
   }
 
-  const next = await storage.put(rootOver(at, layer));
-  if (await storage.moveHead(at, next)) return { accepted: next };
+  const root = await storage.put(rootOver(at, layer, ground.act));
+  if (await storage.moveHead(at?.page ?? null, root)) return { accepted: await headAt(storage, root) };
 
-  await storage.drop(next);
-  return lay(storage, ground, layer, await storage.head());
+  await storage.remove(root);
+  return lay(storage, ground, layer, await headNow(storage));
+}
+
+// The store's head as it is now: the act and root page the storage's head names.
+async function headNow(storage: Storage): Promise<Head | null> {
+  const root = await storage.head();
+  return root === null ? null : headAt(storage, root);
 }
 
 // Merges one small slice of layers into the trees and lays it like any layer. It touches
