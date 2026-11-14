@@ -44,8 +44,8 @@ async function put(blobs: Folder, bytes: Uint8Array) {
 // From memory, else from OPFS, else, for a published store, fetched from the site.
 async function read(blobs: Folder, from: string | undefined, name: string, offset = 0, length?: number) {
   const key = `${name} ${offset} ${length ?? ""}`;
-  const pooled = pool.get(key);
-  if (pooled) return remembered(key, pooled).slice();
+  const pooled = pooledBytes(key);
+  if (pooled) return pooled.slice();
 
   const file = (await fileIn(blobs, name)) ?? (from ? await fetched(blobs, from, name) : null);
   if (!file) throw new Error(`the blob ${name} is not kept here`);
@@ -157,22 +157,29 @@ function fetched(blobs: Folder, from: string, name: string) {
 
 // ---- Memory
 
-// Bytes read, by blob, offset and length, the most recently read kept up to 64 MB. What
-// is handed out is a copy, since bytes sent over a wire are given up.
-const pool = new Map<string, Uint8Array>();
-const budget = 64 * 1024 * 1024;
+// Bytes read, by blob, offset and length, about 64 MB of the most recently read kept, in
+// two maps: what is read goes into the recent one, and what is found in the older one is
+// moved there; once the recent one holds half, the older one is dropped whole. Nothing is
+// deleted one by one, since a Map slows down with every entry deleted from it. What is
+// handed out is a copy, since bytes sent over a wire are given up.
+const half = 32 * 1024 * 1024;
+let recent = new Map<string, Uint8Array>();
+let older = new Map<string, Uint8Array>();
 let pooled = 0;
 
+function pooledBytes(key: string) {
+  const known = recent.get(key) ?? older.get(key);
+  if (known && !recent.has(key)) remembered(key, known);
+  return known;
+}
+
 function remembered(key: string, bytes: Uint8Array) {
-  if (pool.delete(key)) pooled -= bytes.length;
-  pool.set(key, bytes);
+  recent.set(key, bytes);
   pooled += bytes.length;
+  if (pooled < half) return bytes;
 
-  for (const [oldest, held] of pool) {
-    if (pooled <= budget) break;
-    pool.delete(oldest);
-    pooled -= held.length;
-  }
-
+  older = recent;
+  recent = new Map();
+  pooled = 0;
   return bytes;
 }

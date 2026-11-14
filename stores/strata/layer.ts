@@ -87,10 +87,10 @@ export async function rootOver(storage: Storage, at: Head | null, pending: Pendi
   });
 }
 
-// The addresses an act places and takes away. A whole it writes is given an address for
-// each named holon it holds, and loses those of the holons it held before. A holon it
-// renames or lets go moves in, or out of, every whole that holds it and that the act does
-// not write.
+// The addresses an act places and takes away: only what changed. A whole it writes gives
+// an address to each named holon it now holds and did not before, and takes it from each
+// it no longer holds; the parts it held before and still holds keep theirs. A holon it
+// renames or lets go moves within, or out of, every whole that held it and still does.
 async function addressChanges(
   storage: Storage,
   root: Root | null,
@@ -111,12 +111,17 @@ async function addressChanges(
   const wholes = [...written.values(), ...[...gone].map((id) => before.get(id)).filter(Boolean)] as Holon[];
   for (const whole of wholes) {
     const old = before.get(whole.id);
-    for (const child of old ? heldBy(old) : []) {
+    const held = new Set(old ? heldBy(old) : []);
+    const holds = new Set(gone.has(whole.id) ? [] : heldBy(whole));
+
+    for (const child of held) {
+      if (holds.has(child)) continue;
       const name = await nameAt(child, false);
       if (name !== undefined) addresses.push([keyOf([whole.id, name]), null]);
     }
-    if (gone.has(whole.id)) continue;
-    for (const child of heldBy(whole)) {
+
+    for (const child of holds) {
+      if (held.has(child)) continue;
       const name = await nameAt(child, true);
       if (name !== undefined) addresses.push([keyOf([whole.id, name]), child]);
     }
@@ -127,7 +132,8 @@ async function addressChanges(
     if (was === is || !root) continue;
 
     for (const whole of await wholesOf(storage, root, id)) {
-      if (written.has(whole) || gone.has(whole)) continue;
+      if (gone.has(whole)) continue;
+      if (written.has(whole) && !heldBy(written.get(whole)!).includes(id)) continue;
       if (was !== undefined) addresses.push([keyOf([whole, was]), null]);
       if (is !== undefined) addresses.push([keyOf([whole, is]), id]);
     }

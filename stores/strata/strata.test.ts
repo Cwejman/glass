@@ -71,6 +71,24 @@ describe("strata", () => {
     expect((await read(store, first, { address: [id(2), "Notes"] }))[0].id).toBe(id(1));
   });
 
+  test("a whole rewritten keeps its parts' addresses, moves a renamed one, and gives one to a part added", async () => {
+    const { store } = opened();
+    const first = await accepted(store, act(null, [note, whole]));
+    const other = { id: id(3), instance: [id(100)], name: "Other", body: {} };
+    const next = await accepted(
+      store,
+      act(first, [
+        { ...whole, body: { parts: [ref(1, true), ref(3, true)] } },
+        { ...note, name: "Renamed" },
+        other,
+      ]),
+    );
+
+    expect(await read(store, next, { address: [id(2), "Notes"] })).toEqual([]);
+    expect((await read(store, next, { address: [id(2), "Renamed"] }))[0].id).toBe(id(1));
+    expect((await read(store, next, { address: [id(2), "Other"] }))[0].id).toBe(id(3));
+  });
+
   test("facts are found by attribute and value, by reference, and by holon", async () => {
     const { store } = opened();
     const head = await accepted(store, act(null, [note, whole]));

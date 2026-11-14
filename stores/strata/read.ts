@@ -80,13 +80,27 @@ function firstAtOrAfter(changes: [string, unknown][], key: string) {
   return low;
 }
 
-// A pending layer's entries, its versions' pointers made to name the layer.
+// A pending layer's entries, its versions' pointers made to name the layer. Only a few
+// layers are pending at a time, but one can hold tens of thousands of entries, so they are
+// kept apart from the cache of nodes and versions, the most recent 32 of them, where they
+// would push out everything else.
+const pendingKept = new Map<string, Promise<Changes>>();
+
 export function pendingEntries(storage: Storage, { layer, entries: [offset, length] }: Pending) {
-  return remembered(`entries ${layer} ${offset}`, length, async () => {
+  const key = `${layer} ${offset}`;
+  const known = pendingKept.get(key);
+  if (known) return known;
+
+  const loading = (async () => {
     const changes: Changes = JSON.parse(decoder.decode(await storage.read(layer, offset, length)));
     for (const change of changes.ids ?? []) change[1] = within(change[1] as Pointer | null, layer);
     return changes;
-  });
+  })();
+
+  pendingKept.set(key, loading);
+  loading.catch(() => pendingKept.delete(key));
+  if (pendingKept.size > 32) pendingKept.delete(pendingKept.keys().next().value!);
+  return loading;
 }
 
 // The latest version of a holon as of a root, and where it lies.
