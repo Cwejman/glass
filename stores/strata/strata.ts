@@ -1,15 +1,15 @@
-// Strata: glass's own kind of store. Each act is written once, as a thin layer over the
-// last, and never changed. Compaction merges the layers' entries into deep trees. Every
-// root strata has had stays readable, and those roots are its history.
+// Strata: glass's own kind of store. Each act is written once, as a layer, and never
+// changed. Compaction merges the layers' index entries into B-trees. Every root written
+// stays readable, so the store can be read as it was at any earlier head.
 //
-// A layer holds an act's holons, their new versions, and the act's entries for finding
-// them: by id, by address, and by the facts and words they say. A root ties a moment
-// together: the act it records, the root before it, the trees, and the layers not yet
-// merged into them. A read starts at a root, and looks in those layers and the trees.
+// A layer holds one act: its holons' new versions and its index entries, by id, by
+// address, by fact and by word. A root records one head: its act, the previous root, the
+// trees, and the layers not yet merged. A read starts at a root and looks in those
+// layers, then in the trees.
 //
-// Everything strata is rests in its storage, which knows nothing of holons: a folder on a
-// machine, or OPFS in a browser, each made by an entry, machine.ts or browser.ts. Any
-// number of strata over one storage, in one process or many, meet at its head.
+// All data is in the storage, a folder on a machine or OPFS in a browser, made by
+// machine.ts or browser.ts. Any number of strata instances, in one process or several,
+// can share a storage; they coordinate only through its head.
 
 import type { Act, Head, Question, Reply, Store } from "../store.ts";
 import { changedSince } from "./changed.ts";
@@ -21,9 +21,10 @@ import { headAt, headNow, type Pending } from "./root.ts";
 import type { Storage } from "./storage/storage.ts";
 
 export function strata(storage: Storage): Store {
-  // What is happening, never what is: the reads and offers under way, and whether
-  // compaction runs or has work. Losing it loses nothing. Compaction waits until nothing
-  // is under way, since one thread runs one thing at a time.
+  // In-memory state, used only to schedule compaction: how many reads and offers are in
+  // progress, and whether a compaction is running or needed. All data is in storage, so
+  // this can be lost without harm. Compaction runs only when no read or offer is in
+  // progress, because they share one thread.
   let underway = 0;
   let compacting = false;
   let toCompact = false;
@@ -40,7 +41,7 @@ export function strata(storage: Storage): Store {
     }
   }
 
-  // Writes the act once as its own layer, then lays it over the head.
+  // Writes the act as a layer, then moves the head to a new root that includes it.
   async function offer(act: Act): Promise<Reply> {
     underway++;
 
@@ -70,9 +71,10 @@ export function strata(storage: Storage): Store {
     return unsubscribe;
   }
 
-  // Lays the act's layer over the head with one new root. If another writer laid first,
-  // it is laid over theirs, unless theirs touched the same holons or addresses: then the
-  // layer is taken back, and the engine judges the act again.
+  // Writes a root that adds the layer, and moves the head to it. If another writer moved
+  // the head first, it retries on top of theirs, unless their act touched the same holons
+  // or addresses: then the layer is removed, and the act goes back to the engine to be
+  // judged again.
   async function lay(act: Act, pending: Pending, at: Head | null): Promise<Reply> {
     if (await changedSince(storage, act.over, at, act.touches)) {
       await storage.remove(pending.layer);
@@ -86,8 +88,8 @@ export function strata(storage: Storage): Store {
     return lay(act, pending, await headNow(storage));
   }
 
-  // Compacts one slice at a time, at most eight layers, while nothing is under way and
-  // layers still wait.
+  // Compacts one slice of at most eight layers at a time, while no read or offer is in
+  // progress and layers are still pending.
   async function compactWhenIdle() {
     if (!toCompact || compacting || underway) return;
     compacting = true;
@@ -96,7 +98,7 @@ export function strata(storage: Storage): Store {
     try {
       toCompact = (await compact(storage)) || toCompact;
     } catch {
-      // A slice that fails loses nothing: its layers still wait, read where they lie.
+      // A failed slice loses nothing: its layers stay pending, and reads still find them.
     } finally {
       compacting = false;
     }
