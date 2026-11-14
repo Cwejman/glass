@@ -2,18 +2,16 @@
 // by act: each commit of the old log becomes one act, with its hash, its time and what it
 // says, writing the versions that commit wrote and letting go of what it took out.
 // References are marked $holds where they hold, as each holon's types say, the types read
-// as they stand now in every store of this repository. Each act is compacted before the
-// next is offered, so the conversion never runs ahead of its trees.
+// as they stand now in every store of this repository. It uses strata as any consumer
+// does, offering one act after another; strata compacts them as it goes.
 //
 //   bun stores/strata/convert.ts <store name> <folder for the strata>
 
-import { mouldOf, references } from "../../engine/moulds.ts";
+import { isRef, mouldOf, references } from "../../engine/moulds.ts";
 import { actHash, asHolon, goneIds, type Version as OldVersion } from "../../integrations/glass/store.ts";
 import { storesHere } from "../../stores.ts";
 import type { Act, Head, Holon } from "../store.ts";
-import { isRef } from "./entries.ts";
 import { folderStorage } from "./storage/folder.ts";
-import { compact } from "./compact.ts";
 import { strata } from "./strata.ts";
 
 export async function convert(name: string, into: string, converted: (acts: number) => void = () => {}) {
@@ -24,17 +22,20 @@ export async function convert(name: string, into: string, converted: (acts: numb
   const types = await typesEverywhere(found);
   const entries = await old.fullLog();
   const placed = entries.find(({ line }) => line.conversion)?.line.conversion?.blocks ?? [];
-  const storage = folderStorage(into);
-  const store = strata(storage);
+  const store = strata(folderStorage(into));
   let head: Head | null = null;
   let done = 0;
 
   for (const { line } of entries) {
-    const versions = line.held
-      ? await Promise.all(line.held.map(async ([id, place]) => (await blockOf(placed[place]!)).get(id)!))
-      : (
-          await Promise.all(ownBlocks(line).map(async ({ hash }) => [...(await blockOf(hash)).values()]))
-        ).flat();
+    // Each block of the old store read once for the act, however many of its holons the
+    // act writes, and one at a time.
+    const blocks = new Map<string, Map<string, OldVersion>>();
+    const block = async (hash: string) =>
+      blocks.get(hash) ?? blocks.set(hash, await blockOf(hash)).get(hash)!;
+
+    const versions: OldVersion[] = [];
+    if (line.held) for (const [id, place] of line.held) versions.push((await block(placed[place]!)).get(id)!);
+    else for (const { hash } of ownBlocks(line)) versions.push(...(await block(hash)).values());
 
     const holons = versions.map((version) => marked(asHolon(version), types));
     const gone = goneIds(line.gone);
@@ -53,7 +54,6 @@ export async function convert(name: string, into: string, converted: (acts: numb
     if (!("accepted" in reply))
       throw new Error(`the act ${act.hash} was not accepted: ${JSON.stringify(reply)}`);
     head = reply.accepted;
-    while (await compact(storage));
     converted(++done);
   }
 
