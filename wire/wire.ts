@@ -49,15 +49,20 @@ const wordsOf = (error: unknown) => (error instanceof Error ? error.message : St
 const channels = new WeakMap<object, Channel>();
 
 // How many channels each object is served on, and what resolves when the last one closes.
-const served = new Map<object, { count: number; gone: PromiseWithResolvers<void> }>();
+const served = new WeakMap<object, { count: number; gone: PromiseWithResolvers<void> }>();
+
+function servingOf(object: object) {
+  const serving = served.get(object) ?? { count: 0, gone: Promise.withResolvers<void>() };
+  served.set(object, serving);
+  return serving;
+}
 
 // Answers each call arriving on the channel by calling the method of that name on the
 // object. An error thrown is sent back as the call's problem. A request for another
 // connection is answered with a new port, on which the object is served as well.
 export function serveObject(channel: Channel, object: object) {
   const stops = new Map<number, () => void>();
-  const serving = served.get(object) ?? { count: 0, gone: Promise.withResolvers<void>() };
-  served.set(object, serving);
+  const serving = servingOf(object);
   serving.count++;
 
   channel.receive(async (message) => {
@@ -196,9 +201,10 @@ export function disconnected(object: object): Promise<void> {
   return channels.get(object)?.closed ?? new Promise(() => {});
 }
 
-// Resolves when the last channel an object is served on closes.
+// Resolves when the last channel an object is served on closes. Asked before the object
+// is served, it waits for it to be served first.
 export function noLongerServed(object: object): Promise<void> {
-  return served.get(object)?.gone.promise ?? Promise.resolve();
+  return servingOf(object).gone.promise;
 }
 
 const isStop = (value: unknown) =>

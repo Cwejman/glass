@@ -208,10 +208,29 @@ test("on a machine, strata runs with its compactor on a worker beside it", async
   const store = await workers().run<Store>(new URL("./machine.ts", import.meta.url), { folder });
 
   let head: Head | null = null;
-  for (let n = 0; n < 5; n++) head = await accepted(store, act(head, [{ ...note, id: id(n), name: `n${n}` }]));
+  for (let n = 0; n < 5; n++)
+    head = await accepted(store, act(head, [{ ...note, id: id(n), name: `n${n}` }]));
   await new Promise((resolve) => setTimeout(resolve, 300));
 
   const storage = folderStorage(folder);
   expect((await rootAt(storage, (await storage.head())!)).pending).toHaveLength(0);
   expect(await read(store, head!, { holon: id(4) })).toHaveLength(1);
+});
+
+test("once nothing is connected to strata on a worker, its compactor ends too", async () => {
+  const folder = mkdtempSync(join(tmpdir(), "glass-strata-"));
+  made.push(folder);
+  const { workers } = await import("../../runtime/runtime.ts");
+  const { disconnect } = await import("../../wire/wire.ts");
+  const running = await workers().run<Store>(new URL("./machine.ts", import.meta.url), { folder });
+
+  const first = await accepted(running, act(null, [note]));
+  disconnect(running);
+  await new Promise((resolve) => setTimeout(resolve, 300));
+
+  const storage = folderStorage(folder);
+  const waitingBefore = (await rootAt(storage, (await storage.head())!)).pending.length;
+  await accepted(strata(storage), act(first, [whole]));
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  expect((await rootAt(storage, (await storage.head())!)).pending).toHaveLength(waitingBefore + 1);
 });
