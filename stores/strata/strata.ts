@@ -88,11 +88,15 @@ export function strata(storage: Storage): Store {
   // Writes the act's commit over the head as it stands, and moves the head to it with the
   // act's run added. If another writer moved the head first, it lays the act again over
   // theirs, unless their act touched the same holons or addresses: then the act goes back
-  // to the engine to be judged again, and its run is removed. Its part is left for a
-  // sweep, since a twin offer of the same act writes the very same blob.
+  // to the engine to be judged again, and its run is removed. If theirs was this very act,
+  // offered twice, it was taken. Blobs are named by their bytes, so a twin offer writes the
+  // very blobs the head now names: none the head names is removed, and the part is left
+  // for a sweep.
   async function lay(act: Act, run: Run, now: State | null): Promise<Reply> {
+    if (now && (await headAt(storage, now.commit)).act === act.hash) return { accepted: await headAt(storage, now.commit) };
+
     if (await changedSince(storage, act, now)) {
-      await storage.remove(run.blob);
+      if (!now!.runs.some((each) => each.blob === run.blob)) await storage.remove(run.blob);
       return { changed: await headAt(storage, now!.commit) };
     }
 
@@ -102,7 +106,7 @@ export function strata(storage: Storage): Store {
     if (await storage.moveHead(now && stateText(now), stateText(next))) return { accepted: await headAt(storage, commit) };
 
     const moved = await stateNow(storage);
-    if (moved?.commit !== now?.commit) await storage.remove(commit);
+    if (moved?.commit !== now?.commit && moved?.commit !== commit) await storage.remove(commit);
     return lay(act, run, moved);
   }
 

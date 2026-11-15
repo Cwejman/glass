@@ -234,6 +234,18 @@ describe("acts that race", () => {
   });
 });
 
+test("one act offered twice at once, by two instances over one storage, is taken once", async () => {
+  const { storage, store } = opened();
+  const twin = strata(storage);
+  const offered = await act(null, [note]);
+  const replies = await Promise.all([store.offer(offered), twin.offer(offered)]);
+
+  const now = (await stateNow(storage))!;
+  expect(replies).toEqual([{ accepted: await headAt(storage, now.commit) }, { accepted: await headAt(storage, now.commit) }]);
+  expect(now.runs).toHaveLength(1);
+  expect(await read(store, await headAt(storage, now.commit), { holon: id(1) })).toEqual([note]);
+});
+
 describe("compaction", () => {
   test("runs are merged as acts come, and every head still reads as it did", async () => {
     const waiting = 16;
