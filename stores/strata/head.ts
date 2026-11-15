@@ -93,3 +93,18 @@ export async function takenAt(storage: Storage, now: State, act: string): Promis
     commit = at.predecessors[0]!;
   return headAt(storage, commit);
 }
+
+// Every blob the head reaches: the runs it names, every commit back to the first, and the
+// part each commit names as this store's own.
+export async function blobsOf(storage: Storage): Promise<string[]> {
+  const now = await stateNow(storage);
+  if (!now) return [];
+
+  const blobs = now.runs.map(({ blob }) => blob);
+  for (let name: string | undefined = now.commit; name; ) {
+    const { act, own, predecessors } = await commitAt(storage, name);
+    blobs.push(name, ...act.parts.flatMap(([store, part]) => (store === own && part ? [part] : [])));
+    name = predecessors[0];
+  }
+  return blobs;
+}

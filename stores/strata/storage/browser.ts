@@ -1,7 +1,9 @@
 // A storage in a browser. Blobs and the head are kept in OPFS, in a folder of the store's
-// own, laid out as a folder on a machine is: blobs/ and head. Blobs read are held in
-// memory up to a budget, shared by every store in the worker, so a page read twice is
-// read from memory: the browser has no page cache of its own to do it.
+// own, laid out as a folder on a machine is: blobs/ and head. A blob read is kept open, as
+// a file is on a machine: in a worker, through a synchronous handle opened read-only, so
+// any number of tabs and workers may hold one on the same blob; elsewhere, as the File
+// read once. Blobs never change, so what is kept open always reads right. The browser
+// keeps no page cache for OPFS; pool.ts stands in for one, over this storage.
 //
 // A store published with a site names where the site serves it. Its head is the one the
 // site serves, and it is read here, never written. A blob it does not keep yet is fetched
@@ -22,11 +24,12 @@ export async function browserStorage({ folder, from }: Kept): Promise<Storage> {
   const glass = await opfs.getDirectoryHandle("glass", { create: true });
   const kept = await glass.getDirectoryHandle(folder, { create: true });
   const blobs = await kept.getDirectoryHandle("blobs", { create: true });
+  const opened = new Map<string, Promise<Opened>>();
 
   return {
     put: (bytes) => put(blobs, bytes),
-    read: (name, offset, length) => read(blobs, from, name, offset, length),
-    remove: (name) => remove(blobs, name),
+    read: (name, offset, length) => read(blobs, opened, from, name, offset, length),
+    remove: (name) => remove(blobs, opened, name),
     head: () => head(kept, from),
     moveHead: (before, to) => moveHead(kept, folder, from, before, to),
     watchHead: (listener) => watchHead(folder, from, listener),
@@ -41,30 +44,53 @@ async function put(blobs: Folder, bytes: Uint8Array) {
   return name;
 }
 
-// From memory, else from OPFS, else, for a published store, fetched from the site.
-async function read(blobs: Folder, from: string | undefined, name: string, offset = 0, length?: number) {
-  const key = `${name} ${offset} ${length ?? ""}`;
-  const pooled = pooledBytes(key);
-  if (pooled) return pooled.slice();
-
-  const file = (await fileIn(blobs, name)) ?? (from ? await fetched(blobs, from, name) : null);
-  if (!file) throw new Error(`the blob ${name} is not kept here`);
-
-  const end = length === undefined ? undefined : offset + length;
-  const bytes = new Uint8Array(await file.slice(offset, end).arrayBuffer());
-  return remembered(key, bytes).slice();
+// From the blob kept open, else from OPFS, else, for a published store, fetched from the
+// site and kept.
+async function read(
+  blobs: Folder,
+  opened: Map<string, Promise<Opened>>,
+  from: string | undefined,
+  name: string,
+  offset = 0,
+  length?: number,
+) {
+  let open = opened.get(name);
+  if (!open) {
+    open = openBlob(blobs, from, name);
+    opened.set(name, open);
+    open.catch(() => opened.delete(name));
+    if (opened.size > most) {
+      const [first, oldest] = opened.entries().next().value!;
+      opened.delete(first);
+      void oldest.then((each) => each.close(), () => {});
+    }
+  }
+  return (await open).read(offset, length);
 }
 
-async function remove(blobs: Folder, name: string) {
+async function remove(blobs: Folder, opened: Map<string, Promise<Opened>>, name: string) {
+  const open = opened.get(name);
+  opened.delete(name);
+  await open?.then((each) => each.close(), () => {});
   await blobs.removeEntry(name).catch(() => {});
 }
 
+// A published store's head is read from the site once: it moves only when the site is
+// published again.
+const served = new Map<string, Promise<string | null>>();
+
 async function head(kept: Folder, from: string | undefined) {
   if (from) {
-    const served = await fetch(`${from}head`, { cache: "no-store" });
-    if (served.status === 404) return null;
-    if (!served.ok) throw new Error(`the site did not serve the head of ${from}: ${served.status}`);
-    return (await served.text()).trim() || null;
+    if (!served.has(from)) {
+      const reading = fetch(`${from}head`, { cache: "no-store" }).then(async (answer) => {
+        if (answer.status === 404) return null;
+        if (!answer.ok) throw new Error(`the site did not serve the head of ${from}: ${answer.status}`);
+        return (await answer.text()).trim() || null;
+      });
+      served.set(from, reading);
+      reading.catch(() => served.delete(from));
+    }
+    return served.get(from)!;
   }
 
   const file = await fileIn(kept, "head");
@@ -101,6 +127,52 @@ function watchHead(folder: string, from: string | undefined, listener: (head: st
 
 // ---- OPFS
 
+// A blob kept open: read at an offset, and closed.
+type Opened = { read(offset: number, length?: number): Uint8Array | Promise<Uint8Array>; close(): void };
+
+// The most blobs kept open at once.
+const most = 4096;
+
+// A blob opened to be read: kept, or fetched first. In a worker, a synchronous handle read
+// at an offset; where none can be had read-only, the File, sliced.
+async function openBlob(blobs: Folder, from: string | undefined, name: string): Promise<Opened> {
+  const handle = await blobs.getFileHandle(name).catch(async () => {
+    if (!from) throw new Error(`the blob ${name} is not kept here`);
+    await fetched(blobs, from, name);
+    return blobs.getFileHandle(name);
+  });
+
+  const access = await (
+    handle as unknown as { createSyncAccessHandle(options: { mode: string }): Promise<SyncAccess> }
+  )
+    .createSyncAccessHandle({ mode: "read-only" })
+    .catch(() => null);
+
+  if (access) {
+    const size = access.getSize();
+    return {
+      read: (offset, length) => {
+        const bytes = new Uint8Array(Math.max(0, Math.min(length ?? size - offset, size - offset)));
+        return bytes.subarray(0, access.read(bytes, { at: offset }));
+      },
+      close: () => access.close(),
+    };
+  }
+
+  const file = await handle.getFile();
+  return {
+    read: async (offset, length) =>
+      new Uint8Array(await file.slice(offset, length === undefined ? undefined : offset + length).arrayBuffer()),
+    close: () => {},
+  };
+}
+
+type SyncAccess = {
+  getSize(): number;
+  read(buffer: Uint8Array, options: { at: number }): number;
+  close(): void;
+};
+
 async function fileIn(folder: Folder, name: string) {
   try {
     return await (await folder.getFileHandle(name)).getFile();
@@ -132,7 +204,7 @@ async function write(folder: Folder, name: string, bytes: Uint8Array) {
 }
 
 // A blob fetched from the site, checked against its name, and kept.
-const fetching = new Map<string, Promise<File>>();
+const fetching = new Map<string, Promise<void>>();
 
 function fetched(blobs: Folder, from: string, name: string) {
   const known = fetching.get(name);
@@ -147,39 +219,9 @@ function fetched(blobs: Folder, from: string, name: string) {
       throw new Error(`the blob ${name} the site served does not match its name`);
 
     await write(blobs, name, bytes);
-    return (await fileIn(blobs, name))!;
   })();
 
   fetching.set(name, loading);
   loading.finally(() => fetching.delete(name)).catch(() => {});
   return loading;
-}
-
-// ---- Memory
-
-// Bytes read, by blob, offset and length, about 64 MB of the most recently read kept, in
-// two maps: what is read goes into the recent one, and what is found in the older one is
-// moved there; once the recent one holds half, the older one is dropped whole. Nothing is
-// deleted one by one, since a Map slows down with every entry deleted from it. What is
-// handed out is a copy, since bytes sent over a wire are given up.
-const half = 32 * 1024 * 1024;
-let recent = new Map<string, Uint8Array>();
-let older = new Map<string, Uint8Array>();
-let pooled = 0;
-
-function pooledBytes(key: string) {
-  const known = recent.get(key) ?? older.get(key);
-  if (known && !recent.has(key)) remembered(key, known);
-  return known;
-}
-
-function remembered(key: string, bytes: Uint8Array) {
-  recent.set(key, bytes);
-  pooled += bytes.length;
-  if (pooled < half) return bytes;
-
-  older = recent;
-  recent = new Map();
-  pooled = 0;
-  return bytes;
 }
