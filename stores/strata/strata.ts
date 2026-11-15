@@ -1,11 +1,9 @@
-// Strata: glass's own kind of store. Each act is written once, as a layer, and never
-// changed. Compaction merges the layers' index entries into B-trees. Every root written
-// stays readable, so the store can be read as it was at any earlier head.
-//
-// A layer holds one act: its holons' new versions and its index entries, by id, by
-// address, by fact and by word. A root records one head: its act, the previous root, the
-// trees, and the layers not yet merged. A read starts at a root and looks in those
-// layers, then in the trees.
+// Strata: glass's own kind of store. Each act is written once, as a layer of its holons'
+// new versions, and never changed, beside a run of its index entries, by id, by address,
+// by fact and by word. A root records one head: its act and its number, the previous
+// root, and the runs of the index. Every entry is stamped with its act's number, so the
+// runs answer for every head the store has had; compaction merges runs as they grow, and
+// the index grows with what changes, never with how many heads there are.
 //
 // All data is in the storage, a folder on a machine or OPFS in a browser, made by
 // machine.ts or browser.ts. Any number of strata instances, in one process or several,
@@ -14,10 +12,11 @@
 import type { Act, Head, Question, Reply, Store } from "../store.ts";
 import { changedSince } from "./changed.ts";
 import { compact } from "./compact.ts";
-import { layerOf, rootOver } from "./layer.ts";
-import { answer } from "./read.ts";
+import { rootOver, writeLayer } from "./layer.ts";
+import { afresh, answer } from "./read.ts";
 import { refusals } from "./refusals.ts";
-import { headAt, headNow, type Pending } from "./root.ts";
+import { headAt, headNow, viewAt } from "./root.ts";
+import type { Run } from "./run.ts";
 import type { Storage } from "./storage/storage.ts";
 
 export function strata(storage: Storage): Store {
@@ -41,18 +40,18 @@ export function strata(storage: Storage): Store {
     }
   }
 
-  // Writes the act as a layer, then moves the head to a new root that includes it.
+  // Writes the act as a layer and a run, then moves the head to a new root that adds the
+  // run.
   async function offer(act: Act): Promise<Reply> {
     underway++;
 
     try {
       const at = await headNow(storage);
-      const refused = await refusals(storage, at, act);
+      const refused = await afresh(() => refusals(storage, at, act));
       if (refused.length) return { refused };
 
-      const layer = await layerOf(storage, at, act);
-      const pending = { layer: await storage.put(layer.bytes), entries: layer.entries };
-      const reply = await lay(act, pending, at);
+      const run = await afresh(async () => writeLayer(storage, await viewAt(storage, at), act));
+      const reply = await lay(act, run, at);
 
       if ("accepted" in reply) toCompact = true;
       return reply;
@@ -71,25 +70,26 @@ export function strata(storage: Storage): Store {
     return unsubscribe;
   }
 
-  // Writes a root that adds the layer, and moves the head to it. If another writer moved
+  // Writes a root that adds the run, and moves the head to it. If another writer moved
   // the head first, it retries on top of theirs, unless their act touched the same holons
-  // or addresses: then the layer is removed, and the act goes back to the engine to be
-  // judged again.
-  async function lay(act: Act, pending: Pending, at: Head | null): Promise<Reply> {
+  // or addresses: then the act goes back to the engine to be judged again, and its run is
+  // removed. Its layer is left for a sweep, since a twin offer of the same act writes the
+  // very same blob.
+  async function lay(act: Act, run: Run, at: Head | null): Promise<Reply> {
     if (await changedSince(storage, act.over, at, act.touches)) {
-      await storage.remove(pending.layer);
+      await storage.remove(run.blob);
       return { changed: at! };
     }
 
-    const root = await storage.put(await rootOver(storage, at, pending, act));
+    const root = await storage.put(await rootOver(storage, at, run, act));
     if (await storage.moveHead(at?.page ?? null, root)) return { accepted: await headAt(storage, root) };
 
     await storage.remove(root);
-    return lay(act, pending, await headNow(storage));
+    return lay(act, run, await headNow(storage));
   }
 
-  // Compacts one slice of at most eight layers at a time, while no read or offer is in
-  // progress and layers are still pending.
+  // Merges two runs at a time, while no read or offer is in progress and runs are to be
+  // merged.
   async function compactWhenIdle() {
     if (!toCompact || compacting || underway) return;
     compacting = true;
@@ -98,7 +98,7 @@ export function strata(storage: Storage): Store {
     try {
       toCompact = (await compact(storage)) || toCompact;
     } catch {
-      // A failed slice loses nothing: its layers stay pending, and reads still find them.
+      // A failed merge loses nothing: the runs it began from are still the index.
     } finally {
       compacting = false;
     }

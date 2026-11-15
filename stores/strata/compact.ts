@@ -1,108 +1,68 @@
-// Compaction: the oldest layers waiting are merged into the trees, one new segment for
-// all of them, and a root is laid that lists them no longer. It touches no holon. Strata
-// runs it when nothing else is under way, one slice at a time. It meets other writers
-// where every writer meets, at the head: losing to an act, it lays its root again over the
-// act; losing to another compaction, in another process, it gives up and is begun again
-// from the trees as they are.
+// Compaction: the newest runs merged into one, down to the oldest run that holds no more
+// entries than all the runs newer than it together. Afterwards each run holds more than
+// all those newer than it, so a store of n entries has at most about log2(n) runs, and
+// an entry is rewritten only when the run holding it at least doubles. Every entry keeps
+// its stamp, so the merged run answers every head the runs did. It touches no holon.
+//
+// It meets other writers where every writer meets, at the head. Losing to an act, it lays
+// its root again over the act. Losing to another compaction, in another process, it gives
+// up. Once its root is laid, the runs merged are removed; a read still in them begins
+// again.
 
-import { trees, type Tree } from "./entries.ts";
-import { pendingEntries } from "./read.ts";
-import { headNow, rootAt, rootBytes, type Root } from "./root.ts";
+import { headNow, rootAt, rootBytes } from "./root.ts";
+import { mergedRuns, type Run } from "./run.ts";
 import type { Storage } from "./storage/storage.ts";
-import { merged, within, type Change, type Pointer } from "./tree.ts";
 
-// How many layers one slice merges, at most, so that one slice is short.
-const slice = 8;
+// How many of the newest runs are to be merged: none, or two or more.
+export function merging(runs: Run[]): number {
+  let newer = 0;
+  let deepest = 0;
 
-// Merges one slice of the layers waiting, the oldest first. Returns whether any still
-// wait.
+  for (const [i, run] of runs.entries()) {
+    if (i > 0 && run.count <= newer) deepest = i;
+    newer += run.count;
+  }
+
+  return deepest ? deepest + 1 : 0;
+}
+
+// Merges the newest runs, if any are to be merged. Returns whether more merging is wanted.
 export async function compact(storage: Storage): Promise<boolean> {
   const at = await headNow(storage);
   if (!at) return false;
 
-  const root = await rootAt(storage, at.page);
-  const merging = root.pending.slice(0, slice);
-  if (!merging.length) return false;
+  const { runs } = await rootAt(storage, at.page);
+  const merged = runs.slice(0, merging(runs));
+  if (!merged.length) return false;
 
-  const { bytes, roots } = await pressed(storage, root, merging);
-  const segment = await storage.put(bytes);
-  const pressedTrees = Object.fromEntries(
-    Object.entries(roots).map(([tree, pointer]) => [tree, within(pointer, segment)]),
-  ) as Root["trees"];
+  const written = await mergedRuns(storage, merged);
+  const run: Run = { blob: await storage.put(written.bytes), count: written.count, index: written.index };
 
-  const left = await lay(storage, root, pressedTrees, new Set(merging.map((pending) => pending.layer)));
-  return left > 0;
+  if (!(await lay(storage, merged, run))) return false;
+  for (const each of merged) await storage.remove(each.blob);
+  return merging((await rootAt(storage, (await storage.head())!)).runs) > 0;
 }
 
-// The trees with these layers' entries merged in, oldest layer first, written as one
-// segment.
-async function pressed(storage: Storage, root: Root, merging: Root["pending"]) {
-  const changes = new Map<Tree, Map<string, unknown>>(trees.map((tree) => [tree, new Map()]));
+// Lays a root with the merged run in place of the runs it merged, over whatever the head
+// now is, so long as they are all still there. Returns whether it was laid.
+async function lay(storage: Storage, merged: Run[], run: Run): Promise<boolean> {
+  const name = (await storage.head())!;
+  const now = await rootAt(storage, name);
+  const at = now.runs.findIndex((each) => each.blob === merged[0]!.blob);
+  const still = at >= 0 && merged.every((each, i) => now.runs[at + i]?.blob === each.blob);
 
-  for (const pending of merging)
-    for (const [tree, list] of Object.entries(await pendingEntries(storage, pending)) as [Tree, Change[]][])
-      for (const [key, value] of list) changes.get(tree)!.set(key, value);
-
-  const segments: Uint8Array[] = [];
-  const roots: Partial<Record<Tree, Pointer | null>> = {};
-  let offset = 0;
-
-  for (const tree of trees) {
-    const sorted = [...changes.get(tree)!].sort(([a], [b]) => (a < b ? -1 : 1)) as Change[];
-    if (!sorted.length) {
-      roots[tree] = root.trees[tree] ?? null;
-      continue;
-    }
-
-    const { bytes, root: top } = await merged(storage, root.trees[tree] ?? null, sorted, offset);
-    segments.push(bytes);
-    roots[tree] = top;
-    offset += bytes.length;
+  // Another compaction merged them first. What this one wrote is removed only if no root
+  // uses it: a twin compaction from the same runs writes the very same blob.
+  if (!still) {
+    if (!now.runs.some((each) => each.blob === run.blob)) await storage.remove(run.blob);
+    return false;
   }
 
-  return { bytes: joined(segments), roots };
-}
-
-// The root that replaces the trees and drops the merged layers, laid over whatever the
-// head now is, so long as its trees are still those this compaction began from. Losing
-// the race for the head to an act, it is laid again over the act. Returns how many layers
-// still wait.
-async function lay(
-  storage: Storage,
-  from: Root,
-  pressedTrees: Root["trees"],
-  merged: Set<string>,
-): Promise<number> {
-  const name = await storage.head();
-  const now = name === null ? null : await rootAt(storage, name);
-
-  // Another compaction laid first, and this one gives up. It removes nothing it wrote: a
-  // twin compaction from the same head writes the very same blobs, which later roots may
-  // build on. What is left unused is for a sweep.
-  if (!now || JSON.stringify(now.trees) !== JSON.stringify(from.trees)) return now?.pending.length ?? 0;
-
-  const pending = now.pending.filter((each) => !merged.has(each.layer));
+  const runs = [...now.runs.slice(0, at), run, ...now.runs.slice(at + merged.length)];
   const next = await storage.put(
-    rootBytes({
-      ...now,
-      touches: { ids: [], addresses: [] },
-      previous: name,
-      trees: pressedTrees,
-      pending,
-      pressed: true,
-    }),
+    rootBytes({ ...now, touches: { ids: [], addresses: [] }, previous: name, runs, pressed: true }),
   );
 
-  if (await storage.moveHead(name, next)) return pending.length;
-  return lay(storage, from, pressedTrees, merged);
-}
-
-function joined(parts: Uint8Array[]) {
-  const all = new Uint8Array(parts.reduce((sum, part) => sum + part.length, 0));
-  let at = 0;
-  for (const part of parts) {
-    all.set(part, at);
-    at += part.length;
-  }
-  return all;
+  if (await storage.moveHead(name, next)) return true;
+  return lay(storage, merged, run);
 }

@@ -1,31 +1,28 @@
-// A layer: the blob one act is written as. Its first line is the act: its hash, when it
-// was made, what it says, what it lets go and touches, and the stores it was offered to
-// alongside. Then one line for each holon the act writes, its new version, naming where
-// the version before it lies. Its last line is the act's entries for every tree, sorted:
-// only what changed, each fact the old versions said that the new ones do not taken
-// out, and each fact only the new ones say put in.
+// A layer: the blob one act's versions are written as. Its first line is the act: its
+// hash, when it was made, what it says, what it lets go and touches, and the stores it
+// was offered to alongside. Then one line for each holon the act writes, its new version,
+// naming where the version before it lies.
 //
-// A version's pointer into its own layer leaves the layer empty, as a tree's pointers into
-// their own segment do; it is resolved when the layer's entries are read.
+// Beside the layer, the act's own run: its entries for every tree, only what changed,
+// each fact the old versions said that the new ones do not taken out, and each fact only
+// the new ones say put in.
 
 import type { Act, Head, Holon } from "../store.ts";
-import { factChanges, heldBy, type Changes, type Tree } from "./entries.ts";
+import { entriesOf, factChanges, heldBy, keyOf, type Change, type Changes, type Tree } from "./entries.ts";
 import { holonAt, wholesOf, type Version } from "./read.ts";
-import { rootAt, rootBytes, type Pending, type Root } from "./root.ts";
+import { rootAt, rootBytes, type Root, type View } from "./root.ts";
+import { runOf, type Run } from "./run.ts";
 import type { Storage } from "./storage/storage.ts";
-import { keyOf, type Change, type Pointer } from "./tree.ts";
 
 const encoder = new TextEncoder();
 
-// The act's layer, written against the store as of a head, and where its entries lie in it.
-export async function layerOf(storage: Storage, at: Head | null, act: Act) {
-  const root = at && (await rootAt(storage, at.page));
+// Writes the act's layer and its run, against the store as of a view, and gives the run.
+export async function writeLayer(storage: Storage, view: View | null, act: Act): Promise<Run> {
   const before = new Map<string, Version | null>();
-  const lying = new Map<string, Pointer>();
-  const changes = changesMap();
+  const lying = new Map<string, [string, number, number]>();
 
   for (const id of [...act.holons.map((holon) => holon.id), ...act.gone]) {
-    const held = root && (await holonAt(storage, root, id));
+    const held = await holonAt(storage, view, id);
     before.set(id, held?.version ?? null);
     if (held) lying.set(id, held.pointer);
   }
@@ -39,18 +36,23 @@ export async function layerOf(storage: Storage, at: Head | null, act: Act) {
     alongside: act.alongside,
   });
   const lines = [header];
+  const places = new Map<string, [number, number]>();
   let offset = encoder.encode(header).length + 1;
 
   for (const holon of act.holons) {
-    const old = before.get(holon.id);
     const line = JSON.stringify({ ...holon, prev: lying.get(holon.id) ?? null });
     const length = encoder.encode(line).length;
-
-    changes.add({ ids: [[keyOf([holon.id]), ["", offset, length]]] });
-    changes.add(factChanges(old ?? null, holon));
-
+    places.set(holon.id, [offset, length]);
     lines.push(line);
     offset += length + 1;
+  }
+
+  const layer = await storage.put(encoder.encode(lines.join("\n")));
+  const changes = changesMap();
+
+  for (const holon of act.holons) {
+    changes.add({ ids: [[keyOf([holon.id]), [layer, ...places.get(holon.id)!]]] });
+    changes.add(factChanges(before.get(holon.id) ?? null, holon));
   }
 
   for (const id of act.gone) {
@@ -60,30 +62,26 @@ export async function layerOf(storage: Storage, at: Head | null, act: Act) {
     changes.add(factChanges(old, null));
   }
 
-  changes.add(await addressChanges(storage, root, act, before));
+  changes.add(await addressChanges(storage, view, act, before));
 
-  const entries = JSON.stringify(changes.sorted());
-  lines.push(entries);
-
-  return {
-    bytes: encoder.encode(lines.join("\n")),
-    entries: [offset, encoder.encode(entries).length] as [number, number],
-  };
+  const run = runOf(entriesOf(changes.gathered()));
+  return { blob: await storage.put(run.bytes), count: run.count, index: run.index };
 }
 
-// The root that lays a layer over a head: the trees as they were, and the layer added to
-// those not yet merged.
-export async function rootOver(storage: Storage, at: Head | null, pending: Pending, act: Act) {
+// The root that lays an act's run over a head: the act, numbered after the head's, and
+// the run added, newest, to the runs the head has.
+export async function rootOver(storage: Storage, at: Head | null, run: Run, act: Act) {
   const before: Root | null = at && (await rootAt(storage, at.page));
+  const number = (before?.number ?? 0) + 1;
 
   return rootBytes({
     act: act.hash,
+    number,
     at: act.at,
     says: act.says,
     touches: act.touches,
     previous: at?.page ?? null,
-    trees: before?.trees ?? {},
-    pending: [...(before?.pending ?? []), pending],
+    runs: [{ ...run, act: number }, ...(before?.runs ?? [])],
   });
 }
 
@@ -93,7 +91,7 @@ export async function rootOver(storage: Storage, at: Head | null, pending: Pendi
 // renames or lets go moves within, or out of, every whole that held it and still does.
 async function addressChanges(
   storage: Storage,
-  root: Root | null,
+  view: View | null,
   act: Act,
   before: Map<string, Version | null>,
 ): Promise<Changes> {
@@ -105,7 +103,7 @@ async function addressChanges(
     if (now && written.has(id)) return written.get(id)!.name;
     if (now && gone.has(id)) return undefined;
     if (before.has(id)) return before.get(id)?.name;
-    return root ? (await holonAt(storage, root, id))?.version.name : undefined;
+    return (await holonAt(storage, view, id))?.version.name;
   };
 
   const wholes = [...written.values(), ...[...gone].map((id) => before.get(id)).filter(Boolean)] as Holon[];
@@ -129,9 +127,9 @@ async function addressChanges(
 
   for (const id of [...written.keys(), ...gone]) {
     const [was, is] = [before.get(id)?.name, gone.has(id) ? undefined : written.get(id)?.name];
-    if (was === is || !root) continue;
+    if (was === is || !view) continue;
 
-    for (const whole of await wholesOf(storage, root, id)) {
+    for (const whole of await wholesOf(storage, view, id)) {
       if (gone.has(whole)) continue;
       if (written.has(whole) && !heldBy(written.get(whole)!).includes(id)) continue;
       if (was !== undefined) addresses.push([keyOf([whole, was]), null]);
@@ -144,12 +142,12 @@ async function addressChanges(
 
 // Changes gathered tree by tree, a later change to a key replacing an earlier one.
 function changesMap() {
-  const all = new Map<Tree, Map<string, unknown>>();
+  const byTree = new Map<Tree, Map<string, unknown>>();
 
   function add(changes: Changes) {
     for (const [tree, list] of Object.entries(changes) as [Tree, Change[]][]) {
-      const keys = all.get(tree) ?? new Map();
-      all.set(tree, keys);
+      const keys = byTree.get(tree) ?? new Map();
+      byTree.set(tree, keys);
       for (const [key, value] of list) {
         keys.delete(key);
         keys.set(key, value);
@@ -157,11 +155,9 @@ function changesMap() {
     }
   }
 
-  function sorted(): Changes {
-    return Object.fromEntries(
-      [...all].map(([tree, keys]) => [tree, [...keys].sort(([a], [b]) => (a < b ? -1 : 1))]),
-    );
+  function gathered(): Changes {
+    return Object.fromEntries([...byTree].map(([tree, keys]) => [tree, [...keys]]));
   }
 
-  return { add, sorted };
+  return { add, gathered };
 }

@@ -176,7 +176,7 @@ describe("acts that race", () => {
 });
 
 describe("compaction", () => {
-  test("layers are merged into the trees as acts come, and every head still reads as it did", async () => {
+  test("runs are merged as acts come, and every head still reads as it did", async () => {
     const waiting = 16;
     const { storage, store } = opened();
     let head: Head | null = null;
@@ -193,8 +193,8 @@ describe("compaction", () => {
 
     const now = (await storage.head())!;
     const root = await rootAt(storage, now);
-    expect(root.pending.length).toBe(0);
-    expect(Object.values(root.trees).some(Boolean)).toBe(true);
+    // Runs grow by doubling: twenty acts of one holon each leave a few runs, not twenty.
+    expect(root.runs.length).toBeLessThanOrEqual(5);
 
     const latest = { act: root.act, page: now };
     for (let n = 0; n < waiting + 4; n++)
@@ -202,6 +202,24 @@ describe("compaction", () => {
     expect(await read(store, heads[3]!, { holon: id(10) })).toEqual([]);
     expect(await read(store, heads[3]!, { holon: id(3) })).toHaveLength(1);
   });
+});
+
+test("a holon rewritten again and again reads at every head as that head wrote it, after runs merge", async () => {
+  const { store } = opened();
+  const heads: Head[] = [];
+  let head: Head | null = null;
+
+  for (let n = 0; n < 12; n++) {
+    head = await accepted(store, act(head, [{ ...note, body: { text: `draft${n}` } }]));
+    heads.push(head);
+  }
+  await new Promise((resolve) => setTimeout(resolve, 200));
+
+  for (const [n, at] of heads.entries()) {
+    expect((await read(store, at, { holon: id(1) }))[0].body.text).toBe(`draft${n}`);
+    expect(await read(store, at, { said: { a: "text", word: `draft${n}` } })).toHaveLength(1);
+    expect(await read(store, at, { said: { a: "text", word: `draft${(n + 1) % 12}` } })).toEqual([]);
+  }
 });
 
 test("a subscriber is told the head, and every move of it", async () => {
@@ -232,7 +250,7 @@ test("on a worker, strata compacts what its acts lay", async () => {
   await new Promise((resolve) => setTimeout(resolve, 300));
 
   const storage = folderStorage(folder);
-  expect((await rootAt(storage, (await storage.head())!)).pending).toHaveLength(0);
+  expect((await rootAt(storage, (await storage.head())!)).runs.length).toBeLessThan(5);
   expect(await read(store, head!, { holon: id(4) })).toHaveLength(1);
 });
 
@@ -258,18 +276,22 @@ test("compaction waits while a read is under way", async () => {
   const first = await accepted(store, act(null, [note, whole]));
   await new Promise((resolve) => setTimeout(resolve, 100));
 
-  // The whole's version has not been read yet, so reading it reaches the storage.
+  // The run's index is read once, by reading the note; the whole's version has not been
+  // read yet, so reading it reaches the storage.
+  await store.read(first, { holon: id(1) });
   holding = true;
   const reading = store.read(first, { holon: id(2) });
   await new Promise((resolve) => setTimeout(resolve, 20));
-  await accepted(store, act(first, [{ ...note, body: { text: "again" } }]));
+  // As many entries as the first act, so that the two runs are to be merged.
+  const more = [7, 8, 9].map((n) => ({ ...note, id: id(n), name: `n${n}` }));
+  await accepted(store, act(first, [{ ...note, body: { text: "again" } }, ...more]));
   await new Promise((resolve) => setTimeout(resolve, 100));
-  const whileReading = (await rootAt(storage, (await storage.head())!)).pending.length;
+  const whileReading = (await rootAt(storage, (await storage.head())!)).runs.length;
 
   release();
   await reading;
   await new Promise((resolve) => setTimeout(resolve, 200));
-  const afterwards = (await rootAt(storage, (await storage.head())!)).pending.length;
+  const afterwards = (await rootAt(storage, (await storage.head())!)).runs.length;
 
-  expect([whileReading, afterwards]).toEqual([1, 0]);
+  expect([whileReading, afterwards]).toEqual([2, 1]);
 });

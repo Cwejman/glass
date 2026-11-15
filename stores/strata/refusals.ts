@@ -4,14 +4,14 @@
 
 import type { Act, Head, Problem } from "../store.ts";
 import { holonAt } from "./read.ts";
-import { rootAt } from "./root.ts";
+import { viewAt } from "./root.ts";
 import type { Storage } from "./storage/storage.ts";
 
 const id = /^[0-9A-HJKMNP-TV-Z]{15}$/;
 
 export async function refusals(storage: Storage, at: Head | null, act: Act): Promise<Problem[]> {
   const problems: Problem[] = [];
-  const root = at && (await rootAt(storage, at.page));
+  const view = await viewAt(storage, at);
 
   for (const holon of act.holons) {
     if (!id.test(holon.id))
@@ -21,7 +21,7 @@ export async function refusals(storage: Storage, at: Head | null, act: Act): Pro
   }
 
   for (const gone of act.gone)
-    if (!root || !(await holonAt(storage, root, gone)))
+    if (!(await holonAt(storage, view, gone)))
       problems.push({ rule: "gone", id: gone, says: "this store does not keep it" });
 
   return problems;

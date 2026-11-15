@@ -1,30 +1,33 @@
 // A root: one small blob of JSON tying a moment of the store together. It names the act
-// it records, what that act touches, the root before it, the root node of each tree, and
-// the layers whose entries are not yet merged into the trees, oldest first. A head names
-// a root; following previous from it walks the store's history back to its first act.
+// it records, its number, counting from 1, what that act touches, the root before it, and
+// the runs that make up the index, newest first. A head names a root; following previous
+// from it walks the store's history back to its first act.
 //
-// A root laid by compaction records no act of its own: it carries the act before it,
-// touches nothing, and is marked pressed.
+// Every run's entries are stamped with their act, so the runs of the latest root answer
+// for every head before it too: as of a head, an entry counts if its act's number is the
+// head's or lower. An older root's runs may since have been merged and removed.
+//
+// A root laid by compaction records no act of its own: it carries the act before it and
+// its number, touches nothing, and is marked pressed.
 
 import type { Head, Touches } from "../store.ts";
-import type { Tree } from "./entries.ts";
 import { remembered } from "./remembered.ts";
+import type { Run } from "./run.ts";
 import type { Storage } from "./storage/storage.ts";
-import type { Pointer } from "./tree.ts";
-
-// A layer not yet merged: its blob, and where its entries line lies in it.
-export type Pending = { layer: string; entries: [offset: number, length: number] };
 
 export type Root = {
   act: string;
+  number: number;
   at: string;
   says: string;
   touches: Touches;
   previous: string | null;
-  trees: Partial<Record<Tree, Pointer | null>>;
-  pending: Pending[];
+  runs: Run[];
   pressed?: true;
 };
+
+// The index as of a head: the latest root's runs, and the number of the head's act.
+export type View = { runs: Run[]; upTo: number };
 
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();
@@ -41,6 +44,14 @@ export async function headAt(storage: Storage, name: string): Promise<Head> {
 export async function headNow(storage: Storage): Promise<Head | null> {
   const name = await storage.head();
   return name === null ? null : headAt(storage, name);
+}
+
+// The index as of a head, read through the runs the store has now.
+export async function viewAt(storage: Storage, head: Head | null): Promise<View | null> {
+  if (!head) return null;
+  const now = await storage.head();
+  const latest = await rootAt(storage, now ?? head.page);
+  return { runs: latest.runs, upTo: (await rootAt(storage, head.page)).number };
 }
 
 export const rootBytes = (root: Root) => encoder.encode(JSON.stringify(root));
