@@ -72,11 +72,7 @@ export async function engine({ readers: runtime, count = 1 }: Starting): Promise
     for (const reader of readers) await reader.mount(name, await anotherConnectionTo(store));
 
     const unsubscribe = await store.subscribe((head) => {
-      const before = heads.get(name);
       heads.set(name, head);
-
-      // A head moved by a store's own housekeeping, to the same act, changes no answer.
-      if (before && head && before.act === head.act) return;
       for (const subscriber of subscribers) if (name in subscriber.stoodOn) notify(subscriber);
     });
 

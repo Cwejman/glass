@@ -1,57 +1,46 @@
-// A layer: the blob one act's versions are written as. Its first line is the act: its
-// hash, when it was made, what it says, what it lets go and touches, and the stores it
-// was offered to alongside. Then one line for each holon the act writes, its new version,
-// naming where the version before it lies.
-//
-// Beside the layer, the act's own run: its entries for every tree, only what changed,
-// each fact the old versions said that the new ones do not taken out, and each fact only
-// the new ones say put in.
+// Taking an act. Its part is written first: the holons this store keeps of it, as
+// partOf in ../act.ts writes them, so its name is the hash the act names for this store.
+// Then its run: its entries for every tree, only what changed, each fact the old
+// versions said that the new ones do not taken out, and each fact only the new ones say
+// put in, and the act itself, by its content hash. Last its commit, over the head it is
+// laid on.
 
-import type { Act, Head, Holon } from "../store.ts";
+import { byId, lineOf } from "../act.ts";
+import type { Act, Holon } from "../store.ts";
 import { entriesOf, factChanges, heldBy, keyOf, type Change, type Changes, type Tree } from "./entries.ts";
-import { holonAt, wholesOf, type Version } from "./read.ts";
-import { rootAt, rootBytes, type Root, type View } from "./root.ts";
+import { commitAt, commitBytes, type State, type View } from "./head.ts";
+import { holonAt, wholesOf } from "./read.ts";
 import { runOf, type Run } from "./run.ts";
 import type { Storage } from "./storage/storage.ts";
 
 const encoder = new TextEncoder();
 
-// Writes the act's layer and its run, against the store as of a view, and gives the run.
-export async function writeLayer(storage: Storage, view: View | null, act: Act): Promise<Run> {
-  const before = new Map<string, Version | null>();
-  const lying = new Map<string, [string, number, number]>();
+// Writes the act's part and its run, against the store as of a view, and gives the run.
+export async function writeAct(storage: Storage, view: View | null, act: Act): Promise<Run> {
+  // The versions before, of the holons the act writes and lets go, except those this
+  // store has never kept.
+  const before = new Map<string, Holon | null>();
+  const born = new Set(act.born);
+  for (const id of [...act.holons.map((holon) => holon.id), ...act.gone])
+    before.set(id, born.has(id) ? null : ((await holonAt(storage, view, id))?.version ?? null));
 
-  for (const id of [...act.holons.map((holon) => holon.id), ...act.gone]) {
-    const held = await holonAt(storage, view, id);
-    before.set(id, held?.version ?? null);
-    if (held) lying.set(id, held.pointer);
-  }
-
-  const header = JSON.stringify({
-    hash: act.hash,
-    at: act.at,
-    says: act.says,
-    gone: act.gone,
-    touches: act.touches,
-    alongside: act.alongside,
-  });
-  const lines = [header];
+  const lines: string[] = [];
   const places = new Map<string, [number, number]>();
-  let offset = encoder.encode(header).length + 1;
-
-  for (const holon of act.holons) {
-    const line = JSON.stringify({ ...holon, prev: lying.get(holon.id) ?? null });
+  let offset = 0;
+  for (const holon of [...act.holons].sort(byId)) {
+    const line = lineOf(holon);
     const length = encoder.encode(line).length;
-    places.set(holon.id, [offset, length]);
     lines.push(line);
+    places.set(holon.id, [offset, length]);
     offset += length + 1;
   }
+  const part = lines.length ? await storage.put(encoder.encode(lines.join("\n"))) : null;
 
-  const layer = await storage.put(encoder.encode(lines.join("\n")));
   const changes = changesMap();
+  changes.add({ acts: [[keyOf([act.hash]), true]] });
 
   for (const holon of act.holons) {
-    changes.add({ ids: [[keyOf([holon.id]), [layer, ...places.get(holon.id)!]]] });
+    changes.add({ ids: [[keyOf([holon.id]), [part, ...places.get(holon.id)!]]] });
     changes.add(factChanges(before.get(holon.id) ?? null, holon));
   }
 
@@ -68,21 +57,22 @@ export async function writeLayer(storage: Storage, view: View | null, act: Act):
   return { blob: await storage.put(run.bytes), count: run.count, index: run.index };
 }
 
-// The root that lays an act's run over a head: the act, numbered after the head's, and
-// the run added, newest, to the runs the head has.
-export async function rootOver(storage: Storage, at: Head | null, run: Run, act: Act) {
-  const before: Root | null = at && (await rootAt(storage, at.page));
+// The commit of an act laid over a head: the act whole, this store's name for itself,
+// the head's commit before it, and the number after the head's.
+export async function commitOver(storage: Storage, at: State | null, act: Act) {
+  const before = at && (await commitAt(storage, at.commit));
   const number = (before?.number ?? 0) + 1;
+  const { at: when, says, by, gone, parts } = act;
 
-  return rootBytes({
-    act: act.hash,
+  return {
     number,
-    at: act.at,
-    says: act.says,
-    touches: act.touches,
-    previous: at?.page ?? null,
-    runs: [{ ...run, act: number }, ...(before?.runs ?? [])],
-  });
+    bytes: commitBytes({
+      act: by === undefined ? { at: when, says, gone, parts } : { at: when, says, by, gone, parts },
+      own: act.own,
+      predecessors: at ? [at.commit] : [],
+      number,
+    }),
+  };
 }
 
 // The addresses an act places and takes away: only what changed. A whole it writes gives
@@ -93,7 +83,7 @@ async function addressChanges(
   storage: Storage,
   view: View | null,
   act: Act,
-  before: Map<string, Version | null>,
+  before: Map<string, Holon | null>,
 ): Promise<Changes> {
   const written = new Map(act.holons.map((holon) => [holon.id, holon]));
   const gone = new Set(act.gone);

@@ -2,14 +2,17 @@
 // entries than all the runs newer than it together. Afterwards each run holds more than
 // all those newer than it, so a store of n entries has at most about log2(n) runs, and
 // an entry is rewritten only when the run holding it at least doubles. Every entry keeps
-// its stamp, so the merged run answers every head the runs did. It touches no holon.
+// its stamp, so the merged run answers every head the runs did. It touches no holon and
+// writes no commit: history never sees it.
 //
-// It meets other writers where every writer meets, at the head. Losing to an act, it lays
-// its root again over the act. Losing to another compaction, in another process, it gives
-// up. Once its root is laid, the runs merged are removed; a read still in them begins
-// again.
+// It meets other writers where every writer meets, at the head, and never stands in an
+// act's way: losing to an act, it lays its runs again over the act's head; an act losing
+// to it only lays its head again. Losing to another compaction, in another process, it
+// gives up. The runs it merged are not removed at once, since a read in another process
+// may still be in them; they are removed by the next merge, and a read that finds a run
+// gone begins again.
 
-import { headNow, rootAt, rootBytes } from "./root.ts";
+import { stateNow, stateText, type State } from "./head.ts";
 import { mergedRuns, type Run } from "./run.ts";
 import type { Storage } from "./storage/storage.ts";
 
@@ -26,43 +29,35 @@ export function merging(runs: Run[]): number {
   return deepest ? deepest + 1 : 0;
 }
 
-// Merges the newest runs, if any are to be merged. Returns whether more merging is wanted.
-export async function compact(storage: Storage): Promise<boolean> {
-  const at = await headNow(storage);
-  if (!at) return false;
+// Merges the newest runs, if any are to be merged, and gives the runs merged, to be
+// removed by the next merge; null where nothing was merged.
+export async function compact(storage: Storage): Promise<Run[] | null> {
+  const now = await stateNow(storage);
+  if (!now) return null;
 
-  const { runs } = await rootAt(storage, at.page);
-  const merged = runs.slice(0, merging(runs));
-  if (!merged.length) return false;
+  const merged = now.runs.slice(0, merging(now.runs));
+  if (!merged.length) return null;
 
   const written = await mergedRuns(storage, merged);
   const run: Run = { blob: await storage.put(written.bytes), count: written.count, index: written.index };
 
-  if (!(await lay(storage, merged, run))) return false;
-  for (const each of merged) await storage.remove(each.blob);
-  return merging((await rootAt(storage, (await storage.head())!)).runs) > 0;
+  return (await lay(storage, now, merged, run)) ? merged : null;
 }
 
-// Lays a root with the merged run in place of the runs it merged, over whatever the head
+// Moves the head to the merged run in place of the runs it merged, over whatever the head
 // now is, so long as they are all still there. Returns whether it was laid.
-async function lay(storage: Storage, merged: Run[], run: Run): Promise<boolean> {
-  const name = (await storage.head())!;
-  const now = await rootAt(storage, name);
+async function lay(storage: Storage, now: State, merged: Run[], run: Run): Promise<boolean> {
   const at = now.runs.findIndex((each) => each.blob === merged[0]!.blob);
   const still = at >= 0 && merged.every((each, i) => now.runs[at + i]?.blob === each.blob);
 
-  // Another compaction merged them first. What this one wrote is removed only if no root
-  // uses it: a twin compaction from the same runs writes the very same blob.
+  // Another compaction merged them first. What this one wrote is removed only if the
+  // head does not use it: a twin compaction from the same runs writes the very same blob.
   if (!still) {
     if (!now.runs.some((each) => each.blob === run.blob)) await storage.remove(run.blob);
     return false;
   }
 
   const runs = [...now.runs.slice(0, at), run, ...now.runs.slice(at + merged.length)];
-  const next = await storage.put(
-    rootBytes({ ...now, touches: { ids: [], addresses: [] }, previous: name, runs, pressed: true }),
-  );
-
-  if (await storage.moveHead(name, next)) return true;
-  return lay(storage, merged, run);
+  if (await storage.moveHead(stateText(now), stateText({ commit: now.commit, runs }))) return true;
+  return lay(storage, (await stateNow(storage))!, merged, run);
 }

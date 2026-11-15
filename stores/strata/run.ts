@@ -161,6 +161,20 @@ export async function valuesIn(storage: Storage, run: Run, from: Uint8Array, to:
   return found;
 }
 
+// Every entry for a key stamped at or before an act, newest first, each with its act and
+// its value, null where that act removed the key.
+export async function entriesFor(storage: Storage, run: Run, key: Uint8Array, upTo: number) {
+  const found: { act: number; value: Uint8Array | null }[] = [];
+
+  await visit(storage, run, key, (cursor) => {
+    const order = compareKey(cursor, key);
+    if (order === 0 && cursor.act <= upTo) found.push({ act: cursor.act, value: cursor.set ? valueAt(cursor) : null });
+    return order <= 0;
+  });
+
+  return found;
+}
+
 // Calls each with a cursor at every entry from the block that may hold `key` onward, in
 // order, until it returns false or the run ends.
 async function visit(storage: Storage, run: Run, key: Uint8Array, each: (cursor: Cursor) => boolean) {

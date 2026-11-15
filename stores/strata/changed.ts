@@ -1,27 +1,29 @@
 // Whether anything an act touches changed between the head it was judged against and the
-// head it is now to be laid over: walking back from the newer head, each root's act is
-// compared with this one's. A head that is not found in that history counts as changed.
+// head it is now to be laid over. The runs are the record of what every act changed: a
+// holon it touches changed if its id has an entry stamped after the head it was judged
+// against, and an address if it has one. A head the store never had counts as changed.
 
-import type { Head, Touches } from "../store.ts";
-import { rootAt } from "./root.ts";
+import type { Act } from "../store.ts";
+import { keyOf } from "./entries.ts";
+import { commitAt, type State } from "./head.ts";
+import { stamps } from "./read.ts";
 import type { Storage } from "./storage/storage.ts";
 
-export async function changedSince(storage: Storage, over: Head | null, at: Head | null, touches: Touches) {
-  let name = at?.page ?? null;
+export async function changedSince(storage: Storage, { over, touches }: Act, now: State | null) {
+  if ((over?.commit ?? null) === (now?.commit ?? null)) return false;
+  if (!now) return true;
 
-  while (name !== null && name !== (over?.page ?? null)) {
-    const root = await rootAt(storage, name);
-    if (meet(root.touches, touches)) return true;
-    name = root.previous;
-  }
+  const view = { runs: now.runs, upTo: (await commitAt(storage, now.commit)).number };
+  const after = over ? await commitAt(storage, over.commit).then(({ number }) => number, () => null) : 0;
+  if (after === null) return true;
+  if (over && !(await stamps(storage, view, "acts", keyOf([over.act]))).some(({ act }) => act === after)) return true;
 
-  return name !== (over?.page ?? null);
-}
+  const keys = [
+    ...touches.ids.map((id) => ["ids", keyOf([id])] as const),
+    ...touches.addresses.map((address) => ["addresses", keyOf(address)] as const),
+  ];
+  for (const [tree, key] of keys)
+    if ((await stamps(storage, view, tree, key)).some(({ act }) => act > after)) return true;
 
-function meet(a: Touches, b: Touches) {
-  const ids = new Set(a.ids);
-  const addresses = new Set(a.addresses.map((address) => JSON.stringify(address)));
-  return (
-    b.ids.some((id) => ids.has(id)) || b.addresses.some((address) => addresses.has(JSON.stringify(address)))
-  );
+  return false;
 }

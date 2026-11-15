@@ -5,7 +5,8 @@
 // uses it the same way.
 //
 // A store is whole in itself: it keeps its holons, their history and their index under
-// a head, and each head names the act that made it and the head before. It has three
+// a head. Its history is its commits, one for each act it took, each naming the commit
+// before it. It has three
 // methods: read as of a head, offer an act, and subscribe to moves of its head, whoever
 // moves it. All are async.
 
@@ -20,9 +21,10 @@ export type Holon = {
   body: Record<string, unknown>;
 };
 
-// A point in a store's history: the act that made it, and the root page a read starts
-// from. A store can be read at any head it has had; the latest is its current state.
-export type Head = { act: string; page: string };
+// A point in a store's history: the act that made it, by its content hash, and the
+// commit that keeps it here, by its history hash. A store can be read at any head it has
+// had; the latest is its current state.
+export type Head = { act: string; commit: string };
 
 // ---- Reading
 
@@ -33,14 +35,16 @@ export type Clause = { e?: string; a?: string; v?: Value };
 
 // What a read can ask, as of a head: a holon by id, or by address, a whole and a name;
 // the facts matching a clause; the holons containing a word under a key; a holon's
-// versions; or the acts before the head.
+// versions; the acts before the head; or whether the store took an act, named by its
+// content hash, and where in its history.
 export type Question =
   | { holon: string }
   | { address: [whole: string, name: string] }
   | { facts: Clause }
   | { said: { a: string; word: string } }
   | { versions: string }
-  | { acts: { since?: string } };
+  | { acts: { since?: string } }
+  | { act: string };
 
 // ---- Writing
 
@@ -52,17 +56,27 @@ export type Problem = { rule: string; id?: string; says: string };
 export type Touches = { ids: string[]; addresses: [whole: string, name: string][] };
 
 // An act as offered to one store: judged against a head, its ids minted, each reference
-// saying whether it holds. An act across stores is offered to each, with the same hash,
-// naming the others.
+// saying whether it holds. An act is one in every store it touches, and the same: each
+// store keeps a commit of it whole, and its own part.
+//
+// A store's part is the holons it keeps of the act, as partOf in act.ts writes them.
+// parts names every store the act touches, by the id of its root, with the hash of its
+// part, or null for a store the act only lets go in; own says which is this store. The
+// act's hash is its content hash, of what it says, as contentOf in act.ts gives it, the
+// same in every store. gone takes a holon out of every store that keeps it; born names the
+// holons this store has never kept, so their versions before need not be looked for.
 export type Act = {
   hash: string;
   at: string;
   says: string;
-  over: Head | null;
-  holons: Holon[];
+  by?: string;
   gone: string[];
+  parts: [store: string, part: string | null][];
+  own: string;
+  holons: Holon[];
+  born: string[];
+  over: Head | null;
   touches: Touches;
-  alongside: string[];
 };
 
 // A store's reply to an offer: accepted, with the new head; refused, with every problem;

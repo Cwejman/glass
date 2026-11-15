@@ -1,4 +1,4 @@
-// Reading the store as of a head, through the runs of the latest root. A key's value is
+// Reading the store as of a head, through the runs the head has now. A key's value is
 // the newest entry for it stamped with the head's act or one before; runs are searched
 // newest first, so the first that has one answers. A key that entry removes is gone. An
 // answer is lines of JSON, each holon's line exactly as it was written.
@@ -8,13 +8,10 @@
 
 import type { Clause, Head, Holon, Question } from "../store.ts";
 import { factsOf, isRef, keyBytes, keyOf, keyText, partsOf, prefixOf, valueFrom, type Pointer, type Tree } from "./entries.ts";
+import { commitAt, headAt, viewAt, type View } from "./head.ts";
 import { remembered } from "./remembered.ts";
-import { rootAt, viewAt, type Root, type View } from "./root.ts";
-import { valueIn, valuesIn } from "./run.ts";
+import { entriesFor, valueIn, valuesIn } from "./run.ts";
 import type { Storage } from "./storage/storage.ts";
-
-// A holon as strata keeps it: with where its previous version lies.
-export type Version = Holon & { prev: Pointer | null };
 
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();
@@ -53,7 +50,12 @@ async function answerAt(storage: Storage, head: Head, view: View, question: Ques
 
   if ("versions" in question) return lines(await versionLines(storage, view, question.versions));
 
-  return lines(await actLines(storage, head.page, question.acts.since));
+  if ("act" in question) {
+    const taken = await stamps(storage, view, "acts", keyOf([question.act]));
+    return lines(taken.map(({ act }) => json({ act: question.act, number: act })));
+  }
+
+  return lines(await actLines(storage, head.commit, question.acts.since));
 }
 
 // A tree's value for a key as of a view, or undefined where it has none.
@@ -68,6 +70,15 @@ export async function found(storage: Storage, view: View | null, tree: Tree, key
   }
 
   return undefined;
+}
+
+// Every entry for a key as of a view, in every run, newest first: the acts that set it or
+// took it away.
+export async function stamps(storage: Storage, view: View | null, tree: Tree, key: string) {
+  if (!view) return [];
+  const bytes = keyBytes(tree, key);
+  const all = await Promise.all(view.runs.map((run) => entriesFor(storage, run, bytes, view.upTo)));
+  return all.flat().sort((a, b) => b.act - a.act);
 }
 
 // A tree's keys from `from` up to `to` as of a view, with their values, in order.
@@ -88,7 +99,7 @@ export async function foundBetween(storage: Storage, view: View | null, tree: Tr
 export async function holonAt(storage: Storage, view: View | null, id: string) {
   const pointer = (await found(storage, view, "ids", keyOf([id]))) as Pointer | undefined;
   if (!pointer) return null;
-  return { pointer, version: JSON.parse(decoder.decode(await versionBytes(storage, pointer))) as Version };
+  return { pointer, version: JSON.parse(decoder.decode(await versionBytes(storage, pointer))) as Holon };
 }
 
 // The wholes that hold a holon, as of a view.
@@ -97,8 +108,8 @@ export async function wholesOf(storage: Storage, view: View | null, id: string):
   return holding.map(([key]) => partsOf(key)[2] as string);
 }
 
-function versionBytes(storage: Storage, [layer, offset, length]: Pointer) {
-  return remembered(`version ${layer} ${offset}`, length, () => storage.read(layer, offset, length));
+function versionBytes(storage: Storage, [part, offset, length]: Pointer) {
+  return remembered(`version ${part} ${offset}`, length, () => storage.read(part, offset, length));
 }
 
 async function holonLines(storage: Storage, view: View, ids: string[]) {
@@ -136,32 +147,28 @@ async function factsFor(storage: Storage, view: View, { e, a, v }: Clause) {
   throw new Error("a clause needs a holon, an attribute or a reference");
 }
 
-// A holon's versions, newest first, each line as it was written.
+// A holon's versions, newest first, each line as it was written: every act that set it,
+// as the index keeps them by id. A holon let go has none.
 async function versionLines(storage: Storage, view: View, id: string) {
-  const all: Uint8Array[] = [];
-  let pointer = (await found(storage, view, "ids", keyOf([id]))) as Pointer | null | undefined;
+  const all = await stamps(storage, view, "ids", keyOf([id]));
+  if (!all.length || all[0]!.value === null) return [];
 
-  while (pointer) {
-    const bytes = await versionBytes(storage, pointer);
-    all.push(bytes);
-    pointer = (JSON.parse(decoder.decode(bytes)) as Version).prev;
-  }
-
-  return all;
+  const pointers = all.flatMap(({ value }) => (value ? [valueFrom("ids", value) as Pointer] : []));
+  return Promise.all(pointers.map((pointer) => versionBytes(storage, pointer)));
 }
 
-// The acts from a head back to the one named since, newest first, compaction's roots left
-// out.
-async function actLines(storage: Storage, page: string, since: string | undefined) {
+// The acts from a head back to the one named since, newest first: each commit's act,
+// with its content hash.
+async function actLines(storage: Storage, commit: string, since: string | undefined) {
   const acts: Uint8Array[] = [];
-  let name: string | null = page;
+  let name: string | undefined = commit;
 
   while (name) {
-    const root: Root = await rootAt(storage, name);
-    if (root.act === since) break;
-    if (!root.pressed)
-      acts.push(json({ hash: root.act, at: root.at, says: root.says, touches: root.touches }));
-    name = root.previous;
+    const { act, predecessors } = await commitAt(storage, name);
+    const { act: hash } = await headAt(storage, name);
+    if (hash === since) break;
+    acts.push(json({ hash, ...act }));
+    name = predecessors[0];
   }
 
   return acts;

@@ -2,8 +2,9 @@ import { afterAll, describe, expect, test } from "bun:test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { contentOf, hashOf, partOf } from "../act.ts";
 import type { Act, Head, Holon, Question, Store } from "../store.ts";
-import { rootAt } from "./root.ts";
+import { headAt, stateNow } from "./head.ts";
 import { folderStorage } from "./storage/folder.ts";
 import { strata } from "./strata.ts";
 
@@ -21,21 +22,35 @@ const id = (n: number) => String(n).padStart(15, "0");
 const ref = (n: number, holds = false) => (holds ? { $ref: id(n), $holds: true } : { $ref: id(n) });
 let acts = 0;
 
-function act(over: Head | null, holons: Holon[], gone: string[] = [], touches?: Act["touches"]): Act {
-  return {
-    hash: `act ${acts++}`,
-    at: new Date(0).toISOString(),
+// An act as an engine makes it, for the store named here, and others it names.
+async function act(
+  over: Head | null,
+  holons: Holon[],
+  gone: string[] = [],
+  touches?: Act["touches"],
+  others: Act["parts"] = [],
+): Promise<Act> {
+  const part = partOf(holons);
+  const said = {
+    at: new Date(acts++).toISOString(),
     says: "a test",
-    over,
-    holons,
     gone,
+    parts: [["here", part && (await hashOf(part))], ...others] as Act["parts"],
+  };
+
+  return {
+    ...said,
+    hash: await hashOf(contentOf(said)),
+    own: "here",
+    holons,
+    born: [],
+    over,
     touches: touches ?? { ids: [...holons.map((holon) => holon.id), ...gone], addresses: [] },
-    alongside: [],
   };
 }
 
-async function accepted(store: Store, offered: Act) {
-  const reply = await store.offer(offered);
+async function accepted(store: Store, offered: Act | Promise<Act>) {
+  const reply = await store.offer(await offered);
   if (!("accepted" in reply)) throw new Error(`not accepted: ${JSON.stringify(reply)}`);
   return reply.accepted;
 }
@@ -56,7 +71,7 @@ describe("strata", () => {
     const { store } = opened();
     const head = await accepted(store, act(null, [note, whole]));
 
-    expect(await read(store, head, { holon: id(1) })).toEqual([{ ...note, prev: null }]);
+    expect(await read(store, head, { holon: id(1) })).toEqual([note]);
     expect(await read(store, head, { holon: id(9) })).toEqual([]);
   });
 
@@ -146,10 +161,38 @@ describe("strata", () => {
     expect(await read(store, second, { acts: {} })).toHaveLength(2);
   });
 
-  test("letting go of what the store does not keep is refused", async () => {
+  test("letting go of what the store does not keep changes nothing here", async () => {
     const { store } = opened();
-    const reply = await store.offer(act(null, [], [id(7)]));
-    expect(reply).toEqual({ refused: [{ rule: "gone", id: id(7), says: "this store does not keep it" }] });
+    const first = await accepted(store, act(null, [note]));
+    const second = await accepted(store, act(first, [], [id(7)]));
+
+    expect(await read(store, second, { holon: id(1) })).toEqual([note]);
+    expect(await read(store, second, { acts: {} })).toHaveLength(2);
+  });
+
+  test("an act whose hash or part does not hold is refused", async () => {
+    const { store } = opened();
+    const forged = { ...(await act(null, [note])), hash: "0".repeat(64) };
+    expect(await store.offer(forged)).toEqual({
+      refused: [{ rule: "hash", says: "the act's hash is not the hash of what it says" }],
+    });
+
+    const other = await act(null, [note]);
+    expect(await store.offer({ ...other, holons: [whole] })).toEqual({
+      refused: [{ rule: "part", says: "the act does not name this store's part as the holons offered make it" }],
+    });
+  });
+
+  test("an act across stores is kept whole, and is found by its content hash", async () => {
+    const { store } = opened();
+    const offered = await act(null, [note], [], undefined, [["elsewhere", "f".repeat(64)]]);
+    const head = await accepted(store, offered);
+
+    expect(head.act).toBe(offered.hash);
+    const [kept] = await read(store, head, { acts: {} });
+    expect(kept.parts).toEqual(offered.parts);
+    expect(await read(store, head, { act: offered.hash })).toEqual([{ act: offered.hash, number: 1 }]);
+    expect(await read(store, head, { act: "e".repeat(64) })).toEqual([]);
   });
 });
 
@@ -163,7 +206,7 @@ describe("acts that race", () => {
 
     expect(await read(store, other, { holon: id(2) })).toHaveLength(1);
     expect(await read(store, other, { holon: id(3) })).toHaveLength(1);
-    expect(one.page).not.toBe(other.page);
+    expect(one.commit).not.toBe(other.commit);
   });
 
   test("an act judged over an older head is handed back when another touched the same holon", async () => {
@@ -171,7 +214,23 @@ describe("acts that race", () => {
     const first = await accepted(store, act(null, [note]));
     const moved = await accepted(store, act(first, [{ ...note, body: { text: "one" } }]));
 
-    expect(await store.offer(act(first, [{ ...note, body: { text: "two" } }]))).toEqual({ changed: moved });
+    expect(await store.offer(await act(first, [{ ...note, body: { text: "two" } }]))).toEqual({ changed: moved });
+  });
+
+  test("an act judged over an older head is handed back when another took an address it touches", async () => {
+    const { store } = opened();
+    const first = await accepted(store, act(null, [note, whole]));
+    const other = { id: id(3), instance: [id(100)], name: "New", body: {} };
+    const moved = await accepted(
+      store,
+      act(first, [{ ...whole, body: { parts: [ref(1, true), ref(3, true)] } }, other]),
+    );
+
+    const late = await act(first, [{ ...note, id: id(4), name: "Late" }], [], {
+      ids: [id(4)],
+      addresses: [[id(2), "New"]],
+    });
+    expect(await store.offer(late)).toEqual({ changed: moved });
   });
 });
 
@@ -191,12 +250,12 @@ describe("compaction", () => {
     }
     await new Promise((resolve) => setTimeout(resolve, 200));
 
-    const now = (await storage.head())!;
-    const root = await rootAt(storage, now);
+    const now = (await stateNow(storage))!;
     // Runs grow by doubling: twenty acts of one holon each leave a few runs, not twenty.
-    expect(root.runs.length).toBeLessThanOrEqual(5);
+    expect(now.runs.length).toBeLessThanOrEqual(5);
 
-    const latest = { act: root.act, page: now };
+    const latest = await headAt(storage, now.commit);
+    expect(latest).toEqual(head!);
     for (let n = 0; n < waiting + 4; n++)
       expect(await read(store, latest, { said: { a: "text", word: `word${n}` } })).toHaveLength(1);
     expect(await read(store, heads[3]!, { holon: id(10) })).toEqual([]);
@@ -231,11 +290,8 @@ test("a subscriber is told the head, and every move of it", async () => {
   await new Promise((resolve) => setTimeout(resolve, 150));
   stop();
 
-  // Compaction moves the head too, to a root of the same act, and a folder may report
-  // only the last of two moves close together.
-  expect(told[0]).toBeNull();
-  expect(told.length).toBeGreaterThan(1);
-  expect(told.slice(1).every((each) => each?.act === head.act)).toBe(true);
+  // Compaction moves the head too, to the same commit, and no subscriber is told.
+  expect(told).toEqual([null, head]);
 });
 
 test("on a worker, strata compacts what its acts lay", async () => {
@@ -250,7 +306,7 @@ test("on a worker, strata compacts what its acts lay", async () => {
   await new Promise((resolve) => setTimeout(resolve, 300));
 
   const storage = folderStorage(folder);
-  expect((await rootAt(storage, (await storage.head())!)).runs.length).toBeLessThan(5);
+  expect((await stateNow(storage))!.runs.length).toBeLessThan(5);
   expect(await read(store, head!, { holon: id(4) })).toHaveLength(1);
 });
 
@@ -273,7 +329,8 @@ test("compaction waits while a read is under way", async () => {
     },
   };
   const store = strata(slow);
-  const first = await accepted(store, act(null, [note, whole]));
+  // Holons no other test writes, so no part of theirs is read from what is kept in memory.
+  const first = await accepted(store, act(null, [{ ...note, body: { text: "held" } }, { ...whole, name: "Held" }]));
   await new Promise((resolve) => setTimeout(resolve, 100));
 
   // The run's index is read once, by reading the note; the whole's version has not been
@@ -286,12 +343,12 @@ test("compaction waits while a read is under way", async () => {
   const more = [7, 8, 9].map((n) => ({ ...note, id: id(n), name: `n${n}` }));
   await accepted(store, act(first, [{ ...note, body: { text: "again" } }, ...more]));
   await new Promise((resolve) => setTimeout(resolve, 100));
-  const whileReading = (await rootAt(storage, (await storage.head())!)).runs.length;
+  const whileReading = (await stateNow(storage))!.runs.length;
 
   release();
   await reading;
   await new Promise((resolve) => setTimeout(resolve, 200));
-  const afterwards = (await rootAt(storage, (await storage.head())!)).runs.length;
+  const afterwards = (await stateNow(storage))!.runs.length;
 
   expect([whileReading, afterwards]).toEqual([2, 1]);
 });

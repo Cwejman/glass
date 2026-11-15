@@ -1,9 +1,9 @@
 // Where strata's bytes rest, in whatever place it runs: the one thing that differs
 // between a machine and a browser. A storage knows nothing of holons or acts. It keeps
 // blobs, each named by the SHA-256 of its bytes and never changed once written, and one
-// head: the name of a blob, which only moves.
+// head: a short text, which only moves.
 //
-// The head moves only if it still names what the writer last saw, so of writers racing,
+// The head moves only if it still holds what the writer last saw, so of writers racing,
 // one wins and the others read the new head and try again. Blobs can be read in part,
 // at an offset, so strata reads the page it needs, not the whole blob.
 //
@@ -17,9 +17,9 @@ export type Storage = {
   // Removes a blob that no head reaches any more, such as one written by a writer that
   // lost the race for the head.
   remove(name: string): Promise<void>;
-  // The name the head holds, or null for a storage never written.
+  // The text the head holds, or null for a storage never written.
   head(): Promise<string | null>;
-  // Points the head at a blob, only if it still holds from. Returns whether it moved.
+  // Sets the head to a text, only if it still holds from. Returns whether it moved.
   moveHead(from: string | null, to: string): Promise<boolean>;
   // Calls the listener with each new head, moved by this process or another. Returns
   // the function that stops it.

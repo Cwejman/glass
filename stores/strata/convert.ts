@@ -3,13 +3,18 @@
 // says, writing the versions that commit wrote and letting go of what it took out.
 // References are marked $holds where they hold, as each holon's types say, the types read
 // as they stand now in every store of this repository. It uses strata as any consumer
-// does, offering one act after another; strata compacts them as it goes.
+// does, offering one act after another, each made as an engine makes it: its part, its
+// content hash, the store named by the id of its root; strata compacts them as it goes.
+//
+// An act of the old log that touched other stores too named only its own blocks, never
+// the others' holons, so its converted act names only this store's part.
 //
 //   bun stores/strata/convert.ts <store name> <folder for the strata>
 
-import { isRef, mouldOf, references } from "../../engine/moulds.ts";
-import { actHash, asHolon, goneIds, type Version as OldVersion } from "../../integrations/glass/store.ts";
-import { storesHere } from "../../stores.ts";
+import { isRef, isRoot, mouldOf, references } from "../../engine/moulds.ts";
+import { asHolon, goneIds, type Version as OldVersion } from "../../integrations/glass/store.ts";
+import { holonsOf, storesHere } from "../../stores.ts";
+import { contentOf, hashOf, partOf } from "../act.ts";
 import type { Act, Head, Holon } from "../store.ts";
 import { folderStorage } from "./storage/folder.ts";
 import { strata } from "./strata.ts";
@@ -24,6 +29,7 @@ export async function convert(name: string, into: string, converted: (spent: Spe
   if (!old) throw new Error(`no store here is called ${name}`);
 
   const types = await typesEverywhere(found);
+  const root = (await holonsOf(old)).find((holon) => isRoot(holon, (id) => types.get(id)))!.id;
   const entries = await old.fullLog();
   const placed = entries.find(({ line }) => line.conversion)?.line.conversion?.blocks ?? [];
   const store = strata(folderStorage(into));
@@ -45,15 +51,16 @@ export async function convert(name: string, into: string, converted: (spent: Spe
 
     const holons = versions.map((version) => marked(asHolon(version), types));
     const gone = goneIds(line.gone);
+    const part = partOf(holons);
+    const said = { at: line.at, says: line.says, gone, parts: [[root, part && (await hashOf(part))]] as Act["parts"] };
     const act: Act = {
-      hash: await actHash(line),
-      at: line.at,
-      says: line.says,
-      over: head,
+      ...said,
+      hash: await hashOf(contentOf(said)),
+      own: root,
       holons,
-      gone,
+      born: versions.filter((version) => version.prev === null).map((version) => version.id),
+      over: head,
       touches: { ids: [...holons.map((holon) => holon.id), ...gone], addresses: [] },
-      alongside: line.stores ?? [],
     };
 
     const offering = performance.now();

@@ -1,7 +1,8 @@
 // What strata's index holds, and how its keys are made. Each entry belongs to one tree,
-// named by what its keys begin with: where each holon's latest version lies, by id; which
-// holon a whole holds under a name, by address; a holon's facts, by attribute and value
-// and, for references, by what they refer to; and the words of its text, by attribute.
+// named by what its keys begin with: where each holon's version lies, by id; which holon
+// a whole holds under a name, by address; a holon's facts, by attribute and value and,
+// for references, by what they refer to; the words of its text, by attribute; and the
+// acts the store took, by content hash, each stamped with its number.
 //
 // A fact is one value a holon has under a key: each type it is an instance of, under
 // instance; its name, under name; and each value its body holds under a key, an array
@@ -12,11 +13,11 @@
 import type { Fact, Holon, Value } from "../store.ts";
 import { compare, type Entry } from "./run.ts";
 
-export const trees = ["ids", "addresses", "value", "refers", "words"] as const;
+export const trees = ["ids", "addresses", "value", "refers", "words", "acts"] as const;
 export type Tree = (typeof trees)[number];
 
-// Where a version lies: its layer, and the offset and length of its line there.
-export type Pointer = [layer: string, offset: number, length: number];
+// Where a version lies: its part, and the offset and length of its line there.
+export type Pointer = [part: string, offset: number, length: number];
 
 // A change to a key: its value, or null where the key is removed. A fact or a word has
 // no value but its presence, true.
@@ -58,13 +59,13 @@ export const keyText = (bytes: Uint8Array) => decoder.decode(bytes.subarray(1));
 
 // ---- Values
 
-// A tree's value as a run keeps it: a pointer as its layer's 32 bytes of hash, then its
-// offset and length; an id as its text; a fact or a word as nothing.
+// A tree's value as a run keeps it: a pointer as its part's 32 bytes of hash, then its
+// offset and length; an id as its text; a fact, a word or an act as nothing.
 export function valueBytes(tree: Tree, value: unknown): Uint8Array {
   if (tree === "ids") {
-    const [layer, offset, length] = value as Pointer;
+    const [part, offset, length] = value as Pointer;
     const bytes = new Uint8Array(40);
-    for (let i = 0; i < 32; i++) bytes[i] = parseInt(layer.slice(i * 2, i * 2 + 2), 16);
+    for (let i = 0; i < 32; i++) bytes[i] = parseInt(part.slice(i * 2, i * 2 + 2), 16);
     new DataView(bytes.buffer).setUint32(32, offset);
     new DataView(bytes.buffer).setUint32(36, length);
     return bytes;
@@ -76,8 +77,8 @@ export function valueBytes(tree: Tree, value: unknown): Uint8Array {
 export function valueFrom(tree: Tree, bytes: Uint8Array): unknown {
   if (tree === "ids") {
     const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-    const layer = Array.from(bytes.subarray(0, 32), (byte) => byte.toString(16).padStart(2, "0")).join("");
-    return [layer, view.getUint32(32), view.getUint32(36)] as Pointer;
+    const part = Array.from(bytes.subarray(0, 32), (byte) => byte.toString(16).padStart(2, "0")).join("");
+    return [part, view.getUint32(32), view.getUint32(36)] as Pointer;
   }
   if (tree === "addresses") return decoder.decode(bytes);
   return true;

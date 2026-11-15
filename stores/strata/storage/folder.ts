@@ -1,5 +1,5 @@
 // A storage in a folder on a machine: each blob a file in blobs/, named by its hash, and
-// the head a file holding one blob's name. Any number of processes may share the folder.
+// the head a file holding a short text. Any number of processes may share the folder.
 //
 // A blob is written beside its place and renamed into it, so no reader sees half of one.
 // A rename is not a compare-and-swap, so moving the head takes a lock file for the swap
