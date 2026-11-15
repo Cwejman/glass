@@ -295,6 +295,28 @@ test("an act offered again after other acts is answered as taken, at the commit 
   expect(await read(store, taken, { acts: {} })).toHaveLength(1);
 });
 
+test("runs of many pages answer every key and every range, before and after they merge", async () => {
+  const { store } = opened();
+  const many = (from: number, count: number) =>
+    Array.from({ length: count }, (_, i) => ({
+      id: id(from + i),
+      instance: [id(100)],
+      name: `n${from + i}`,
+      body: { text: `word${from + i} shared` },
+    }));
+
+  const first = await accepted(store, act(null, many(1000, 3000)));
+  const second = await accepted(store, act(first, many(5000, 3000)));
+  await new Promise((resolve) => setTimeout(resolve, 300));
+
+  for (const n of [1000, 1001, 2500, 3999, 5000, 6500, 7999])
+    expect((await read(store, second, { holon: id(n) }))[0].name).toBe(`n${n}`);
+  expect(await read(store, first, { holon: id(5000) })).toEqual([]);
+  expect(await read(store, second, { facts: { a: "instance", v: { $ref: id(100) } } })).toHaveLength(6000);
+  expect(await read(store, first, { said: { a: "text", word: "shared" } })).toHaveLength(3000);
+  expect(await read(store, second, { said: { a: "text", word: "word6500" } })).toEqual([{ e: id(6500), a: "text", v: "word6500" }]);
+});
+
 describe("compaction", () => {
   test("runs are merged as acts come, and every head still reads as it did", async () => {
     const waiting = 16;

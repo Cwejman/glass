@@ -30,22 +30,24 @@ const decoder = new TextDecoder();
 // ---- Keys
 
 // A key made of parts. Each part is JSON, which never holds a raw \u0000, so the
-// separator sorts below anything a part can hold. A string longer than a key can hold
-// stands as its beginning and a hash of the whole, so every key stays short; whoever
-// reads such a part back reads the whole string from the holon.
+// separator sorts below anything a part can hold. A long string stands as its beginning
+// and a hash of the whole, so every key stays short; whoever reads such a part back reads
+// the whole string from the holon.
 export function keyOf(parts: unknown[]): string {
   return parts.map((part) => JSON.stringify(shortened(part))).join("\u0000");
 }
 
-// The longest string a key holds whole, in UTF-16 code units, and how much of a longer
-// one it keeps.
+// The longest string a key holds whole, as JSON in UTF-16 code units, and how much of a
+// longer one it keeps, so every key fits in a run's page.
 const longest = 256;
-const kept = 200;
+const kept = 64;
 
 export type Long = { $long: string; $hash: string };
 
 const shortened = (part: unknown) =>
-  typeof part === "string" && part.length > longest ? ({ $long: part.slice(0, kept), $hash: fnv(part) } as Long) : part;
+  typeof part === "string" && JSON.stringify(part).length > longest
+    ? ({ $long: part.slice(0, kept), $hash: fnv(part) } as Long)
+    : part;
 
 export const isLong = (part: unknown): part is Long =>
   part !== null && typeof part === "object" && typeof (part as Long).$long === "string";
