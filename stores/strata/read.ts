@@ -9,7 +9,6 @@
 import type { Clause, Fact, Head, Holon, Question, Value } from "../store.ts";
 import { factsOf, isLong, isRef, keyBytes, keyOf, keyText, partsOf, prefixOf, standsFor, valueFrom, type Pointer, type Tree } from "./entries.ts";
 import { commitAt, headAt, viewAt, type View } from "./head.ts";
-import { remembered } from "./remembered.ts";
 import { entriesFor, valueIn, valuesIn } from "./run.ts";
 import type { Storage } from "./storage/storage.ts";
 
@@ -109,7 +108,7 @@ export async function wholesOf(storage: Storage, view: View | null, id: string):
 }
 
 function versionBytes(storage: Storage, [part, offset, length]: Pointer) {
-  return remembered(`version ${part} ${offset}`, length, () => storage.read(part, offset, length));
+  return storage.read(part, offset, length);
 }
 
 async function holonLines(storage: Storage, view: View, ids: string[]) {

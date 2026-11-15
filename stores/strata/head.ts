@@ -15,7 +15,6 @@
 import { contentOf, hashOf } from "../act.ts";
 import type { Act, Head } from "../store.ts";
 import { keyBytes, keyOf } from "./entries.ts";
-import { remembered } from "./remembered.ts";
 import { entriesFor, type Run } from "./run.ts";
 import type { Storage } from "./storage/storage.ts";
 
@@ -36,17 +35,14 @@ const decoder = new TextDecoder();
 const encoder = new TextEncoder();
 
 export function commitAt(storage: Storage, name: string): Promise<Commit> {
-  return remembered(`commit ${name}`, 1024, async () => JSON.parse(decoder.decode(await storage.read(name))));
+  return storage.read(name).then((bytes) => JSON.parse(decoder.decode(bytes)));
 }
 
 export const commitBytes = (commit: Commit) => encoder.encode(JSON.stringify(commit));
 
 // The head a commit stands for: its act's content hash, and the commit's name.
-export function headAt(storage: Storage, commit: string): Promise<Head> {
-  return remembered(`head ${commit}`, 128, async () => ({
-    act: await hashOf(contentOf((await commitAt(storage, commit)).act)),
-    commit,
-  }));
+export async function headAt(storage: Storage, commit: string): Promise<Head> {
+  return { act: await hashOf(contentOf((await commitAt(storage, commit)).act)), commit };
 }
 
 export function stateOf(text: string): State {
