@@ -14,8 +14,9 @@
 
 import { contentOf, hashOf } from "../act.ts";
 import type { Act, Head } from "../store.ts";
+import { keyBytes, keyOf } from "./entries.ts";
 import { remembered } from "./remembered.ts";
-import type { Run } from "./run.ts";
+import { entriesFor, type Run } from "./run.ts";
 import type { Storage } from "./storage/storage.ts";
 
 export type Commit = {
@@ -79,4 +80,20 @@ export async function viewAt(storage: Storage, head: Head | null): Promise<View 
   if (!head) return null;
   const now = await stateNow(storage);
   return { runs: now?.runs ?? [], upTo: (await commitAt(storage, head.commit)).number };
+}
+
+// The head of the commit that took an act, named by its content hash, if the store took
+// it: the index stamps the act with its number, and the commit of that number is found by
+// walking back from the head.
+export async function takenAt(storage: Storage, now: State, act: string): Promise<Head | null> {
+  const upTo = (await commitAt(storage, now.commit)).number;
+  const key = keyBytes("acts", keyOf([act]));
+  const stamps = (await Promise.all(now.runs.map((run) => entriesFor(storage, run, key, upTo)))).flat();
+  if (!stamps.length) return null;
+
+  const number = stamps[0]!.act;
+  let commit = now.commit;
+  for (let at = await commitAt(storage, commit); at.number > number; at = await commitAt(storage, commit))
+    commit = at.predecessors[0]!;
+  return headAt(storage, commit);
 }

@@ -246,6 +246,33 @@ test("one act offered twice at once, by two instances over one storage, is taken
   expect(await read(store, await headAt(storage, now.commit), { holon: id(1) })).toEqual([note]);
 });
 
+test("a rename racing a hold, from two instances over one storage, leaves the index as the commits make it", async () => {
+  for (let trial = 0; trial < 10; trial++) {
+    const { storage, store } = opened();
+    const other = strata(storage);
+    const first = await accepted(store, act(null, [note, { ...whole, body: { parts: [] } }]));
+
+    const hold = await act(first, [whole], [], { ids: [id(2)], addresses: [[id(2), "Notes"]] });
+    const rename = await act(first, [{ ...note, name: "Renamed" }], [], { ids: [id(1)], addresses: [] });
+    const replies = await Promise.all([store.offer(hold), other.offer(rename)]);
+    expect(replies.every((reply) => "accepted" in reply)).toBe(true);
+
+    const latest = await headAt(storage, (await stateNow(storage))!.commit);
+    expect(await read(store, latest, { address: [id(2), "Notes"] })).toEqual([]);
+    expect((await read(store, latest, { address: [id(2), "Renamed"] }))[0].id).toBe(id(1));
+  }
+});
+
+test("an act offered again after other acts is answered as taken, at the commit that took it", async () => {
+  const { store } = opened();
+  const offered = await act(null, [note]);
+  const taken = await accepted(store, offered);
+  await accepted(store, act(taken, [whole]));
+
+  expect(await store.offer(offered)).toEqual({ accepted: taken });
+  expect(await read(store, taken, { acts: {} })).toHaveLength(1);
+});
+
 describe("compaction", () => {
   test("runs are merged as acts come, and every head still reads as it did", async () => {
     const waiting = 16;
