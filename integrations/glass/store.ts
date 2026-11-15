@@ -171,6 +171,9 @@ const decode = (text: string) => [...text].reduce((n, char) => n * 32 + alphabet
 
 export const idAt = (ms: number, count = 0) => encode(ms, 9) + encode(count, 6);
 
+// The moment a holon was born, in milliseconds, read from its id's first nine characters.
+export const bornAt = (id: string) => decode(id.slice(0, 9));
+
 export const nextId = (id: string) => id.slice(0, 9) + encode(decode(id.slice(9)) + 1, 6);
 
 // The holons a commit gave a version: each block's new ones, a run from its first, and

@@ -166,6 +166,13 @@ a:hover {
   text-decoration-color: var(--accent);
 }
 
+/* Text new since a moment the reader chose, washed in the accent, which
+   has its own light and dark. */
+mark {
+  color: inherit;
+  background: color-mix(in oklch, var(--accent) 22%, transparent);
+}
+
 code,
 pre {
   font-family: var(--mono);

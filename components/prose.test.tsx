@@ -1,6 +1,7 @@
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
 import { beforeAll, expect, test } from "bun:test";
 import type { HolonRead, Whole } from "../engine/compat.ts";
+import { idAt } from "../integrations/glass/store.ts";
 import { block, inline } from "./prose.tsx";
 
 beforeAll(() => {
@@ -101,4 +102,21 @@ test("text is never read as markup", () => {
   };
 
   expect(element(block(dangerous, "s")).querySelector("img")).toBe(null);
+});
+
+test("given a moment, a sentence born after it is marked, and one born before is not", () => {
+  const before = idAt(Date.parse("2026-11-01"));
+  const after = idAt(Date.parse("2026-11-20"));
+  const timed: Whole["holons"] = {
+    w: word("w", "old"),
+    n: word("n", "new"),
+    [before]: holon(before, "sentence", { words: [ref("w")] }),
+    [after]: holon(after, "sentence", { words: [ref("n")] }),
+    p: holon("p", "paragraph", { sentences: [ref(before), ref(after)] }),
+  };
+
+  const drawn = element(block(timed, "p", Date.parse("2026-11-15")));
+
+  expect([...drawn.querySelectorAll("mark")].map((mark) => mark.textContent)).toEqual(["new"]);
+  expect(element(block(timed, "p")).querySelector("mark")).toBe(null);
 });
