@@ -7,20 +7,28 @@
 // The lock holds its holder's process id; a lock left by a process that died is removed
 // and taken. Two processes taking over the same dead lock at the same instant could both
 // succeed; that needs a crash and a race together, and is left so for now.
+//
+// A blob read is kept open, and read again at an offset through the same file
+// descriptor, the number the system gives a file opened, so a read is one call to the
+// system rather than open, read and close. Blobs never change, so what an open file reads
+// is always right, and on macOS and Linux a blob removed while open stays readable through
+// it. Up to a few thousand are kept open, the first opened closed first; the system's page
+// cache keeps their bytes, not this.
 
-import { mkdirSync, watch } from "node:fs";
-import { open, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
+import { closeSync, fstatSync, mkdirSync, openSync, readSync, watch } from "node:fs";
+import { readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { nameOf, type Storage } from "./storage.ts";
 
 // The storage's methods, over the folder given.
 export function folderStorage(folder: string): Storage {
   mkdirSync(join(folder, "blobs"), { recursive: true });
+  const opened = new Map<string, number>();
 
   return {
     put: (bytes) => put(folder, bytes),
-    read: (name, offset, length) => read(folder, name, offset, length),
-    remove: (name) => remove(folder, name),
+    read: async (name, offset, length) => read(folder, opened, name, offset, length),
+    remove: (name) => remove(folder, opened, name),
     head: () => head(folder),
     moveHead: (from, to) => moveHead(folder, from, to),
     watchHead: (listener) => watchHead(folder, listener),
@@ -42,20 +50,32 @@ async function put(folder: string, bytes: Uint8Array) {
   return name;
 }
 
-async function read(folder: string, name: string, offset = 0, length?: number) {
-  const file = await open(blobAt(folder, name));
+// The most blobs kept open at once.
+const most = 4096;
 
-  try {
-    const size = length ?? (await file.stat()).size - offset;
-    const bytes = new Uint8Array(size);
-    const { bytesRead } = await file.read(bytes, 0, size, offset);
-    return bytes.subarray(0, bytesRead);
-  } finally {
-    await file.close();
+function read(folder: string, opened: Map<string, number>, name: string, offset = 0, length?: number) {
+  let file = opened.get(name);
+  if (file === undefined) {
+    file = openSync(blobAt(folder, name), "r");
+    opened.set(name, file);
+    if (opened.size > most) {
+      const [first, descriptor] = opened.entries().next().value!;
+      opened.delete(first);
+      closeSync(descriptor);
+    }
   }
+
+  const size = length ?? fstatSync(file).size - offset;
+  const bytes = new Uint8Array(size);
+  return bytes.subarray(0, readSync(file, bytes, 0, size, offset));
 }
 
-async function remove(folder: string, name: string) {
+async function remove(folder: string, opened: Map<string, number>, name: string) {
+  const file = opened.get(name);
+  if (file !== undefined) {
+    opened.delete(name);
+    closeSync(file);
+  }
   await rm(blobAt(folder, name), { force: true });
 }
 
