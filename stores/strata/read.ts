@@ -6,8 +6,8 @@
 // A run read here may be merged and removed by compaction, in this process or another,
 // before the read reaches it; the read then begins again, from the runs the store has now.
 
-import type { Clause, Head, Holon, Question } from "../store.ts";
-import { factsOf, isRef, keyBytes, keyOf, keyText, partsOf, prefixOf, valueFrom, type Pointer, type Tree } from "./entries.ts";
+import type { Clause, Fact, Head, Holon, Question, Value } from "../store.ts";
+import { factsOf, isLong, isRef, keyBytes, keyOf, keyText, partsOf, prefixOf, standsFor, valueFrom, type Pointer, type Tree } from "./entries.ts";
 import { commitAt, headAt, viewAt, type View } from "./head.ts";
 import { remembered } from "./remembered.ts";
 import { entriesFor, valueIn, valuesIn } from "./run.ts";
@@ -122,29 +122,44 @@ async function holonLines(storage: Storage, view: View, ids: string[]) {
 // attribute alone.
 async function factsFor(storage: Storage, view: View, { e, a, v }: Clause) {
   const matches = (fact: { a: string; v: unknown }) =>
-    (a === undefined || fact.a === a) && (v === undefined || json(fact.v) === json(v));
+    (a === undefined || fact.a === a) && (v === undefined || JSON.stringify(fact.v) === JSON.stringify(v));
 
   if (e !== undefined) {
     const held = await holonAt(storage, view, e);
     return held ? factsOf(held.version).filter(matches) : [];
   }
 
+  // The facts the keys found say, each [holon, attribute, value] as its key holds it.
+  const facts = async (found: [e: unknown, a: unknown, v: unknown][]) =>
+    (await Promise.all(found.map(([e, a, v]) => factsKept(storage, view, e as string, a, v)))).flat().filter(matches);
+
   if (a !== undefined && v !== undefined) {
     const entries = await foundBetween(storage, view, "value", ...prefixOf([a, v]));
-    return entries.map(([key]) => ({ e: partsOf(key)[2], a, v }));
+    return facts(entries.map(([key]) => [partsOf(key)[2], a, partsOf(key)[1]]));
   }
 
   if (v !== undefined && isRef(v)) {
     const entries = await foundBetween(storage, view, "refers", ...prefixOf([v.$ref]));
-    return entries.map(([key]) => ({ e: partsOf(key)[2], a: partsOf(key)[1], v }));
+    return facts(entries.map(([key]) => [partsOf(key)[2], partsOf(key)[1], v]));
   }
 
   if (a !== undefined) {
     const entries = await foundBetween(storage, view, "value", ...prefixOf([a]));
-    return entries.map(([key]) => ({ e: partsOf(key)[2], a, v: partsOf(key)[1] }));
+    return facts(entries.map(([key]) => [partsOf(key)[2], a, partsOf(key)[1]]));
   }
 
   throw new Error("a clause needs a holon, an attribute or a reference");
+}
+
+// The fact a key holds, or, where the key kept only the beginning of a long string, the
+// holon's facts that string stands for, read whole from the holon.
+async function factsKept(storage: Storage, view: View, e: string, a: unknown, v: unknown): Promise<Fact[]> {
+  if (!isLong(a) && !isLong(v)) return [{ e, a: a as string, v: v as Value }];
+
+  const held = await holonAt(storage, view, e);
+  const kept = (part: unknown, value: unknown) =>
+    isLong(part) ? standsFor(part, value) : JSON.stringify(part) === JSON.stringify(value);
+  return held ? factsOf(held.version).filter((fact) => kept(a, fact.a) && kept(v, fact.v)) : [];
 }
 
 // A holon's versions, newest first, each line as it was written: every act that set it,

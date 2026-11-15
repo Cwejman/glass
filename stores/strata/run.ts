@@ -80,6 +80,7 @@ function writer() {
   }
 
   function add({ key, act, value }: Entry) {
+    if (key.length > 0xffff || (value?.length ?? 0) > 0xffff) throw new Error("an entry longer than a run can hold");
     if (count++ % block === 0) {
       starts.push(at);
       firsts.push(key);

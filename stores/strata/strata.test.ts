@@ -121,6 +121,28 @@ describe("strata", () => {
     ]);
   });
 
+  test("a text longer than a key holds is found by its words, its value and its attribute, and read whole", async () => {
+    const { store } = opened();
+    const long = { ...note, body: { text: "word ".repeat(14000) + "end" } };
+    const other = { ...note, id: id(3), name: "Other", body: { text: "zebra" } };
+    const head = await accepted(store, act(null, [long, other]));
+
+    expect(await read(store, head, { facts: { a: "instance", v: { $ref: id(100) } } })).toHaveLength(2);
+    expect(await read(store, head, { said: { a: "text", word: "zebra" } })).toHaveLength(1);
+    expect(await read(store, head, { said: { a: "text", word: "end" } })).toEqual([{ e: id(1), a: "text", v: "end" }]);
+    expect(await read(store, head, { facts: { a: "text", v: long.body.text } })).toEqual([{ e: id(1), a: "text", v: long.body.text }]);
+    expect(await read(store, head, { facts: { a: "text", v: long.body.text + "!" } })).toEqual([]);
+    expect((await read(store, head, { facts: { a: "text" } })).map((fact) => fact.v).sort()).toEqual([long.body.text, "zebra"]);
+  });
+
+  test("a holon's facts are found by its value too", async () => {
+    const { store } = opened();
+    const head = await accepted(store, act(null, [note]));
+    expect(await read(store, head, { facts: { e: id(1), v: "Glass holds holons" } })).toEqual([
+      { e: id(1), a: "text", v: "Glass holds holons" },
+    ]);
+  });
+
   test("a word is found whatever its case or accents", async () => {
     const { store } = opened();
     const head = await accepted(store, act(null, [{ ...note, body: { text: "Une Âme de verre" } }]));

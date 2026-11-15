@@ -30,9 +30,39 @@ const decoder = new TextDecoder();
 // ---- Keys
 
 // A key made of parts. Each part is JSON, which never holds a raw \u0000, so the
-// separator sorts below anything a part can hold.
+// separator sorts below anything a part can hold. A string longer than a key can hold
+// stands as its beginning and a hash of the whole, so every key stays short; whoever
+// reads such a part back reads the whole string from the holon.
 export function keyOf(parts: unknown[]): string {
-  return parts.map((part) => JSON.stringify(part)).join("\u0000");
+  return parts.map((part) => JSON.stringify(shortened(part))).join("\u0000");
+}
+
+// The longest string a key holds whole, in UTF-16 code units, and how much of a longer
+// one it keeps.
+const longest = 256;
+const kept = 200;
+
+export type Long = { $long: string; $hash: string };
+
+const shortened = (part: unknown) =>
+  typeof part === "string" && part.length > longest ? ({ $long: part.slice(0, kept), $hash: fnv(part) } as Long) : part;
+
+export const isLong = (part: unknown): part is Long =>
+  part !== null && typeof part === "object" && typeof (part as Long).$long === "string";
+
+// Whether a value is the one a long part stands for.
+export const standsFor = (part: Long, value: unknown) => JSON.stringify(shortened(value)) === JSON.stringify(part);
+
+// A hash of a string's code units, as 16 hex digits: two 32-bit FNV-1a hashes begun from
+// different offsets. A long string found by it is always checked against the holon's.
+function fnv(text: string) {
+  let [a, b] = [0x811c9dc5, 0x050c5d1f];
+  for (let i = 0; i < text.length; i++) {
+    const unit = text.charCodeAt(i);
+    a = Math.imul(a ^ unit, 0x01000193) >>> 0;
+    b = Math.imul(b ^ unit, 0x01000193) >>> 0;
+  }
+  return a.toString(16).padStart(8, "0") + b.toString(16).padStart(8, "0");
 }
 
 // The keys beginning with these parts: from the key they make, up to but not including
