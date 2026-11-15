@@ -7,10 +7,6 @@
 // visit added to the reader's history in the field, which is only ever added to. Back
 // and forward are only the address changing: nothing is written to go back.
 //
-// An address may say a moment, `&since=2026-11-15T20:00`, and the root offers it to
-// everything beneath, so prose marks the sentences born after it. It is read once, as
-// the page opens, and said again in every address the page moves to.
-//
 // The page names the entry, and everything else is reached from it by reference: what
 // it offers is what everything beneath it looks for, the functions, components, types
 // and material glass ships. Names are looked up only within a whole that holds them.
@@ -130,8 +126,6 @@ export async function mount(
 
   lay(offer.material ? await engine.holon(offer.material.$ref) : null);
 
-  const sinceSaid = new URL(location.href).searchParams.get("since");
-  const since = Date.parse(sinceSaid ?? "");
   const historyType = typeNamed("history");
   const rootOf = async () => (await firstNamedInHome(engine, "root")) ?? entry;
 
@@ -234,7 +228,7 @@ export async function mount(
 
     await drawn.draw(page, {
       reads: { holon: drawnRoot },
-      offered: { kind: "full", ...(Number.isNaN(since) ? {} : { since }) },
+      offered: { kind: "full" },
       settings: { place, entry: entered.body },
     });
   }
@@ -272,13 +266,10 @@ export async function mount(
   }
 
   async function addressFor(at: Place) {
-    const moment = Number.isNaN(since) ? "" : `since=${sinceSaid}`;
-    if (samePlace(at, atRoot())) return moment ? `${location.pathname}?${moment}` : location.pathname;
+    if (samePlace(at, atRoot())) return location.pathname;
 
     const { names, or, route } = await functionsNow();
-    const address = addressOf(location.pathname, at, { names, or, route: await routeTo(at, route) });
-
-    return moment ? `${address}&${moment}` : address;
+    return addressOf(location.pathname, at, { names, or, route: await routeTo(at, route) });
   }
 
   // The place the address names, or, where it names none that can be read, the root,
@@ -307,7 +298,7 @@ export async function mount(
     if (place) return;
 
     place = atRoot();
-    history.replaceState(null, "", await addressFor(place));
+    history.replaceState(null, "", location.pathname);
   }
 
   addEventListener("popstate", () => void inTurn(async () => (await settle(), await draw())));

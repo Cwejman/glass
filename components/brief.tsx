@@ -99,7 +99,7 @@ async function full(given: Given, space: Space) {
     <article class="place reader">
       {way}
       <h1>{brief.name}</h1>
-      {await flowAndSections(brief, space, 2, new Set([brief.id]), given.offered.since as number | undefined)}
+      {await flowAndSections(brief, space, 2, new Set([brief.id]))}
     </article>
   );
 }
@@ -110,12 +110,11 @@ async function flowAndSections(
   space: Space,
   depth: number,
   seen: Set<string>,
-  since?: number,
 ): Promise<Child> {
   const { holons } = await untilBriefs(space, brief.id);
 
   const flow = refsOf(brief.body.prose).map(
-    (id) => block(holons, id, since) ?? space.open(id, { offer: { kind: "face" } }),
+    (id) => block(holons, id) ?? space.open(id, { offer: { kind: "face" } }),
   );
 
   const sections = await Promise.all(
@@ -126,14 +125,14 @@ async function flowAndSections(
       if (!section || seen.has(id)) return [];
       seen.add(id);
 
-      return [sectionOf(section, space, depth, seen, since)];
+      return [sectionOf(section, space, depth, seen)];
     }),
   );
 
   return [flow, sections];
 }
 
-async function sectionOf(section: HolonRead, space: Space, depth: number, seen: Set<string>, since?: number) {
+async function sectionOf(section: HolonRead, space: Space, depth: number, seen: Set<string>) {
   const Heading = `h${Math.min(depth, 6)}`;
 
   return (
@@ -143,12 +142,12 @@ async function sectionOf(section: HolonRead, space: Space, depth: number, seen: 
           {section.name}
         </a>
       </Heading>
-      {await flowAndSections(section, space, depth + 1, seen, since)}
+      {await flowAndSections(section, space, depth + 1, seen)}
     </section>
   );
 }
 
-async function face({ holon, offered }: Given, space: Space) {
+async function face({ holon }: Given, space: Space) {
   const brief = holon as HolonRead;
   const firstId = refsOf(brief.body.prose)[0];
   const first = firstId ? (await space.read({ whole: firstId })).holons : {};
@@ -156,9 +155,7 @@ async function face({ holon, offered }: Given, space: Space) {
   return (
     <div class="card face-card">
       <h2>{brief.name}</h2>
-      {firstId &&
-        first[firstId]?.types.includes("paragraph") &&
-        block(first, firstId, offered.since as number | undefined)}
+      {firstId && first[firstId]?.types.includes("paragraph") && block(first, firstId)}
     </div>
   );
 }

@@ -1,11 +1,9 @@
 // Prose drawn from its holons: a paragraph is its sentences, a sentence is its words,
 // and a word is what comes before it, its text, and what comes after. Nothing here is
 // a slot, so a brief of thousands of words is one drawing. What is not prose, standing
-// in a flow, is left to whatever the caller opens for it. Given a moment, in milliseconds,
-// a sentence born after it is marked as new since then.
+// in a flow, is left to whatever the caller opens for it.
 
 import type { HolonRead, Whole } from "../engine/compat.ts";
-import { bornAt } from "../integrations/glass/store.ts";
 import { h, type Child } from "./jsx.ts";
 
 type Holons = Whole["holons"];
@@ -22,10 +20,10 @@ const leadsClose = (holon: HolonRead | undefined) =>
   !!holon?.types.includes("word") && /^[.,;:!?)\]]/.test(holon.body.before ?? "");
 
 // Words and what stands among them, each set apart by a space.
-function spaced(holons: Holons, ids: string[], since?: number): Child[] {
+function spaced(holons: Holons, ids: string[]): Child[] {
   return ids.flatMap((id, i) => [
     i > 0 && !keepsClose(holons[id]) && !leadsClose(holons[id]) ? " " : null,
-    inline(holons, id, since),
+    inline(holons, id),
   ]);
 }
 
@@ -54,7 +52,7 @@ function linked({ body }: HolonRead, words: Child[]) {
   );
 }
 
-export function inline(holons: Holons, id: string, since?: number): Child {
+export function inline(holons: Holons, id: string): Child {
   const holon = holons[id];
   if (!holon) return null;
 
@@ -64,24 +62,23 @@ export function inline(holons: Holons, id: string, since?: number): Child {
     return [body.before ?? "", leadsClose(holon) ? " " : "", body.text, body.after ?? ""].join("");
   if (types.includes("codespan") || types.includes("closed")) return <code>{body.text}</code>;
 
-  const inside = spaced(holons, [...refsOf(body.sentences), ...refsOf(body.words)], since);
+  const inside = spaced(holons, [...refsOf(body.sentences), ...refsOf(body.words)]);
 
   if (types.includes("emphasis")) return <em>{inside}</em>;
   if (types.includes("strong")) return <strong>{inside}</strong>;
   if (types.includes("link")) return linked(holon, inside);
-  if (types.includes("sentence") && since !== undefined && bornAt(id) > since) return <mark>{inside}</mark>;
 
   return inside;
 }
 
 // One block of a flow, or nothing where the holon is not prose.
-export function block(holons: Holons, id: string, since?: number): Node | null {
+export function block(holons: Holons, id: string): Node | null {
   const holon = holons[id];
   if (!holon) return null;
 
   const { body, types } = holon;
 
-  if (types.includes("paragraph") || types.includes("sentence")) return <p>{inline(holons, id, since)}</p>;
+  if (types.includes("paragraph") || types.includes("sentence")) return <p>{inline(holons, id)}</p>;
   if (types.includes("break")) return <hr />;
   if (types.includes("code"))
     return (
@@ -92,18 +89,18 @@ export function block(holons: Holons, id: string, since?: number): Node | null {
   if (types.includes("drawing")) return <pre>{(body.lines as string[]).join("\n")}</pre>;
 
   if (types.includes("quote")) {
-    return <blockquote>{refsOf(body.prose).map((inner) => block(holons, inner, since))}</blockquote>;
+    return <blockquote>{refsOf(body.prose).map((inner) => block(holons, inner))}</blockquote>;
   }
 
   if (types.includes("list")) {
-    return <ul>{refsOf(body.items).map((inner) => block(holons, inner, since))}</ul>;
+    return <ul>{refsOf(body.items).map((inner) => block(holons, inner))}</ul>;
   }
 
   if (types.includes("item")) {
     return (
       <li>
-        {spaced(holons, refsOf(body.sentences), since)}
-        {body.list && block(holons, body.list.$ref, since)}
+        {spaced(holons, refsOf(body.sentences))}
+        {body.list && block(holons, body.list.$ref)}
       </li>
     );
   }
