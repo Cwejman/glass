@@ -7,7 +7,9 @@
 //
 // A store published with a site names where the site serves it. Its head is the one the
 // site serves, and it is read here, never written. A blob it does not keep yet is fetched
-// from the site once, checked against its name, and kept.
+// from the site once, served gzipped as the site's build writes it, unpacked, checked
+// against its name, and kept. A blob a read waits on is fetched at once; blobs asked to be
+// kept beforehand are fetched behind them, a few at a time, only while no read waits.
 //
 // The head of a store the reader writes, such as the home, is moved under a Web Lock,
 // which every tab and worker of the site shares, and each move is told to the others on a
@@ -19,7 +21,10 @@ import { nameOf, type Storage } from "./storage.ts";
 // the URL its blobs and head are served from, ending in a slash.
 export type Kept = { folder: string; from?: string };
 
-export async function browserStorage({ folder, from }: Kept): Promise<Storage> {
+// A browser's storage, which can also be asked to keep blobs before any read needs them.
+export type BrowserStorage = Storage & { keep(names: string[]): Promise<void> };
+
+export async function browserStorage({ folder, from }: Kept): Promise<BrowserStorage> {
   const opfs = await navigator.storage.getDirectory();
   const glass = await opfs.getDirectoryHandle("glass", { create: true });
   const kept = await glass.getDirectoryHandle(folder, { create: true });
@@ -33,6 +38,7 @@ export async function browserStorage({ folder, from }: Kept): Promise<Storage> {
     head: () => head(kept, from),
     moveHead: (before, to) => moveHead(kept, folder, from, before, to),
     watchHead: (listener) => watchHead(folder, from, listener),
+    keep: (names) => keep(blobs, from, names),
   };
 }
 
@@ -138,7 +144,7 @@ const most = 4096;
 async function openBlob(blobs: Folder, from: string | undefined, name: string): Promise<Opened> {
   const handle = await blobs.getFileHandle(name).catch(async () => {
     if (!from) throw new Error(`the blob ${name} is not kept here`);
-    await fetched(blobs, from, name);
+    await asked(() => fetched(blobs, from, name));
     return blobs.getFileHandle(name);
   });
 
@@ -203,7 +209,42 @@ async function write(folder: Folder, name: string, bytes: Uint8Array) {
   await (beside as unknown as { move(name: string): Promise<void> }).move(name);
 }
 
-// A blob fetched from the site, checked against its name, and kept.
+// The blobs not kept yet fetched and kept, a few at a time, each waiting while a read
+// waits on a fetch of its own.
+async function keep(blobs: Folder, from: string | undefined, names: string[]) {
+  if (!from) return;
+  const together = 4;
+  let next = 0;
+
+  await Promise.all(
+    Array.from({ length: together }, async () => {
+      while (next < names.length) {
+        const name = names[next++]!;
+        if (await blobs.getFileHandle(name).then(() => true, () => false)) continue;
+        await quiet();
+        await fetched(blobs, from, name);
+      }
+    }),
+  );
+}
+
+// Fetches reads wait on, under way, in every store of the worker; and what waits for
+// there to be none.
+let waiting = 0;
+const idle: (() => void)[] = [];
+
+async function asked<T>(work: () => Promise<T>) {
+  waiting++;
+  try {
+    return await work();
+  } finally {
+    if (--waiting === 0) for (const go of idle.splice(0)) go();
+  }
+}
+
+const quiet = () => (waiting === 0 ? Promise.resolve() : new Promise<void>((go) => idle.push(go)));
+
+// A blob fetched from the site, unpacked, checked against its name, and kept.
 const fetching = new Map<string, Promise<void>>();
 
 function fetched(blobs: Folder, from: string, name: string) {
@@ -214,7 +255,7 @@ function fetched(blobs: Folder, from: string, name: string) {
     const served = await fetch(`${from}blobs/${name}`);
     if (!served.ok) throw new Error(`the site did not serve the blob ${name}: ${served.status}`);
 
-    const bytes = new Uint8Array(await served.arrayBuffer());
+    const bytes = new Uint8Array(await new Response(served.body!.pipeThrough(new DecompressionStream("gzip"))).arrayBuffer());
     if ((await nameOf(bytes)) !== name)
       throw new Error(`the blob ${name} the site served does not match its name`);
 

@@ -19,7 +19,7 @@ const strataCode = new URL("./strata.js", import.meta.url);
 
 const published = (name: string) => ({
   folder: name,
-  from: new URL(`./stores/${name}/`, location.href).href,
+  from: new URL(`./strata/${name}/`, location.href).href,
 });
 
 try {
