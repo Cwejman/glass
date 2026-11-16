@@ -32,7 +32,8 @@ async function act(
 ): Promise<Act> {
   const part = partOf(holons);
   const said = {
-    at: new Date(acts++).toISOString(),
+    when: new Date(acts++).toISOString(),
+    at: [] as Act["at"],
     says: "a test",
     gone,
     parts: [["here", part && (await hashOf(part))], ...others] as Act["parts"],
@@ -102,6 +103,22 @@ describe("strata", () => {
     expect(await read(store, next, { address: [id(2), "Notes"] })).toEqual([]);
     expect((await read(store, next, { address: [id(2), "Renamed"] }))[0].id).toBe(id(1));
     expect((await read(store, next, { address: [id(2), "Other"] }))[0].id).toBe(id(3));
+  });
+
+  test("a whole is read in one question, to a depth, not entering what stop names, nor what it does not keep", async () => {
+    const { store } = opened();
+    const word = { id: id(5), instance: [id(102)], body: { text: "holds" } };
+    const sentence = { id: id(4), instance: [id(102)], body: { words: [ref(5, true)] } };
+    const paragraph = { id: id(3), instance: [id(101)], body: { parts: [ref(4, true), ref(9, true)] } };
+    const top = { ...whole, body: { parts: [ref(3, true), ref(1)] } };
+    const head = await accepted(store, act(null, [top, paragraph, sentence, word, note]));
+    const ids = async (whole: { id: string; depth?: number; stop?: string[] }) =>
+      (await read(store, head, { whole })).map(({ id }) => id);
+
+    expect(await ids({ id: id(2) })).toEqual([id(2), id(3), id(4), id(5)]);
+    expect(await ids({ id: id(2), depth: 1 })).toEqual([id(2), id(3)]);
+    expect(await ids({ id: id(2), stop: [id(102)] })).toEqual([id(2), id(3), id(4)]);
+    expect(await ids({ id: id(9) })).toEqual([]);
   });
 
   test("facts are found by attribute and value, by reference, and by holon", async () => {

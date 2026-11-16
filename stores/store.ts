@@ -34,12 +34,15 @@ export type Fact = { e: string; a: string; v: Value };
 export type Clause = { e?: string; a?: string; v?: Value };
 
 // What a read can ask, as of a head: a holon by id, or by address, a whole and a name;
-// the facts matching a clause; the holons containing a word under a key; a holon's
-// versions; the acts before the head; or whether the store took an act, named by its
-// content hash, and where in its history.
+// a whole, a holon and what it holds, down to a depth, reading but not entering the
+// holons of the types named by id in stop, as far as this store keeps them; the facts
+// matching a clause; the holons containing a word under a key; a holon's versions; the
+// acts before the head; or whether the store took an act, named by its content hash, and
+// where in its history.
 export type Question =
   | { holon: string }
   | { address: [whole: string, name: string] }
+  | { whole: { id: string; depth?: number; stop?: string[] } }
   | { facts: Clause }
   | { said: { a: string; word: string } }
   | { versions: string }
@@ -63,15 +66,19 @@ export type Touches = { ids: string[]; addresses: [whole: string, name: string][
 // parts names every store the act touches, by the id of its root, with the hash of its
 // part, or null for a store the act only lets go in; own says which is this store. The
 // act's hash is its content hash, of what it says, as contentOf in act.ts gives it, the
-// same in every store. gone takes a holon out of every store that keeps it; born names the
+// same in every store. when is its moment; at names, by the id of each store's root, the
+// head of each store it touches that its maker read before making it, so history tells
+// what each maker had seen of what it changed, and is empty where it was made without
+// reading. gone takes a holon out of every store that keeps it; born names the
 // holons this store has never kept, so their versions before need not be looked for.
 export type Act = {
   hash: string;
-  at: string;
+  when: string;
   says: string;
   by?: string;
   gone: string[];
   parts: [store: string, part: string | null][];
+  at: [store: string, head: Head][];
   own: string;
   holons: Holon[];
   born: string[];

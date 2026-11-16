@@ -3,36 +3,44 @@
 // The engine holds no holons. Each store keeps its own holons, their history and their
 // index, and reports where it stands as a head. Stores are started by whoever sets glass
 // up, the page for instance, and passed to mount already running, local or reached over
-// the wire. The engine keeps only its mounts, each a store under a name, and the current
-// head of each.
+// the wire.
 //
-// Reads run on readers (reader.ts), started on the runtime the engine is given: workers()
-// for one thread per reader, or sameThread() for a single-threaded engine. Each reader
-// gets its own connection to every store. Commits run on the engine itself, which alone
-// knows the changes in progress.
+// The engine's own thread keeps only what has to be one, seen by every verb: the mounts
+// and the current head of each, the subscriptions and the heads each stood on, and the
+// changes under way. All other work is done by workers (worker.ts), started on the
+// runtime the engine is given: workers() for one thread each, or sameThread() for an
+// engine on one thread. Every worker is the same and has its own connection to every
+// store; it reads, and it takes a commit through judging, minting and offering.
+//
+// Workers are one pool. Reads and commits each hold at most all but one of them, so a
+// burst of either never leaves the other waiting for a worker.
+//
+// A change waits only for the changes under way that touch the same holons or addresses,
+// strict or not, since one under way may yet be refused. It is then judged against the
+// field as it stands: refused if it can no longer stand, and, if strict, if anything it
+// touches moved since its at.
 //
 // Anyone can subscribe to an expression. When a store's head moves, whoever moved it,
-// the engine records the new head and reruns the reads that used that store. A store
-// that stops is unmounted, and its subscribers are notified.
+// the engine records the new head and reruns the reads that stood on that store. A store
+// that stops is unmounted, and its subscribers are told.
 
 import type { Expression, Value } from "../../language/expression.ts";
 import type { Runtime } from "../../runtime/runtime.ts";
 import type { Head, Problem, Store, Touches } from "../../stores/store.ts";
 import { anotherConnectionTo, disconnect, disconnected } from "../../wire/wire.ts";
-import type { Reader } from "./reader.ts";
+import type { EngineWorker } from "./worker.ts";
 import type { Change } from "./commit/change.ts";
 import { touchesOf, meet } from "./commit/touches.ts";
-import { judge } from "./commit/judge.ts";
-import { mint } from "./commit/mint.ts";
-import { land, type Landed } from "./commit/land.ts";
+import type { Landed } from "./commit/land.ts";
 
 // A mounted store: the store, whether this engine writes to it, and the function that
 // ends the engine's subscription to it.
 export type Mount = { store: Store; write: boolean; unsubscribe: () => void };
 
-// The head of each store a read used, by mount name. A subscriber is rerun when one of
-// these moves. A change can carry them, to be refused if anything it touches has moved
-// since.
+// Heads by mount name. A read answers with the heads of the stores it read, and a
+// subscriber is rerun when one of them moves. A change carries the heads it was made
+// from, empty when made without reading, and its commit keeps those of the stores it
+// touches.
 export type Heads = Readonly<Record<string, Head | null>>;
 
 export type Answer = { at: Heads } & ({ value: Value } | { problem: string });
@@ -48,33 +56,40 @@ export type Engine = {
   commit(change: Change): Promise<Committed>;
 };
 
-// What an engine is started with: the runtime its readers run on, and how many to start.
-export type Starting = { readers: Runtime; count?: number };
+// What an engine is started with: the runtime its workers run on, and how many to start.
+export type Starting = { workers: Runtime; count?: number };
 
+type Work = "read" | "commit";
+type Waiting = { work: Work; resolve: (worker: EngineWorker) => void };
 type Subscriber = { expression: Expression; listener: (answer: Answer) => void; stoodOn: Heads };
 type Underway = { touches: Touches; done: Promise<void> };
 
-const readerCode = new URL("./reader.ts", import.meta.url);
+const workerCode = new URL("./worker.ts", import.meta.url);
 
-export async function engine({ readers: runtime, count = 1 }: Starting): Promise<Engine> {
-  const readers = await Promise.all(Array.from({ length: count }, () => runtime.run<Reader>(readerCode)));
+const sameHead = (a: Head | null | undefined, b: Head | null | undefined) =>
+  (a?.commit ?? null) === (b?.commit ?? null);
+
+export async function engine({ workers: runtime, count = 1 }: Starting): Promise<Engine> {
+  const workers = await Promise.all(
+    Array.from({ length: count }, () => runtime.run<EngineWorker>(workerCode)),
+  );
   const mounts = new Map<string, Mount>();
   const heads = new Map<string, Head | null>();
   const subscribers = new Set<Subscriber>();
   const underway = new Set<Underway>();
-  const idle = [...readers];
-  const waitingForReader: ((reader: Reader) => void)[] = [];
 
-  // Mounts a store under a name, gives every reader its own connection to it, and
+  const idle = [...workers];
+  const waiting: Waiting[] = [];
+  const busy: Record<Work, number> = { read: 0, commit: 0 };
+  const most = Math.max(1, count - 1);
+
+  // Mounts a store under a name, gives every worker its own connection to it, and
   // subscribes to its head. Each move records the new head and reruns the subscribers
-  // that read from this store. If the store stops, it is unmounted.
+  // that stood on this store. If the store stops, it is unmounted.
   async function mount(name: string, store: Store, { write = false } = {}) {
-    for (const reader of readers) await reader.mount(name, await anotherConnectionTo(store));
+    for (const worker of workers) await worker.mount(name, await anotherConnectionTo(store), { write });
 
-    const unsubscribe = await store.subscribe((head) => {
-      heads.set(name, head);
-      for (const subscriber of subscribers) if (name in subscriber.stoodOn) notify(subscriber);
-    });
+    const unsubscribe = await store.subscribe((head) => moved(name, head));
 
     mounts.set(name, { store, write, unsubscribe });
     disconnected(store).then(() => {
@@ -90,19 +105,19 @@ export async function engine({ readers: runtime, count = 1 }: Starting): Promise
 
     mount?.unsubscribe();
     if (mount) disconnect(mount.store);
-    await Promise.all(readers.map((reader) => reader.unmount(name)));
+    await Promise.all(workers.map((worker) => worker.unmount(name)));
     for (const subscriber of subscribers) if (name in subscriber.stoodOn) notify(subscriber);
   }
 
-  // Runs the read on the first free reader, with every store's head as the read starts.
-  // A slow read holds up only its own reader; other reads go to the others.
+  // Works the expression out on a worker, over every store as it stood when the read
+  // began.
   async function read(expression: Expression): Promise<Answer> {
-    const reader = await freeReader();
+    const worker = await take("read");
 
     try {
-      return await reader.read(expression, Object.fromEntries(heads));
+      return await worker.read(expression, Object.fromEntries(heads));
     } finally {
-      release(reader);
+      give("read", worker);
     }
   }
 
@@ -115,24 +130,39 @@ export async function engine({ readers: runtime, count = 1 }: Starting): Promise
     return () => void subscribers.delete(subscriber);
   }
 
-  // Waits only for changes in progress that touch the same holons; then judges the change,
-  // mints its ids, and writes it to its stores.
+  // Waits for the changes under way that touch what this one touches, then has a worker
+  // judge it against the stores as they stand, mint its ids, and offer it to them.
   async function commit(change: Change): Promise<Committed> {
     const done = await turnAmong(touchesOf(change));
+    const worker = await take("commit");
+    const judgedAt: Heads = Object.fromEntries(heads);
 
     try {
-      const now: Heads = Object.fromEntries(heads);
-      const problems = await judge(change, mounts, now);
-      if (problems.length) return { refused: problems };
+      const committed = await worker.commit(change, judgedAt);
 
-      return await land(mint(change, mounts, now), mounts);
+      // Where it landed the store's head is now its commit, unless the store has told of
+      // another move since it was judged; so a read after a commit reads it.
+      if ("landed" in committed)
+        for (const [name, head] of Object.entries(committed.landed))
+          if (sameHead(heads.get(name), judgedAt[name])) moved(name, head);
+
+      return committed;
     } finally {
+      give("commit", worker);
       done();
     }
   }
 
-  // Waits for the changes in progress that overlap this one, and registers this one so
-  // later overlapping changes wait for it. Returns the function that releases them.
+  // A store's head moved: recorded, and the reads that stood on that store rerun.
+  function moved(name: string, head: Head | null) {
+    if (heads.has(name) && sameHead(heads.get(name), head)) return;
+
+    heads.set(name, head);
+    for (const subscriber of subscribers) if (name in subscriber.stoodOn) notify(subscriber);
+  }
+
+  // Waits for the changes under way that meet this one, and registers this one so later
+  // changes that meet it wait for it. Returns the function that releases them.
   async function turnAmong(touches: Touches) {
     const meeting = [...underway].filter((other) => meet(other.touches, touches));
     const { promise, resolve } = Promise.withResolvers<void>();
@@ -147,21 +177,36 @@ export async function engine({ readers: runtime, count = 1 }: Starting): Promise
     };
   }
 
-  // A reader as soon as one is free: at once if one is idle, else when one is released.
-  function freeReader() {
-    const reader = idle.pop();
-    if (reader) return Promise.resolve(reader);
-    return new Promise<Reader>((resolve) => waitingForReader.push(resolve));
+  // A worker for this work as soon as one is free and this work holds fewer than it may.
+  function take(work: Work) {
+    const { promise, resolve } = Promise.withResolvers<EngineWorker>();
+    waiting.push({ work, resolve });
+    handOut();
+    return promise;
   }
 
-  // A reader back in the pool: to the read waiting longest, or idle.
-  function release(reader: Reader) {
-    const next = waitingForReader.shift();
-    if (next) next(reader);
-    else idle.push(reader);
+  function give(work: Work, worker: EngineWorker) {
+    busy[work]--;
+    idle.push(worker);
+    handOut();
   }
 
-  // Reruns a subscriber's read, records which heads it used, and calls its listener.
+  // Free workers to whoever has waited longest, among the work that may take one.
+  function handOut() {
+    for (let i = 0; i < waiting.length && idle.length; ) {
+      const { work, resolve } = waiting[i]!;
+      if (busy[work] >= most) {
+        i++;
+        continue;
+      }
+
+      waiting.splice(i, 1);
+      busy[work]++;
+      resolve(idle.pop()!);
+    }
+  }
+
+  // Reruns a subscriber's read, records which heads it stood on, and calls its listener.
   async function notify(subscriber: Subscriber) {
     const answer = await read(subscriber.expression);
     subscriber.stoodOn = answer.at;

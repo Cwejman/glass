@@ -6,9 +6,9 @@
 // each, in the order of their ids, joined by newlines. It says nothing of the versions
 // before, which differ from store to store, so a part follows from the act alone.
 //
-// The content hash is the SHA-256 of the canonical JSON of {at, says, by, gone, parts}:
-// what happened, every store's share of it by hash, and nothing of where it stands in any
-// store's history.
+// The content hash is the SHA-256 of the canonical JSON of {when, says, by, at, gone,
+// parts}: what happened, what its maker had read, every store's share of it by hash, and
+// nothing of where it stands in any store's history.
 
 import { canonical } from "../integrations/glass/canonical.ts";
 import type { Act, Holon } from "./store.ts";
@@ -27,8 +27,15 @@ export function partOf(holons: Holon[]): Uint8Array | null {
 }
 
 // What an act says, which its content hash is the hash of.
-export function contentOf({ at, says, by, gone, parts }: Pick<Act, "at" | "says" | "by" | "gone" | "parts">) {
-  return canonical({ at, says, by, gone, parts });
+export function contentOf({
+  when,
+  says,
+  by,
+  at,
+  gone,
+  parts,
+}: Pick<Act, "when" | "says" | "by" | "at" | "gone" | "parts">) {
+  return canonical({ when, says, by, at, gone, parts });
 }
 
 // The hex SHA-256 of bytes or text.

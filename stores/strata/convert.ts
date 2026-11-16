@@ -53,8 +53,9 @@ export async function convert(name: string, into: string, converted: (spent: Spe
     const gone = goneIds(line.gone);
     const part = partOf(holons);
     const said = {
-      at: line.at,
+      when: line.at,
       says: line.says,
+      at: [],
       gone,
       parts: [[root, part && (await hashOf(part))]] as Act["parts"],
     };

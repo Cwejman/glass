@@ -62,12 +62,13 @@ export async function writeAct(storage: Storage, view: View | null, act: Act): P
 export async function commitOver(storage: Storage, at: State | null, act: Act) {
   const before = at && (await commitAt(storage, at.commit));
   const number = (before?.number ?? 0) + 1;
-  const { at: when, says, by, gone, parts } = act;
+  const { when, says, by, at: seen, gone, parts } = act;
 
   return {
     number,
     bytes: commitBytes({
-      act: by === undefined ? { at: when, says, gone, parts } : { at: when, says, by, gone, parts },
+      act:
+        by === undefined ? { when, says, at: seen, gone, parts } : { when, says, by, at: seen, gone, parts },
       own: act.own,
       predecessors: at ? [at.commit] : [],
       number,

@@ -1,7 +1,7 @@
 // A store's history and where it stands now.
 //
 // A commit is one small blob of JSON: the act whole, as every store it touches keeps it
-// ({at, says, by, gone, parts}), which store this is (own), the commit before it, and its
+// ({when, says, by, at, gone, parts}), which store this is (own), the commit before it, and its
 // number, counting from 1. Its name, the hash of its bytes, is its history hash; the hash
 // of its act's canonical JSON is the act's content hash. Commits are history and nothing
 // else: they name no index, so nothing but an act ever writes one.
@@ -19,7 +19,7 @@ import { entriesFor, type Run } from "./run.ts";
 import type { Storage } from "./storage/storage.ts";
 
 export type Commit = {
-  act: Pick<Act, "at" | "says" | "by" | "gone" | "parts">;
+  act: Pick<Act, "when" | "says" | "by" | "at" | "gone" | "parts">;
   own: string;
   predecessors: string[];
   number: number;

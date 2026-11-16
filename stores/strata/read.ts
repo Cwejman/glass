@@ -9,6 +9,7 @@
 import type { Clause, Fact, Head, Holon, Question, Value } from "../store.ts";
 import {
   factsOf,
+  heldBy,
   isLong,
   isRef,
   keyBytes,
@@ -51,6 +52,8 @@ async function answerAt(storage: Storage, head: Head, view: View, question: Ques
     const id = await found(storage, view, "addresses", keyOf(question.address));
     return lines(await holonLines(storage, view, typeof id === "string" ? [id] : []));
   }
+
+  if ("whole" in question) return lines(await wholeLines(storage, view, question.whole));
 
   if ("facts" in question) return lines((await factsFor(storage, view, question.facts)).map(json));
 
@@ -131,6 +134,44 @@ export async function wholesOf(storage: Storage, view: View | null, id: string):
 
 function versionBytes(storage: Storage, [part, offset, length]: Pointer) {
   return storage.read(part, offset, length);
+}
+
+// A whole as this store keeps it: the holon, then what it holds, a layer at a time, each
+// holon once, down to the depth asked, entering nothing of a type stop names but the
+// holon asked for. A part this store does not keep is left for whoever asked.
+async function wholeLines(
+  storage: Storage,
+  view: View,
+  { id, depth, stop = [] }: { id: string; depth?: number; stop?: string[] },
+) {
+  const most = depth ?? Number.POSITIVE_INFINITY;
+  const stopped = new Set(stop);
+  const seen = new Set<string>();
+  const lines: Uint8Array[] = [];
+
+  // A holon's line as it was written, and the holon it says.
+  const kept = async (each: string) => {
+    const pointer = (await found(storage, view, "ids", keyOf([each]))) as Pointer | undefined;
+    if (!pointer) return null;
+    const line = await versionBytes(storage, pointer);
+    return { line, holon: JSON.parse(decoder.decode(line)) as Holon };
+  };
+
+  for (let layer = [id], down = 0; layer.length && down <= most; down++) {
+    const fresh = [...new Set(layer)].filter((each) => !seen.has(each));
+    fresh.forEach((each) => seen.add(each));
+    const read = await Promise.all(fresh.map(kept));
+    layer = [];
+
+    for (const each of read) {
+      if (!each) continue;
+      lines.push(each.line);
+      const enters = each.holon.id === id || !each.holon.instance.some((type) => stopped.has(type));
+      if (enters) layer.push(...heldBy(each.holon));
+    }
+  }
+
+  return lines;
 }
 
 async function holonLines(storage: Storage, view: View, ids: string[]) {
