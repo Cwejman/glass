@@ -1,0 +1,24 @@
+{"body":{"text":"The"},"id":"1M7JKX4A2TS8000","instance":["1M6YBY3G0000005"],"prev":null}
+{"body":{"text":"session"},"id":"1M7JKX4A2TS8001","instance":["1M6YBY3G0000005"],"prev":null}
+{"body":{"text":"named"},"id":"1M7JKX4A2TS8002","instance":["1M6YBY3G0000005"],"prev":null}
+{"body":{"text":"what"},"id":"1M7JKX4A2TS8003","instance":["1M6YBY3G0000005"],"prev":null}
+{"body":{"text":"in"},"id":"1M7JKX4A2TS8004","instance":["1M6YBY3G0000005"],"prev":null}
+{"body":{"text":"Knowledge"},"id":"1M7JKX4A2TS8005","instance":["1M6YBY3G0000005"],"prev":null}
+{"body":{"text":"the"},"id":"1M7JKX4A2TS8006","instance":["1M6YBY3G0000005"],"prev":null}
+{"body":{"text":"session"},"id":"1M7JKX4A2TS8007","instance":["1M6YBY3G0000005"],"prev":null}
+{"body":{"text":"had"},"id":"1M7JKX4A2TS8008","instance":["1M6YBY3G0000005"],"prev":null}
+{"body":{"after":",","text":"overtaken"},"id":"1M7JKX4A2TS8009","instance":["1M6YBY3G0000005"],"prev":null}
+{"body":{"text":"and"},"id":"1M7JKX4A2TS800A","instance":["1M6YBY3G0000005"],"prev":null}
+{"body":{"text":"the"},"id":"1M7JKX4A2TS800B","instance":["1M6YBY3G0000005"],"prev":null}
+{"body":{"text":"questions"},"id":"1M7JKX4A2TS800C","instance":["1M6YBY3G0000005"],"prev":null}
+{"body":{"text":"it"},"id":"1M7JKX4A2TS800D","instance":["1M6YBY3G0000005"],"prev":null}
+{"body":{"text":"took"},"id":"1M7JKX4A2TS800E","instance":["1M6YBY3G0000005"],"prev":null}
+{"body":{"text":"to"},"id":"1M7JKX4A2TS800F","instance":["1M6YBY3G0000005"],"prev":null}
+{"body":{"text":"stand"},"id":"1M7JKX4A2TS800G","instance":["1M6YBY3G0000005"],"prev":null}
+{"body":{"text":"in"},"id":"1M7JKX4A2TS800H","instance":["1M6YBY3G0000005"],"prev":null}
+{"body":{"text":"the"},"id":"1M7JKX4A2TS800J","instance":["1M6YBY3G0000005"],"prev":null}
+{"body":{"after":".","text":"way"},"id":"1M7JKX4A2TS800K","instance":["1M6YBY3G0000005"],"prev":null}
+{"body":{"words":[{"$ref":"1M7JKX4A2TS8000"},{"$ref":"1M7JKX4A2TS8001"},{"$ref":"1M7JKX4A2TS8002"},{"$ref":"1M7JKX4A2TS8003"},{"$ref":"1M7JKX4A2TS8004"},{"$ref":"1M7JKX4A2TS8005"},{"$ref":"1M7JKX4A2TS8006"},{"$ref":"1M7JKX4A2TS8007"},{"$ref":"1M7JKX4A2TS8008"},{"$ref":"1M7JKX4A2TS8009"},{"$ref":"1M7JKX4A2TS800A"},{"$ref":"1M7JKX4A2TS800B"},{"$ref":"1M7JKX4A2TS800C"},{"$ref":"1M7JKX4A2TS800D"},{"$ref":"1M7JKX4A2TS800E"},{"$ref":"1M7JKX4A2TS800F"},{"$ref":"1M7JKX4A2TS800G"},{"$ref":"1M7JKX4A2TS800H"},{"$ref":"1M7JKX4A2TS800J"},{"$ref":"1M7JKX4A2TS800K"}]},"id":"1M7JKX4A2TS800M","instance":["1M6YBY3G0000004"],"prev":null}
+{"body":{"sentences":[{"$ref":"1M7JKX4A2TS800M"}]},"id":"1M7JKX4A2TS800N","instance":["1M6YBY3G0000002"],"prev":null}
+{"body":{"as":"answered by the session","flow":[{"$ref":"1M7JKX4A2TS800N"}],"order":36,"voice":{"$ref":"1M7J7W9674MT000"}},"id":"1M7JKX4A2TS800P","instance":["1M6YBY3G0000001"],"prev":null}
+{"body":{"kept":"Whole in the author's words: every utterance as it came, typed the first and the last, spoken between, the dictation's stray 333333 kept as written. The session's answers by their essence, short; the four free agents' reports are kept only as woven into answer 10.","on":"2026-11-16","paths":[{"$ref":"1M7J7W9674MT436"},{"$ref":"1M7J7W9674MT437"},{"$ref":"1M7J7W9674MT438"},{"$ref":"1M7J7W9674MT439"},{"$ref":"1M7J7W9674MT43A"},{"$ref":"1M7J7W9674MT43B"}],"said":[{"$ref":"1M7J7W9674MT00Q"},{"$ref":"1M7J7W9674MT02P"},{"$ref":"1M7J7W9674MT0AH"},{"$ref":"1M7J7W9674MT0D6"},{"$ref":"1M7J7W9674MT0NN"},{"$ref":"1M7J7W9674MT0R1"},{"$ref":"1M7J7W9674MT0Y9"},{"$ref":"1M7J7W9674MT0ZZ"},{"$ref":"1M7J7W9674MT127"},{"$ref":"1M7J7W9674MT198"},{"$ref":"1M7J7W9674MT1A1"},{"$ref":"1M7J7W9674MT1BR"},{"$ref":"1M7J7W9674MT1C7"},{"$ref":"1M7J7W9674MT1EB"},{"$ref":"1M7J7W9674MT1FN"},{"$ref":"1M7J7W9674MT1GT"},{"$ref":"1M7J7W9674MT1PR"},{"$ref":"1M7J7W9674MT1S2"},{"$ref":"1M7J7W9674MT21K"},{"$ref":"1M7J7W9674MT25D"},{"$ref":"1M7J7W9674MT294"},{"$ref":"1M7J7W9674MT2BN"},{"$ref":"1M7J7W9674MT2MC"},{"$ref":"1M7J7W9674MT2RE"},{"$ref":"1M7J7W9674MT31V"},{"$ref":"1M7J7W9674MT369"},{"$ref":"1M7J7W9674MT39R"},{"$ref":"1M7J7W9674MT3BT"},{"$ref":"1M7J7W9674MT3VD"},{"$ref":"1M7J7W9674MT3YJ"},{"$ref":"1M7J7W9674MT40G"},{"$ref":"1M7J7W9674MT427"},{"$ref":"1M7J7W9674MT42D"},{"$ref":"1M7J7W9674MT435"},{"$ref":"1M7JKX2AB3GY01C"},{"$ref":"1M7JKX4A2TS800P"}],"voice":{"$ref":"1M7J7W9674MT000"}},"id":"1M7J7W9674MT43C","instance":["1M6YBY3G0000000"],"name":"A sixteenth session: the source both ways again, the buffer gathered, and resolution where sources meet types","prev":"b7b708d19b298be05f442f964ff9ec807f980f86a350cd1a315c5745043b2fea"}
