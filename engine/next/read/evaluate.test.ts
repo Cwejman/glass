@@ -105,7 +105,12 @@ async function field(more: { name: string; holons: Holon[] }[] = []) {
 
   // A read's answer, its value or its problem, and the stores it asked.
   const reading = (expression: Expression) =>
-    evaluate(expression, stores, heads) as Promise<{ value?: Value; problem?: string; asked: string[] }>;
+    evaluate(expression, stores, heads) as Promise<{
+      value?: Value;
+      problem?: string;
+      asked: string[];
+      diverged?: string[];
+    }>;
   return Object.assign(reading, { asked });
 }
 
@@ -125,19 +130,32 @@ describe("reading over stores", () => {
     expect((await read(call("get", ref(999), "text"))).value).toBeNull();
   });
 
-  test("a whole is asked of the store keeping it in one question, and its parts in other stores read as any holon", async () => {
+  test("a whole is read a layer at a time, each layer one question of every store", async () => {
     const read = await field();
     const answer = await read(call("whole", ref(200)));
 
     expect(Object.keys((answer.value as { holons: object }).holons).sort()).toEqual([id(101), id(200)]);
-    expect(read.asked.whole).toBe(1);
+    expect(read.asked.holon).toBeUndefined();
+    // Each turn's holons asked of all three stores together: the function, its type, the
+    // whole, its parts and their types, five turns in all.
+    expect(read.asked.holons).toBe(5 * 3);
   });
 
-  test("an answer names the stores it asked", async () => {
+  test("an answer names the stores it asked: every store, for every holon", async () => {
     const read = await field();
 
-    expect((await read(call("add", 1, 2))).asked).toEqual(["glass"]);
+    expect((await read(1)).asked).toEqual([]);
     expect((await read(call("get", ref(101), "text"))).asked.sort()).toEqual(["glass", "home", "notes"]);
+  });
+
+  test("a holon two stores keep differently is said to have diverged, the first store's answering", async () => {
+    const read = await field([
+      { name: "other", holons: [{ ...note, body: { text: "Glass is otherwise" } }] },
+    ]);
+    const answer = await read(call("get", ref(101), "text"));
+
+    expect(answer).toMatchObject({ value: "Glass holds holons", diverged: [id(101)] });
+    expect((await read(call("get", ref(100), "name"))).diverged).toBeUndefined();
   });
 
   test("what refers to a holon is found in every store", async () => {

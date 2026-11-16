@@ -23,23 +23,31 @@ import {
   type Tree,
 } from "./entries.ts";
 import { commitAt, headAt, viewAt, type View } from "./head.ts";
-import { entriesFor, valueIn, valuesIn } from "./run.ts";
+import { compare, entriesFor, valueIn, valuesFor, valuesIn } from "./run.ts";
 import { Missing, type Storage } from "./storage/storage.ts";
 
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();
 const newline = encoder.encode("\n");
 
-export function answer(storage: Storage, head: Head, question: Question): Promise<Uint8Array> {
-  return afresh(async () => answerAt(storage, head, (await viewAt(storage, head))!, question));
+// The index as of a head; afresh, read from the head the storage holds now.
+export type Viewing = (head: Head, afresh: boolean) => Promise<View>;
+
+export function answer(
+  storage: Storage,
+  head: Head,
+  question: Question,
+  viewing: Viewing = async (head) => (await viewAt(storage, head))!,
+): Promise<Uint8Array> {
+  return afresh(async (again) => answerAt(storage, head, await viewing(head, again), question));
 }
 
 // Work over the index, begun again from the runs the store has now if a run it read was
 // removed under it, up to three times. Any other failure is the read's answer at once.
-export async function afresh<T>(work: () => Promise<T>): Promise<T> {
+export async function afresh<T>(work: (again: boolean) => Promise<T>): Promise<T> {
   for (let tries = 1; ; tries++)
     try {
-      return await work();
+      return await work(tries > 1);
     } catch (error) {
       if (!(error instanceof Missing) || tries === 3) throw error;
     }
@@ -47,6 +55,7 @@ export async function afresh<T>(work: () => Promise<T>): Promise<T> {
 
 async function answerAt(storage: Storage, head: Head, view: View, question: Question) {
   if ("holon" in question) return lines(await holonLines(storage, view, [question.holon]));
+  if ("holons" in question) return lines(await holonLines(storage, view, question.holons));
 
   if ("address" in question) {
     const id = await found(storage, view, "addresses", keyOf(question.address));
@@ -85,6 +94,35 @@ export async function found(storage: Storage, view: View | null, tree: Tree, key
   }
 
   return undefined;
+}
+
+// Many keys' values in one tree as of a view, in the order the keys were given: each run
+// swept once for the keys sorted, newest run first, a key answered by the first run
+// that has an entry for it.
+export async function foundMany(storage: Storage, view: View | null, tree: Tree, keys: readonly string[]) {
+  const values = new Array<unknown>(keys.length);
+  if (!view) return values;
+
+  const sorted = keys
+    .map((key, i) => ({ i, bytes: keyBytes(tree, key) }))
+    .sort((a, b) => compare(a.bytes, b.bytes));
+  let open = sorted;
+
+  for (const run of view.runs) {
+    if (!open.length) break;
+    const found = await valuesFor(
+      storage,
+      run,
+      open.map(({ bytes }) => bytes),
+      view.upTo,
+    );
+    open.forEach(({ i }, j) => {
+      if (found[j] !== undefined && found[j] !== null) values[i] = valueFrom(tree, found[j]!);
+    });
+    open = open.filter((_, j) => found[j] === undefined);
+  }
+
+  return values;
 }
 
 // Every entry for a key as of a view, in every run, newest first: the acts that set it or
@@ -149,22 +187,16 @@ async function wholeLines(
   const seen = new Set<string>();
   const lines: Uint8Array[] = [];
 
-  // A holon's line as it was written, and the holon it says.
-  const kept = async (each: string) => {
-    const pointer = (await found(storage, view, "ids", keyOf([each]))) as Pointer | undefined;
-    if (!pointer) return null;
-    const line = await versionBytes(storage, pointer);
-    return { line, holon: JSON.parse(decoder.decode(line)) as Holon };
-  };
-
   for (let layer = [id], down = 0; layer.length && down <= most; down++) {
     const fresh = [...new Set(layer)].filter((each) => !seen.has(each));
     fresh.forEach((each) => seen.add(each));
-    const read = await Promise.all(fresh.map(kept));
+    const read = (await holonLines(storage, view, fresh)).map((line) => ({
+      line,
+      holon: JSON.parse(decoder.decode(line)) as Holon,
+    }));
     layer = [];
 
     for (const each of read) {
-      if (!each) continue;
       lines.push(each.line);
       const enters = each.holon.id === id || !each.holon.instance.some((type) => stopped.has(type));
       if (enters) layer.push(...heldBy(each.holon));
@@ -174,8 +206,15 @@ async function wholeLines(
   return lines;
 }
 
-async function holonLines(storage: Storage, view: View, ids: string[]) {
-  const pointers = await Promise.all(ids.map((id) => found(storage, view, "ids", keyOf([id]))));
+// The lines of the holons kept by these ids, in the order the ids were given, those not
+// kept left out.
+async function holonLines(storage: Storage, view: View, ids: readonly string[]) {
+  const pointers = await foundMany(
+    storage,
+    view,
+    "ids",
+    ids.map((id) => keyOf([id])),
+  );
   return Promise.all(pointers.filter(Boolean).map((pointer) => versionBytes(storage, pointer as Pointer)));
 }
 

@@ -43,7 +43,9 @@ export type Mount = { store: Store; write: boolean; unsubscribe: () => void };
 // touches.
 export type Heads = Readonly<Record<string, Head | null>>;
 
-export type Answer = { at: Heads } & ({ value: Value } | { problem: string });
+// A read's answer: its value or its problem, the heads it stood on, and the holons it
+// found kept differently in two stores, the first store's version answering, where any.
+export type Answer = { at: Heads; diverged?: string[] } & ({ value: Value } | { problem: string });
 
 export type Committed = Landed | { refused: Problem[] };
 

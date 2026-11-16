@@ -22,20 +22,25 @@ export type Scope = { words: Record<string, Value>; up?: Scope; args?: Value[] }
 const most = 10_000_000;
 
 // Works an expression out over the stores, each at its head. Gives its value, or the
-// problem that stopped it, and either way the stores it asked.
+// problem that stopped it, and either way the stores it asked and the holons it found
+// kept differently in two stores, where there were any.
 export async function evaluate(
   expression: Expression,
   stores: Stores,
   heads: Heads,
-): Promise<({ value: Value } | { problem: string }) & { asked: string[] }> {
+): Promise<({ value: Value } | { problem: string }) & { asked: string[]; diverged?: string[] }> {
   const field = fieldOf(stores, heads);
+  const seen = () => ({
+    asked: [...field.asked],
+    ...(field.diverged.size && { diverged: [...field.diverged].sort() }),
+  });
 
   try {
     const problem = expressionProblem(expression);
     if (problem) throw new Error(problem);
-    return { value: outward(await evaluator(field).evaluate(expression)), asked: [...field.asked] };
+    return { value: outward(await evaluator(field).evaluate(expression)), ...seen() };
   } catch (error) {
-    return { problem: error instanceof Error ? error.message : String(error), asked: [...field.asked] };
+    return { problem: error instanceof Error ? error.message : String(error), ...seen() };
   }
 }
 

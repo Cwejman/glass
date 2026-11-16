@@ -3,11 +3,12 @@
 // keeps each answer for the rest of the read, so nothing is asked twice; and it records
 // which stores were asked, which are the heads the answer stood on.
 //
-// How a bare id finds the store it lies in is not yet designed, so a holon is asked
-// first of the store that has kept the most of what this read asked for, since a read
-// mostly stays within a store, and of the others only where that one does not keep it.
-// A holon kept in two stores is read from the one that answers for it first; where they
-// keep it differently the later commit's version is to answer, which is not yet done.
+// How a bare id finds the store it lies in is not yet designed, so every store is asked
+// for every holon. The holons a read asks for within one turn of the event loop are
+// gathered and asked of each store as one question, so a read walking a whole asks once
+// a layer rather than once a holon. A holon is read from the first store, in the order
+// they were mounted, that keeps it; where another keeps it differently, the holon has
+// diverged, and the read says so beside its answer, never choosing in silence.
 
 import type { Clause, Fact, Head, Holon, Question, Store } from "../../../stores/store.ts";
 import type { Heads } from "../engine.ts";
@@ -34,11 +35,6 @@ export type Field = {
   holon(id: string): Promise<Kept | null>;
   // Every store that keeps a holon, in the order they were mounted.
   keepers(id: string): Promise<string[]>;
-  // A whole read into the field at once: the holon and what it holds, down to a depth,
-  // not entering holons of the types stop names by id, asked of the store that keeps the
-  // holon in one question. What it gives is held for the rest of the read, so reading
-  // those holons asks no store again; parts another store keeps are read as any holon is.
-  whole(id: string, depth?: number, stop?: string[]): Promise<void>;
   // The facts matching a clause, from every store.
   facts(clause: Clause): Promise<Fact[]>;
   // The holons saying a word under a key, as facts, from every store.
@@ -49,6 +45,8 @@ export type Field = {
   log(store: string): Promise<Logged[]>;
   // The stores this read asked.
   asked: ReadonlySet<string>;
+  // The holons this read found kept differently in two stores.
+  diverged: ReadonlySet<string>;
 };
 
 const decoder = new TextDecoder();
@@ -57,7 +55,6 @@ export function fieldOf(stores: Stores, heads: Heads): Field {
   const names = [...stores.keys()];
   const asked = new Set<string>();
   const answers = new Map<string, Promise<unknown[]>>();
-  const holonsRead = new Map<string, Promise<Kept | null>>();
 
   // A store's answer to a question at the read's head, as the values its lines say. A
   // store with no head yet holds nothing.
@@ -81,52 +78,45 @@ export function fieldOf(stores: Stores, heads: Heads): Field {
     });
   }
 
-  function holon(id: string) {
-    if (!holonsRead.has(id)) holonsRead.set(id, holonIn(id));
-    return holonsRead.get(id)!;
-  }
+  // Each holon asked for, as every store keeps it, by mount order; asked in batches.
+  const versions = new Map<string, Promise<(Holon | undefined)[]>>();
+  const diverged = new Set<string>();
+  let waiting: { id: string; resolve: (found: (Holon | undefined)[]) => void }[] = [];
 
-  // A holon from the store that has kept the most this read has asked for, else from the
-  // first of the others that keeps it.
-  const kept = new Map(names.map((name) => [name, 0]));
-
-  async function holonIn(id: string): Promise<Kept | null> {
-    const likely = names.reduce((best, name) => (kept.get(name)! > kept.get(best)! ? name : best), names[0]!);
-    if (likely === undefined) return null;
-
-    const tried = await ask(likely, { holon: id });
-    if (tried.length) return found(likely, tried[0] as Holon);
-
-    const others = names.filter((name) => name !== likely);
-    const answers = await Promise.all(others.map((name) => ask(name, { holon: id })));
-    const at = answers.findIndex((lines) => lines.length);
-    return at < 0 ? null : found(others[at]!, answers[at]![0] as Holon);
-  }
-
-  function found(store: string, holon: Holon): Kept {
-    kept.set(store, kept.get(store)! + 1);
-    return { holon, store };
-  }
-
-  // The holons wholes were read from to every depth, entering everything, so a whole
-  // within one is not asked for again.
-  const entered = new Set<string>();
-
-  async function whole(id: string, depth?: number, stop: string[] = []) {
-    if (entered.has(id)) return;
-    const root = await holon(id);
-    if (!root) return;
-
-    const holons = (await ask(root.store, { whole: { id, depth, stop } })) as Holon[];
-    for (const each of holons) {
-      if (!holonsRead.has(each.id)) holonsRead.set(each.id, Promise.resolve(found(root.store, each)));
-      if (depth === undefined && !stop.length) entered.add(each.id);
+  function versionsOf(id: string) {
+    if (!versions.has(id)) {
+      const { promise, resolve } = Promise.withResolvers<(Holon | undefined)[]>();
+      versions.set(id, promise);
+      if (!waiting.length) nextTurn(askWaiting);
+      waiting.push({ id, resolve });
     }
+    return versions.get(id)!;
+  }
+
+  // Every holon asked for this turn, asked of every store as one question.
+  async function askWaiting() {
+    const batch = waiting;
+    waiting = [];
+    const ids = batch.map(({ id }) => id);
+    const answers = await Promise.all(names.map((name) => ask(name, { holons: ids }) as Promise<Holon[]>));
+    const byStore = answers.map((holons) => new Map(holons.map((holon) => [holon.id, holon])));
+
+    for (const { id, resolve } of batch) resolve(byStore.map((kept) => kept.get(id)));
+  }
+
+  async function holon(id: string): Promise<Kept | null> {
+    const found = await versionsOf(id);
+    const first = found.findIndex(Boolean);
+    if (first < 0) return null;
+
+    const line = JSON.stringify(found[first]);
+    if (found.some((each) => each && JSON.stringify(each) !== line)) diverged.add(id);
+    return { holon: found[first]!, store: names[first]! };
   }
 
   async function keepers(id: string) {
-    const answers = await Promise.all(names.map((name) => ask(name, { holon: id })));
-    return names.filter((_, i) => answers[i]!.length);
+    const found = await versionsOf(id);
+    return names.filter((_, i) => found[i]);
   }
 
   async function address(whole: string, name: string) {
@@ -141,14 +131,27 @@ export function fieldOf(stores: Stores, heads: Heads): Field {
     stores: names,
     holon,
     keepers,
-    whole,
     facts: (clause) => everywhere({ facts: clause }),
     said: (a, word) => everywhere({ said: { a, word } }),
     address,
     log: async (store) => (names.includes(store) ? ((await ask(store, { acts: {} })) as Logged[]) : []),
     asked,
+    diverged,
   };
 }
+
+// Calls back once the work begun this turn has run as far as it can without waiting.
+const nextTurn: (callback: () => void) => void =
+  typeof setImmediate === "function"
+    ? (callback) => void setImmediate(callback)
+    : (callback) => {
+        const { port1, port2 } = new MessageChannel();
+        port1.onmessage = () => {
+          port1.close();
+          callback();
+        };
+        port2.postMessage(null);
+      };
 
 function linesOf(bytes: Uint8Array): unknown[] {
   return decoder

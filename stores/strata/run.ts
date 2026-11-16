@@ -193,31 +193,84 @@ export async function entriesFor(storage: Storage, run: Run, key: Uint8Array, up
   return found;
 }
 
-// Calls each with a cursor at every entry from the leaf that may hold `key` onward, in
-// order, until it returns false or the leaves end. The leaf is found from the root, one
-// page per level: at each branch, the last page whose first key is below the key, since
-// the key's newest entries may begin in the page before the one its key begins.
-async function visit(storage: Storage, run: Run, key: Uint8Array, each: (cursor: Cursor) => boolean) {
-  let number = run.index[0] / size;
-  let page = await pageOf(storage, run, number);
+// The values of many keys, sorted, as of an act, in one sweep of the run: each key's
+// leaf found from the root, unless the sweep reaches it first, and each page read once
+// for them all. As valueIn gives them: null where removed, undefined where absent.
+export async function valuesFor(storage: Storage, run: Run, keys: readonly Uint8Array[], upTo: number) {
+  const found = new Array<Uint8Array | null | undefined>(keys.length);
+  const pages = new Map<number, Promise<Uint8Array>>();
+  const page = (number: number) => {
+    if (!pages.has(number)) pages.set(number, pageOf(storage, run, number));
+    return pages.get(number)!;
+  };
 
-  while (page[2] !== 0) {
-    const view = viewOf(page);
+  const key = new Uint8Array(size);
+  let number = -1;
+  let cursor: Cursor | undefined;
+
+  // The cursor at a leaf's first entry; false where that page is no leaf.
+  const at = async (leaf: number) => {
+    const bytes = await page(leaf);
+    if (bytes[2] !== 0) return false;
+    number = leaf;
+    cursor = cursorOver(entriesIn(bytes), run.act, key);
+    return true;
+  };
+
+  for (const [i, wanted] of keys.entries()) {
+    if (!cursor) await at(await leafFor(run, wanted, page));
+
+    // To the key's first entry: on in this leaf, else to the leaf that may hold it.
+    while (cursor && !cursor.ended) {
+      while (!cursor.ended && compareKey(cursor, wanted) < 0) step(cursor);
+      if (!cursor.ended) break;
+      const leaf = await leafFor(run, wanted, page);
+      if (!(await at(leaf > number ? leaf : number + 1))) break;
+    }
+
+    // Its newest entry at or before the act, its entries running on into the next leaf.
+    while (cursor && !cursor.ended && compareKey(cursor, wanted) === 0) {
+      if (found[i] === undefined && cursor.act <= upTo) found[i] = cursor.set ? valueAt(cursor) : null;
+      step(cursor);
+      if (cursor.ended && !(await at(number + 1))) break;
+    }
+  }
+
+  return found;
+}
+
+// The leaf that may hold a key's entries, found from the root, one page per level: at
+// each branch, the last page whose first key is below the key, since the key's newest
+// entries may begin in the page before the one its key begins.
+async function leafFor(run: Run, key: Uint8Array, page: (number: number) => Promise<Uint8Array>) {
+  let number = run.index[0] / size;
+  let bytes = await page(number);
+
+  while (bytes[2] !== 0) {
+    const view = viewOf(bytes);
     const used = view.getUint16(0);
     let below = -1;
     for (let at = top; at < used; ) {
       const length = view.getUint16(at);
-      const first = page.subarray(at + 2, at + 2 + length);
-      if (below >= 0 && compare(first, key) >= 0) break;
+      if (below >= 0 && compareIn(bytes, at + 2, length, key) >= 0) break;
       below = view.getUint32(at + 2 + length);
       at += 6 + length;
     }
     number = below;
-    page = await pageOf(storage, run, number);
+    bytes = await page(number);
   }
 
-  for (; page[2] === 0; page = await pageOf(storage, run, ++number)) {
-    const cursor = cursorOver(entriesIn(page), run.act);
+  return number;
+}
+
+// Calls each with a cursor at every entry from the leaf that may hold `key` onward, in
+// order, until it returns false or the leaves end.
+async function visit(storage: Storage, run: Run, key: Uint8Array, each: (cursor: Cursor) => boolean) {
+  const page = (number: number) => pageOf(storage, run, number);
+  let number = await leafFor(run, key, page);
+
+  for (let bytes = await page(number); bytes[2] === 0; bytes = await page(++number)) {
+    const cursor = cursorOver(entriesIn(bytes), run.act);
     for (; !cursor.ended; step(cursor)) if (!each(cursor)) return;
   }
 }
@@ -278,14 +331,16 @@ type Cursor = {
   value: [offset: number, length: number];
 };
 
-function cursorOver(bytes: Uint8Array, stamp: number | undefined): Cursor {
+// A cursor at a leaf's first entry; its key is made in the buffer given, which one sweep
+// may use again from leaf to leaf.
+function cursorOver(bytes: Uint8Array, stamp: number | undefined, key = new Uint8Array(size)): Cursor {
   const cursor: Cursor = {
     bytes,
     view: viewOf(bytes),
     next: 0,
     stamp,
     ended: false,
-    key: new Uint8Array(size),
+    key,
     keyLength: 0,
     act: 0,
     set: false,
@@ -335,6 +390,13 @@ function compareKeys(a: Cursor, b: Cursor) {
 }
 
 // ---- Keys
+
+// A key lying in a page compared with another where it lies, as compare does.
+function compareIn(page: Uint8Array, from: number, length: number, other: Uint8Array) {
+  const most = Math.min(length, other.length);
+  for (let i = 0; i < most; i++) if (page[from + i] !== other[i]) return page[from + i]! - other[i]!;
+  return length - other.length;
+}
 
 // Keys compared byte by byte, as they are sorted.
 export function compare(a: Uint8Array, b: Uint8Array) {

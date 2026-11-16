@@ -33,7 +33,8 @@ export type Value = string | number | boolean | { $ref: string };
 export type Fact = { e: string; a: string; v: Value };
 export type Clause = { e?: string; a?: string; v?: Value };
 
-// What a read can ask, as of a head: a holon by id, or by address, a whole and a name;
+// What a read can ask, as of a head: a holon by id, or many at once, or one by address,
+// a whole and a name;
 // a whole, a holon and what it holds, down to a depth, reading but not entering the
 // holons of the types named by id in stop, as far as this store keeps them; the facts
 // matching a clause; the holons containing a word under a key; a holon's versions; the
@@ -41,6 +42,7 @@ export type Clause = { e?: string; a?: string; v?: Value };
 // where in its history.
 export type Question =
   | { holon: string }
+  | { holons: string[] }
   | { address: [whole: string, name: string] }
   | { whole: { id: string; depth?: number; stop?: string[] } }
   | { facts: Clause }

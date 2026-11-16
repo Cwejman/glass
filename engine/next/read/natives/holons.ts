@@ -66,18 +66,12 @@ export function holons({ field, apply }: Calling): Record<string, Native> {
       isRef(value) ? ((await reading(field, value.$ref)) as unknown as Value) : null,
 
     // A whole: a holon and what it holds, down to a depth, entering nothing whose type is
-    // named in stop, though reading it. The store keeping the holon is asked for it in one
-    // question; what lies in other stores is read a layer at a time.
+    // named in stop, though reading it. Each layer is read at once.
     async whole([value, depth, stop]) {
       if (!isRef(value)) return null;
 
       const most = typeof depth === "number" ? depth : Number.POSITIVE_INFINITY;
       const stopAt = new Set(list(stop).filter((each) => typeof each === "string"));
-      await field.whole(
-        value.$ref,
-        typeof depth === "number" ? depth : undefined,
-        await typesNamed(field, stopAt),
-      );
       const holons: Record<string, Value> = {};
 
       for (let layer = [value.$ref], down = 0; layer.length && down <= most; down++) {
@@ -154,15 +148,6 @@ export async function reading(field: Field, id: string) {
   ];
 
   return { ...holon, store, types: names };
-}
-
-// The ids of the types of these names: holons so named that have a mould.
-async function typesNamed(field: Field, names: ReadonlySet<string>) {
-  const named = (await Promise.all([...names].map((name) => field.facts({ a: "name", v: name })))).flat();
-  const types = await Promise.all(
-    named.map(async ({ e }) => ((await field.holon(e))?.holon.mould ? [e] : [])),
-  );
-  return types.flat();
 }
 
 // Every reference in a body, in the order the body holds them, under its top key.

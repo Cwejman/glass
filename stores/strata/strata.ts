@@ -14,8 +14,8 @@ import type { Act, Head, Question, Reply, Store } from "../store.ts";
 import { changedSince } from "./changed.ts";
 import { commitOver, writeAct } from "./commit.ts";
 import { compact } from "./compact.ts";
-import { headAt, stateNow, stateOf, stateText, takenAt, viewAt, type State } from "./head.ts";
-import { afresh, answer } from "./read.ts";
+import { commitAt, headAt, stateNow, stateOf, stateText, takenAt, viewAt, type State } from "./head.ts";
+import { afresh, answer, type Viewing } from "./read.ts";
 import { refusals } from "./refusals.ts";
 import type { Run } from "./run.ts";
 import type { Storage } from "./storage/storage.ts";
@@ -34,12 +34,36 @@ export function strata(storage: Storage): Store {
   let toCompact = false;
   let replaced: { run: Run; at: number }[] = [];
 
+  // The head as last read, its runs and its commit's number, and every commit's number
+  // once read: a commit never changes, and runs listed for a later head answer for every
+  // earlier one, as their entries are stamped. A head asked of that is newer than the one
+  // held, or a run gone missing under a read, has the head read again.
+  let held: { runs: Run[]; number: number } | null = null;
+  const numbers = new Map<string, Promise<number>>();
+  const numberOf = (commit: string) => {
+    if (!numbers.has(commit))
+      numbers.set(
+        commit,
+        commitAt(storage, commit).then(({ number }) => number),
+      );
+    return numbers.get(commit)!;
+  };
+
+  const viewing: Viewing = async (head, again) => {
+    const upTo = await numberOf(head.commit);
+    if (again || !held || held.number < upTo) {
+      const now = (await stateNow(storage))!;
+      held = { runs: now.runs, number: await numberOf(now.commit) };
+    }
+    return { runs: held.runs, upTo };
+  };
+
   // Answers a question from the store as it was at a head.
   async function read(head: Head, question: Question) {
     underway++;
 
     try {
-      return await answer(storage, head, question);
+      return await answer(storage, head, question, viewing);
     } finally {
       underway--;
       void compactWhenIdle();

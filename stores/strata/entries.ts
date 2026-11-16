@@ -107,10 +107,13 @@ export function valueBytes(tree: Tree, value: unknown): Uint8Array {
   return new Uint8Array(0);
 }
 
+const hex = Array.from({ length: 256 }, (_, byte) => byte.toString(16).padStart(2, "0"));
+
 export function valueFrom(tree: Tree, bytes: Uint8Array): unknown {
   if (tree === "ids") {
     const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-    const part = Array.from(bytes.subarray(0, 32), (byte) => byte.toString(16).padStart(2, "0")).join("");
+    let part = "";
+    for (let i = 0; i < 32; i++) part += hex[bytes[i]!];
     return [part, view.getUint32(32), view.getUint32(36)] as Pointer;
   }
   if (tree === "addresses") return decoder.decode(bytes);
