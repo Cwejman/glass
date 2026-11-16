@@ -24,11 +24,11 @@ import type { Storage } from "./storage/storage.ts";
 const grace = 10_000;
 
 export function strata(storage: Storage): Store {
-  // In-memory state, used only to schedule compaction: how many reads and offers are in
-  // progress, whether a compaction is running or needed, and the runs merges replaced,
-  // with when. All data is in storage, so this can be lost without harm, at worst leaving
-  // runs no head names. Compaction runs only when no read or offer is in progress,
-  // because they share one thread.
+  // In-memory state for scheduling compaction: how many reads and offers are in progress,
+  // whether a compaction is running or needed, and the runs merges replaced, with when.
+  // The head and commit numbers held for reading are below. All data is in storage, so
+  // this can be lost without harm, at worst leaving runs no head names. Compaction runs
+  // only when no read or offer is in progress, because they share one thread.
   let underway = 0;
   let compacting = false;
   let toCompact = false;
