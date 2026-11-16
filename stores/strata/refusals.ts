@@ -26,7 +26,10 @@ export async function refusals(act: Act): Promise<Problem[]> {
   const part = partOf(act.holons);
   const named = act.parts.filter(([store]) => store === act.own);
   if (named.length !== 1 || named[0]![1] !== (part && (await hashOf(part))))
-    problems.push({ rule: "part", says: "the act does not name this store's part as the holons offered make it" });
+    problems.push({
+      rule: "part",
+      says: "the act does not name this store's part as the holons offered make it",
+    });
 
   return problems;
 }

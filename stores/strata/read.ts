@@ -7,7 +7,20 @@
 // before the read reaches it; the read then begins again, from the runs the store has now.
 
 import type { Clause, Fact, Head, Holon, Question, Value } from "../store.ts";
-import { factsOf, isLong, isRef, keyBytes, keyOf, keyText, partsOf, prefixOf, standsFor, valueFrom, type Pointer, type Tree } from "./entries.ts";
+import {
+  factsOf,
+  isLong,
+  isRef,
+  keyBytes,
+  keyOf,
+  keyText,
+  partsOf,
+  prefixOf,
+  standsFor,
+  valueFrom,
+  type Pointer,
+  type Tree,
+} from "./entries.ts";
 import { commitAt, headAt, viewAt, type View } from "./head.ts";
 import { entriesFor, valueIn, valuesIn } from "./run.ts";
 import type { Storage } from "./storage/storage.ts";
@@ -81,7 +94,13 @@ export async function stamps(storage: Storage, view: View | null, tree: Tree, ke
 }
 
 // A tree's keys from `from` up to `to` as of a view, with their values, in order.
-export async function foundBetween(storage: Storage, view: View | null, tree: Tree, from: string, to: string) {
+export async function foundBetween(
+  storage: Storage,
+  view: View | null,
+  tree: Tree,
+  from: string,
+  to: string,
+) {
   if (!view) return [];
   const all = new Map<string, unknown | null>();
   const [low, high] = [keyBytes(tree, from), keyBytes(tree, to)];
@@ -91,7 +110,10 @@ export async function foundBetween(storage: Storage, view: View | null, tree: Tr
     for (const [key, value] of await valuesIn(storage, run, low, high, view.upTo))
       all.set(keyText(key), value === null ? null : valueFrom(tree, value));
 
-  return [...all].filter(([, value]) => value !== null).sort(([a], [b]) => (a < b ? -1 : 1)) as [string, unknown][];
+  return [...all].filter(([, value]) => value !== null).sort(([a], [b]) => (a < b ? -1 : 1)) as [
+    string,
+    unknown,
+  ][];
 }
 
 // The latest version of a holon as of a view, and where it lies.
@@ -130,7 +152,9 @@ async function factsFor(storage: Storage, view: View, { e, a, v }: Clause) {
 
   // The facts the keys found say, each [holon, attribute, value] as its key holds it.
   const facts = async (found: [e: unknown, a: unknown, v: unknown][]) =>
-    (await Promise.all(found.map(([e, a, v]) => factsKept(storage, view, e as string, a, v)))).flat().filter(matches);
+    (await Promise.all(found.map(([e, a, v]) => factsKept(storage, view, e as string, a, v))))
+      .flat()
+      .filter(matches);
 
   if (a !== undefined && v !== undefined) {
     const entries = await foundBetween(storage, view, "value", ...prefixOf([a, v]));

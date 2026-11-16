@@ -185,7 +185,8 @@ export async function entriesFor(storage: Storage, run: Run, key: Uint8Array, up
 
   await visit(storage, run, key, (cursor) => {
     const order = compareKey(cursor, key);
-    if (order === 0 && cursor.act <= upTo) found.push({ act: cursor.act, value: cursor.set ? valueAt(cursor) : null });
+    if (order === 0 && cursor.act <= upTo)
+      found.push({ act: cursor.act, value: cursor.set ? valueAt(cursor) : null });
     return order <= 0;
   });
 
@@ -229,10 +230,22 @@ const viewOf = (bytes: Uint8Array) => new DataView(bytes.buffer, bytes.byteOffse
 const entriesIn = (page: Uint8Array) => page.subarray(top, viewOf(page).getUint16(0));
 
 // A run's leaves read in order, from all its pages up to its first branch.
-type Leaves = { bytes: Uint8Array; number: number; stamp: number | undefined; cursor: Cursor; ended: boolean };
+type Leaves = {
+  bytes: Uint8Array;
+  number: number;
+  stamp: number | undefined;
+  cursor: Cursor;
+  ended: boolean;
+};
 
 function leavesOf(bytes: Uint8Array, stamp: number | undefined): Leaves {
-  const leaves = { bytes, number: 0, stamp, cursor: cursorOver(entriesIn(bytes.subarray(0, size)), stamp), ended: false };
+  const leaves = {
+    bytes,
+    number: 0,
+    stamp,
+    cursor: cursorOver(entriesIn(bytes.subarray(0, size)), stamp),
+    ended: false,
+  };
   if (leaves.cursor.ended) stepLeaves(leaves);
   return leaves;
 }

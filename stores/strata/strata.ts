@@ -106,11 +106,16 @@ export function strata(storage: Storage): Store {
       return { changed: await headAt(storage, now!.commit) };
     }
 
-    const run = written ?? (await afresh(async () => writeAct(storage, await viewAt(storage, now && (await headAt(storage, now.commit))), act)));
+    const run =
+      written ??
+      (await afresh(async () =>
+        writeAct(storage, await viewAt(storage, now && (await headAt(storage, now.commit))), act),
+      ));
     const { number, bytes } = await commitOver(storage, now, act);
     const commit = await storage.put(bytes);
     const next = { commit, runs: [{ ...run, act: number }, ...(now?.runs ?? [])] };
-    if (await storage.moveHead(now && stateText(now), stateText(next))) return { accepted: await headAt(storage, commit) };
+    if (await storage.moveHead(now && stateText(now), stateText(next)))
+      return { accepted: await headAt(storage, commit) };
 
     const moved = await stateNow(storage);
     if (moved?.commit === now?.commit) return lay(act, run, moved);

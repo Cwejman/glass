@@ -68,7 +68,10 @@ async function read(
     if (opened.size > most) {
       const [first, oldest] = opened.entries().next().value!;
       opened.delete(first);
-      void oldest.then((each) => each.close(), () => {});
+      void oldest.then(
+        (each) => each.close(),
+        () => {},
+      );
     }
   }
   return (await open).read(offset, length);
@@ -77,7 +80,10 @@ async function read(
 async function remove(blobs: Folder, opened: Map<string, Promise<Opened>>, name: string) {
   const open = opened.get(name);
   opened.delete(name);
-  await open?.then((each) => each.close(), () => {});
+  await open?.then(
+    (each) => each.close(),
+    () => {},
+  );
   await blobs.removeEntry(name).catch(() => {});
 }
 
@@ -168,7 +174,9 @@ async function openBlob(blobs: Folder, from: string | undefined, name: string): 
   const file = await handle.getFile();
   return {
     read: async (offset, length) =>
-      new Uint8Array(await file.slice(offset, length === undefined ? undefined : offset + length).arrayBuffer()),
+      new Uint8Array(
+        await file.slice(offset, length === undefined ? undefined : offset + length).arrayBuffer(),
+      ),
     close: () => {},
   };
 }
@@ -220,7 +228,13 @@ async function keep(blobs: Folder, from: string | undefined, names: string[]) {
     Array.from({ length: together }, async () => {
       while (next < names.length) {
         const name = names[next++]!;
-        if (await blobs.getFileHandle(name).then(() => true, () => false)) continue;
+        if (
+          await blobs.getFileHandle(name).then(
+            () => true,
+            () => false,
+          )
+        )
+          continue;
         await quiet();
         await fetched(blobs, from, name);
       }
@@ -255,7 +269,9 @@ function fetched(blobs: Folder, from: string, name: string) {
     const served = await fetch(`${from}blobs/${name}`);
     if (!served.ok) throw new Error(`the site did not serve the blob ${name}: ${served.status}`);
 
-    const bytes = new Uint8Array(await new Response(served.body!.pipeThrough(new DecompressionStream("gzip"))).arrayBuffer());
+    const bytes = new Uint8Array(
+      await new Response(served.body!.pipeThrough(new DecompressionStream("gzip"))).arrayBuffer(),
+    );
     if ((await nameOf(bytes)) !== name)
       throw new Error(`the blob ${name} the site served does not match its name`);
 

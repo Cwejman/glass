@@ -53,7 +53,8 @@ export const isLong = (part: unknown): part is Long =>
   part !== null && typeof part === "object" && typeof (part as Long).$long === "string";
 
 // Whether a value is the one a long part stands for.
-export const standsFor = (part: Long, value: unknown) => JSON.stringify(shortened(value)) === JSON.stringify(part);
+export const standsFor = (part: Long, value: unknown) =>
+  JSON.stringify(shortened(value)) === JSON.stringify(part);
 
 // A hash of a string's code units, as 16 hex digits: two 32-bit FNV-1a hashes begun from
 // different offsets. A long string found by it is always checked against the holon's.
@@ -122,7 +123,11 @@ export function entriesOf(changes: Changes): Entry[] {
 
   for (const [tree, list] of Object.entries(changes) as [Tree, Change[]][])
     for (const [key, value] of list)
-      entries.push({ key: keyBytes(tree, key), act: 0, value: value === null ? null : valueBytes(tree, value) });
+      entries.push({
+        key: keyBytes(tree, key),
+        act: 0,
+        value: value === null ? null : valueBytes(tree, value),
+      });
 
   return entries.sort((a, b) => compare(a.key, b.key));
 }

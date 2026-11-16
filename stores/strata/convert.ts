@@ -52,7 +52,12 @@ export async function convert(name: string, into: string, converted: (spent: Spe
     const holons = versions.map((version) => marked(asHolon(version), types));
     const gone = goneIds(line.gone);
     const part = partOf(holons);
-    const said = { at: line.at, says: line.says, gone, parts: [[root, part && (await hashOf(part))]] as Act["parts"] };
+    const said = {
+      at: line.at,
+      says: line.says,
+      gone,
+      parts: [[root, part && (await hashOf(part))]] as Act["parts"],
+    };
     const act: Act = {
       ...said,
       hash: await hashOf(contentOf(said)),

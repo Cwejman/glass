@@ -14,9 +14,15 @@ export async function changedSince(storage: Storage, { over, touches }: Act, now
   if (!now) return true;
 
   const view = { runs: now.runs, upTo: (await commitAt(storage, now.commit)).number };
-  const after = over ? await commitAt(storage, over.commit).then(({ number }) => number, () => null) : 0;
+  const after = over
+    ? await commitAt(storage, over.commit).then(
+        ({ number }) => number,
+        () => null,
+      )
+    : 0;
   if (after === null) return true;
-  if (over && !(await stamps(storage, view, "acts", keyOf([over.act]))).some(({ act }) => act === after)) return true;
+  if (over && !(await stamps(storage, view, "acts", keyOf([over.act]))).some(({ act }) => act === after))
+    return true;
 
   const keys = [
     ...touches.ids.map((id) => ["ids", keyOf([id])] as const),

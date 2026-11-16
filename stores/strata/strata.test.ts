@@ -129,10 +129,17 @@ describe("strata", () => {
 
     expect(await read(store, head, { facts: { a: "instance", v: { $ref: id(100) } } })).toHaveLength(2);
     expect(await read(store, head, { said: { a: "text", word: "zebra" } })).toHaveLength(1);
-    expect(await read(store, head, { said: { a: "text", word: "end" } })).toEqual([{ e: id(1), a: "text", v: "end" }]);
-    expect(await read(store, head, { facts: { a: "text", v: long.body.text } })).toEqual([{ e: id(1), a: "text", v: long.body.text }]);
+    expect(await read(store, head, { said: { a: "text", word: "end" } })).toEqual([
+      { e: id(1), a: "text", v: "end" },
+    ]);
+    expect(await read(store, head, { facts: { a: "text", v: long.body.text } })).toEqual([
+      { e: id(1), a: "text", v: long.body.text },
+    ]);
     expect(await read(store, head, { facts: { a: "text", v: long.body.text + "!" } })).toEqual([]);
-    expect((await read(store, head, { facts: { a: "text" } })).map((fact) => fact.v).sort()).toEqual([long.body.text, "zebra"]);
+    expect((await read(store, head, { facts: { a: "text" } })).map((fact) => fact.v).sort()).toEqual([
+      long.body.text,
+      "zebra",
+    ]);
   });
 
   test("a holon's facts are found by its value too", async () => {
@@ -201,7 +208,9 @@ describe("strata", () => {
 
     const other = await act(null, [note]);
     expect(await store.offer({ ...other, holons: [whole] })).toEqual({
-      refused: [{ rule: "part", says: "the act does not name this store's part as the holons offered make it" }],
+      refused: [
+        { rule: "part", says: "the act does not name this store's part as the holons offered make it" },
+      ],
     });
   });
 
@@ -236,7 +245,9 @@ describe("acts that race", () => {
     const first = await accepted(store, act(null, [note]));
     const moved = await accepted(store, act(first, [{ ...note, body: { text: "one" } }]));
 
-    expect(await store.offer(await act(first, [{ ...note, body: { text: "two" } }]))).toEqual({ changed: moved });
+    expect(await store.offer(await act(first, [{ ...note, body: { text: "two" } }]))).toEqual({
+      changed: moved,
+    });
   });
 
   test("an act judged over an older head is handed back when another took an address it touches", async () => {
@@ -263,7 +274,10 @@ test("one act offered twice at once, by two instances over one storage, is taken
   const replies = await Promise.all([store.offer(offered), twin.offer(offered)]);
 
   const now = (await stateNow(storage))!;
-  expect(replies).toEqual([{ accepted: await headAt(storage, now.commit) }, { accepted: await headAt(storage, now.commit) }]);
+  expect(replies).toEqual([
+    { accepted: await headAt(storage, now.commit) },
+    { accepted: await headAt(storage, now.commit) },
+  ]);
   expect(now.runs).toHaveLength(1);
   expect(await read(store, await headAt(storage, now.commit), { holon: id(1) })).toEqual([note]);
 });
@@ -314,7 +328,9 @@ test("runs of many pages answer every key and every range, before and after they
   expect(await read(store, first, { holon: id(5000) })).toEqual([]);
   expect(await read(store, second, { facts: { a: "instance", v: { $ref: id(100) } } })).toHaveLength(6000);
   expect(await read(store, first, { said: { a: "text", word: "shared" } })).toHaveLength(3000);
-  expect(await read(store, second, { said: { a: "text", word: "word6500" } })).toEqual([{ e: id(6500), a: "text", v: "word6500" }]);
+  expect(await read(store, second, { said: { a: "text", word: "word6500" } })).toEqual([
+    { e: id(6500), a: "text", v: "word6500" },
+  ]);
 });
 
 describe("compaction", () => {
@@ -413,7 +429,13 @@ test("compaction waits while a read is under way", async () => {
   };
   const store = strata(slow);
   // Holons no other test writes, so no part of theirs is read from what is kept in memory.
-  const first = await accepted(store, act(null, [{ ...note, body: { text: "held" } }, { ...whole, name: "Held" }]));
+  const first = await accepted(
+    store,
+    act(null, [
+      { ...note, body: { text: "held" } },
+      { ...whole, name: "Held" },
+    ]),
+  );
   await new Promise((resolve) => setTimeout(resolve, 100));
 
   // The run's index is read once, by reading the note; the whole's version has not been
