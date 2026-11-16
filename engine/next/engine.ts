@@ -241,18 +241,28 @@ export async function engine({ workers: runtime, count = 1 }: Starting): Promise
     void rerun(subscriber);
   }
 
+  // A listener that throws fails on its own: its error is thrown apart, where whoever runs
+  // the engine hears of it, and the subscription keeps answering.
   async function rerun(subscriber: Subscriber) {
-    do {
-      subscriber.again = false;
-      const answer = await read(subscriber.expression);
-      if (!subscribers.has(subscriber)) return;
+    try {
+      do {
+        subscriber.again = false;
+        const answer = await read(subscriber.expression);
+        if (!subscribers.has(subscriber)) return;
 
-      subscriber.stoodOn = answer.at;
-      subscriber.answered = true;
-      subscriber.listener(answer);
-    } while (subscriber.again);
-
-    subscriber.running = false;
+        subscriber.stoodOn = answer.at;
+        subscriber.answered = true;
+        try {
+          subscriber.listener(answer);
+        } catch (error) {
+          queueMicrotask(() => {
+            throw error;
+          });
+        }
+      } while (subscriber.again);
+    } finally {
+      subscriber.running = false;
+    }
   }
 
   return { mount, unmount, read, subscribe, commit };

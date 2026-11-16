@@ -140,12 +140,13 @@ describe("the engine", () => {
     const heard: unknown[] = [];
     const { promise, resolve } = Promise.withResolvers<void>();
 
-    await glassEngine.subscribe(call("get", ref(101), "contents"), (answer) => {
+    const stop = await glassEngine.subscribe(call("get", ref(101), "contents"), (answer) => {
       heard.push("value" in answer ? (answer.value as unknown[]).length : answer.problem);
       if (heard.length === 2) resolve();
     });
     await glassEngine.commit(note("heard"));
     await promise;
+    stop();
 
     expect(heard).toEqual([1, 2]);
   });
@@ -155,13 +156,14 @@ describe("the engine", () => {
     const heard: number[] = [];
     let last: (() => void) | undefined;
 
-    await glassEngine.subscribe(call("get", ref(101), "contents"), (answer) => {
+    const stop = await glassEngine.subscribe(call("get", ref(101), "contents"), (answer) => {
       heard.push("value" in answer ? (answer.value as unknown[]).length : -1);
       if (heard.at(-1) === 5) last?.();
     });
     const done = new Promise<void>((resolve) => (last = resolve));
     await Promise.all([1, 2, 3, 4].map((n) => glassEngine.commit(note(`note ${n}`))));
     await done;
+    stop();
 
     expect(heard).toEqual([...heard].sort((a, b) => a - b));
     expect(heard.at(-1)).toBe(5);
