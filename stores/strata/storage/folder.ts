@@ -18,7 +18,7 @@
 import { closeSync, fstatSync, mkdirSync, openSync, readSync, watch } from "node:fs";
 import { readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { nameOf, type Storage } from "./storage.ts";
+import { Missing, nameOf, type Storage } from "./storage.ts";
 
 // The storage's methods, over the folder given.
 export function folderStorage(folder: string): Storage {
@@ -56,7 +56,11 @@ const most = 4096;
 function read(folder: string, opened: Map<string, number>, name: string, offset = 0, length?: number) {
   let file = opened.get(name);
   if (file === undefined) {
-    file = openSync(blobAt(folder, name), "r");
+    try {
+      file = openSync(blobAt(folder, name), "r");
+    } catch (error) {
+      throw (error as { code?: string }).code === "ENOENT" ? new Missing(name) : error;
+    }
     opened.set(name, file);
     if (opened.size > most) {
       const [first, descriptor] = opened.entries().next().value!;

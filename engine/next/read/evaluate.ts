@@ -21,15 +21,22 @@ export type Scope = { words: Record<string, Value>; up?: Scope; args?: Value[] }
 // The most steps one read may take, so a function that never ends is stopped.
 const most = 10_000_000;
 
-// Works an expression out over the stores, each at its head. Gives its value, and the
-// stores it asked.
-export async function evaluate(expression: Expression, stores: Stores, heads: Heads) {
-  const problem = expressionProblem(expression);
-  if (problem) throw new Error(problem);
-
+// Works an expression out over the stores, each at its head. Gives its value, or the
+// problem that stopped it, and either way the stores it asked.
+export async function evaluate(
+  expression: Expression,
+  stores: Stores,
+  heads: Heads,
+): Promise<({ value: Value } | { problem: string }) & { asked: string[] }> {
   const field = fieldOf(stores, heads);
-  const value = outward(await evaluator(field).evaluate(expression));
-  return { value, asked: [...field.asked] };
+
+  try {
+    const problem = expressionProblem(expression);
+    if (problem) throw new Error(problem);
+    return { value: outward(await evaluator(field).evaluate(expression)), asked: [...field.asked] };
+  } catch (error) {
+    return { problem: error instanceof Error ? error.message : String(error), asked: [...field.asked] };
+  }
 }
 
 type Function = { name: string; native?: string; gives?: Expression };

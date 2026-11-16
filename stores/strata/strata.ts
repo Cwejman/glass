@@ -68,13 +68,18 @@ export function strata(storage: Storage): Store {
   // commit, by this process or another. Compaction moves the head to the same commit, and
   // no listener is told of that.
   async function subscribe(listener: (head: Head | null) => void) {
+    // Each head told in the order the storage moved to it, one after the other, so a
+    // later head is never told before an earlier one.
     let told: string | null | undefined;
-    const tell = async (text: string | null) => {
-      const commit = text === null ? null : stateOf(text).commit;
-      if (commit === told) return;
-      told = commit;
-      listener(commit === null ? null : await headAt(storage, commit));
-    };
+    let telling = Promise.resolve();
+    const tell = (text: string | null) =>
+      (telling = telling.then(async () => {
+        const commit = text === null ? null : stateOf(text).commit;
+        if (commit === told) return;
+        const head = commit === null ? null : await headAt(storage, commit);
+        told = commit;
+        listener(head);
+      }));
 
     const unsubscribe = storage.watchHead(tell);
     await tell(await storage.head());

@@ -150,6 +150,23 @@ describe("the engine", () => {
     expect(heard).toEqual([1, 2]);
   });
 
+  test("a subscriber hears its answers one at a time, in order, the last at the latest heads", async () => {
+    const glassEngine = await started();
+    const heard: number[] = [];
+    let last: (() => void) | undefined;
+
+    await glassEngine.subscribe(call("get", ref(101), "contents"), (answer) => {
+      heard.push("value" in answer ? (answer.value as unknown[]).length : -1);
+      if (heard.at(-1) === 5) last?.();
+    });
+    const done = new Promise<void>((resolve) => (last = resolve));
+    await Promise.all([1, 2, 3, 4].map((n) => glassEngine.commit(note(`note ${n}`))));
+    await done;
+
+    expect(heard).toEqual([...heard].sort((a, b) => a - b));
+    expect(heard.at(-1)).toBe(5);
+  });
+
   test("a change breaking a rule is refused with every problem, said by its handles", async () => {
     const glassEngine = await started();
     const committed = await glassEngine.commit(note(5));

@@ -28,7 +28,7 @@ export async function land(
   change: Change,
   stores: Mounted,
   heads: Heads,
-): Promise<Landed | { changed: true }> {
+): Promise<Landed | { changed: Heads }> {
   const parts = await Promise.all(
     plan.shares.map(async ({ root, holons }) => {
       const part = partOf(holons);
@@ -74,7 +74,10 @@ export async function land(
     else missed[store] = reply;
   });
 
-  if (!Object.keys(landed).length && Object.values(missed).some((reply) => "changed" in reply))
-    return { changed: true };
+  // Landed nowhere, and changed somewhere: judged again at the heads the stores now give.
+  const changed = Object.entries(missed).flatMap(([store, reply]) =>
+    "changed" in reply ? [[store, reply.changed] as const] : [],
+  );
+  if (!Object.keys(landed).length && changed.length) return { changed: Object.fromEntries(changed) };
   return { landed, ids: plan.ids, ...(Object.keys(missed).length && { missed }) };
 }

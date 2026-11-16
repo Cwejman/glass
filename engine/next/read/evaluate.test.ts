@@ -2,7 +2,7 @@ import { afterAll, describe, expect, test } from "bun:test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { Expression } from "../../../language/expression.ts";
+import type { Expression, Value } from "../../../language/expression.ts";
 import { contentOf, hashOf, partOf } from "../../../stores/act.ts";
 import type { Act, Head, Holon, Store } from "../../../stores/store.ts";
 import { folderStorage } from "../../../stores/strata/storage/folder.ts";
@@ -103,7 +103,10 @@ async function field(more: { name: string; holons: Holon[] }[] = []) {
     heads[name] = head;
   }
 
-  return Object.assign((expression: Expression) => evaluate(expression, stores, heads), { asked });
+  // A read's answer, its value or its problem, and the stores it asked.
+  const reading = (expression: Expression) =>
+    evaluate(expression, stores, heads) as Promise<{ value?: Value; problem?: string; asked: string[] }>;
+  return Object.assign(reading, { asked });
 }
 
 describe("reading over stores", () => {
@@ -194,6 +197,8 @@ describe("reading over stores", () => {
   test("what would scan every holon is refused, saying what to write instead", async () => {
     const read = await field();
 
-    await expect(read(call("everything"))).rejects.toThrow("scanned every holon");
+    expect(await read(call("everything"))).toMatchObject({
+      problem: expect.stringContaining("scanned every holon"),
+    });
   });
 });

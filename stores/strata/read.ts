@@ -24,7 +24,7 @@ import {
 } from "./entries.ts";
 import { commitAt, headAt, viewAt, type View } from "./head.ts";
 import { entriesFor, valueIn, valuesIn } from "./run.ts";
-import type { Storage } from "./storage/storage.ts";
+import { Missing, type Storage } from "./storage/storage.ts";
 
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();
@@ -35,13 +35,13 @@ export function answer(storage: Storage, head: Head, question: Question): Promis
 }
 
 // Work over the index, begun again from the runs the store has now if a run it read was
-// removed under it, up to three times.
+// removed under it, up to three times. Any other failure is the read's answer at once.
 export async function afresh<T>(work: () => Promise<T>): Promise<T> {
   for (let tries = 1; ; tries++)
     try {
       return await work();
     } catch (error) {
-      if (tries === 3) throw error;
+      if (!(error instanceof Missing) || tries === 3) throw error;
     }
 }
 

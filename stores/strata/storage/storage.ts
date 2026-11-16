@@ -12,7 +12,7 @@
 export type Storage = {
   // Writes a blob and returns its name. Writing a blob that exists already does nothing.
   put(bytes: Uint8Array): Promise<string>;
-  // Reads a blob, or length bytes of it from offset.
+  // Reads a blob, or length bytes of it from offset; a blob not kept throws Missing.
   read(name: string, offset?: number, length?: number): Promise<Uint8Array>;
   // Removes a blob that no head reaches any more, such as one written by a writer that
   // lost the race for the head.
@@ -25,6 +25,14 @@ export type Storage = {
   // the function that stops it.
   watchHead(listener: (head: string | null) => void): () => void;
 };
+
+// What a storage throws when asked for a blob it does not keep, as when compaction
+// removed a run a read was about to reach, so the read can begin again from the head.
+export class Missing extends Error {
+  constructor(name: string) {
+    super(`the blob ${name} is not kept here`);
+  }
+}
 
 // A blob's name: the hex SHA-256 of its bytes, by Web Crypto, in a browser or on a machine.
 export async function nameOf(bytes: Uint8Array): Promise<string> {

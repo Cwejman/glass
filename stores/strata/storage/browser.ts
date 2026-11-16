@@ -15,7 +15,7 @@
 // which every tab and worker of the site shares, and each move is told to the others on a
 // BroadcastChannel.
 
-import { nameOf, type Storage } from "./storage.ts";
+import { Missing, nameOf, type Storage } from "./storage.ts";
 
 // Where a store is kept: its folder in OPFS, and, for a store published with the site,
 // the URL its blobs and head are served from, ending in a slash.
@@ -149,7 +149,7 @@ const most = 4096;
 // at an offset; where none can be had read-only, the File, sliced.
 async function openBlob(blobs: Folder, from: string | undefined, name: string): Promise<Opened> {
   const handle = await blobs.getFileHandle(name).catch(async () => {
-    if (!from) throw new Error(`the blob ${name} is not kept here`);
+    if (!from) throw new Missing(name);
     await asked(() => fetched(blobs, from, name));
     return blobs.getFileHandle(name);
   });

@@ -4,7 +4,7 @@
 // commit holds up only the worker it runs on.
 
 import type { Expression } from "../../language/expression.ts";
-import type { Head, Store } from "../../stores/store.ts";
+import type { Store } from "../../stores/store.ts";
 import { disconnect } from "../../wire/wire.ts";
 import type { Answer, Committed, Heads } from "./engine.ts";
 import { evaluate } from "./read/evaluate.ts";
@@ -20,8 +20,10 @@ export type EngineWorker = {
   read(expression: Expression, heads: Heads): Promise<Answer>;
   // Judges the change against each store at the head given for it, minting its ids;
   // refused, returns its problems; else offers it to every store it touches, judging it
-  // again, up to three times, where the stores answer that what it touches has changed.
-  commit(change: Change, heads: Heads): Promise<Committed>;
+  // again, up to three times, at the heads the stores answer with where what it touches
+  // has changed. Gives too every set of heads it judged at, so the engine knows which
+  // heads its commit was laid over.
+  commit(change: Change, heads: Heads): Promise<{ committed: Committed; judgedAt: Heads[] }>;
 };
 
 type Mounted = { store: Store; write: boolean };
@@ -40,44 +42,27 @@ export function engineWorker(): EngineWorker {
   }
 
   async function read(expression: Expression, heads: Heads): Promise<Answer> {
-    try {
-      const { value, asked } = await evaluate(expression, stores, heads);
-      return { at: Object.fromEntries(asked.map((name: string) => [name, heads[name]!])), value };
-    } catch (problem) {
-      return { at: heads, problem: String(problem) };
-    }
+    const { asked, ...answer } = await evaluate(expression, stores, heads);
+    return { at: Object.fromEntries(asked.map((name: string) => [name, heads[name] ?? null])), ...answer };
   }
 
-  async function commit(change: Change, heads: Heads): Promise<Committed> {
-    let judgedAt = heads;
+  async function commit(change: Change, heads: Heads) {
+    const judgedAt: Heads[] = [heads];
 
     for (let tries = 1; ; tries++) {
-      const plan = await judge(change, stores, judgedAt);
-      if (plan.problems.length) return { refused: plan.problems };
+      const at = judgedAt.at(-1)!;
+      const plan = await judge(change, stores, at);
+      if (plan.problems.length) return { committed: { refused: plan.problems }, judgedAt };
 
-      const landed = await land(plan, change, stores, judgedAt);
-      if (!("changed" in landed)) return landed;
-      if (tries === 3)
-        return {
-          refused: [{ rule: "changed", says: "what the change touches kept changing while it was judged" }],
-        };
+      const landed = await land(plan, change, stores, at);
+      if (!("changed" in landed)) return { committed: landed, judgedAt };
+      if (tries === 3) {
+        const says = "what the change touches kept changing while it was judged";
+        return { committed: { refused: [{ rule: "changed", says }] }, judgedAt };
+      }
 
-      judgedAt = await headsNow();
+      judgedAt.push({ ...at, ...landed.changed });
     }
-  }
-
-  // Every store's head as it stands now, as each store tells it.
-  async function headsNow(): Promise<Heads> {
-    const found = await Promise.all(
-      [...stores].map(async ([name, { store }]) => {
-        const { promise, resolve } = Promise.withResolvers<Head | null>();
-        const unsubscribe = await store.subscribe(resolve);
-        const head = await promise;
-        unsubscribe();
-        return [name, head] as const;
-      }),
-    );
-    return Object.fromEntries(found);
   }
 
   return { mount, unmount, read, commit };

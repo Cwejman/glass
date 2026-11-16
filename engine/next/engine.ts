@@ -61,7 +61,16 @@ export type Starting = { workers: Runtime; count?: number };
 
 type Work = "read" | "commit";
 type Waiting = { work: Work; resolve: (worker: EngineWorker) => void };
-type Subscriber = { expression: Expression; listener: (answer: Answer) => void; stoodOn: Heads };
+// A kept read: what it stood on last, whether it has answered yet, and whether a rerun is
+// under way and another is due after it, so its answers come one at a time, in order.
+type Subscriber = {
+  expression: Expression;
+  listener: (answer: Answer) => void;
+  stoodOn: Heads;
+  answered: boolean;
+  running: boolean;
+  again: boolean;
+};
 type Underway = { touches: Touches; done: Promise<void> };
 
 const workerCode = new URL("./worker.ts", import.meta.url);
@@ -106,7 +115,7 @@ export async function engine({ workers: runtime, count = 1 }: Starting): Promise
     mount?.unsubscribe();
     if (mount) disconnect(mount.store);
     await Promise.all(workers.map((worker) => worker.unmount(name)));
-    for (const subscriber of subscribers) if (name in subscriber.stoodOn) notify(subscriber);
+    for (const subscriber of subscribers) if (stoodOn(subscriber, name)) notify(subscriber);
   }
 
   // Works the expression out on a worker, over every store as it stood when the read
@@ -123,7 +132,14 @@ export async function engine({ workers: runtime, count = 1 }: Starting): Promise
 
   // Keeps a read: its listener is called now, and again whenever a store it read moves.
   async function subscribe(expression: Expression, listener: (answer: Answer) => void) {
-    const subscriber: Subscriber = { expression, listener, stoodOn: {} };
+    const subscriber: Subscriber = {
+      expression,
+      listener,
+      stoodOn: {},
+      answered: false,
+      running: false,
+      again: false,
+    };
     subscribers.add(subscriber);
     notify(subscriber);
 
@@ -135,16 +151,15 @@ export async function engine({ workers: runtime, count = 1 }: Starting): Promise
   async function commit(change: Change): Promise<Committed> {
     const done = await turnAmong(touchesOf(change));
     const worker = await take("commit");
-    const judgedAt: Heads = Object.fromEntries(heads);
 
     try {
-      const committed = await worker.commit(change, judgedAt);
+      const { committed, judgedAt } = await worker.commit(change, Object.fromEntries(heads));
 
-      // Where it landed the store's head is now its commit, unless the store has told of
-      // another move since it was judged; so a read after a commit reads it.
+      // Where it landed the store's head is now its commit, unless the store has told of a
+      // move the worker did not judge at; so a read after a commit reads it.
       if ("landed" in committed)
         for (const [name, head] of Object.entries(committed.landed))
-          if (sameHead(heads.get(name), judgedAt[name])) moved(name, head);
+          if (judgedAt.some((at) => sameHead(heads.get(name), at[name]))) moved(name, head);
 
       return committed;
     } finally {
@@ -158,8 +173,13 @@ export async function engine({ workers: runtime, count = 1 }: Starting): Promise
     if (heads.has(name) && sameHead(heads.get(name), head)) return;
 
     heads.set(name, head);
-    for (const subscriber of subscribers) if (name in subscriber.stoodOn) notify(subscriber);
+    for (const subscriber of subscribers) if (stoodOn(subscriber, name)) notify(subscriber);
   }
+
+  // Whether a store's move may change a kept read: one it read, or any, before it first
+  // answered.
+  const stoodOn = (subscriber: Subscriber, name: string) =>
+    !subscriber.answered || name in subscriber.stoodOn;
 
   // Waits for the changes under way that meet this one, and registers this one so later
   // changes that meet it wait for it. Returns the function that releases them.
@@ -207,10 +227,30 @@ export async function engine({ workers: runtime, count = 1 }: Starting): Promise
   }
 
   // Reruns a subscriber's read, records which heads it stood on, and calls its listener.
-  async function notify(subscriber: Subscriber) {
-    const answer = await read(subscriber.expression);
-    subscriber.stoodOn = answer.at;
-    subscriber.listener(answer);
+  // While one rerun is under way another is only marked due, and run after it, so the
+  // listener hears every answer in order and the last one stands on the latest heads.
+  function notify(subscriber: Subscriber) {
+    if (subscriber.running) {
+      subscriber.again = true;
+      return;
+    }
+
+    subscriber.running = true;
+    void rerun(subscriber);
+  }
+
+  async function rerun(subscriber: Subscriber) {
+    do {
+      subscriber.again = false;
+      const answer = await read(subscriber.expression);
+      if (!subscribers.has(subscriber)) return;
+
+      subscriber.stoodOn = answer.at;
+      subscriber.answered = true;
+      subscriber.listener(answer);
+    } while (subscriber.again);
+
+    subscriber.running = false;
   }
 
   return { mount, unmount, read, subscribe, commit };
