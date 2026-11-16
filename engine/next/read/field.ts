@@ -12,6 +12,7 @@
 
 import type { Clause, Fact, Head, Holon, Question, Store } from "../../../stores/store.ts";
 import type { Heads } from "../engine.ts";
+import type { Maybe } from "./maybe.ts";
 
 export type Stores = ReadonlyMap<string, { store: Store }>;
 
@@ -32,7 +33,8 @@ export type Logged = {
 export type Field = {
   // The names of the stores, in the order they were mounted.
   stores: readonly string[];
-  holon(id: string): Promise<Kept | null>;
+  // A holon, at once where the read already holds it.
+  holon(id: string): Maybe<Kept | null>;
   // Every store that keeps a holon, in the order they were mounted.
   keepers(id: string): Promise<string[]>;
   // The facts matching a clause, from every store.
@@ -104,14 +106,23 @@ export function fieldOf(stores: Stores, heads: Heads): Field {
     for (const { id, resolve } of batch) resolve(byStore.map((kept) => kept.get(id)));
   }
 
-  async function holon(id: string): Promise<Kept | null> {
-    const found = await versionsOf(id);
-    const first = found.findIndex(Boolean);
-    if (first < 0) return null;
+  // Each holon as the read holds it, once its stores have answered.
+  const held = new Map<string, Kept | null>();
 
-    const line = JSON.stringify(found[first]);
-    if (found.some((each) => each && JSON.stringify(each) !== line)) diverged.add(id);
-    return { holon: found[first]!, store: names[first]! };
+  function holon(id: string): Maybe<Kept | null> {
+    if (held.has(id)) return held.get(id)!;
+
+    return versionsOf(id).then((found) => {
+      if (held.has(id)) return held.get(id)!;
+
+      const first = found.findIndex(Boolean);
+      const kept = first < 0 ? null : { holon: found[first]!, store: names[first]! };
+      const line = JSON.stringify(found[first]);
+      if (kept && found.some((each) => each && JSON.stringify(each) !== line)) diverged.add(id);
+
+      held.set(id, kept);
+      return kept;
+    });
   }
 
   async function keepers(id: string) {

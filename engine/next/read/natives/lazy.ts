@@ -2,18 +2,19 @@
 // fallback. If is the bare one; case and else are lazy so that what is not chosen is
 // never worked out.
 
+import { after } from "../maybe.ts";
 import type { Lazy } from "./natives.ts";
 import { truly } from "../values.ts";
 
 export const lazy: Record<string, Lazy> = {
-  if: async ([test, then, otherwise]) =>
-    truly(await test?.()) ? ((await then?.()) ?? null) : ((await otherwise?.()) ?? null),
+  if: ([test, then, otherwise]) =>
+    after(test?.() ?? null, (value) => (truly(value) ? (then?.() ?? null) : (otherwise?.() ?? null))),
 
-  async case([value, cases, otherwise]) {
-    const key = await value?.();
-    const chosen = typeof key === "string" ? await cases?.key(key) : undefined;
-    return chosen !== undefined ? chosen : ((await otherwise?.()) ?? null);
-  },
+  case: ([value, cases, otherwise]) =>
+    after(value?.() ?? null, (key) => {
+      const chosen = typeof key === "string" ? cases?.key(key) : undefined;
+      return chosen !== undefined ? chosen : (otherwise?.() ?? null);
+    }),
 
-  else: async ([value, otherwise]) => (await value?.()) ?? (await otherwise?.()) ?? null,
+  else: ([value, otherwise]) => after(value?.() ?? null, (found) => found ?? otherwise?.() ?? null),
 };

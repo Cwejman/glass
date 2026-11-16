@@ -7,6 +7,7 @@
 // so it is refused.
 
 import { isRef, ref, type Value } from "../../../../language/expression.ts";
+import { after, each } from "../maybe.ts";
 import type { Lazy } from "./natives.ts";
 import { list, truly } from "../values.ts";
 
@@ -18,40 +19,55 @@ export const inOrder = (ids: Iterable<string>): Value[] => [...ids].sort().map(r
 
 export function sets(): Record<string, Lazy> {
   return {
-    async and(given) {
-      let last: Value = true;
+    // The first false of truths, else the last; the meet of the sets among them.
+    and(given) {
       const meet: Set<string>[] = [];
+      let failed: Value | undefined;
 
-      for (const each of given) {
-        last = await each();
-        if (isSet(last)) meet.push(idsOf(last));
-        else if (!truly(last)) return last;
-      }
-
-      if (!meet.length) return last;
-      const [smallest, ...rest] = meet.sort((a, b) => a.size - b.size);
-      return inOrder([...smallest!].filter((id) => rest.every((set) => set.has(id))));
+      return after(
+        each(given, true as Value, (last, next) => {
+          if (failed !== undefined) return last;
+          return after(next(), (value) => {
+            if (isSet(value)) meet.push(idsOf(value));
+            else if (!truly(value)) failed = value;
+            return value;
+          });
+        }),
+        (last) => {
+          if (failed !== undefined) return failed;
+          if (!meet.length) return last;
+          const [smallest, ...rest] = meet.sort((a, b) => a.size - b.size);
+          return inOrder([...smallest!].filter((id) => rest.every((set) => set.has(id))));
+        },
+      );
     },
 
-    async or(given) {
+    // The first true of truths; the join of the sets among them.
+    or(given) {
       const join = new Set<string>();
       let anySet = false;
+      let found: Value | undefined;
 
-      for (const each of given) {
-        const value = await each();
-        if (isSet(value)) {
-          anySet = true;
-          for (const id of idsOf(value)) join.add(id);
-        } else if (truly(value)) return value;
-      }
-
-      return anySet ? inOrder(join) : false;
+      return after(
+        each(given, null as Value, (last, next) => {
+          if (found !== undefined) return last;
+          return after(next(), (value) => {
+            if (isSet(value)) {
+              anySet = true;
+              for (const id of idsOf(value)) join.add(id);
+            } else if (truly(value)) found = value;
+            return value;
+          });
+        }),
+        () => (found !== undefined ? found : anySet ? inOrder(join) : false),
+      );
     },
 
-    async not([given]) {
-      const value = (await given?.()) ?? null;
-      if (isSet(value)) throw new Error("not of a set is every other holon of the field, which is not read");
-      return !truly(value);
-    },
+    not: ([given]) =>
+      after(given?.() ?? null, (value) => {
+        if (isSet(value))
+          throw new Error("not of a set is every other holon of the field, which is not read");
+        return !truly(value);
+      }),
   };
 }

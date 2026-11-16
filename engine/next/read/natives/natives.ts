@@ -5,6 +5,7 @@
 
 import type { Expression, Value } from "../../../../language/expression.ts";
 import type { Field } from "../field.ts";
+import type { Maybe } from "../maybe.ts";
 import type { Scope } from "../evaluate.ts";
 import { patterns } from "./find.ts";
 import { history } from "./history.ts";
@@ -15,22 +16,22 @@ import { lists } from "./lists.ts";
 import { sets } from "./sets.ts";
 import { values } from "./values.ts";
 
-export type Native = (given: Value[]) => Value | Promise<Value>;
+export type Native = (given: Value[]) => Maybe<Value>;
 
 // What a lazy native is given: each of what it is given, to be worked out if needed, and
 // a record's one field alone, for a case.
-export type Deferred = (() => Promise<Value>) & { key: (key: string) => Promise<Value | undefined> };
-export type Lazy = (given: Deferred[]) => Promise<Value>;
+export type Deferred = (() => Maybe<Value>) & { key: (key: string) => Maybe<Value> | undefined };
+export type Lazy = (given: Deferred[]) => Maybe<Value>;
 
-export type Structural = (given: Expression[], scope: Scope) => Promise<Value>;
+export type Structural = (given: Expression[], scope: Scope) => Maybe<Value>;
 
 // What a native may ask of the evaluator calling it.
 export type Calling = {
   field: Field;
-  apply(fn: unknown, given: Value[]): Promise<Value>;
-  evaluate(expression: Expression, scope: Scope): Promise<Value>;
+  apply(fn: unknown, given: Value[]): Maybe<Value>;
+  evaluate(expression: Expression, scope: Scope): Maybe<Value>;
   // The native a call names, if it names one: how a pattern reads its clauses.
-  nativeOf(expression: unknown): Promise<string | undefined>;
+  nativeOf(expression: unknown): Maybe<string | undefined>;
 };
 
 export function natives(calling: Calling) {

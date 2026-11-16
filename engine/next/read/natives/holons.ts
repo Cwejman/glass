@@ -7,6 +7,7 @@
 import { isRef, ref, type Value } from "../../../../language/expression.ts";
 import type { Holon } from "../../../../stores/store.ts";
 import type { Field } from "../field.ts";
+import { after } from "../maybe.ts";
 import type { Calling, Native } from "./natives.ts";
 import { isRecord, list, truly, type Rec } from "../values.ts";
 import { values } from "./values.ts";
@@ -15,46 +16,44 @@ import { values } from "./values.ts";
 export type Reference = { id: string; key: string; holds: boolean };
 
 export function holons({ field, apply }: Calling): Record<string, Native> {
-  const keptOf = (value: unknown) => (isRef(value) ? field.holon(value.$ref) : Promise.resolve(null));
+  const keptOf = (value: unknown) => (isRef(value) ? field.holon(value.$ref) : null);
 
   return {
     stores: () => [...field.stores],
 
-    async get([value, key]) {
-      const kept = await keptOf(value);
-      if (kept) {
-        const { holon, store } = kept;
-        const own: Record<string, Value> = {
-          id: holon.id,
-          name: holon.name ?? null,
-          store,
-          instance: holon.instance.map(ref),
-          mould: (holon.mould as Value) ?? null,
-        };
-        return String(key) in own ? own[String(key)]! : asValue(holon.body[String(key)]);
-      }
+    get: ([value, key]) =>
+      after(keptOf(value), (kept) => {
+        if (kept) {
+          const { holon, store } = kept;
+          const own: Record<string, Value> = {
+            id: holon.id,
+            name: holon.name ?? null,
+            store,
+            instance: holon.instance.map(ref),
+            mould: (holon.mould as Value) ?? null,
+          };
+          return String(key) in own ? own[String(key)]! : asValue(holon.body[String(key)]);
+        }
 
-      if (Array.isArray(value)) return typeof key === "number" ? (value[key] ?? null) : null;
-      if (isRecord(value)) return (value as Rec)[String(key)] ?? null;
-      return null;
-    },
+        if (Array.isArray(value)) return typeof key === "number" ? (value[key] ?? null) : null;
+        if (isRecord(value)) return (value as Rec)[String(key)] ?? null;
+        return null;
+      }),
 
-    async keys([value]) {
-      const kept = await keptOf(value);
-      return kept ? Object.keys(kept.holon.body) : values.keys!([value]);
-    },
+    keys: ([value]) =>
+      after(keptOf(value), (kept) => (kept ? Object.keys(kept.holon.body) : values.keys!([value]))),
 
     // Edges out of a holon: what it is an instance of, then every reference in its body,
     // in the order the body holds them.
-    async out([value]) {
-      const kept = await keptOf(value);
-      if (!kept) return [];
-
-      return [
-        ...kept.holon.instance.map((type) => ({ key: "instance", to: ref(type), holds: false })),
-        ...references(kept.holon.body).map(({ id, key, holds }) => ({ key, to: ref(id), holds })),
-      ];
-    },
+    out: ([value]) =>
+      after(keptOf(value), (kept) =>
+        kept
+          ? [
+              ...kept.holon.instance.map((type) => ({ key: "instance", to: ref(type), holds: false })),
+              ...references(kept.holon.body).map(({ id, key, holds }) => ({ key, to: ref(id), holds })),
+            ]
+          : [],
+      ),
 
     // Edges into a holon.
     in: async ([value]) =>

@@ -45,7 +45,7 @@ async function atProblems(at: Heads, stores: Mounted, heads: Heads): Promise<Pro
 // read as it stood then and as it stands now.
 async function moved(change: Change, now: Field, then: Field): Promise<Problem[]> {
   const ids = [...change.holons.map(({ id }) => id), ...(change.gone ?? [])].filter((id) => !isHandle(id));
-  const read = (field: Field, id: string) => field.holon(id).then((kept) => text(kept?.holon));
+  const read = async (field: Field, id: string) => text((await field.holon(id))?.holon);
   const found = await Promise.all(
     ids.map(async (id) => ((await read(then, id)) === (await read(now, id)) ? [] : [id])),
   );

@@ -3,6 +3,9 @@
 // held here. Every holon is asked of the stores as it is needed (field.ts), so working
 // an expression out waits on them, and is asynchronous throughout.
 //
+// A holon the read already holds is used at once, and only one it waits on is awaited
+// (maybe.ts), so the work stays in one turn wherever it can.
+//
 // A function is a holon, an instance of the type named function. It gives in one of two
 // ways: natively, by a small act in code its body names, or by an expression of its own,
 // written in the field. A native is one of three: given values; lazy, given what it is
@@ -13,6 +16,7 @@ import { expressionProblem, isRef, type Expression, type Value } from "../../../
 import type { Heads } from "../engine.ts";
 import { fieldOf, type Field, type Stores } from "./field.ts";
 import { natives, type Calling, type Deferred } from "./natives/natives.ts";
+import { after, all, waits, type Maybe } from "./maybe.ts";
 import { closure, isClosure, isRecord, type Rec } from "./values.ts";
 
 // What a lambda closes over: the words around it, and a function of one's own's places.
@@ -48,72 +52,82 @@ type Function = { name: string; native?: string; gives?: Expression };
 
 export function evaluator(field: Field) {
   let steps = 0;
-  const functions = new Map<string, Promise<Function>>();
+  const functions = new Map<string, Maybe<Function>>();
 
   // What a call finds: a native by the name its body gives, or an expression it gives.
-  function functionOf(id: string) {
-    if (!functions.has(id)) functions.set(id, found(id));
-    return functions.get(id)!;
+  function functionOf(id: string): Maybe<Function> {
+    const known = functions.get(id);
+    if (known) return known;
+
+    const finding = after(found(id), (fn) => (functions.set(id, fn), fn));
+    if (waits(finding)) functions.set(id, finding);
+    return finding;
   }
 
-  async function found(id: string): Promise<Function> {
-    const kept = await field.holon(id);
-    if (!kept) throw new Error(`the function ${id} is not in the field`);
+  function found(id: string): Maybe<Function> {
+    return after(field.holon(id), (kept) => {
+      if (!kept) throw new Error(`the function ${id} is not in the field`);
 
-    const { holon } = kept;
-    const types = await Promise.all(holon.instance.map((type) => field.holon(type)));
-    const isFunction = types.some((type) => type?.holon.name === "function" && type.holon.mould);
-    const body = holon.body as { native?: unknown; gives?: Expression };
-    const native = isFunction && typeof body.native === "string" ? body.native : undefined;
+      const { holon } = kept;
+      return after(all(holon.instance.map((type) => field.holon(type))), (types) => {
+        const isFunction = types.some((type) => type?.holon.name === "function" && type.holon.mould);
+        const body = holon.body as { native?: unknown; gives?: Expression };
+        const native = isFunction && typeof body.native === "string" ? body.native : undefined;
 
-    return { name: holon.name ?? id, native, gives: body.gives };
+        return { name: holon.name ?? id, native, gives: body.gives };
+      });
+    });
   }
 
   const calling: Calling = {
     field,
     apply,
     evaluate: (expression, scope) => evaluate(expression, scope),
-    nativeOf: async (expression) => {
+    nativeOf: (expression) => {
       const id = (expression as { call?: { $ref?: string } } | null)?.call?.$ref;
-      return id && (await field.holon(id)) ? (await functionOf(id)).native : undefined;
+      if (!id) return undefined;
+      return after(field.holon(id), (kept) =>
+        kept ? after(functionOf(id), ({ native }) => native) : undefined,
+      );
     },
   };
 
   const { given, lazy, structural } = natives(calling);
 
   // A function, as a value or a holon, given values.
-  async function apply(fn: unknown, values: Value[]): Promise<Value> {
+  function apply(fn: unknown, values: Value[]): Maybe<Value> {
     if (isClosure(fn)) {
       const words = Object.fromEntries(fn.fn.map((word, i) => [word, values[i] ?? null]));
       return evaluate(fn.gives as Expression, { words, up: fn.scope as Scope });
     }
 
-    return isRef(fn) && (await field.holon(fn.$ref)) ? called(fn.$ref, values) : null;
+    if (!isRef(fn)) return null;
+    return after(field.holon(fn.$ref), (kept) => (kept ? called(fn.$ref, values) : null));
   }
 
   // A function kept as a holon, given values already worked out.
-  async function called(id: string, values: Value[]): Promise<Value> {
-    const { name, native, gives } = await functionOf(id);
+  function called(id: string, values: Value[]): Maybe<Value> {
+    return after(functionOf(id), ({ name, native, gives }) => {
+      if (native && given[native]) return given[native]!(values);
+      if (native && lazy[native]) return lazy[native]!(values.map(valued));
+      if (native && structural[native])
+        throw new Error(`${name} reads what it is given as written, so it is called, not given to another`);
 
-    if (native && given[native]) return given[native]!(values);
-    if (native && lazy[native]) return lazy[native]!(values.map(valued));
-    if (native && structural[native])
-      throw new Error(`${name} reads what it is given as written, so it is called, not given to another`);
+      if (gives === undefined) throw new Error(`${name} is not a function`);
 
-    if (gives === undefined) throw new Error(`${name} is not a function`);
-
-    const written = gives as { fn?: string[]; gives?: Expression };
-    return Array.isArray(written?.fn)
-      ? apply(closure(written.fn, written.gives, { words: {} }), values)
-      : evaluate(gives, { words: {}, args: values });
+      const written = gives as { fn?: string[]; gives?: Expression };
+      return Array.isArray(written?.fn)
+        ? apply(closure(written.fn, written.gives, { words: {} }), values)
+        : evaluate(gives, { words: {}, args: values });
+    });
   }
 
-  function evaluate(expression: Expression, scope: Scope = { words: {} }): Promise<Value> {
+  function evaluate(expression: Expression, scope: Scope = { words: {} }): Maybe<Value> {
     if (++steps > most) throw new Error(`a read takes at most ${most.toLocaleString("en")} steps`);
     return form(expression, scope);
   }
 
-  async function form(expression: Expression, scope: Scope): Promise<Value> {
+  function form(expression: Expression, scope: Scope): Maybe<Value> {
     if (expression === null || typeof expression !== "object") return expression ?? null;
     if (Array.isArray(expression)) throw new Error("a list is written { list: [ … ] }");
 
@@ -123,22 +137,24 @@ export function evaluator(field: Field) {
     if ("fn" in expression) return closure(expression.fn, expression.gives, scope);
     if ("?" in expression)
       throw new Error(`?${expression["?"]} is a pattern's variable, and stands only within find`);
-    if ("list" in expression) return Promise.all(expression.list.map((each) => evaluate(each, scope)));
+    if ("list" in expression) return all(expression.list.map((each) => evaluate(each, scope)));
     if ("record" in expression) {
       const entries = Object.entries(expression.record);
-      const values = await Promise.all(entries.map(([, each]) => evaluate(each, scope)));
-      return Object.fromEntries(entries.map(([key], i) => [key, values[i]!]));
+      return after(all(entries.map(([, each]) => evaluate(each, scope))), (values) =>
+        Object.fromEntries(entries.map(([key], i) => [key, values[i]!])),
+      );
     }
 
     if ("call" in expression) {
       const id = expression.call.$ref;
-      const { native } = await functionOf(id);
       const written = expression.with ?? [];
 
-      if (native && structural[native]) return structural[native]!(written, scope);
-      if (native && lazy[native]) return lazy[native]!(written.map((each) => deferred(each, scope)));
+      return after(functionOf(id), ({ native }) => {
+        if (native && structural[native]) return structural[native]!(written, scope);
+        if (native && lazy[native]) return lazy[native]!(written.map((each) => deferred(each, scope)));
 
-      return called(id, await Promise.all(written.map((each) => evaluate(each, scope))));
+        return after(all(written.map((each) => evaluate(each, scope))), (values) => called(id, values));
+      });
     }
 
     throw new Error(`not an expression: ${JSON.stringify(expression).slice(0, 80)}`);
@@ -149,7 +165,7 @@ export function evaluator(field: Field) {
   function deferred(expression: Expression, scope: Scope): Deferred {
     const record = (expression as { record?: Record<string, Expression> } | null)?.record;
     return Object.assign(() => evaluate(expression, scope), {
-      key: async (key: string) => (record && key in record ? evaluate(record[key]!, scope) : undefined),
+      key: (key: string) => (record && key in record ? evaluate(record[key]!, scope) : undefined),
     });
   }
 
@@ -158,8 +174,8 @@ export function evaluator(field: Field) {
 
 // What a lazy native is given for a value already worked out.
 function valued(value: Value): Deferred {
-  return Object.assign(async () => value, {
-    key: async (key: string) => (isRecord(value) ? (value as Rec)[key] : undefined),
+  return Object.assign(() => value, {
+    key: (key: string) => (isRecord(value) ? (value as Rec)[key] : undefined),
   });
 }
 
