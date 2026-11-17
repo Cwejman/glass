@@ -137,10 +137,17 @@ export function markedWriter({ put, word }: Pick<ReturnType<typeof proseWriter>,
 
   const sentence = (text: string) => put("sentence", { words: inlineOf(release(text)).map(ref) });
 
-  const sentencesOf = (text: string) => splitSentences(hold(text)).map(sentence).map(ref);
+  // A sentence whose text is among those kept keeps its holon; any other is written anew.
+  const sentencesOf = (text: string, kept: ReadonlyMap<string, string> = new Map()) =>
+    splitSentences(hold(text))
+      .map((each) => kept.get(release(each)) ?? sentence(each))
+      .map(ref);
 
   return {
     paragraph: (text: string) => put("paragraph", { sentences: sentencesOf(text) }),
+    // A paragraph said again, keeping the sentences given by their text.
+    paragraphKeeping: (text: string, kept: ReadonlyMap<string, string>) =>
+      put("paragraph", { sentences: sentencesOf(text, kept) }),
     item: (text: string) => put("item", { sentences: sentencesOf(text) }),
   };
 }

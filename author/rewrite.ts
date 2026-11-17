@@ -19,7 +19,8 @@
 // stood at place i of the old flow; { "keep": i, "change": [[from, to]] }, that paragraph
 // said again with its words changed; { "code": "...", "language": "..." }; { "list": [...] };
 // { "mount": "a brief's id" }, a brief placed in the flow as a break, and so no longer among
-// the parts of the brief whose flow it stands in.
+// the parts of the brief whose flow it stands in. A paragraph said again keeps the holon of
+// every sentence whose text is unchanged.
 
 import { mouldOf, partsOf, references } from "../engine/moulds.ts";
 import { handles } from "../engine/handles.ts";
@@ -55,6 +56,8 @@ const marked = markedWriter(writer);
 const { types, put } = writer;
 const changed = new Set<Holon>();
 const replaced = new Set<string>();
+// Sentences a paragraph said again keeps, which stay though their old paragraph goes.
+const stillHeld = new Set<string>();
 
 const refsOf = (list: unknown) => ((list ?? []) as { $ref: string }[]).map(({ $ref }) => $ref);
 
@@ -100,7 +103,10 @@ function flowOf(before: { $ref: string }[], flow: FlowItem[], name: string) {
       text = text.replace(from, () => to);
     }
 
-    return held(marked.paragraph(text));
+    // Each sentence said as before keeps its holon, so only what is new is born.
+    const sentences = refsOf(byId.get(kept.$ref)!.body.sentences);
+    for (const id of sentences) stillHeld.add(id);
+    return held(marked.paragraphKeeping(text, new Map(sentences.map((id) => [said(id), id]))));
   });
 }
 
@@ -195,7 +201,7 @@ function nothingElseHolds() {
 
   while (queue.length) {
     const id = queue.pop()!;
-    if (going.has(id)) continue;
+    if (going.has(id) || stillHeld.has(id)) continue;
 
     going.add(id);
     queue.push(...partsOf(byId.get(id)!.body, mouldFor(byId.get(id)!)));
