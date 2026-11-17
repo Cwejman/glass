@@ -159,6 +159,33 @@ describe("strata", () => {
     ]);
   });
 
+  test("a reference is a fact under its key at any depth, a record's other values none", async () => {
+    const { store } = opened();
+    const board = {
+      id: id(3),
+      instance: [],
+      name: "Board",
+      body: { widgets: [{ gathers: { call: ref(1), with: [ref(2, true)] }, says: "two" }] },
+    };
+    const head = await accepted(store, act(null, [note, whole, board]));
+
+    const facts = await read(store, head, { facts: { e: id(3) } });
+    expect(facts).toHaveLength(4);
+    expect(facts).toEqual(
+      expect.arrayContaining([
+        { e: id(3), a: "$holds", v: { $ref: id(2) } },
+        { e: id(3), a: "name", v: "Board" },
+        { e: id(3), a: "widgets", v: { $ref: id(1) } },
+        { e: id(3), a: "widgets", v: { $ref: id(2) } },
+      ]),
+    );
+    expect(await read(store, head, { facts: { v: { $ref: id(1) } } })).toContainEqual({
+      e: id(3),
+      a: "widgets",
+      v: { $ref: id(1) },
+    });
+  });
+
   test("a holon's facts are found by its value too", async () => {
     const { store } = opened();
     const head = await accepted(store, act(null, [note]));

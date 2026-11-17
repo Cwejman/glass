@@ -5,7 +5,7 @@ import { join } from "node:path";
 import type { Expression } from "../../language/expression.ts";
 import { sameThread, workers } from "../../runtime/runtime.ts";
 import { contentOf, hashOf, partOf } from "../../stores/act.ts";
-import type { Act, Holon, Store } from "../../stores/store.ts";
+import type { Act, Head, Holon, Store } from "../../stores/store.ts";
 import { folderStorage } from "../../stores/strata/storage/folder.ts";
 import { strata } from "../../stores/strata/strata.ts";
 import { engine, type Answer, type Committed, type Engine } from "./engine.ts";
@@ -265,4 +265,292 @@ describe("the engine", () => {
     await glassEngine.unmount("glass");
     await glassEngine.unmount("notes");
   }, 20_000);
+});
+
+// A store as another, with some of its methods answering otherwise.
+const otherwise = (store: Store, methods: Partial<Store>): Store => ({ ...store, ...methods });
+
+// An engine on one thread over glass, read, and notes, written, with more stores mounted
+// beside them as given, and how many workers.
+async function startedWith(more: Record<string, Store> = {}, count = 2, write = false) {
+  const [language, written] = [strata(folderStorage(folder())), strata(folderStorage(folder()))];
+  await begun(language, glass);
+  await begun(written, notes);
+
+  const glassEngine = await engine({ workers: sameThread(), count });
+  await glassEngine.mount("glass", language);
+  await glassEngine.mount("notes", written, { write: true });
+  for (const [name, store] of Object.entries(more)) await glassEngine.mount(name, store, { write });
+  return glassEngine;
+}
+
+// The head a store stands at now.
+const strataHead = async (store: Store) => {
+  let head: Head | null = null;
+  (await store.subscribe((now) => (head = now)))();
+  return head as Head | null;
+};
+
+// A second written store, its root the one of the type store, holding one note.
+const more: Holon[] = [
+  { id: id(301), instance: [id(2)], name: "more", body: { contents: [{ $ref: id(302), $holds: true }] } },
+  { id: id(302), instance: [id(100)], body: { text: "kept in more" } },
+];
+
+async function moreStore() {
+  const store = strata(folderStorage(folder()));
+  await begun(store, more);
+  return store;
+}
+
+// A change editing a note in notes and the note in more, as one commit.
+const across = (made: string, text: string) => ({
+  holons: [
+    { id: made, instance: [id(100)], body: { text } },
+    { id: id(302), instance: [id(100)], body: { text } },
+  ] as Holon[],
+  says: "across",
+  at: {},
+});
+
+const failing = () => Promise.reject(new Error("the storage is gone"));
+
+describe("when things go wrong", () => {
+  test("a store failing a read fails that read with its problem, and the engine reads on", async () => {
+    let broken = true;
+    const store = await moreStore();
+    const glassEngine = await startedWith({
+      more: otherwise(store, { read: (head, question) => (broken ? failing() : store.read(head, question)) }),
+    });
+
+    const answer = await Promise.race([
+      glassEngine.read(call("get", ref(100), "name")),
+      Bun.sleep(2_000).then(() => ({ problem: "no answer within 2 s" })),
+    ]);
+    expect(answer).toMatchObject({ problem: expect.stringContaining("the storage is gone") });
+
+    broken = false;
+    expect(await glassEngine.read(call("get", ref(100), "name"))).toMatchObject({ value: "note" });
+  });
+
+  test("a commit across two stores, one taking it and one refusing, says where it landed and what the other answered", async () => {
+    const store = await moreStore();
+    const refusing = otherwise(store, {
+      offer: async () => ({ refused: [{ rule: "full", says: "this store takes nothing more" }] }),
+    });
+    const glassEngine = await startedWith({ more: refusing }, 2, true);
+    const made = landed(await glassEngine.commit(note("first", {}, { into: "notes" }))).ids["~1"]!;
+
+    const committed = landed(await glassEngine.commit(across(made, "both")));
+    expect(Object.keys(committed.landed)).toEqual(["notes"]);
+    expect(committed.missed).toEqual({
+      more: { refused: [{ rule: "full", says: "this store takes nothing more" }] },
+    });
+    expect(await glassEngine.read(call("get", { $ref: made }, "text"))).toMatchObject({ value: "both" });
+  });
+
+  test("a commit across two stores, one failing as it is offered, still says where it landed", async () => {
+    const store = await moreStore();
+    const glassEngine = await startedWith({ more: otherwise(store, { offer: failing }) }, 2, true);
+    const made = landed(await glassEngine.commit(note("first", {}, { into: "notes" }))).ids["~1"]!;
+
+    const committed = landed(await glassEngine.commit(across(made, "both")));
+    expect(Object.keys(committed.landed)).toEqual(["notes"]);
+    expect(committed.missed).toEqual({ more: { failed: "the storage is gone" } });
+  });
+
+  test("a store answering changed every time has the change refused after three judgings", async () => {
+    let offered = 0;
+    const store = await moreStore();
+    const glassEngine = await startedWith({}, 2);
+    const { at } = await glassEngine.read(call("get", ref(302), "text"));
+
+    // more answers every offer as changed, at a head it has had.
+    const head = (await strataHead(store))!;
+    await glassEngine.mount(
+      "more",
+      otherwise(store, {
+        offer: async () => {
+          offered++;
+          return { changed: head };
+        },
+      }),
+      { write: true },
+    );
+
+    expect(at).not.toHaveProperty("more");
+    expect(await glassEngine.commit(note("never", {}, { into: "more" }))).toMatchObject({
+      refused: [{ rule: "changed" }],
+    });
+    expect(offered).toBe(3);
+  });
+
+  test("a subscriber standing on a store unmounted is answered again without it", async () => {
+    const glassEngine = await startedWith({ more: await moreStore() });
+    const heard: string[][] = [];
+    const { promise, resolve } = Promise.withResolvers<void>();
+
+    const stop = await glassEngine.subscribe(call("get", ref(302), "text"), (answer) => {
+      heard.push(Object.keys(answer.at).sort());
+      if (heard.length === 2) resolve();
+    });
+    await Bun.sleep(50);
+    await glassEngine.unmount("more");
+    await promise;
+    stop();
+
+    expect(heard).toEqual([
+      ["glass", "more", "notes"],
+      ["glass", "notes"],
+    ]);
+  });
+});
+
+describe("changes at once", () => {
+  test("many changes touching different holons all land, each once", async () => {
+    const glassEngine = await startedWith({}, 4);
+    const all = await Promise.all(
+      Array.from({ length: 40 }, (_, n) => glassEngine.commit(note(`note ${n}`))),
+    );
+    all.forEach(landed);
+
+    const log = (await glassEngine.read(call("size", call("log", "notes")))) as Answer;
+    expect(log).toMatchObject({ value: 41 });
+    const contents = (await glassEngine.read(call("size", call("get", ref(101), "contents")))) as Answer;
+    expect(contents).toMatchObject({ value: 41 });
+  });
+
+  test("two holons given one name in one whole at once: one lands, the other is refused", async () => {
+    const glassEngine = await startedWith({}, 4);
+    const named = (text: string) => ({
+      holons: [{ id: "~1", instance: [id(100)], name: "Same", body: { text } }] as Holon[],
+      says: text,
+      at: {},
+    });
+
+    const both = await Promise.all([glassEngine.commit(named("a")), glassEngine.commit(named("b"))]);
+    expect(both.filter((one) => "landed" in one)).toHaveLength(1);
+    expect(both.filter((one) => "refused" in one)).toHaveLength(1);
+  });
+
+  test("two engines over one storage, editing one holon at once, both land, one after the other", async () => {
+    const [languageAt, writtenAt] = [folder(), folder()];
+    await begun(strata(folderStorage(languageAt)), glass);
+    await begun(strata(folderStorage(writtenAt)), notes);
+
+    const engines = await Promise.all(
+      [1, 2].map(async () => {
+        const one = await engine({ workers: sameThread(), count: 2 });
+        await one.mount("glass", strata(folderStorage(languageAt)));
+        await one.mount("notes", strata(folderStorage(writtenAt)), { write: true });
+        return one;
+      }),
+    );
+    const made = landed(await engines[0]!.commit(note("first"))).ids["~1"]!;
+
+    // The second engine hears of the first one's commit as the storage's head moves.
+    while (
+      !("value" in (await engines[1]!.read(call("get", { $ref: made }, "text")))) ||
+      ((await engines[1]!.read(call("get", { $ref: made }, "text"))) as { value: unknown }).value === null
+    )
+      await Bun.sleep(10);
+
+    const edit = (text: string, strict = false) => ({
+      holons: [{ id: made, instance: [id(100)], body: { text } }] as Holon[],
+      says: text,
+      at: {},
+      strict,
+    });
+
+    const both = await Promise.all([engines[0]!.commit(edit("a")), engines[1]!.commit(edit("b"))]);
+    both.forEach(landed);
+
+    // Each engine hears of the other's commit as the storage's head moves.
+    const newest = async (one: Engine) => {
+      const log = (await one.read(call("log", "notes"))) as unknown as { value: { says: string }[] };
+      return log.value.slice(0, 2).map(({ says }) => says);
+    };
+    while (
+      (await newest(engines[0]!)).sort().join() !== "a,b" ||
+      (await newest(engines[1]!)).sort().join() !== "a,b"
+    )
+      await Bun.sleep(10);
+    const [last] = await newest(engines[1]!);
+    const text = await engines[0]!.read(call("get", { $ref: made }, "text"));
+    expect(text).toMatchObject({ value: last });
+  });
+});
+
+describe("names in a whole", () => {
+  const named = (name: string, text = name) => ({
+    holons: [{ id: "~1", instance: [id(100)], name, body: { text } }] as Holon[],
+    says: name,
+    at: {},
+  });
+
+  test("a name a whole already holds is refused, said of the handle", async () => {
+    const glassEngine = await started();
+    landed(await glassEngine.commit(named("Same")));
+
+    expect(await glassEngine.commit(named("Same", "again"))).toMatchObject({
+      refused: [{ rule: "namesAreOne", id: "~1", says: `${id(101)} already holds a holon named "Same"` }],
+    });
+  });
+
+  test("a part renamed to a name its whole holds is refused; to a free one it lands", async () => {
+    const glassEngine = await started();
+    landed(await glassEngine.commit(named("Taken")));
+    const other = landed(await glassEngine.commit(named("Other"))).ids["~1"]!;
+    const renamed = (name: string) => ({
+      holons: [{ id: other, instance: [id(100)], name, body: { text: "Other" } }] as Holon[],
+      says: "renamed",
+      at: {},
+    });
+
+    expect(await glassEngine.commit(renamed("Taken"))).toMatchObject({
+      refused: [{ rule: "namesAreOne", id: other }],
+    });
+    landed(await glassEngine.commit(renamed("Free")));
+  });
+
+  test("a whole letting go of a part and taking another of the same name lands", async () => {
+    const glassEngine = await started();
+    const first = landed(await glassEngine.commit(named("Same"))).ids["~1"]!;
+    const root = (await glassEngine.read(call("get", ref(101), "contents"))) as Answer & { value: unknown[] };
+
+    const committed = await glassEngine.commit({
+      holons: [
+        {
+          id: id(101),
+          instance: [id(2)],
+          name: "notes",
+          body: {
+            contents: [
+              ...root.value.filter((each) => (each as { $ref: string }).$ref !== first),
+              { $ref: "~1", $holds: true },
+            ],
+          },
+        },
+        { id: "~1", instance: [id(100)], name: "Same", body: { text: "the new one" } },
+      ] as Holon[],
+      gone: [first],
+      says: "replaced",
+      at: {},
+    });
+    landed(committed);
+  });
+
+  test("two parts of one name placed at once in one whole are refused", async () => {
+    const glassEngine = await started();
+    const committed = await glassEngine.commit({
+      holons: [
+        { id: "~1", instance: [id(100)], name: "Twin", body: { text: "one" } },
+        { id: "~2", instance: [id(100)], name: "Twin", body: { text: "two" } },
+      ] as Holon[],
+      says: "twins",
+      at: {},
+    });
+
+    expect(committed).toMatchObject({ refused: [{ rule: "namesAreOne", id: "~2" }] });
+  });
 });

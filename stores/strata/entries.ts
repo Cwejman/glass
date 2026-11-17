@@ -5,10 +5,10 @@
 // acts the store took, by content hash, each stamped with its number.
 //
 // A fact is one value a holon has under a key: each type it is an instance of, under
-// instance; its name, under name; and each value its body holds under a key, an array
-// giving one fact for each element. Values are strings, numbers, booleans and
-// references; a record that is not a reference gives no fact. A reference that holds
-// gives a second fact, under $holds.
+// instance; its name, under name; and each value its body holds under a key: a string,
+// number or boolean at the top or as an element of an array, and a reference at any
+// depth, within records and arrays alike, as an expression kept in a body refers. A
+// reference that holds gives a second fact, under $holds.
 
 import type { Fact, Holon, Value } from "../store.ts";
 import { compare, type Entry } from "./run.ts";
@@ -141,14 +141,23 @@ export function factsOf(holon: Holon): Fact[] {
   const facts: Fact[] = holon.instance.map((type) => ({ e: holon.id, a: "instance", v: { $ref: type } }));
   if (holon.name !== undefined) facts.push({ e: holon.id, a: "name", v: holon.name });
 
-  for (const [a, held] of Object.entries(holon.body))
+  // References at any depth beneath a key.
+  const refersUnder = (a: string, value: unknown) => {
+    if (isRef(value)) {
+      facts.push({ e: holon.id, a, v: { $ref: value.$ref } });
+      if (holds(value)) facts.push({ e: holon.id, a: "$holds", v: { $ref: value.$ref } });
+    } else if (Array.isArray(value)) for (const each of value) refersUnder(a, each);
+    else if (typeof value === "object" && value !== null)
+      for (const inner of Object.values(value)) refersUnder(a, inner);
+  };
+
+  for (const [a, held] of Object.entries(holon.body)) {
+    refersUnder(a, held);
     for (const each of Array.isArray(held) ? held : [held]) {
       const v = valueOf(each);
-      if (v === undefined) continue;
-
-      facts.push({ e: holon.id, a, v });
-      if (holds(each)) facts.push({ e: holon.id, a: "$holds", v });
+      if (v !== undefined && !isRef(v)) facts.push({ e: holon.id, a, v });
     }
+  }
 
   return facts;
 }

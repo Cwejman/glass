@@ -16,7 +16,8 @@
 // burst of either never leaves the other waiting for a worker.
 //
 // A change waits only for the changes under way that touch the same holons or addresses,
-// strict or not, since one under way may yet be refused. It is then judged against the
+// or put new holons into the root of the same store, strict or not, since one under way
+// may yet be refused. It is then judged against the
 // field as it stands: refused if it can no longer stand, and, if strict, if anything it
 // touches moved since its at.
 //
@@ -30,7 +31,7 @@ import type { Head, Problem, Store, Touches } from "../../stores/store.ts";
 import { anotherConnectionTo, disconnect, disconnected } from "../../wire/wire.ts";
 import type { EngineWorker } from "./worker.ts";
 import type { Change } from "./commit/change.ts";
-import { touchesOf, meet } from "./commit/touches.ts";
+import { touchesOf, meet, placesInRoot } from "./commit/touches.ts";
 import type { Landed } from "./commit/land.ts";
 
 // A mounted store: the store, whether this engine writes to it, and the function that
@@ -151,7 +152,7 @@ export async function engine({ workers: runtime, count = 1 }: Starting): Promise
   // Waits for the changes under way that touch what this one touches, then has a worker
   // judge it against the stores as they stand, mint its ids, and offer it to them.
   async function commit(change: Change): Promise<Committed> {
-    const done = await turnAmong(touchesOf(change));
+    const done = await turnAmong(touching(change));
     const worker = await take("commit");
 
     try {
@@ -168,6 +169,17 @@ export async function engine({ workers: runtime, count = 1 }: Starting): Promise
       give("commit", worker);
       done();
     }
+  }
+
+  // What a change touches, and the root of the store it puts a holon nothing holds into:
+  // the store it names, or the only one written.
+  function touching(change: Change): Touches {
+    const touches = touchesOf(change);
+    const written = [...mounts].filter(([, { write }]) => write).map(([name]) => name);
+    const into = change.into ?? (written.length === 1 ? written[0] : undefined);
+    if (into === undefined || !placesInRoot(change)) return touches;
+
+    return { ...touches, ids: [...touches.ids, `the root of ${into}`] };
   }
 
   // A store's head moved: recorded, and the reads that stood on that store rerun.

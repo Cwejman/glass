@@ -16,11 +16,11 @@ import type { Plan } from "./plan.ts";
 import { touchesOf } from "./touches.ts";
 
 // Where a commit landed, by store, the ids its handles were given, and what each store
-// it did not land in answered: refused, or changed since it was judged.
+// it did not land in answered: refused, changed since it was judged, or failed.
 export type Landed = {
   landed: Record<string, Head>;
   ids: Record<string, string>;
-  missed?: Record<string, { refused: Problem[] } | { changed: Head }>;
+  missed?: Record<string, { refused: Problem[] } | { changed: Head } | { failed: string }>;
 };
 
 export async function land(
@@ -52,17 +52,22 @@ export async function land(
   };
   const hash = await hashOf(contentOf(said));
 
+  // A store that fails as it is offered its share is told apart, so the stores that took
+  // theirs are still said.
   const replies = await Promise.all(
     plan.shares.map(({ store, root, holons, born }) =>
-      stores.get(store)!.store.offer({
-        ...said,
-        hash,
-        own: root,
-        holons,
-        born,
-        over: (heads[store] as Head | null | undefined) ?? null,
-        touches: touchesOf({ ...change, holons }),
-      } satisfies Act),
+      stores
+        .get(store)!
+        .store.offer({
+          ...said,
+          hash,
+          own: root,
+          holons,
+          born,
+          over: (heads[store] as Head | null | undefined) ?? null,
+          touches: touchesOf({ ...change, holons }),
+        } satisfies Act)
+        .catch((error: unknown) => ({ failed: error instanceof Error ? error.message : String(error) })),
     ),
   );
 

@@ -61,6 +61,17 @@ async function answer(field: Field, asked: Asked): Promise<Fact[]> {
   if (asked.nothing) return [];
   const { e, a, v, words } = asked;
 
+  // The words a holon known says under a key are cut from it here, as the index cuts
+  // them, where no word is given to ask the index by.
+  if (words && v === undefined) {
+    if (e === undefined)
+      throw new Error("a word said is asked of a word known or a holon known, said(h, key, ?w)");
+    const kept = await field.holon(e);
+    const held = a === "name" ? kept?.holon.name : kept?.holon.body[a!];
+    const said = (Array.isArray(held) ? held : [held]).flatMap(wordsOf);
+    return [...new Set(said)].map((word) => ({ e, a: a!, v: word }));
+  }
+
   if (words) {
     const found = await field.said(a!, v as string);
     return found.filter((fact) => e === undefined || fact.e === e) as Fact[];
@@ -80,7 +91,7 @@ async function answer(field: Field, asked: Asked): Promise<Fact[]> {
 function count({ e, a, v, words, nothing }: Asked) {
   if (nothing) return 0;
   if (e !== undefined) return 1;
-  if (words) return 20;
+  if (words) return v !== undefined ? 20 : Number.POSITIVE_INFINITY;
   if (a !== undefined && v !== undefined) return a === "instance" ? 1_000 : 20;
   if (v !== undefined) return 50;
   if (a !== undefined) return 100_000;

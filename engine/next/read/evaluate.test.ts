@@ -197,6 +197,31 @@ describe("reading over stores", () => {
     ).toEqual([ref(1), ref(100), ref(200)]);
   });
 
+  test("the words a holon known says are found with no word given; with neither known, it is refused", async () => {
+    const read = await field();
+
+    expect((await read(call("find", v("w"), call("said", ref(101), "text", v("w"))))).value).toEqual([
+      "glass",
+      "holds",
+      "holons",
+    ]);
+    expect(
+      (
+        await read(
+          call(
+            "find",
+            v("w"),
+            { list: [v("h"), "instance", ref(100)] },
+            call("said", v("h"), "text", v("w")),
+          ),
+        )
+      ).value,
+    ).toEqual(["glass", "holds", "holons"]);
+    expect(await read(call("find", v("w"), call("said", v("h"), "text", v("w"))))).toMatchObject({
+      problem: expect.stringContaining("a word known or a holon known"),
+    });
+  });
+
   test("a store not yet written holds nothing, and is asked all the same", async () => {
     const read = await field([{ name: "empty", holons: [] }]);
     const answer = await read(call("get", ref(999), "text"));

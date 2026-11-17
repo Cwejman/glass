@@ -27,6 +27,16 @@ export function touchesOf({ holons, gone = [] }: Change): Touches {
   };
 }
 
+// Whether the change brings in a holon nothing in it holds, which goes into the root of
+// the store it is put into, and so writes that root. Such changes into one store meet
+// there, known from the change before the root is read.
+export function placesInRoot({ holons }: Change) {
+  const held = new Set(
+    holons.flatMap((holon) => references(holon.body).flatMap(({ id, holds }) => (holds ? [id] : []))),
+  );
+  return holons.some(({ id }) => isHandle(id) && !held.has(id));
+}
+
 export function meet(a: Touches, b: Touches) {
   const ids = new Set(a.ids);
   const addresses = new Set(a.addresses.map((address) => JSON.stringify(address)));

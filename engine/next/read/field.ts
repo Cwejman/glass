@@ -83,27 +83,33 @@ export function fieldOf(stores: Stores, heads: Heads): Field {
   // Each holon asked for, as every store keeps it, by mount order; asked in batches.
   const versions = new Map<string, Promise<(Holon | undefined)[]>>();
   const diverged = new Set<string>();
-  let waiting: { id: string; resolve: (found: (Holon | undefined)[]) => void }[] = [];
+  type Waiting = PromiseWithResolvers<(Holon | undefined)[]> & { id: string };
+  let waiting: Waiting[] = [];
 
   function versionsOf(id: string) {
     if (!versions.has(id)) {
-      const { promise, resolve } = Promise.withResolvers<(Holon | undefined)[]>();
-      versions.set(id, promise);
+      const asking = { ...Promise.withResolvers<(Holon | undefined)[]>(), id };
+      versions.set(id, asking.promise);
       if (!waiting.length) nextTurn(askWaiting);
-      waiting.push({ id, resolve });
+      waiting.push(asking);
     }
     return versions.get(id)!;
   }
 
-  // Every holon asked for this turn, asked of every store as one question.
+  // Every holon asked for this turn, asked of every store as one question. A store that
+  // fails fails every holon of the batch, each read waiting on one told why.
   async function askWaiting() {
     const batch = waiting;
     waiting = [];
     const ids = batch.map(({ id }) => id);
-    const answers = await Promise.all(names.map((name) => ask(name, { holons: ids }) as Promise<Holon[]>));
-    const byStore = answers.map((holons) => new Map(holons.map((holon) => [holon.id, holon])));
 
-    for (const { id, resolve } of batch) resolve(byStore.map((kept) => kept.get(id)));
+    try {
+      const answers = await Promise.all(names.map((name) => ask(name, { holons: ids }) as Promise<Holon[]>));
+      const byStore = answers.map((holons) => new Map(holons.map((holon) => [holon.id, holon])));
+      for (const { id, resolve } of batch) resolve(byStore.map((kept) => kept.get(id)));
+    } catch (error) {
+      for (const { reject } of batch) reject(error);
+    }
   }
 
   // Each holon as the read holds it, once its stores have answered.
