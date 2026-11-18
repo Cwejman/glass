@@ -1,29 +1,59 @@
 // How a read is worked out: what it gives, over the field as the stores stood when the
-// read began, and the holons the read carries. The language is the same as ever; what is new is that the field is not
-// held here. Every holon is asked of the stores as it is needed (field.ts), so working
-// an expression out waits on them, and is asynchronous throughout.
+// read began, and the holons the read carries. The field is not held here. Every holon is
+// asked of the stores as it is needed (field.ts), so working a read out waits on them,
+// and is asynchronous throughout.
 //
 // A holon the read already holds is used at once, and only one it waits on is awaited
 // (maybe.ts), so the work stays in one turn wherever it can.
 //
-// A function is a holon, an instance of the type named function. It gives in one of two
-// ways: natively, by a small act in code its body names, or by an expression of its own,
-// written in the field. A native is one of three: given values; lazy, given what it is
-// given unworked, to work out only what it needs; or reading what it is given as
-// written, as a pattern is.
+// What a read gives is JSON with references at any depth. A reference gives, in order:
+// the value of a placeholder bound around it; what a use gives, if it points at one; a
+// function held where it is written, as a lambda over the placeholders around it; and
+// else the holon itself, a function among them as a value. A use is a holon of a type
+// whose mould declares fn and args: it names the function it applies, and holds what it
+// gives it.
+//
+// A function is a holon of a type whose mould declares input, the placeholders it takes,
+// each held at its place and bound by its id. It gives in one of two ways: natively, by a
+// small act in code its body names, or by the use it holds as its body. A native is one
+// of three: given values; lazy, given what it is given unworked, to work out only what it
+// needs; or reading what it is given as written, as a pattern is.
+//
+// Until the earlier form of an expression goes, a read written in it, a record keyed
+// call, fn, var, arg, list or record, is worked out as it was, and a function of that
+// form gives an expression of its own.
 
-import { expressionProblem, isRef, type Expression, type Value } from "../../../language/expression.ts";
+import {
+  expressionProblem,
+  isRef,
+  type Expression,
+  type Ref,
+  type Value,
+} from "../../../language/expression.ts";
+import type { Holon } from "../../../stores/store.ts";
 import type { Heads, Read } from "../engine.ts";
 import { fieldOf, type Field, type Stores } from "./field.ts";
-import { natives, type Calling, type Deferred } from "./natives/natives.ts";
-import { after, all, waits, type Maybe } from "./maybe.ts";
-import { closure, isClosure, isRecord, type Rec } from "./values.ts";
+import { natives, type Calling, type Deferred, type Written } from "./natives/natives.ts";
+import { after, all, each, waits, type Maybe } from "./maybe.ts";
+import { isVar } from "./patterns.ts";
+import { closure, isClosure, isRecord, kind, type Closure, type Rec } from "./values.ts";
 
-// What a lambda closes over: the words around it, and a function of one's own's places.
+// What a lambda of the earlier form closes over: the words around it, and a function of
+// one's own's places.
 export type Scope = { words: Record<string, Value>; up?: Scope; args?: Value[] };
+
+// The placeholders bound where a use is worked out, by id, and those around them; and
+// the offers nearest first, for an optional placeholder left unfilled.
+export type Frame = { bound: ReadonlyMap<string, Value>; up?: Frame; offers: readonly Ref[] };
+
+// A reference as written in a holon's body, holding or not, optional or not.
+type Link = Ref & { $holds?: boolean; $optional?: boolean };
 
 // The most steps one read may take, so a function that never ends is stopped.
 const most = 10_000_000;
+
+// The keys an expression of the earlier form is written with.
+const earlier = ["call", "fn", "var", "arg", "list", "record"];
 
 // Works a read out over the stores, each at its head. Gives its value, or the problem
 // that stopped it, and either way the stores it asked and the holons it found kept
@@ -40,86 +70,336 @@ export async function evaluate(
   });
 
   try {
+    const reading = evaluator(field);
+    if (!isEarlier(gives)) return { value: outward(await reading.give(gives)), ...seen() };
+
     const problem = expressionProblem(gives);
     if (problem) throw new Error(problem);
-    return { value: outward(await evaluator(field).evaluate(gives as Expression)), ...seen() };
+    return { value: outward(await reading.evaluate(gives as Expression)), ...seen() };
   } catch (error) {
     return { problem: error instanceof Error ? error.message : String(error), ...seen() };
   }
 }
 
-type Function = { name: string; native?: string; gives?: Expression };
+const isEarlier = (gives: unknown) => isRecord(gives) && earlier.some((key) => key in (gives as object));
+
+// A holon, with its types, and what they make it.
+type Known = { holon: Holon; types: Holon[]; use: boolean; applicable: boolean };
+
+// A placeholder of a function's input: whether it may be left unfilled, its types, and
+// whether it takes a use itself rather than what the use gives.
+type Place = { id: string; optional: boolean; types: Holon[]; itself: boolean };
+
+type Function = { name: string; native?: string; input?: Place[]; body?: string; gives?: Expression };
+
+type Use = { fn: Link; args: unknown[]; offer: Ref[] };
+
+// What a function is given for one argument: as written, for a placeholder that takes a
+// use itself, and what it gives, worked out once and only if asked.
+type Given = { written: unknown; value: () => Maybe<Value> };
+
+const declares = (type: Holon, key: string) => Boolean(type.mould && key in type.mould);
+const isUseType = (type: Holon) => declares(type, "fn") && declares(type, "args");
+// The types of glass not yet given input are known by the name function until they are.
+const isFunctionType = (type: Holon) =>
+  declares(type, "input") || (type.name === "function" && Boolean(type.mould));
+
+// The kinds of value a placeholder may take, each known by its type's name.
+const kinds = new Set(["value", "number", "string", "boolean", "list", "record", "holon"]);
 
 export function evaluator(field: Field) {
   let steps = 0;
-  const functions = new Map<string, Maybe<Function>>();
+  const root: Frame = { bound: new Map(), offers: [] };
 
-  // What a call finds: a native by the name its body gives, or an expression it gives.
-  function functionOf(id: string): Maybe<Function> {
-    const known = functions.get(id);
-    if (known) return known;
+  const known = remembered(
+    (id): Maybe<Known | null> =>
+      after(field.holon(id), (kept) => {
+        if (!kept) return null;
 
-    const finding = after(found(id), (fn) => (functions.set(id, fn), fn));
-    if (waits(finding)) functions.set(id, finding);
-    return finding;
+        const { holon } = kept;
+        return after(all(holon.instance.map((type) => field.holon(type))), (found) => {
+          const types = found.flatMap((type) => (type ? [type.holon] : []));
+          return { holon, types, use: types.some(isUseType), applicable: types.some(isFunctionType) };
+        });
+      }),
+  );
+
+  // What a function takes and how it gives: a native, a use held as its body, or an
+  // expression of the earlier form.
+  const functionOf = remembered(
+    (id): Maybe<Function> =>
+      after(known(id), (found) => {
+        if (!found) throw new Error(`the function ${id} is not in the field`);
+
+        const { holon, applicable } = found;
+        const body = holon.body as { native?: unknown; input?: unknown; body?: unknown; gives?: Expression };
+        const name = holon.name ?? id;
+        if (!applicable) return { name, gives: body.gives };
+
+        const input = Array.isArray(body.input) ? all(body.input.filter(isRef).map(placeOf)) : undefined;
+        return after(input, (input) => ({
+          name,
+          native: typeof body.native === "string" ? body.native : undefined,
+          input,
+          body: isRef(body.body) ? body.body.$ref : undefined,
+          gives: body.gives,
+        }));
+      }),
+  );
+
+  function placeOf({ $ref: id, $optional }: Link): Maybe<Place> {
+    return after(known(id), (found) => {
+      if (!found) throw new Error(`the placeholder ${id} is not in the field`);
+
+      const { types } = found;
+      return { id, optional: $optional === true, types, itself: types.some(isUseType) };
+    });
   }
 
-  function found(id: string): Maybe<Function> {
-    return after(field.holon(id), (kept) => {
-      if (!kept) throw new Error(`the function ${id} is not in the field`);
+  const useOf = remembered(
+    (id): Maybe<Use> =>
+      after(known(id), (found) => {
+        const { fn, args, offer } = (found?.holon.body ?? {}) as {
+          fn?: unknown;
+          args?: unknown;
+          offer?: unknown;
+        };
+        if (!isRef(fn)) throw new Error(`the use ${found?.holon.name ?? id} names no function, fn, to apply`);
 
-      const { holon } = kept;
-      return after(all(holon.instance.map((type) => field.holon(type))), (types) => {
-        const isFunction = types.some((type) => type?.holon.name === "function" && type.holon.mould);
-        const body = holon.body as { native?: unknown; gives?: Expression };
-        const native = isFunction && typeof body.native === "string" ? body.native : undefined;
+        return {
+          fn,
+          args: Array.isArray(args) ? args : [],
+          offer: Array.isArray(offer) ? offer.filter(isRef).map(({ $ref }) => ({ $ref })) : [],
+        };
+      }),
+  );
 
-        return { name: holon.name ?? id, native, gives: body.gives };
+  const calling: Calling = { field, apply: (fn, values) => applied(fn, values.map(valueGiven), []) };
+  const { given: byValue, lazy, structural } = natives(calling);
+
+  // ---- Uses
+
+  // What an argument gives where it is written: JSON as it is, each reference resolved.
+  function argOf(arg: unknown, frame: Frame): Maybe<Value> {
+    if (arg === null || typeof arg !== "object") return (arg ?? null) as Value;
+    if (Array.isArray(arg)) return all(arg.map((each) => argOf(each, frame)));
+    if (isRef(arg)) return referred(arg, frame);
+    if (isVar(arg)) return boundIn(frame, `?${arg["?"]}`) ?? arg;
+
+    const entries = Object.entries(arg);
+    return after(all(entries.map(([, each]) => argOf(each, frame))), (values) =>
+      Object.fromEntries(entries.map(([key], i) => [key, values[i]!])),
+    );
+  }
+
+  function referred({ $ref: id, $holds }: Link, frame: Frame): Maybe<Value> {
+    const bound = boundIn(frame, id);
+    if (bound !== undefined) return bound;
+
+    return after(known(id), (found) => {
+      if (found?.use) return use(id, frame);
+      if (found?.applicable && $holds) return closure(id, undefined, frame);
+      return { $ref: id };
+    });
+  }
+
+  // What a use gives. One worked out where no placeholder is bound gives the same
+  // wherever it is reused, so it is worked out once a read.
+  const atRoot = remembered((id) => worked(id, root));
+  const use = (id: string, frame: Frame) => (frame === root ? atRoot(id) : worked(id, frame));
+
+  function worked(id: string, frame: Frame): Maybe<Value> {
+    if (++steps > most) throw new Error(`a read takes at most ${most.toLocaleString("en")} steps`);
+
+    return after(useOf(id), ({ fn, args, offer }) => {
+      const at = offer.length ? { bound: new Map(), up: frame, offers: [...offer, ...frame.offers] } : frame;
+      const given = () => args.map((arg) => givenAt(arg, at));
+
+      return after(argOf(fn, at), (applying) => {
+        if (isClosure(applying)) return applied(applying, given(), at.offers);
+        if (!isRef(applying))
+          throw new Error(`the use ${id} applies ${JSON.stringify(applying)}, not a function`);
+
+        return after(functionOf(applying.$ref), ({ native }) => {
+          if (native && structural[native]) return structural[native]!(args, writtenAt(at));
+          if (native && lazy[native]) return lazy[native]!(args.map((arg) => deferredAt(arg, at)));
+          return applied(applying, given(), at.offers);
+        });
       });
     });
   }
 
-  const calling: Calling = {
-    field,
-    apply,
-    evaluate: (expression, scope) => evaluate(expression, scope),
-    nativeOf: (expression) => {
-      const id = (expression as { call?: { $ref?: string } } | null)?.call?.$ref;
-      if (!id) return undefined;
-      return after(field.holon(id), (kept) =>
-        kept ? after(functionOf(id), ({ native }) => native) : undefined,
-      );
-    },
-  };
-
-  const { given, lazy, structural } = natives(calling);
-
-  // A function, as a value or a holon, given values.
-  function apply(fn: unknown, values: Value[]): Maybe<Value> {
-    if (isClosure(fn)) {
-      const words = Object.fromEntries(fn.fn.map((word, i) => [word, values[i] ?? null]));
-      return evaluate(fn.gives as Expression, { words, up: fn.scope as Scope });
-    }
-
-    if (!isRef(fn)) return null;
-    return after(field.holon(fn.$ref), (kept) => (kept ? called(fn.$ref, values) : null));
+  function givenAt(arg: unknown, frame: Frame): Given {
+    const bound = isRef(arg) ? boundIn(frame, arg.$ref) : undefined;
+    const written = bound !== undefined ? bound : isRef(arg) ? { $ref: arg.$ref } : arg;
+    return { written, value: once(() => argOf(arg, frame)) };
   }
 
-  // A function kept as a holon, given values already worked out.
-  function called(id: string, values: Value[]): Maybe<Value> {
-    return after(functionOf(id), ({ name, native, gives }) => {
-      if (native && given[native]) return given[native]!(values);
-      if (native && lazy[native]) return lazy[native]!(values.map(valued));
+  // What a lazy native is given for an argument: worked out when asked, and a literal
+  // record's one field alone when a case asks for it.
+  function deferredAt(arg: unknown, frame: Frame): Deferred {
+    return Object.assign(() => argOf(arg, frame), {
+      key: (key: string) =>
+        isRecord(arg) && !isVar(arg) && key in arg ? argOf((arg as Rec)[key], frame) : undefined,
+    });
+  }
+
+  // ---- Functions
+
+  // A function, as a value or a holon, given its arguments, and the offers around.
+  function applied(fn: unknown, given: Given[], offers: readonly Ref[]): Maybe<Value> {
+    if (isClosure(fn))
+      return typeof fn.fn === "string"
+        ? called(fn.fn, given, (fn.scope as Frame).offers, fn.scope as Frame)
+        : after(all(given.map(({ value }) => value())), (values) => lambda(fn, values));
+
+    if (!isRef(fn)) return null;
+    return after(field.holon(fn.$ref), (kept) => (kept ? called(fn.$ref, given, offers) : null));
+  }
+
+  // A function kept as a holon, given its arguments: its body worked out in a frame of
+  // its placeholders bound, within the frame it was written in, if it was held there.
+  function called(id: string, given: Given[], offers: readonly Ref[], up?: Frame): Maybe<Value> {
+    return after(functionOf(id), ({ name, native, input, body, gives }) => {
       if (native && structural[native])
         throw new Error(`${name} reads what it is given as written, so it is called, not given to another`);
+      if (native && lazy[native])
+        return after(all(given.map(({ value }) => value())), (values) => lazy[native]!(values.map(valued)));
+      if (native && byValue[native]) return after(valuesOf(input, given, offers), byValue[native]!);
 
+      if (body) return after(bind(input ?? [], given, offers), (bound) => use(body, { bound, up, offers }));
       if (gives === undefined) throw new Error(`${name} is not a function`);
 
-      const written = gives as { fn?: string[]; gives?: Expression };
-      return Array.isArray(written?.fn)
-        ? apply(closure(written.fn, written.gives, { words: {} }), values)
-        : evaluate(gives, { words: {}, args: values });
+      return after(all(given.map(({ value }) => value())), (values) => {
+        const written = gives as { fn?: string[]; gives?: Expression };
+        return Array.isArray(written?.fn)
+          ? lambda(closure(written.fn, written.gives, { words: {} }) as Closure, values)
+          : evaluate(gives, { words: {}, args: values });
+      });
     });
+  }
+
+  // What a native is given: in the order of its input, where it has one.
+  function valuesOf(input: Place[] | undefined, given: Given[], offers: readonly Ref[]): Maybe<Value[]> {
+    if (!input) return all(given.map(({ value }) => value()));
+    return after(bind(input, given, offers), (bound) => input.map(({ id }) => bound.get(id) ?? null));
+  }
+
+  // The placeholders of an input bound by id to what is given, in order. An optional one
+  // is passed over where what comes next does not fit its type, or nothing is left; one
+  // left unfilled is given the nearest offer of its type, else null.
+  function bind(input: Place[], given: Given[], offers: readonly Ref[]): Maybe<Map<string, Value>> {
+    const bound = new Map<string, Value>();
+
+    const binding = each(input, 0, (next, place) => {
+      const arg = given[next];
+      return after(arg && (!place.optional || fits(place.types, arg)), (fit) =>
+        fit
+          ? after(place.itself ? (arg!.written as Value) : arg!.value(), (value) => {
+              bound.set(place.id, value);
+              return next + 1;
+            })
+          : after(offered(place, offers), (value) => {
+              bound.set(place.id, value);
+              return next;
+            }),
+      );
+    });
+    return after(binding, () => bound);
+  }
+
+  function offered(place: Place, offers: readonly Ref[]): Maybe<Value> {
+    return each(
+      offers,
+      null as Value,
+      (found, offer) => found ?? after(fits(place.types, valueGiven(offer)), (fit) => (fit ? offer : null)),
+    );
+  }
+
+  // Whether what is given fits a placeholder of these types, any of them; of none, it
+  // takes anything.
+  function fits(types: Holon[], given: Given): Maybe<boolean> {
+    if (!types.length) return true;
+    return each(types, false as boolean, (fit, type) => fit || fitsType(type, given));
+  }
+
+  function fitsType(type: Holon, { written, value }: Given): Maybe<boolean> {
+    const holonIs = (ref: unknown, is: (found: Known) => boolean) =>
+      isRef(ref) && after(known(ref.$ref), (found) => Boolean(found && is(found)));
+
+    if (isUseType(type)) return holonIs(written, (found) => found.use);
+    return after(value(), (value) => {
+      if (isFunctionType(type)) return isClosure(value) || holonIs(value, (found) => found.applicable);
+      if (type.name && kinds.has(type.name)) return type.name === "value" || kind(value) === type.name;
+      return holonIs(value, (found) => found.holon.instance.includes(type.id));
+    });
+  }
+
+  // ---- Patterns
+
+  // How find and explain read their arguments as written: a fact a literal list of
+  // three, a clause a held use, and a test a held use reading ?variables, which are
+  // bound in its frame as the pattern finds them.
+  function writtenAt(frame: Frame): Written {
+    const heldUse = (arg: unknown): Maybe<string | undefined> =>
+      isRef(arg) ? after(known(arg.$ref), (found) => (found?.use ? arg.$ref : undefined)) : undefined;
+
+    return {
+      value: (arg) => argOf(arg, frame),
+      fact: (arg) => (Array.isArray(arg) && arg.length === 3 ? arg : undefined),
+      fields: (arg) => (isRecord(arg) && !isVar(arg) ? arg : undefined),
+      called: (arg) =>
+        after(heldUse(arg), (id) =>
+          id === undefined
+            ? undefined
+            : after(useOf(id), ({ fn, args }) =>
+                after(argOf(fn, frame), (applying) =>
+                  isRef(applying)
+                    ? after(functionOf(applying.$ref), ({ native }) => ({ native, given: args }))
+                    : { given: args },
+                ),
+              ),
+        ),
+      test: (arg) =>
+        after(heldUse(arg), (id) =>
+          id === undefined
+            ? undefined
+            : after(varsIn(arg), (names) =>
+                names.length
+                  ? {
+                      names,
+                      holds: (values: Value[]) =>
+                        use(id, {
+                          bound: new Map(names.map((name, i) => [`?${name}`, values[i] ?? null])),
+                          up: frame,
+                          offers: frame.offers,
+                        }),
+                    }
+                  : undefined,
+              ),
+        ),
+    };
+  }
+
+  // The variables of a pattern an argument reads, within the uses it holds, each once.
+  function varsIn(arg: unknown): Maybe<string[]> {
+    if (isVar(arg)) return [arg["?"]];
+    if (isRef(arg))
+      return (arg as Link).$holds
+        ? after(known(arg.$ref), (found) =>
+            found?.use ? after(useOf(arg.$ref), ({ args }) => varsIn(args)) : [],
+          )
+        : [];
+    if (arg === null || typeof arg !== "object") return [];
+
+    return after(all(Object.values(arg).map(varsIn)), (found) => [...new Set(found.flat())]);
+  }
+
+  // ---- The earlier form
+
+  function lambda(fn: Closure, values: Value[]): Maybe<Value> {
+    const words = Object.fromEntries((fn.fn as string[]).map((word, i) => [word, values[i] ?? null]));
+    return evaluate(fn.gives as Expression, { words, up: fn.scope as Scope });
   }
 
   function evaluate(expression: Expression, scope: Scope = { words: {} }): Maybe<Value> {
@@ -150,10 +430,12 @@ export function evaluator(field: Field) {
       const written = expression.with ?? [];
 
       return after(functionOf(id), ({ native }) => {
-        if (native && structural[native]) return structural[native]!(written, scope);
+        if (native && structural[native]) return structural[native]!(written, writtenIn(scope));
         if (native && lazy[native]) return lazy[native]!(written.map((each) => deferred(each, scope)));
 
-        return after(all(written.map((each) => evaluate(each, scope))), (values) => called(id, values));
+        return after(all(written.map((each) => evaluate(each, scope))), (values) =>
+          called(id, values.map(valueGiven), []),
+        );
       });
     }
 
@@ -169,14 +451,70 @@ export function evaluator(field: Field) {
     });
   }
 
-  return { evaluate: (expression: Expression) => evaluate(expression), apply };
+  // How find and explain read an expression of the earlier form: a fact { list: [3] },
+  // a clause a call, and a test a lambda of the variables it reads.
+  function writtenIn(scope: Scope): Written {
+    return {
+      value: (arg) => evaluate(arg as Expression, scope),
+      fact: (arg) => {
+        const list = (arg as { list?: unknown } | null)?.list;
+        return Array.isArray(list) && list.length === 3 ? list : undefined;
+      },
+      fields: (arg) => (arg as { record?: Record<string, unknown> } | null)?.record,
+      called: (arg) => {
+        const call = arg as { call?: { $ref?: string }; with?: unknown[] } | null;
+        const id = call?.call?.$ref;
+        if (!id) return undefined;
+        return after(field.holon(id), (kept) =>
+          kept ? after(functionOf(id), ({ native }) => ({ native, given: call!.with ?? [] })) : undefined,
+        );
+      },
+      test: (arg) => {
+        const words = (arg as { fn?: unknown } | null)?.fn;
+        if (!Array.isArray(words)) return undefined;
+        return after(evaluate(arg as Expression, scope), (fn) => ({
+          names: words as string[],
+          holds: (values: Value[]) => calling.apply(fn, values),
+        }));
+      },
+    };
+  }
+
+  return {
+    give: (gives: unknown) => argOf(gives, root),
+    evaluate: (expression: Expression) => evaluate(expression),
+  };
 }
+
+// A finding by id, kept for the rest of the read, and shared while it waits.
+function remembered<T>(find: (id: string) => Maybe<T>): (id: string) => Maybe<T> {
+  const kept = new Map<string, Maybe<T>>();
+  return (id) => {
+    if (kept.has(id)) return kept.get(id)!;
+
+    const finding = after(find(id), (found) => (kept.set(id, found), found));
+    if (waits(finding)) kept.set(id, finding);
+    return finding;
+  };
+}
+
+function once<T>(work: () => T): () => T {
+  let done: { value: T } | undefined;
+  return () => (done ??= { value: work() }).value;
+}
+
+const valueGiven = (value: Value): Given => ({ written: value, value: () => value });
 
 // What a lazy native is given for a value already worked out.
 function valued(value: Value): Deferred {
   return Object.assign(() => value, {
     key: (key: string) => (isRecord(value) ? (value as Rec)[key] : undefined),
   });
+}
+
+function boundIn(frame: Frame | undefined, key: string): Value | undefined {
+  for (let at = frame; at; at = at.up) if (at.bound.has(key)) return at.bound.get(key)!;
+  return undefined;
 }
 
 function wordIn(scope: Scope | undefined, word: string): Value {
@@ -189,9 +527,10 @@ function argumentIn(scope: Scope | undefined, place: number): Value {
   throw new Error("an argument is given only within a function of one's own");
 }
 
-// A value as it leaves the engine: a lambda as the words it takes.
+// A value as it leaves the engine: a lambda as the words it takes, a function held where
+// it was written as its id.
 function outward(value: Value): Value {
-  if (isClosure(value)) return { function: value.fn.join(", ") };
+  if (isClosure(value)) return { function: typeof value.fn === "string" ? value.fn : value.fn.join(", ") };
   if (Array.isArray(value)) return value.map(outward);
   if (typeof value === "object" && value !== null && !isRef(value))
     return Object.fromEntries(Object.entries(value).map(([key, inner]) => [key, outward(inner)]));

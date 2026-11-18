@@ -3,10 +3,9 @@
 // Those under legacy are kept only while functions written in the field still call
 // them, and go as those are written again upon the rest.
 
-import type { Expression, Value } from "../../../../language/expression.ts";
+import type { Value } from "../../../../language/expression.ts";
 import type { Field } from "../field.ts";
 import type { Maybe } from "../maybe.ts";
-import type { Scope } from "../evaluate.ts";
 import { patterns } from "./find.ts";
 import { history } from "./history.ts";
 import { holons } from "./holons.ts";
@@ -23,15 +22,25 @@ export type Native = (given: Value[]) => Maybe<Value>;
 export type Deferred = (() => Maybe<Value>) & { key: (key: string) => Maybe<Value> | undefined };
 export type Lazy = (given: Deferred[]) => Maybe<Value>;
 
-export type Structural = (given: Expression[], scope: Scope) => Maybe<Value>;
+// What a native that reads what it is given as written is given: each as written, and
+// how to read it where it was written.
+export type Structural = (given: unknown[], written: Written) => Maybe<Value>;
+
+// How what is given is read as written: what one gives; whether it is written as a fact
+// of three, a record, or a call, with the native it names and what it gives it; and a
+// test, held to the values of the pattern's variables it reads.
+export type Written = {
+  value(given: unknown): Maybe<Value>;
+  fact(given: unknown): unknown[] | undefined;
+  fields(given: unknown): Record<string, unknown> | undefined;
+  called(given: unknown): Maybe<{ native?: string; given: unknown[] } | undefined>;
+  test(given: unknown): Maybe<{ names: string[]; holds: (values: Value[]) => Maybe<Value> } | undefined>;
+};
 
 // What a native may ask of the evaluator calling it.
 export type Calling = {
   field: Field;
   apply(fn: unknown, given: Value[]): Maybe<Value>;
-  evaluate(expression: Expression, scope: Scope): Maybe<Value>;
-  // The native a call names, if it names one: how a pattern reads its clauses.
-  nativeOf(expression: unknown): Maybe<string | undefined>;
 };
 
 export function natives(calling: Calling) {

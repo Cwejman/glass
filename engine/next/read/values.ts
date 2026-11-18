@@ -7,12 +7,13 @@
 import { canonical } from "../../../integrations/glass/canonical.ts";
 import { isRef, type Value } from "../../../language/expression.ts";
 
-// A lambda as a value: what it gives, and the words around where it was written. Only
-// the evaluator makes one, so nothing written as data can pass for one.
-export type Closure = { fn: string[]; gives: unknown; scope: unknown };
+// A lambda as a value: a function held where it was written, by its id, or the words it
+// takes and what it gives, in the earlier form; and what was around where it was
+// written. Only the evaluator makes one, so nothing written as data can pass for one.
+export type Closure = { fn: string | string[]; gives: unknown; scope: unknown };
 const closures = new WeakSet<object>();
 
-export function closure(fn: string[], gives: unknown, scope: unknown): Value {
+export function closure(fn: string | string[], gives: unknown, scope: unknown): Value {
   const made = { fn, gives, scope };
   closures.add(made);
   return made as unknown as Value;
