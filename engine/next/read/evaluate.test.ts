@@ -475,6 +475,17 @@ describe("drawing", () => {
     });
   });
 
+  test("where what a drawing is given fails, it holds the problem in its place, and those beside it stand", async () => {
+    const read = await field();
+    const { holons, use, view, drawn } = components();
+    const [failing, standing] = [use(view, use("parse", "add(1,")), use(view, 2)];
+
+    const [failed, stood] = (await read([failing, standing], holons)).value as Value[];
+    expect(failed).toMatchObject({ $draw: view, given: [], at: [failing.$ref] });
+    expect((failed as { problem: string }).problem).toContain("an expression begins here");
+    expect(stood).toEqual(drawn([2], [standing.$ref]));
+  });
+
   test("a drawing is no record to the natives, and a use naming what is no function is refused", async () => {
     const read = await field();
     const { holons, use, view } = components();

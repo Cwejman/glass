@@ -33,14 +33,15 @@ export const isClosure = (value: unknown): value is Closure =>
 // A drawing: a component applied, what the use gave it bound to the component's input,
 // and where it stands, the uses walked through component bodies from the root down to
 // the one that applied it. A use naming no function is drawn too, its component null,
-// for what draws it to find one by type. Only the evaluator makes one, as it does a
-// lambda, so nothing written as data can pass for one; as it leaves the engine it is
-// the record it holds.
-export type Drawing = { $draw: Ref | null; given: Value[]; at: string[] };
+// for what draws it to find one by type. Where working out what it is given failed, it
+// holds the problem instead, so the failure stays at its place and the drawings beside
+// it stand. Only the evaluator makes one, as it does a lambda, so nothing written as
+// data can pass for one; as it leaves the engine it is the record it holds.
+export type Drawing = { $draw: Ref | null; given: Value[]; at: string[]; problem?: string };
 const drawings = new WeakSet<object>();
 
-export function drawing($draw: Ref | null, given: Value[], at: readonly string[]): Value {
-  const made = { $draw, given, at: [...at] };
+export function drawing($draw: Ref | null, given: Value[], at: readonly string[], problem?: string): Value {
+  const made = { $draw, given, at: [...at], ...(problem !== undefined && { problem }) };
   drawings.add(made);
   return made as unknown as Value;
 }
@@ -77,7 +78,7 @@ export function keyOf(value: unknown): string {
     return lambdas.get(value)!;
   }
   if (isDrawing(value))
-    return `draw(${keyOf(value.$draw)},${keyOf(value.given)},${JSON.stringify(value.at)})`;
+    return `draw(${keyOf(value.$draw)},${keyOf(value.given)},${JSON.stringify(value.at)},${keyOf(value.problem ?? null)})`;
   if (Array.isArray(value)) return `[${value.map(keyOf).join(",")}]`;
   if (isRecord(value))
     return `{${Object.keys(value)

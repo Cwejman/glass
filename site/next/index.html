@@ -83,6 +83,25 @@
         flex-direction: column;
         gap: 1.5em;
       }
+      .expression-input input {
+        box-sizing: border-box;
+        width: 100%;
+        padding: 0.5em 0.7em;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: transparent;
+        color: inherit;
+        font:
+          1rem / 1.4 ui-monospace,
+          monospace;
+      }
+      .expression-input input:focus {
+        outline: 2px solid var(--link);
+        outline-offset: -1px;
+      }
+      .expression-input.fixed input {
+        color: var(--quiet);
+      }
       .holon + .holon,
       .list > .drawn + .drawn {
         border-top: 1px solid var(--line);

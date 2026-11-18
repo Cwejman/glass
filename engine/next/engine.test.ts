@@ -38,10 +38,20 @@ const glass: Holon[] = [
     id: id(2),
     instance: [],
     name: "store",
-    mould: { contents: { says: "what it holds", shape: { list: "ref" }, holds: true, optional: true } },
+    mould: {
+      contents: { says: "what it holds", shape: { list: "ref" }, holds: true, optional: true },
+      shape: { says: "the shape its field keeps", shape: "ref", optional: true },
+    },
     body: {},
   },
   { id: id(3), instance: [id(2)], name: "glass", body: {} },
+  {
+    id: id(8),
+    instance: [],
+    name: "shape",
+    mould: { admits: { says: "the types it admits", shape: { set: "ref" }, optional: true } },
+    body: {},
+  },
   { id: id(4), instance: [], name: "value", mould: {}, body: {} },
   {
     id: id(5),
@@ -863,7 +873,7 @@ describe("a buffer", () => {
     const glassEngine = await engine({ workers: sameThread(), count: 2 });
     await glassEngine.mount("glass", language);
     await glassEngine.mount("bar", buffer(), { write: true });
-    const query = landed(await glassEngine.commit(bufferBegun("bar", id(2)))).ids["~2"]!;
+    const query = landed(await glassEngine.commit(bufferBegun("bar", { store: id(2), shape: id(8) }))).ids["~2"]!;
     return { glassEngine, query };
   }
 

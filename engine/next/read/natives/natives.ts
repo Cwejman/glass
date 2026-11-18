@@ -6,6 +6,7 @@
 import type { Value } from "../values.ts";
 import type { Field } from "../field.ts";
 import type { Maybe } from "../maybe.ts";
+import { back } from "../back.ts";
 import { patterns } from "./find.ts";
 import { history } from "./history.ts";
 import { holons } from "./holons.ts";
@@ -53,6 +54,7 @@ export function natives(calling: Calling) {
       ...history(calling),
       ...legacy(calling),
       ...text(calling),
+      ...back(calling),
       // A word said is a clause of a pattern, and nothing outside one.
       said: () => {
         throw new Error("said(e, a, w) is a clause of a pattern, asked within find");

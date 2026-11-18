@@ -25,6 +25,8 @@
 // uses walked through component bodies from the root to the one applying it. One that
 // holds a body gives what its body gives, worked out a step further along. A use that
 // names no function is drawn too, its component null, for what draws it to find one.
+// Where what a drawing is given fails, the drawing holds the problem in its place, so a
+// text that does not read fails its answer alone, never the drawings beside it.
 
 import type { Holon } from "../../../stores/store.ts";
 import type { Heads, Read } from "../engine.ts";
@@ -221,10 +223,7 @@ export function evaluator(field: Field) {
         : frame;
       const given = () => args.map((arg) => givenAt(arg, within));
 
-      if (!fn)
-        return after(all(given().map(({ value }) => value())), (values) =>
-          drawing(null, values, [...frame.at, id]),
-        );
+      if (!fn) return drawn(null, [...frame.at, id], () => all(given().map(({ value }) => value())));
 
       return after(argOf(fn, within), (applying) => {
         if (isClosure(applying)) return applied(applying, given(), within.offers, { around: frame.at });
@@ -283,13 +282,25 @@ export function evaluator(field: Field) {
         return after(all(given.map(({ value }) => value())), (values) => lazy[native]!(values.map(valued)));
       if (native && byValue[native]) return after(valuesOf(input, given, offers), byValue[native]!);
 
-      if (component && body === undefined)
-        return after(valuesOf(input, given, offers), (values) => drawing(ref(id), values, place));
+      if (component && body === undefined) return drawn(ref(id), place, () => valuesOf(input, given, offers));
       if (body === undefined) throw new Error(`${name} names no native and holds no body`);
 
       const at = component ? place : (up?.at ?? around);
       return after(bind(input ?? [], given, offers), (bound) => argOf(body, { bound, up, offers, at }));
     });
+  }
+
+  // A drawing of what it is given, or of the problem working that out met.
+  function drawn(component: Ref | null, at: readonly string[], given: () => Maybe<Value[]>): Maybe<Value> {
+    const failed = (problem: unknown) =>
+      drawing(component, [], at, problem instanceof Error ? problem.message : String(problem));
+
+    try {
+      const values = after(given(), (values) => drawing(component, values, at));
+      return waits(values) ? values.catch(failed) : values;
+    } catch (problem) {
+      return failed(problem);
+    }
   }
 
   // What a native is given: in the order of its input, where it has one.
@@ -435,7 +446,10 @@ function boundIn(frame: Frame | undefined, key: string): Value | undefined {
 // drawing as the record it holds.
 function outward(value: Value): Value {
   if (isClosure(value)) return { function: value.fn };
-  if (isDrawing(value)) return { $draw: value.$draw, given: value.given.map(outward), at: value.at };
+  if (isDrawing(value)) {
+    const { $draw, given, at, problem } = value;
+    return { $draw, given: given.map(outward), at, ...(problem !== undefined && { problem }) };
+  }
   if (Array.isArray(value)) return value.map(outward);
   if (typeof value === "object" && value !== null && !isRef(value))
     return Object.fromEntries(Object.entries(value).map(([key, inner]) => [key, outward(inner)]));

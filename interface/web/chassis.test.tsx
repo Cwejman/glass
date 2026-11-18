@@ -1,7 +1,7 @@
 // The chassis in a page of its own: drawings found by their component's id and kept in
 // place as answers come, over an engine whose answers the test gives; then the page's
-// own read, answer(parse(text)), drawn over a real engine and a store, each value by the
-// component found for it by type.
+// own reads, answer(parse(text)) and the text typed into a buffer beside its answer,
+// drawn over a real engine and a store, each value by the component found for it by type.
 
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
@@ -17,8 +17,18 @@ import type { Act, Holon, Store } from "../../stores/store.ts";
 import { folderStorage } from "../../stores/strata/storage/folder.ts";
 import { strata } from "../../stores/strata/strata.ts";
 import { answer } from "./answer.tsx";
-import { answer as answerId, answerOf } from "./carried.ts";
+import { buffer } from "../../stores/buffer/buffer.ts";
+import { begun, typed } from "../../stores/buffer/string.ts";
+import { addressed } from "./address.ts";
+import {
+  answer as answerId,
+  answerOf,
+  applying,
+  expressionInput as expressionInputId,
+  readerOf,
+} from "./carried.ts";
 import { draw, type Drawer, type Realization } from "./chassis.ts";
+import { expressionInput } from "./expression-input.tsx";
 import { finder } from "./find.ts";
 import { list } from "./list.tsx";
 import { value } from "./value.tsx";
@@ -60,6 +70,7 @@ describe("drawing what an engine gives", () => {
     const engine: Drawer["engine"] = {
       read: async () => ({ at: {}, value: null }),
       subscribe: async (_read, heard) => ((listener = heard), () => void (listener = undefined)),
+      commit: async () => ({ refused: [] }),
     };
     return { engine, answer: (value: Value) => listener?.({ at: {}, value }) };
   }
@@ -142,8 +153,28 @@ describe("the page's read over a real engine", () => {
     { id: valueId, instance: [id(3)], name: "Value", body: {} },
     { id: countId, instance: [id(3)], name: "Count", body: { input: [{ $ref: id(33), $holds: true }] } },
     { id: id(33), instance: [id(5)], name: "n", body: {} },
+    { id: listId, instance: [id(3)], name: "List", body: { input: [{ $ref: id(34), $holds: true }] } },
+    { id: id(34), instance: [id(8)], name: "items", body: {} },
+    { id: id(8), instance: [], name: "list", mould: {}, body: {} },
     { id: id(40), instance: [], name: "First", body: { text: "Glass holds holons", see: { $ref: id(41) } } },
     { id: id(41), instance: [], name: "Second", body: {} },
+    {
+      id: id(6),
+      instance: [],
+      name: "store",
+      mould: {
+        shape: { says: "", shape: "ref" },
+        contents: { says: "", shape: { set: "ref" }, holds: true },
+      },
+      body: {},
+    },
+    {
+      id: id(7),
+      instance: [],
+      name: "shape",
+      mould: { admits: { says: "", shape: { set: "ref" }, optional: true } },
+      body: {},
+    },
   ];
 
   // An engine on one thread over a store holding these holons, taken as one act.
@@ -213,5 +244,74 @@ describe("the page's read over a real engine", () => {
 
     await settled(() => page.querySelector(".note"));
     expect(page.querySelector(".note")!.textContent).toContain("an expression begins here");
+  });
+
+  // The engine over the language, with a query buffer mounted to write, begun, holding the
+  // text given; and the page's read drawn over it.
+  async function typing(text: string) {
+    const field = await engineOver(language);
+    await field.mount("query", buffer(), { write: true });
+    const begin = await field.commit(begun("query", { store: id(6), shape: id(7) }));
+    if (!("ids" in begin)) throw new Error(JSON.stringify(begin));
+    const holon = begin.ids["~2"]!;
+    await field.commit(typed(holon, text));
+
+    const realized = new Map<string, Realization>([
+      [valueId, value],
+      [answerId, answer],
+      [expressionInputId, expressionInput],
+      [listId, list],
+    ]);
+    const find = finder((read: Read) => field.read(read), [...realized.keys()], valueId);
+    const page = document.createElement("main");
+    document.body.append(page);
+    const stop = await draw(page, readerOf(holon, listId), { engine: field, realized, find });
+
+    const held = async () => {
+      const answer = await field.read(applying("get", { $ref: holon }, "text"));
+      return "value" in answer ? answer.value : answer.problem;
+    };
+    return { field, holon, page, stop, held };
+  }
+
+  test("typing goes back to the buffer, and the answer follows, the input kept in place", async () => {
+    const { page, stop, held } = await typing("@First");
+    await settled(() => page.querySelector("h1")?.textContent === "First");
+
+    const input = page.querySelector<HTMLInputElement>(".expression-input input")!;
+    expect(input.value).toBe("@First");
+    input.focus();
+    for (const typed of ["@Sec", "@Second"]) {
+      input.value = typed;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+
+    await settled(() => page.querySelector("h1")?.textContent === "Second");
+    expect(await held()).toBe("@Second");
+    expect(page.querySelector(".expression-input input")).toBe(input);
+    expect(document.activeElement).toBe(input);
+    expect(input.value).toBe("@Second");
+    expect(input.readOnly).toBe(false);
+    stop();
+  });
+
+  test("the address types into the buffer, and following a link in the page is a step of its own", async () => {
+    history.replaceState(null, "", "/next/?q=@First");
+    const { field, holon, page, stop, held } = await typing("");
+    const unaddressed = await addressed(field, holon, page);
+
+    expect(await held()).toBe("@First");
+    await settled(() => page.querySelector("a[data-ref]")?.textContent === "Second");
+    const steps = history.length;
+
+    const link = page.querySelector<HTMLAnchorElement>("a[data-ref]")!;
+    link.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, button: 0 }));
+    await settled(() => page.querySelector("h1")?.textContent === "Second");
+    expect(location.search).toBe(`?q=@${id(41)}`);
+    expect(history.length).toBe(steps + 1);
+    expect(await held()).toBe(`@${id(41)}`);
+
+    unaddressed();
+    stop();
   });
 });
