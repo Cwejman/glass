@@ -8,7 +8,8 @@
 //   { "new": "its name", "under": "the whole's id", "after": "a part's id", "flow": [ ... ] }
 // and of a brief moved to another whole, or to another place in its own:
 //   { "move": "its id", "under": "the whole's id", "after": "a part's id" }
-// and of a brief let go, with all it alone holds; its versions stay in the history:
+// and of a brief let go, or a holon nothing holds any longer, with all it alone holds; its
+// versions stay in the history:
 //   { "letGo": "its id" }
 // and the stale marks it resolves:
 //   { "resolves": ["id of a brief marked stale"] }
@@ -103,10 +104,14 @@ function flowOf(before: { $ref: string }[], flow: FlowItem[], name: string) {
       text = text.replace(from, () => to);
     }
 
-    // Each sentence said as before keeps its holon, so only what is new is born.
+    // Each sentence said as before keeps its holon, so only what is new is born; a
+    // sentence said differently goes with the old paragraph.
     const sentences = refsOf(byId.get(kept.$ref)!.body.sentences);
-    for (const id of sentences) stillHeld.add(id);
-    return held(marked.paragraphKeeping(text, new Map(sentences.map((id) => [said(id), id]))));
+    const paragraph = marked.paragraphKeeping(text, new Map(sentences.map((id) => [said(id), id])));
+    const old = new Set(sentences);
+    for (const id of refsOf(writer.born.find((holon) => holon.id === paragraph)!.body.sentences))
+      if (old.has(id)) stillHeld.add(id);
+    return held(paragraph);
   });
 }
 
@@ -141,7 +146,9 @@ for (const edit of patch) {
   }
 
   if ("letGo" in edit) {
-    unplace(edit.letGo);
+    // A holon nothing holds any longer, as a sentence an earlier rewrite left, goes alone.
+    // Whatever still refers to it keeps it, as below.
+    if (wholeOf(edit.letGo)) unplace(edit.letGo);
     replaced.add(edit.letGo);
     continue;
   }
