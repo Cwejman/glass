@@ -1,5 +1,5 @@
-// How a read is worked out: an expression, over the field as the stores stood when the
-// read began. The language is the same as ever; what is new is that the field is not
+// How a read is worked out: what it gives, over the field as the stores stood when the
+// read began, and the holons the read carries. The language is the same as ever; what is new is that the field is not
 // held here. Every holon is asked of the stores as it is needed (field.ts), so working
 // an expression out waits on them, and is asynchronous throughout.
 //
@@ -13,7 +13,7 @@
 // written, as a pattern is.
 
 import { expressionProblem, isRef, type Expression, type Value } from "../../../language/expression.ts";
-import type { Heads } from "../engine.ts";
+import type { Heads, Read } from "../engine.ts";
 import { fieldOf, type Field, type Stores } from "./field.ts";
 import { natives, type Calling, type Deferred } from "./natives/natives.ts";
 import { after, all, waits, type Maybe } from "./maybe.ts";
@@ -25,24 +25,24 @@ export type Scope = { words: Record<string, Value>; up?: Scope; args?: Value[] }
 // The most steps one read may take, so a function that never ends is stopped.
 const most = 10_000_000;
 
-// Works an expression out over the stores, each at its head. Gives its value, or the
-// problem that stopped it, and either way the stores it asked and the holons it found
-// kept differently in two stores, where there were any.
+// Works a read out over the stores, each at its head. Gives its value, or the problem
+// that stopped it, and either way the stores it asked and the holons it found kept
+// differently in two stores, where there were any.
 export async function evaluate(
-  expression: Expression,
+  { gives, holons = [] }: Read,
   stores: Stores,
   heads: Heads,
 ): Promise<({ value: Value } | { problem: string }) & { asked: string[]; diverged?: string[] }> {
-  const field = fieldOf(stores, heads);
+  const field = fieldOf(stores, heads, holons);
   const seen = () => ({
     asked: [...field.asked],
     ...(field.diverged.size && { diverged: [...field.diverged].sort() }),
   });
 
   try {
-    const problem = expressionProblem(expression);
+    const problem = expressionProblem(gives);
     if (problem) throw new Error(problem);
-    return { value: outward(await evaluator(field).evaluate(expression)), ...seen() };
+    return { value: outward(await evaluator(field).evaluate(gives as Expression)), ...seen() };
   } catch (error) {
     return { problem: error instanceof Error ? error.message : String(error), ...seen() };
   }

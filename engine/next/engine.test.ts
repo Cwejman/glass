@@ -17,15 +17,19 @@ afterAll(() => made.forEach((at) => rmSync(at, { recursive: true, force: true })
 const id = (n: number) => String(n).padStart(15, "0");
 const ref = (n: number) => ({ $ref: id(n) });
 
-// The language's store: the types function and store, and the natives these tests call.
-const natives = ["get", "map", "size", "log"];
+// The language's store: the types function, store and value, and the natives these
+// tests call.
+const natives = ["get", "map", "size", "log", "holon"];
 const fn = (name: string) => id(10 + natives.indexOf(name));
 const glass: Holon[] = [
   {
     id: id(1),
     instance: [],
     name: "function",
-    mould: { native: { says: "its native", shape: "string" } },
+    mould: {
+      native: { says: "its native", shape: "string", optional: true },
+      input: { says: "its placeholders", shape: { list: "ref" }, holds: true, optional: true },
+    },
     body: {},
   },
   {
@@ -36,6 +40,7 @@ const glass: Holon[] = [
     body: {},
   },
   { id: id(3), instance: [id(2)], name: "glass", body: {} },
+  { id: id(4), instance: [], name: "value", mould: {}, body: {} },
   ...natives.map((name) => ({ id: fn(name), instance: [id(1)], name, body: { native: name } })),
 ];
 
@@ -116,12 +121,12 @@ describe("the engine", () => {
     const made = committed.ids["~1"]!;
 
     expect(Object.keys(committed.landed)).toEqual(["notes"]);
-    expect(await glassEngine.read(call("get", { $ref: made }, "text"))).toMatchObject({
+    expect(await glassEngine.read({ gives: call("get", { $ref: made }, "text") })).toMatchObject({
       value: "Glass holds holons",
     });
 
     // Held by nothing in the change, it goes into the store's root.
-    const contents = (await glassEngine.read(call("get", ref(101), "contents"))) as Answer & {
+    const contents = (await glassEngine.read({ gives: call("get", ref(101), "contents") })) as Answer & {
       value: unknown[];
     };
     expect(contents.value).toContainEqual({ $ref: made });
@@ -129,7 +134,7 @@ describe("the engine", () => {
 
   test("a read answers with the heads of the stores it read", async () => {
     const glassEngine = await started();
-    const answer = await glassEngine.read(call("get", ref(100), "name"));
+    const answer = await glassEngine.read({ gives: call("get", ref(100), "name") });
 
     expect(Object.keys(answer.at).sort()).toEqual(["glass", "notes"]);
     expect(answer.at.notes).toHaveProperty("commit");
@@ -140,7 +145,7 @@ describe("the engine", () => {
     const heard: unknown[] = [];
     const { promise, resolve } = Promise.withResolvers<void>();
 
-    const stop = await glassEngine.subscribe(call("get", ref(101), "contents"), (answer) => {
+    const stop = await glassEngine.subscribe({ gives: call("get", ref(101), "contents") }, (answer) => {
       heard.push("value" in answer ? (answer.value as unknown[]).length : answer.problem);
       if (heard.length === 2) resolve();
     });
@@ -156,7 +161,7 @@ describe("the engine", () => {
     const heard: number[] = [];
     let last: (() => void) | undefined;
 
-    const stop = await glassEngine.subscribe(call("get", ref(101), "contents"), (answer) => {
+    const stop = await glassEngine.subscribe({ gives: call("get", ref(101), "contents") }, (answer) => {
       heard.push("value" in answer ? (answer.value as unknown[]).length : -1);
       if (heard.at(-1) === 5) last?.();
     });
@@ -200,7 +205,7 @@ describe("the engine", () => {
   test("strict, a change is refused if what it touches moved since its at; else it is taken", async () => {
     const glassEngine = await started();
     const made = landed(await glassEngine.commit(note("first"))).ids["~1"]!;
-    const { at } = await glassEngine.read(call("get", { $ref: made }, "text"));
+    const { at } = await glassEngine.read({ gives: call("get", { $ref: made }, "text") });
 
     const edit = (text: string, strict: boolean) => ({
       holons: [{ id: made, instance: [id(100)], body: { text } }] as Holon[],
@@ -214,16 +219,18 @@ describe("the engine", () => {
       refused: [{ rule: "strict", id: made }],
     });
     landed(await glassEngine.commit(edit("third", false)));
-    expect(await glassEngine.read(call("get", { $ref: made }, "text"))).toMatchObject({ value: "third" });
+    expect(await glassEngine.read({ gives: call("get", { $ref: made }, "text") })).toMatchObject({
+      value: "third",
+    });
   });
 
   test("a commit keeps the heads its change was made from, of the stores it touches alone", async () => {
     const glassEngine = await started();
-    const { at } = await glassEngine.read(call("get", ref(100), "name"));
+    const { at } = await glassEngine.read({ gives: call("get", ref(100), "name") });
     landed(await glassEngine.commit(note("seen", at)));
     landed(await glassEngine.commit(note("unseen")));
 
-    const log = (await glassEngine.read(call("log", "notes"))) as Answer & {
+    const log = (await glassEngine.read({ gives: call("log", "notes") })) as Answer & {
       value: { says: string; at: unknown[] }[];
     };
     expect(log.value[0]!.at).toEqual([]);
@@ -241,7 +248,9 @@ describe("the engine", () => {
 
     const both = await Promise.all([glassEngine.commit(edit("a")), glassEngine.commit(edit("b"))]);
     both.forEach(landed);
-    expect(await glassEngine.read(call("get", { $ref: made }, "text"))).toMatchObject({ value: "b" });
+    expect(await glassEngine.read({ gives: call("get", { $ref: made }, "text") })).toMatchObject({
+      value: "b",
+    });
   });
 
   test("on workers, with the stores reached over the wire, it reads and commits the same", async () => {
@@ -258,7 +267,7 @@ describe("the engine", () => {
     });
 
     const made = landed(await glassEngine.commit(note("over the wire"))).ids["~1"]!;
-    expect(await glassEngine.read(call("get", { $ref: made }, "text"))).toMatchObject({
+    expect(await glassEngine.read({ gives: call("get", { $ref: made }, "text") })).toMatchObject({
       value: "over the wire",
     });
 
@@ -324,13 +333,13 @@ describe("when things go wrong", () => {
     });
 
     const answer = await Promise.race([
-      glassEngine.read(call("get", ref(100), "name")),
+      glassEngine.read({ gives: call("get", ref(100), "name") }),
       Bun.sleep(2_000).then(() => ({ problem: "no answer within 2 s" })),
     ]);
     expect(answer).toMatchObject({ problem: expect.stringContaining("the storage is gone") });
 
     broken = false;
-    expect(await glassEngine.read(call("get", ref(100), "name"))).toMatchObject({ value: "note" });
+    expect(await glassEngine.read({ gives: call("get", ref(100), "name") })).toMatchObject({ value: "note" });
   });
 
   test("a commit across two stores, one taking it and one refusing, says where it landed and what the other answered", async () => {
@@ -346,7 +355,9 @@ describe("when things go wrong", () => {
     expect(committed.missed).toEqual({
       more: { refused: [{ rule: "full", says: "this store takes nothing more" }] },
     });
-    expect(await glassEngine.read(call("get", { $ref: made }, "text"))).toMatchObject({ value: "both" });
+    expect(await glassEngine.read({ gives: call("get", { $ref: made }, "text") })).toMatchObject({
+      value: "both",
+    });
   });
 
   test("a commit across two stores, one failing as it is offered, still says where it landed", async () => {
@@ -363,7 +374,7 @@ describe("when things go wrong", () => {
     let offered = 0;
     const store = await moreStore();
     const glassEngine = await startedWith({}, 2);
-    const { at } = await glassEngine.read(call("get", ref(302), "text"));
+    const { at } = await glassEngine.read({ gives: call("get", ref(302), "text") });
 
     // more answers every offer as changed, at a head it has had.
     const head = (await strataHead(store))!;
@@ -390,7 +401,7 @@ describe("when things go wrong", () => {
     const heard: string[][] = [];
     const { promise, resolve } = Promise.withResolvers<void>();
 
-    const stop = await glassEngine.subscribe(call("get", ref(302), "text"), (answer) => {
+    const stop = await glassEngine.subscribe({ gives: call("get", ref(302), "text") }, (answer) => {
       heard.push(Object.keys(answer.at).sort());
       if (heard.length === 2) resolve();
     });
@@ -414,9 +425,11 @@ describe("changes at once", () => {
     );
     all.forEach(landed);
 
-    const log = (await glassEngine.read(call("size", call("log", "notes")))) as Answer;
+    const log = (await glassEngine.read({ gives: call("size", call("log", "notes")) })) as Answer;
     expect(log).toMatchObject({ value: 41 });
-    const contents = (await glassEngine.read(call("size", call("get", ref(101), "contents")))) as Answer;
+    const contents = (await glassEngine.read({
+      gives: call("size", call("get", ref(101), "contents")),
+    })) as Answer;
     expect(contents).toMatchObject({ value: 41 });
   });
 
@@ -450,8 +463,9 @@ describe("changes at once", () => {
 
     // The second engine hears of the first one's commit as the storage's head moves.
     while (
-      !("value" in (await engines[1]!.read(call("get", { $ref: made }, "text")))) ||
-      ((await engines[1]!.read(call("get", { $ref: made }, "text"))) as { value: unknown }).value === null
+      !("value" in (await engines[1]!.read({ gives: call("get", { $ref: made }, "text") }))) ||
+      ((await engines[1]!.read({ gives: call("get", { $ref: made }, "text") })) as { value: unknown })
+        .value === null
     )
       await Bun.sleep(10);
 
@@ -467,7 +481,9 @@ describe("changes at once", () => {
 
     // Each engine hears of the other's commit as the storage's head moves.
     const newest = async (one: Engine) => {
-      const log = (await one.read(call("log", "notes"))) as unknown as { value: { says: string }[] };
+      const log = (await one.read({ gives: call("log", "notes") })) as unknown as {
+        value: { says: string }[];
+      };
       return log.value.slice(0, 2).map(({ says }) => says);
     };
     while (
@@ -476,8 +492,101 @@ describe("changes at once", () => {
     )
       await Bun.sleep(10);
     const [last] = await newest(engines[1]!);
-    const text = await engines[0]!.read(call("get", { $ref: made }, "text"));
+    const text = await engines[0]!.read({ gives: call("get", { $ref: made }, "text") });
     expect(text).toMatchObject({ value: last });
+  });
+});
+
+describe("reads carrying holons", () => {
+  const carried = { id: "~1", instance: [id(100)], body: { text: "kept nowhere" } } as Holon;
+
+  test("a read gives a value as it is", async () => {
+    const glassEngine = await started();
+    expect(await glassEngine.read({ gives: 3 })).toMatchObject({ value: 3 });
+  });
+
+  test("a handle is found among the read's holons, never asked of the stores", async () => {
+    const glassEngine = await started();
+    const read = (key: string) => ({ gives: call("get", { $ref: "~1" }, key), holons: [carried] });
+
+    expect(await glassEngine.read(read("text"))).toMatchObject({ value: "kept nowhere" });
+    expect(await glassEngine.read(read("store"))).toMatchObject({ value: "read" });
+  });
+
+  test("a handle the read carries no holon for is a problem", async () => {
+    const glassEngine = await started();
+    const answer = await glassEngine.read({ gives: call("get", { $ref: "~2" }, "text"), holons: [carried] });
+
+    expect(answer).toMatchObject({ problem: "the handle ~2 names no holon the read carries" });
+  });
+
+  test("a subscriber to a read carrying holons is answered again when a store it read moves", async () => {
+    const glassEngine = await started();
+    const heard: unknown[] = [];
+    const { promise, resolve } = Promise.withResolvers<void>();
+    const read = {
+      gives: { list: [call("get", { $ref: "~1" }, "text"), call("size", call("get", ref(101), "contents"))] },
+      holons: [carried],
+    };
+
+    const stop = await glassEngine.subscribe(read, (answer) => {
+      heard.push("value" in answer ? answer.value : answer.problem);
+      if (heard.length === 2) resolve();
+    });
+    await glassEngine.commit(note("heard"));
+    await promise;
+    stop();
+
+    expect(heard).toEqual([
+      ["kept nowhere", 1],
+      ["kept nowhere", 2],
+    ]);
+  });
+});
+
+describe("placeholders", () => {
+  // A function taking two placeholders, the second optional, as one change.
+  const taking = (second: object) => ({
+    holons: [
+      { id: "~1", instance: [id(1)], name: "pair", body: { input: [{ $ref: "~2" }, second] } },
+      { id: "~2", instance: [id(4)], name: "first", body: {} },
+      { id: "~3", instance: [id(4)], name: "second", body: {} },
+    ] as Holon[],
+    says: "a function of two placeholders",
+    at: {},
+  });
+
+  test("a function holds its placeholders in a list, each marked optional or not, and they reside with it", async () => {
+    const glassEngine = await started();
+    const { ids } = landed(await glassEngine.commit(taking({ $ref: "~3", $optional: true })));
+
+    const pair = (await glassEngine.read({ gives: call("holon", { $ref: ids["~1"]! }) })) as Answer & {
+      value: Holon & { store: string };
+    };
+    expect(pair.value.store).toBe("notes");
+    expect(pair.value.body.input).toEqual([
+      { $ref: ids["~2"], $holds: true },
+      { $ref: ids["~3"], $holds: true, $optional: true },
+    ]);
+
+    // Held by the function, the placeholders are not loose in the store's root.
+    const contents = (await glassEngine.read({ gives: call("get", ref(101), "contents") })) as Answer & {
+      value: unknown[];
+    };
+    expect(contents.value).toEqual([{ $ref: id(100) }, { $ref: ids["~1"] }]);
+  });
+
+  test("$optional anywhere but on an entry of the list at input is refused", async () => {
+    const glassEngine = await started();
+
+    const optional = { $ref: id(100), $holds: true, $optional: true };
+    const committed = await glassEngine.commit({
+      holons: [{ id: id(101), instance: [id(2)], name: "notes", body: { contents: [optional] } }],
+      says: "an optional part",
+      at: {},
+    });
+
+    expect(committed).toMatchObject({ refused: [{ rule: "optionalOnlyInInput", id: id(101) }] });
   });
 });
 
@@ -516,7 +625,9 @@ describe("names in a whole", () => {
   test("a whole letting go of a part and taking another of the same name lands", async () => {
     const glassEngine = await started();
     const first = landed(await glassEngine.commit(named("Same"))).ids["~1"]!;
-    const root = (await glassEngine.read(call("get", ref(101), "contents"))) as Answer & { value: unknown[] };
+    const root = (await glassEngine.read({ gives: call("get", ref(101), "contents") })) as Answer & {
+      value: unknown[];
+    };
 
     const committed = await glassEngine.commit({
       holons: [

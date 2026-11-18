@@ -49,10 +49,11 @@ export function mouldOf(types: readonly (Pick<Holon, "mould"> | null | undefined
 // A holon connects to others from its body. A reference is written the same way
 // wherever it stands, `{ "$ref": id }`, so it is seen without knowing the type. Any
 // string under $ref is a reference here, a handle or a mistake as well as an id: whether
-// it is an id is judged, so a wrong one is refused rather than passed over.
-export type Reference = { id: string; key: string; holds: boolean };
+// it is an id is judged, so a wrong one is refused rather than passed over. A reference
+// says with $optional that a function may be given nothing for it.
+export type Reference = { id: string; key: string; holds: boolean; optional: boolean };
 
-type Ref = { $ref: string; $holds?: boolean };
+type Ref = { $ref: string; $holds?: boolean; $optional?: boolean };
 
 export const isRef = (value: unknown): value is Ref =>
   typeof value === "object" && value !== null && typeof (value as { $ref?: unknown }).$ref === "string";
@@ -70,7 +71,12 @@ export function references(body: Holon["body"], mould: Readonly<Record<string, {
     if (Array.isArray(value)) {
       for (const item of value) walk(item, key);
     } else if (isRef(value)) {
-      found.push({ id: value.$ref, key, holds: holding(value, mould[key]) });
+      found.push({
+        id: value.$ref,
+        key,
+        holds: holding(value, mould[key]),
+        optional: value.$optional === true,
+      });
     } else if (typeof value === "object" && value !== null) {
       for (const inner of Object.values(value)) walk(inner, key);
     }

@@ -11,6 +11,7 @@
 //   { list: [ … ] }, { record: { … } }  a list, or a record, each of its parts worked out
 //   { "?": "x" }                        a variable of a pattern, within find
 
+import { isHandle } from "../engine/handles.ts";
 import { isId } from "../integrations/glass/store.ts";
 
 export type Ref = { $ref: string };
@@ -51,8 +52,11 @@ export function expressionProblem(value: unknown, nested = 0): string | undefine
   const only = (...allowed: string[]) => keys.every((key) => allowed.includes(key));
   const inner = (each: unknown) => expressionProblem(each, nested + 1);
 
+  // A holon a read carries of its own is given by its handle, "~1", where an id goes.
   if ("$ref" in record)
-    return only("$ref") && isId(record.$ref) ? undefined : "a holon is given as { $ref: id }";
+    return only("$ref") && (isId(record.$ref) || isHandle(record.$ref))
+      ? undefined
+      : "a holon is given as { $ref: id }";
 
   if ("arg" in record)
     return only("arg") && Number.isInteger(record.arg) && (record.arg as number) >= 0

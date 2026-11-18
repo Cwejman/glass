@@ -5,8 +5,7 @@
 
 import { isDerived, isId } from "../../../integrations/glass/store.ts";
 import type { Holon, Problem } from "../../../stores/store.ts";
-import { bodyProblem, mouldProblem, type Mould } from "../../moulds.ts";
-import { references } from "../read/natives/holons.ts";
+import { bodyProblem, isRef, mouldProblem, references, type Mould } from "../../moulds.ts";
 import { isHandle } from "./change.ts";
 import type { Landing } from "./plan.ts";
 
@@ -35,6 +34,7 @@ const rules = {
   mouldsAreSound,
   typesHaveMoulds,
   bodyFits,
+  optionalOnlyInInput,
   readOnlyRefuses,
   storesAdmit,
   referencesResolve,
@@ -134,6 +134,22 @@ function bodyFits(seen: Seen) {
     if (!moulds.length || moulds.some((mould) => !mould)) return [];
 
     return [bodyProblem(holon.body, moulds as Mould[])];
+  });
+}
+
+// A function may be given nothing for a placeholder its input marks $optional, so the
+// mark stands only on an entry of the list at input.
+function optionalOnlyInInput(seen: Seen) {
+  return eachHolon(seen, ({ holon }) => {
+    const input = holon.body.input;
+    const marked = Array.isArray(input)
+      ? input.filter((entry) => isRef(entry) && entry.$optional === true)
+      : [];
+    const optional = references(holon.body).filter(({ optional }) => optional);
+
+    return [
+      optional.length > marked.length ? "$optional stands only on an entry of the list at input" : undefined,
+    ];
   });
 }
 

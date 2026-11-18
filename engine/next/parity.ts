@@ -183,7 +183,7 @@ for (const text of asked) {
   );
 
   const from = performance.now();
-  const answer = await next.read(expression);
+  const answer = await next.read({ gives: expression });
   const ms = Math.round(performance.now() - from);
   const now: { value: unknown } | { problem: string } =
     "value" in answer ? { value: answer.value } : { problem: answer.problem };

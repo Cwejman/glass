@@ -105,7 +105,7 @@ async function field(more: { name: string; holons: Holon[] }[] = []) {
 
   // A read's answer, its value or its problem, and the stores it asked.
   const reading = (expression: Expression) =>
-    evaluate(expression, stores, heads) as Promise<{
+    evaluate({ gives: expression }, stores, heads) as Promise<{
       value?: Value;
       problem?: string;
       asked: string[];

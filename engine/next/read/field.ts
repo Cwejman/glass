@@ -9,8 +9,12 @@
 // a layer rather than once a holon. A holon is read from the first store, in the order
 // they were mounted, that keeps it; where another keeps it differently, the holon has
 // diverged, and the read says so beside its answer, never choosing in silence.
+//
+// A read may carry holons of its own, kept in no store, each under a handle. A handle is
+// looked up among them, as from the store "read", and never asked of the stores.
 
 import type { Clause, Fact, Head, Holon, Question, Store } from "../../../stores/store.ts";
+import { isHandle } from "../commit/change.ts";
 import type { Heads } from "../engine.ts";
 import type { Maybe } from "./maybe.ts";
 
@@ -53,8 +57,9 @@ export type Field = {
 
 const decoder = new TextDecoder();
 
-export function fieldOf(stores: Stores, heads: Heads): Field {
+export function fieldOf(stores: Stores, heads: Heads, carried: readonly Holon[] = []): Field {
   const names = [...stores.keys()];
+  const given = new Map(carried.map((holon) => [holon.id, { holon, store: "read" }]));
   const asked = new Set<string>();
   const answers = new Map<string, Promise<unknown[]>>();
 
@@ -116,6 +121,8 @@ export function fieldOf(stores: Stores, heads: Heads): Field {
   const held = new Map<string, Kept | null>();
 
   function holon(id: string): Maybe<Kept | null> {
+    if (given.has(id)) return given.get(id)!;
+    if (isHandle(id)) throw new Error(`the handle ${id} names no holon the read carries`);
     if (held.has(id)) return held.get(id)!;
 
     return versionsOf(id).then((found) => {
@@ -138,7 +145,7 @@ export function fieldOf(stores: Stores, heads: Heads): Field {
 
   async function address(whole: string, name: string) {
     const kept = await holon(whole);
-    if (!kept) return null;
+    if (!kept || !stores.has(kept.store)) return null;
 
     const [found] = (await ask(kept.store, { address: [whole, name] })) as Holon[];
     return found?.id ?? null;

@@ -21,13 +21,13 @@
 // field as it stands: refused if it can no longer stand, and, if strict, if anything it
 // touches moved since its at.
 //
-// Anyone can subscribe to an expression. When a store's head moves, whoever moved it,
+// Anyone can subscribe to a read. When a store's head moves, whoever moved it,
 // the engine records the new head and reruns the reads that stood on that store. A store
 // that stops is unmounted, and its subscribers are told.
 
-import type { Expression, Value } from "../../language/expression.ts";
+import type { Value } from "../../language/expression.ts";
 import type { Runtime } from "../../runtime/runtime.ts";
-import type { Head, Problem, Store, Touches } from "../../stores/store.ts";
+import type { Head, Holon, Problem, Store, Touches } from "../../stores/store.ts";
 import { anotherConnectionTo, disconnect, disconnected } from "../../wire/wire.ts";
 import type { EngineWorker } from "./worker.ts";
 import type { Change } from "./commit/change.ts";
@@ -44,6 +44,12 @@ export type Mount = { store: Store; write: boolean; unsubscribe: () => void };
 // touches.
 export type Heads = Readonly<Record<string, Head | null>>;
 
+// A read: what it gives, a value with references at any depth, and the holons it carries
+// of its own, kept in no store. Each comes under a handle, "~1", as a change's new holons
+// do, and is found by it before the stores are asked. Until uses are worked out, what a
+// read gives is an expression.
+export type Read = { gives: unknown; holons?: Holon[] };
+
 // A read's answer: its value or its problem, the heads it stood on, and the holons it
 // found kept differently in two stores, the first store's version answering, where any.
 export type Answer = { at: Heads; diverged?: string[] } & ({ value: Value } | { problem: string });
@@ -54,8 +60,8 @@ export type Committed = Landed | { refused: Problem[] };
 export type Engine = {
   mount(name: string, store: Store, as?: { write?: boolean }): Promise<void>;
   unmount(name: string): Promise<void>;
-  read(expression: Expression): Promise<Answer>;
-  subscribe(expression: Expression, listener: (answer: Answer) => void): Promise<() => void>;
+  read(read: Read): Promise<Answer>;
+  subscribe(read: Read, listener: (answer: Answer) => void): Promise<() => void>;
   commit(change: Change): Promise<Committed>;
 };
 
@@ -67,7 +73,7 @@ type Waiting = { work: Work; resolve: (worker: EngineWorker) => void };
 // A kept read: what it stood on last, whether it has answered yet, and whether a rerun is
 // under way and another is due after it, so its answers come one at a time, in order.
 type Subscriber = {
-  expression: Expression;
+  read: Read;
   listener: (answer: Answer) => void;
   stoodOn: Heads;
   answered: boolean;
@@ -121,22 +127,21 @@ export async function engine({ workers: runtime, count = 1 }: Starting): Promise
     for (const subscriber of subscribers) if (stoodOn(subscriber, name)) notify(subscriber);
   }
 
-  // Works the expression out on a worker, over every store as it stood when the read
-  // began.
-  async function read(expression: Expression): Promise<Answer> {
+  // Works the read out on a worker, over every store as it stood when the read began.
+  async function read(asked: Read): Promise<Answer> {
     const worker = await take("read");
 
     try {
-      return await worker.read(expression, Object.fromEntries(heads));
+      return await worker.read(asked, Object.fromEntries(heads));
     } finally {
       give("read", worker);
     }
   }
 
   // Keeps a read: its listener is called now, and again whenever a store it read moves.
-  async function subscribe(expression: Expression, listener: (answer: Answer) => void) {
+  async function subscribe(asked: Read, listener: (answer: Answer) => void) {
     const subscriber: Subscriber = {
-      expression,
+      read: asked,
       listener,
       stoodOn: {},
       answered: false,
@@ -259,7 +264,7 @@ export async function engine({ workers: runtime, count = 1 }: Starting): Promise
     try {
       do {
         subscriber.again = false;
-        const answer = await read(subscriber.expression);
+        const answer = await read(subscriber.read);
         if (!subscribers.has(subscriber)) return;
 
         subscriber.stoodOn = answer.at;

@@ -3,10 +3,9 @@
 // runtime it is given, every one the same, one per thread, so a slow or failing read or
 // commit holds up only the worker it runs on.
 
-import type { Expression } from "../../language/expression.ts";
 import type { Store } from "../../stores/store.ts";
 import { disconnect } from "../../wire/wire.ts";
-import type { Answer, Committed, Heads } from "./engine.ts";
+import type { Answer, Committed, Heads, Read } from "./engine.ts";
 import { evaluate } from "./read/evaluate.ts";
 import type { Change } from "./commit/change.ts";
 import { judge } from "./commit/judge.ts";
@@ -15,9 +14,9 @@ import { land } from "./commit/land.ts";
 export type EngineWorker = {
   mount(name: string, store: Store, as: { write: boolean }): Promise<void>;
   unmount(name: string): Promise<void>;
-  // Works the expression out over each store at the head given for it. The answer
-  // carries the heads of the stores it read.
-  read(expression: Expression, heads: Heads): Promise<Answer>;
+  // Works the read out over each store at the head given for it. The answer carries the
+  // heads of the stores it read.
+  read(read: Read, heads: Heads): Promise<Answer>;
   // Judges the change against each store at the head given for it, minting its ids;
   // refused, returns its problems; else offers it to every store it touches, judging it
   // again, up to three times, at the heads the stores answer with where what it touches
@@ -41,8 +40,8 @@ export function engineWorker(): EngineWorker {
     if (mounted) disconnect(mounted.store);
   }
 
-  async function read(expression: Expression, heads: Heads): Promise<Answer> {
-    const { asked, ...answer } = await evaluate(expression, stores, heads);
+  async function read(read: Read, heads: Heads): Promise<Answer> {
+    const { asked, ...answer } = await evaluate(read, stores, heads);
     return { at: Object.fromEntries(asked.map((name: string) => [name, heads[name] ?? null])), ...answer };
   }
 
