@@ -3,7 +3,7 @@
 // Those under legacy are kept only while functions written in the field still call
 // them, and go as those are written again upon the rest.
 
-import type { Value } from "../../../../language/expression.ts";
+import type { Value } from "../values.ts";
 import type { Field } from "../field.ts";
 import type { Maybe } from "../maybe.ts";
 import { patterns } from "./find.ts";
@@ -13,6 +13,7 @@ import { lazy } from "./lazy.ts";
 import { legacy } from "./legacy.ts";
 import { lists } from "./lists.ts";
 import { sets } from "./sets.ts";
+import { text } from "./text.ts";
 import { values } from "./values.ts";
 
 export type Native = (given: Value[]) => Maybe<Value>;
@@ -51,6 +52,7 @@ export function natives(calling: Calling) {
       ...holons(calling),
       ...history(calling),
       ...legacy(calling),
+      ...text(calling),
       // A word said is a clause of a pattern, and nothing outside one.
       said: () => {
         throw new Error("said(e, a, w) is a clause of a pattern, asked within find");

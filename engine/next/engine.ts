@@ -25,7 +25,7 @@
 // the engine records the new head and reruns the reads that stood on that store. A store
 // that stops is unmounted, and its subscribers are told.
 
-import type { Value } from "../../language/expression.ts";
+import type { Value } from "./read/values.ts";
 import type { Runtime } from "../../runtime/runtime.ts";
 import type { Head, Holon, Problem, Store, Touches } from "../../stores/store.ts";
 import { anotherConnectionTo, disconnect, disconnected } from "../../wire/wire.ts";
@@ -46,8 +46,8 @@ export type Heads = Readonly<Record<string, Head | null>>;
 
 // A read: what it gives, a value with references at any depth, and the holons it carries
 // of its own, kept in no store. Each comes under a handle, "~1", as a change's new holons
-// do, and is found by it before the stores are asked. Until uses are worked out, what a
-// read gives is an expression.
+// do, and is found by it before the stores are asked. What it gives is worked out as
+// read/evaluate.ts says: a use held there gives what its function gives.
 export type Read = { gives: unknown; holons?: Holon[] };
 
 // A read's answer: its value or its problem, the heads it stood on, and the holons it

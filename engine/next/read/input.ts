@@ -4,11 +4,10 @@
 // gives is matched to them in order and by type: an optional placeholder is passed over
 // where what comes next does not fit it, or nothing is left.
 
-import { isRef, type Ref, type Value } from "../../../language/expression.ts";
+import { isClosure, isRef, kind, type Ref, type Value } from "./values.ts";
 import type { Holon } from "../../../stores/store.ts";
 import type { Field } from "./field.ts";
 import { after, each, type Maybe } from "./maybe.ts";
-import { isClosure, kind } from "./values.ts";
 
 // A reference as written in a holon's body, holding or not, optional or not.
 export type Link = Ref & { $holds?: boolean; $optional?: boolean };
@@ -26,9 +25,7 @@ export type Given = { written: unknown; value: () => Maybe<Value> };
 
 const declares = (type: Holon, key: string) => Boolean(type.mould && key in type.mould);
 export const isUseType = (type: Holon) => declares(type, "fn") && declares(type, "args");
-// The types of glass not yet given input are known by the name function until they are.
-export const isFunctionType = (type: Holon) =>
-  declares(type, "input") || (type.name === "function" && Boolean(type.mould));
+export const isFunctionType = (type: Holon) => declares(type, "input");
 
 // The kinds of value a placeholder may take: types glass ships, each of an empty mould.
 // They are found once, a read or a commit, by their names, and known after by their ids,

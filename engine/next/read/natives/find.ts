@@ -3,12 +3,11 @@
 // the stores; explain says how. These are the natives that read what they are given as
 // written, and are called, never given to another.
 
-import type { Value } from "../../../../language/expression.ts";
+import { keyOf, truly, type Value } from "../values.ts";
 import { bindable, isVar, orProblem, solve, usedBeside, type Clause, type Step } from "../patterns.ts";
 import { wordsOf } from "../words.ts";
 import type { Maybe } from "../maybe.ts";
 import type { Calling, Structural, Written } from "./natives.ts";
-import { keyOf, truly } from "../values.ts";
 
 // A test, held to the values of the variables it reads.
 type Holds = (values: Value[]) => Maybe<Value>;
@@ -53,7 +52,7 @@ export function patterns({ field }: Calling): Record<string, Structural> {
     if (test) return { test: test.holds, names: test.names };
 
     throw new Error(
-      "a clause is a fact [e, a, v], not(…), or(…), or a test, a use or lambda reading the pattern's variables",
+      "a clause is a fact [e, a, v], not(…), or(…), or a test, a use reading the pattern's variables",
     );
   }
 

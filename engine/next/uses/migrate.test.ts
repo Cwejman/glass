@@ -241,6 +241,7 @@ const glass: Holon[] = [
     name: "function",
     mould: {
       native: { says: "its native", shape: "string", optional: true },
+      says: { says: "what it does", shape: "string", optional: true },
       gives: { says: "what it gives", shape: "expression", optional: true },
       takes: { says: "what it takes", shape: { list: "string" }, optional: true },
     },
@@ -317,32 +318,49 @@ const glass: Holon[] = [
 ];
 
 describe("a field migrated", () => {
-  test("reads the same as before, keeps what it names, and is written once", async () => {
+  test("reads as the earlier form did, keeps what it names, and is written once", async () => {
     const store = await begun(glass, id(50));
     const next = await engine({ workers: sameThread(), count: 2 });
     await next.mount("glass", store, { write: true });
-    const asked = call(id(31), call(fn("type"), { $ref: id(4) }), 2);
-    const before = await next.read({ gives: asked });
 
     const { language, commits } = await migrate(next, new Map([["glass", store]]));
     expect(commits.map(({ store }) => store)).toEqual(["glass", "glass"]);
 
-    let made = 0;
-    const read = usesOf(asked, {
-      language,
-      mint: () => `~${++made}`,
-      nativeOf: (id) => nativeNames.find((name) => fn(name) === id),
-      named: () => "",
-    });
-    const after = await next.read({ gives: read.arg, holons: read.holons });
+    // An expression of the earlier form, read as uses.
+    const asking = (expression: Expression) => {
+      let made = 0;
+      const { arg, holons } = usesOf(expression, {
+        language,
+        mint: () => `~${++made}`,
+        nativeOf: (id) => nativeNames.find((name) => fn(name) === id),
+        named: () => "",
+      });
+      return next.read({ gives: arg, holons });
+    };
 
-    expect(before).toMatchObject({ value: [null, 10] });
-    expect(after).toMatchObject({ value: [null, 10] });
-    expect(await next.read({ gives: call(fn("get"), { $ref: id(31) }, "gives") })).toMatchObject({
-      value: null,
+    // doubled(type(@note), 2): the notes above 2, doubled, as the earlier engine gave.
+    expect(await asking(call(id(31), call(fn("type"), { $ref: id(4) }), 2))).toMatchObject({
+      value: [null, 10],
     });
-    expect(await next.read({ gives: call(fn("get"), { $ref: id(32) }, "instance") })).toMatchObject({
-      value: [{ $ref: language.use }],
+    expect(await asking(call(fn("get"), { $ref: id(31) }, "gives"))).toMatchObject({ value: null });
+    // parse and print shipped as a pair, each naming the other its reverse; print(parse(t)) is t.
+    const { at } = await asking(call(fn("get"), { $ref: id(50) }, "name"));
+    const named = async (name: string) => {
+      const facts = await store.read(at.glass!, { facts: { a: "name", v: name } });
+      return JSON.parse(new TextDecoder().decode(facts as Uint8Array)).e as string;
+    };
+    const [parse, print] = [await named("parse"), await named("print")];
+    expect(await asking(call(fn("get"), { $ref: parse }, "reverse"))).toMatchObject({
+      value: { $ref: print },
+    });
+    expect(await asking(call(fn("get"), { $ref: print }, "reverse"))).toMatchObject({
+      value: { $ref: parse },
+    });
+    expect(await asking(call(print, call(parse, "size([1, 2])")))).toMatchObject({ value: "size([1, 2])" });
+
+    // The mount is a use now, naming no component, so what it gives is refused.
+    expect(await next.read({ gives: { $ref: id(32) } })).toMatchObject({
+      problem: "the use entry names no function, fn, to apply",
     });
 
     expect((await migrate(next, new Map([["glass", store]]))).commits).toEqual([]);

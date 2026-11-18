@@ -19,18 +19,7 @@
 // often, or JSON with held uses at their places, as a lambda's may be. A native is one
 // of three: given values; lazy, given what it is given unworked, to work out only what it
 // needs; or reading what it is given as written, as a pattern is.
-//
-// Until the earlier form of an expression goes, a read written in it, a record keyed
-// call, fn, var, arg, list or record, is worked out as it was, and a function of that
-// form gives an expression of its own.
 
-import {
-  expressionProblem,
-  isRef,
-  type Expression,
-  type Ref,
-  type Value,
-} from "../../../language/expression.ts";
 import type { Holon } from "../../../stores/store.ts";
 import type { Heads, Read } from "../engine.ts";
 import { fieldOf, type Field, type Stores } from "./field.ts";
@@ -50,11 +39,7 @@ import {
 import { natives, type Calling, type Deferred, type Written } from "./natives/natives.ts";
 import { after, all, each, waits, type Maybe } from "./maybe.ts";
 import { isVar } from "./patterns.ts";
-import { closure, isClosure, isRecord, type Closure, type Rec } from "./values.ts";
-
-// What a lambda of the earlier form closes over: the words around it, and a function of
-// one's own's places.
-export type Scope = { words: Record<string, Value>; up?: Scope; args?: Value[] };
+import { closure, isClosure, isRecord, isRef, type Rec, type Ref, type Value } from "./values.ts";
 
 // The placeholders bound where a use is worked out, by id, and those around them; and
 // the offers nearest first, for an optional placeholder left unfilled.
@@ -62,9 +47,6 @@ export type Frame = { bound: ReadonlyMap<string, Value>; up?: Frame; offers: rea
 
 // The most steps one read may take, so a function that never ends is stopped.
 const most = 10_000_000;
-
-// The keys an expression of the earlier form is written with.
-const earlier = ["call", "fn", "var", "arg", "list", "record"];
 
 // Works a read out over the stores, each at its head. Gives its value, or the problem
 // that stopped it, and either way the stores it asked and the holons it found kept
@@ -81,20 +63,13 @@ export async function evaluate(
   });
 
   try {
-    const reading = evaluator(field);
-    if (!isEarlier(gives)) return { value: outward(await reading.give(gives)), ...seen() };
-
-    const problem = expressionProblem(gives);
-    if (problem) throw new Error(problem);
-    return { value: outward(await reading.evaluate(gives as Expression)), ...seen() };
+    return { value: outward(await evaluator(field).give(gives)), ...seen() };
   } catch (error) {
     return { problem: error instanceof Error ? error.message : String(error), ...seen() };
   }
 }
 
-const isEarlier = (gives: unknown) => isRecord(gives) && earlier.some((key) => key in (gives as object));
-
-type Function = { name: string; native?: string; input?: Place[]; body?: unknown; gives?: Expression };
+type Function = { name: string; native?: string; input?: Place[]; body?: unknown };
 
 type Use = { fn: Link; args: unknown[]; offer: Ref[] };
 
@@ -117,26 +92,23 @@ export function evaluator(field: Field) {
       }),
   );
 
-  // What a function takes and how it gives: a native, a use held as its body, or an
-  // expression of the earlier form.
+  // What a function takes and how it gives: natively, or by what its body gives.
   const functionOf = remembered(
     (id): Maybe<Function> =>
       after(known(id), (found) => {
         if (!found) throw new Error(`the function ${id} is not in the field`);
 
         const { holon, applicable } = found;
-        const body = holon.body as { native?: unknown; input?: unknown; body?: unknown; gives?: Expression };
         const name = holon.name ?? id;
-        if (!applicable) return { name, gives: body.gives };
+        if (!applicable) throw new Error(`${name} is not a function`);
 
+        const { native, body } = holon.body;
         const links = inputOf(holon);
-        const input = links && all(links.map(placeOf));
-        return after(input, (input) => ({
+        return after(links && all(links.map(placeOf)), (input) => ({
           name,
-          native: typeof body.native === "string" ? body.native : undefined,
+          native: typeof native === "string" ? native : undefined,
           input,
-          body: body.body,
-          gives: body.gives,
+          body,
         }));
       }),
   );
@@ -197,7 +169,7 @@ export function evaluator(field: Field) {
 
     return after(known(id), (found) => {
       if (found?.use) return use(id, frame);
-      if (found?.applicable && $holds) return closure(id, undefined, frame);
+      if (found?.applicable && $holds) return closure(id, frame);
       return { $ref: id };
     });
   }
@@ -247,10 +219,7 @@ export function evaluator(field: Field) {
 
   // A function, as a value or a holon, given its arguments, and the offers around.
   function applied(fn: unknown, given: Given[], offers: readonly Ref[]): Maybe<Value> {
-    if (isClosure(fn))
-      return typeof fn.fn === "string"
-        ? called(fn.fn, given, (fn.scope as Frame).offers, fn.scope as Frame)
-        : after(all(given.map(({ value }) => value())), (values) => lambda(fn, values));
+    if (isClosure(fn)) return called(fn.fn, given, (fn.frame as Frame).offers, fn.frame as Frame);
 
     if (!isRef(fn)) return null;
     return after(field.holon(fn.$ref), (kept) => (kept ? called(fn.$ref, given, offers) : null));
@@ -259,23 +228,16 @@ export function evaluator(field: Field) {
   // A function kept as a holon, given its arguments: its body worked out in a frame of
   // its placeholders bound, within the frame it was written in, if it was held there.
   function called(id: string, given: Given[], offers: readonly Ref[], up?: Frame): Maybe<Value> {
-    return after(functionOf(id), ({ name, native, input, body, gives }) => {
+    return after(functionOf(id), ({ name, native, input, body }) => {
       if (native && structural[native])
         throw new Error(`${name} reads what it is given as written, so it is called, not given to another`);
       if (native && lazy[native])
         return after(all(given.map(({ value }) => value())), (values) => lazy[native]!(values.map(valued)));
       if (native && byValue[native]) return after(valuesOf(input, given, offers), byValue[native]!);
 
-      if (body !== undefined)
-        return after(bind(input ?? [], given, offers), (bound) => argOf(body, { bound, up, offers }));
-      if (gives === undefined) throw new Error(`${name} is not a function`);
+      if (body === undefined) throw new Error(`${name} names no native and holds no body`);
 
-      return after(all(given.map(({ value }) => value())), (values) => {
-        const written = gives as { fn?: string[]; gives?: Expression };
-        return Array.isArray(written?.fn)
-          ? lambda(closure(written.fn, written.gives, { words: {} }) as Closure, values)
-          : evaluate(gives, { words: {}, args: values });
-      });
+      return after(bind(input ?? [], given, offers), (bound) => argOf(body, { bound, up, offers }));
     });
   }
 
@@ -383,95 +345,7 @@ export function evaluator(field: Field) {
     return after(all(Object.values(arg).map(varsIn)), (found) => [...new Set(found.flat())]);
   }
 
-  // ---- The earlier form
-
-  function lambda(fn: Closure, values: Value[]): Maybe<Value> {
-    const words = Object.fromEntries((fn.fn as string[]).map((word, i) => [word, values[i] ?? null]));
-    return evaluate(fn.gives as Expression, { words, up: fn.scope as Scope });
-  }
-
-  function evaluate(expression: Expression, scope: Scope = { words: {} }): Maybe<Value> {
-    if (++steps > most) throw new Error(`a read takes at most ${most.toLocaleString("en")} steps`);
-    return form(expression, scope);
-  }
-
-  function form(expression: Expression, scope: Scope): Maybe<Value> {
-    if (expression === null || typeof expression !== "object") return expression ?? null;
-    if (Array.isArray(expression)) throw new Error("a list is written { list: [ … ] }");
-
-    if ("$ref" in expression) return { $ref: expression.$ref };
-    if ("var" in expression) return wordIn(scope, expression.var);
-    if ("arg" in expression) return argumentIn(scope, expression.arg);
-    if ("fn" in expression) return closure(expression.fn, expression.gives, scope);
-    if ("?" in expression)
-      throw new Error(`?${expression["?"]} is a pattern's variable, and stands only within find`);
-    if ("list" in expression) return all(expression.list.map((each) => evaluate(each, scope)));
-    if ("record" in expression) {
-      const entries = Object.entries(expression.record);
-      return after(all(entries.map(([, each]) => evaluate(each, scope))), (values) =>
-        Object.fromEntries(entries.map(([key], i) => [key, values[i]!])),
-      );
-    }
-
-    if ("call" in expression) {
-      const id = expression.call.$ref;
-      const written = expression.with ?? [];
-
-      return after(functionOf(id), ({ native }) => {
-        if (native && structural[native]) return structural[native]!(written, writtenIn(scope));
-        if (native && lazy[native]) return lazy[native]!(written.map((each) => deferred(each, scope)));
-
-        return after(all(written.map((each) => evaluate(each, scope))), (values) =>
-          called(id, values.map(valueGiven), []),
-        );
-      });
-    }
-
-    throw new Error(`not an expression: ${JSON.stringify(expression).slice(0, 80)}`);
-  }
-
-  // What a lazy native is given for an expression: worked out when asked, and a record's
-  // one field alone when a case asks for it.
-  function deferred(expression: Expression, scope: Scope): Deferred {
-    const record = (expression as { record?: Record<string, Expression> } | null)?.record;
-    return Object.assign(() => evaluate(expression, scope), {
-      key: (key: string) => (record && key in record ? evaluate(record[key]!, scope) : undefined),
-    });
-  }
-
-  // How find and explain read an expression of the earlier form: a fact { list: [3] },
-  // a clause a call, and a test a lambda of the variables it reads.
-  function writtenIn(scope: Scope): Written {
-    return {
-      value: (arg) => evaluate(arg as Expression, scope),
-      fact: (arg) => {
-        const list = (arg as { list?: unknown } | null)?.list;
-        return Array.isArray(list) && list.length === 3 ? list : undefined;
-      },
-      fields: (arg) => (arg as { record?: Record<string, unknown> } | null)?.record,
-      called: (arg) => {
-        const call = arg as { call?: { $ref?: string }; with?: unknown[] } | null;
-        const id = call?.call?.$ref;
-        if (!id) return undefined;
-        return after(field.holon(id), (kept) =>
-          kept ? after(functionOf(id), ({ native }) => ({ native, given: call!.with ?? [] })) : undefined,
-        );
-      },
-      test: (arg) => {
-        const words = (arg as { fn?: unknown } | null)?.fn;
-        if (!Array.isArray(words)) return undefined;
-        return after(evaluate(arg as Expression, scope), (fn) => ({
-          names: words as string[],
-          holds: (values: Value[]) => calling.apply(fn, values),
-        }));
-      },
-    };
-  }
-
-  return {
-    give: (gives: unknown) => argOf(gives, root),
-    evaluate: (expression: Expression) => evaluate(expression),
-  };
+  return { give: (gives: unknown) => argOf(gives, root) };
 }
 
 // A finding by id, kept for the rest of the read, and shared while it waits.
@@ -505,20 +379,9 @@ function boundIn(frame: Frame | undefined, key: string): Value | undefined {
   return undefined;
 }
 
-function wordIn(scope: Scope | undefined, word: string): Value {
-  for (let at = scope; at; at = at.up) if (word in at.words) return at.words[word]!;
-  throw new Error(`${word} is not a word any lambda around it takes`);
-}
-
-function argumentIn(scope: Scope | undefined, place: number): Value {
-  for (let at = scope; at; at = at.up) if (at.args) return at.args[place] ?? null;
-  throw new Error("an argument is given only within a function of one's own");
-}
-
-// A value as it leaves the engine: a lambda as the words it takes, a function held where
-// it was written as its id.
+// A value as it leaves the engine: a function held where it was written as its id.
 function outward(value: Value): Value {
-  if (isClosure(value)) return { function: typeof value.fn === "string" ? value.fn : value.fn.join(", ") };
+  if (isClosure(value)) return { function: value.fn };
   if (Array.isArray(value)) return value.map(outward);
   if (typeof value === "object" && value !== null && !isRef(value))
     return Object.fromEntries(Object.entries(value).map(([key, inner]) => [key, outward(inner)]));

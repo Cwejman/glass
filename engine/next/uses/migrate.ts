@@ -13,8 +13,9 @@
 //   each function written in the field, its gives a body over placeholders;
 //   each statistic's gives, the earliest form, functions called by their names;
 //   each mount a use of its component, keeping its id, its offer a list of refs;
-//   each component's template a list of held uses; and each board's widgets, each
-//     showing a held use.
+//   each component's template a list of held uses; each board's widgets, each
+//     showing a held use; and
+//   the natives parse and print, a pair, each naming the other its reverse.
 //
 // Expressions are found where the types that hold them say, never by searching text:
 // many words of the field say "call". A placeholder is optional where the field already
@@ -394,33 +395,10 @@ export async function migrate(
       })),
   ];
 
-  // The types made stand beside the language's others, in the whole that holds them.
-  const holder = (
-    await keptAll(
-      field,
-      (await field.facts({ a: "$holds", v: { $ref: fnType.id } })).map(({ e }) => e),
-    )
-  )[0]?.holon;
-  if (made.length && !holder) throw new Error(`nothing in ${ships} holds the type function`);
-
   if (made.length || retyped.length) {
-    // Beside the type function, under the key the whole holds it by.
-    const key = Object.keys(holder?.body ?? {}).find(
-      (key) =>
-        Array.isArray(holder!.body[key]) &&
-        (holder!.body[key] as unknown[]).some((each) => isRef(each) && each.$ref === fnType.id),
-    );
-    if (made.length && !key) throw new Error(`the whole holding the type function holds it in no list`);
-    const holds = [
-      ...((holder?.body[key!] ?? []) as unknown[]),
-      ...made.map(({ id }) => ({ $ref: id, $holds: true })),
-    ];
+    // The types made stand beside the type function, in the whole that holds it.
     const ids = await commit({
-      holons: [
-        ...made,
-        ...retyped,
-        ...(made.length ? [{ ...holder!, body: { ...holder!.body, [key!]: holds } }] : []),
-      ],
+      holons: [...made, ...retyped, ...(made.length ? [await besideIn(field, fnType.id, made)] : [])],
       into: ships,
       says: "The language's types: use, and the kinds of value a placeholder takes; a function gaining its input, its body and its reverse",
     });
@@ -453,6 +431,16 @@ export async function migrate(
   };
   // The inputs written, to be marked optional once every use is known.
   const inputs = new Map<string, Link[]>();
+
+  // The pair parse and print, beside the language's other natives.
+  if (![...natives.values()].includes("parse")) {
+    const native = functions.find(({ holon, store }) => store === ships && holon.body.native);
+    if (!native) throw new Error(`${ships} ships no native for parse and print to stand beside`);
+
+    const change = changeOf(ships);
+    const pair = textPair(language, change.mint);
+    change.holons.push(...pair, await besideIn(field, native.holon.id, pair.slice(0, 2)));
+  }
 
   for (const { holon, store } of functions) {
     const { gives, takes, ...body } = holon.body;
@@ -561,6 +549,51 @@ export async function migrate(
       },
     };
   }
+}
+
+// The natives parse and print, each the other's reverse, and their placeholders.
+function textPair(language: Language, mint: () => string): Holon[] {
+  const [parse, print, text, read] = [mint(), mint(), mint(), mint()];
+  const native = (name: string, says: string, input: string, reverse: string): Holon => ({
+    id: name === "parse" ? parse : print,
+    instance: [language.function],
+    name,
+    body: { native: name, says, input: [{ $ref: input, $holds: true }], reverse: { $ref: reverse } },
+  });
+
+  return [
+    native(
+      "parse",
+      "A text read into uses: a read, { gives, holons }, its uses carried under handles, as a read gives them or a change commits them.",
+      text,
+      print,
+    ),
+    native("print", "A read, { gives, holons }, said as text: the reverse of parse.", read, parse),
+    { id: text, instance: [language.string], name: "text", body: {} },
+    { id: read, instance: [language.record], name: "read", body: {} },
+  ];
+}
+
+// The whole holding a holon, holding beside it the holons given, in the list it holds
+// it in.
+async function besideIn(field: Field, id: string, holons: readonly Holon[]): Promise<Holon> {
+  const facts = await field.facts({ a: "$holds", v: { $ref: id } });
+  const whole = (
+    await keptAll(
+      field,
+      facts.map(({ e }) => e),
+    )
+  )[0]?.holon;
+  if (!whole) throw new Error(`nothing holds ${id}`);
+
+  const key = Object.keys(whole.body).find(
+    (key) =>
+      Array.isArray(whole.body[key]) && whole.body[key].some((each) => isRef(each) && each.$ref === id),
+  );
+  if (!key) throw new Error(`${whole.name ?? whole.id} holds ${id} in no list`);
+
+  const held = holons.map(({ id }) => ({ $ref: id, $holds: true }));
+  return { ...whole, body: { ...whole.body, [key]: [...(whole.body[key] as unknown[]), ...held] } };
 }
 
 // A handle for each holon a change brings into being, ~1 on.

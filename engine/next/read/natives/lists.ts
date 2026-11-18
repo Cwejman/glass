@@ -3,10 +3,9 @@
 // once for every item. What a function gives each item is worked out for all items at
 // once, so the stores are asked together, and waited on only where it must be.
 
-import type { Value } from "../../../../language/expression.ts";
+import { keyOf, list, order, same, truly, type Value } from "../values.ts";
 import { after, all, each as folded } from "../maybe.ts";
 import type { Calling, Native } from "./natives.ts";
-import { keyOf, list, order, same, truly } from "../values.ts";
 
 export function lists({ apply }: Calling): Record<string, Native> {
   const each = (items: Value, fn: Value) => all(list(items).map((item) => apply(fn, [item])));

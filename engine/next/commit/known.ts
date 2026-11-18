@@ -1,14 +1,16 @@
 // What the field knows of a change, read all at once before anything is planned: which
 // stores keep each holon it names, the holons it refers to, what its uses apply and are
-// given, what holds what it writes, what refers to what goes, the root of the store a
-// holon nothing holds would go to, and the types each written store admits. Every read judging makes is here; what follows from them is pure, in
-// plan.ts and rules.ts.
+// given, the functions naming one it writes as their reverse, what holds what it writes,
+// what refers to what goes, the root of the store a holon nothing holds would go to, and
+// the types each written store admits. Every read judging makes is here; what follows
+// from them is pure, in plan.ts and rules.ts.
 
 import { isId } from "../../../integrations/glass/store.ts";
 import type { Holon } from "../../../stores/store.ts";
 import type { Field } from "../read/field.ts";
-import { inputOf, isUseType, kindsIn, type Kinds } from "../read/input.ts";
+import { inputOf, isFunctionType, isUseType, kindsIn, type Kinds } from "../read/input.ts";
 import { references } from "../read/natives/holons.ts";
+import { isRef } from "../read/values.ts";
 import type { Change } from "./change.ts";
 import { anyLoose, looseStore } from "./plan.ts";
 
@@ -19,8 +21,11 @@ export type Known = {
   kept: ReadonlyMap<string, readonly string[]>;
   // The holons of the field the change refers to, as types or by reference; and, for
   // each use it writes, the types of what it applies and is given, and the placeholders
-  // of the function it applies, with their types.
+  // of the function it applies, with their types; and the types of each function a
+  // function it writes names as its reverse.
   referred: ReadonlyMap<string, Holon>;
+  // The functions of the field naming one the change writes as their reverse.
+  reversing: readonly Holon[];
   // The kinds of value a placeholder may take, as the field has them.
   kinds: Kinds;
   // The holons of the field holding a holon the change writes.
@@ -46,7 +51,11 @@ export async function knownOf(field: Field, stores: Known["stores"], change: Cha
       ([, names]) => names.length,
     ),
   );
-  const referred = await appliedBy(field, change.holons, await referredBy(field, change.holons));
+  const referred = await reversedBy(
+    field,
+    change.holons,
+    await appliedBy(field, change.holons, await referredBy(field, change.holons)),
+  );
   const into = looseStore({ stores }, change);
   const root = into && anyLoose(change.holons, { referred, kept }) ? await rootIn(field, into) : undefined;
   if (root) kept.set(root.id, await field.keepers(root.id));
@@ -55,6 +64,7 @@ export async function knownOf(field: Field, stores: Known["stores"], change: Cha
     stores,
     kept,
     referred: root ? new Map([...referred, ...(await referredBy(field, [root]))]) : referred,
+    reversing: await reversing(field, change.holons, referred),
     kinds: await kindsIn(field),
     holding: await holdingOf(
       field,
@@ -101,6 +111,33 @@ async function appliedBy(field: Field, holons: readonly Holon[], referred: Reado
 }
 
 const isUse = (type: Holon | undefined) => Boolean(type && isUseType(type));
+
+// The types of each function the holons given name as their reverse, so judging knows
+// whether each is a function.
+async function reversedBy(field: Field, holons: readonly Holon[], referred: ReadonlyMap<string, Holon>) {
+  const named = holons.flatMap(({ body }) => (isRef(body.reverse) ? [referred.get(body.reverse.$ref)] : []));
+  const types = named.flatMap((holon) => holon?.instance.filter((type) => !referred.has(type)) ?? []);
+
+  return new Map([...referred, ...(await holonsOf(field, types))]);
+}
+
+// The functions of the field naming as their reverse one of the functions given.
+async function reversing(field: Field, holons: readonly Holon[], referred: ReadonlyMap<string, Holon>) {
+  const functions = holons.filter(
+    ({ id, instance }) =>
+      isId(id) && instance.some((type) => referred.has(type) && isFunctionType(referred.get(type)!)),
+  );
+  const facts = await Promise.all(functions.map(({ id }) => field.facts({ a: "reverse", v: { $ref: id } })));
+
+  return [
+    ...(
+      await holonsOf(
+        field,
+        facts.flat().map(({ e }) => e),
+      )
+    ).values(),
+  ];
+}
 
 // The holons of the field holding those given.
 async function holdingOf(field: Field, ids: readonly string[]) {

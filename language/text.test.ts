@@ -337,29 +337,36 @@ async function storeOf(holons: Holon[]) {
   return { stores: new Map([["glass", { store }]]), heads: { glass: reply.accepted } };
 }
 
-describe("a text read into uses is worked out as its earlier form is", () => {
-  const texts = [
-    `add(2, 3)`,
-    `[1, 2, 3] | map(x => add(x, x))`,
-    `[1, 2] | map(x => {n: x, twice: add(x, x)})`,
-    `[1, 2] | map(x => x)`,
-    `[1, 2] | map(x => map([10, 20], y => add(x, y)))`,
-    `if(lt(1, 2), "yes", "no")`,
-    `@Notes.text`,
-    `find(?h, [?h, "instance", @note])`,
-    `find(?h, [?h, "name", ?n], n => eq(n, "note"))`,
-    `find(?h, [?h, "name", ?n], not([?h, "instance", @note])) | size`,
+describe("a text read into uses is worked out", () => {
+  const texts: [string, unknown][] = [
+    [`add(2, 3)`, 5],
+    [`[1, 2, 3] | map(x => add(x, x))`, [2, 4, 6]],
+    [
+      `[1, 2] | map(x => {n: x, twice: add(x, x)})`,
+      [
+        { n: 1, twice: 2 },
+        { n: 2, twice: 4 },
+      ],
+    ],
+    [`[1, 2] | map(x => x)`, [1, 2]],
+    [
+      `[1, 2] | map(x => map([10, 20], y => add(x, y)))`,
+      [
+        [11, 21],
+        [12, 22],
+      ],
+    ],
+    [`if(lt(1, 2), "yes", "no")`, "yes"],
+    [`@Notes.text`, "Glass holds holons"],
+    [`find(?h, [?h, "instance", @note])`, [{ $ref: id(5) }]],
+    [`find(?h, [?h, "name", ?n], n => eq(n, "note"))`, [{ $ref: id(4) }]],
+    // Every named holon but the one note.
+    [`find(?h, [?h, "name", ?n], not([?h, "instance", @note])) | size`, stored.length - 1],
   ];
 
-  for (const text of texts)
+  for (const [text, value] of texts)
     test(text, async () => {
       const { stores, heads } = await storeOf(stored);
-      const tree = syntax(text);
-      const earlier = await evaluate({ gives: toExpression(tree, storedNames) }, stores, heads);
-      const now = await evaluate(toRead(tree, storedNames), stores, heads);
-
-      expect(earlier).not.toHaveProperty("problem");
-      expect(now).not.toHaveProperty("problem");
-      expect((now as { value: unknown }).value).toEqual((earlier as { value: unknown }).value);
+      expect(await evaluate(toRead(syntax(text), storedNames), stores, heads)).toMatchObject({ value });
     });
 });

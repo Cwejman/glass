@@ -2,12 +2,12 @@ import { afterAll, describe, expect, test } from "bun:test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { Expression, Value } from "../../../language/expression.ts";
 import { contentOf, hashOf, partOf } from "../../../stores/act.ts";
 import type { Act, Head, Holon, Store } from "../../../stores/store.ts";
 import { folderStorage } from "../../../stores/strata/storage/folder.ts";
 import { strata } from "../../../stores/strata/strata.ts";
 import { evaluate } from "./evaluate.ts";
+import type { Value } from "./values.ts";
 
 const made: string[] = [];
 afterAll(() => made.forEach((at) => rmSync(at, { recursive: true, force: true })));
@@ -64,6 +64,8 @@ const natives = [
   "mul",
   "join",
   "eq",
+  "parse",
+  "print",
 ];
 const fn = (name: string) => id(10 + natives.indexOf(name));
 const kinds = { value: id(3), number: id(4), string: id(5), list: id(6) };
@@ -99,13 +101,9 @@ const type = { id: id(100), instance: [], name: "note", mould: {}, body: {} };
 const note = { id: id(101), instance: [id(100)], name: "Notes", body: { text: "Glass holds holons" } };
 const home = { id: id(200), instance: [], name: "Home", body: { parts: [ref(101, true)], see: ref(100) } };
 
-const call = (name: string, ...given: Expression[]): Expression => ({
-  call: { $ref: fn(name) },
-  with: given,
-});
 const v = (name: string) => ({ "?": name });
 
-// The holons a read carries in the use form, each under a handle: uses, functions held
+// The holons a read carries, each under a handle: uses, functions held
 // where they are written, and their placeholders.
 type Link = { $ref: string; $holds?: boolean; $optional?: boolean };
 
@@ -197,140 +195,6 @@ async function field(more: { name: string; holons: Holon[] }[] = []) {
 }
 
 describe("reading over stores", () => {
-  test("values, lists and lambdas are worked out as ever", async () => {
-    const read = await field();
-    const twice = { fn: ["x"], gives: call("add", { var: "x" }, { var: "x" }) };
-
-    expect((await read(call("map", { list: [1, 2, 3] }, twice))).value).toEqual([2, 4, 6]);
-  });
-
-  test("a holon is read from the store that keeps it, and says so", async () => {
-    const read = await field();
-
-    expect((await read(call("get", ref(101), "store"))).value).toBe("notes");
-    expect((await read(call("get", ref(101), "text"))).value).toBe("Glass holds holons");
-    expect((await read(call("get", ref(999), "text"))).value).toBeNull();
-  });
-
-  test("a whole is read a layer at a time, each layer one question of every store", async () => {
-    const read = await field();
-    const answer = await read(call("whole", ref(200)));
-
-    expect(Object.keys((answer.value as { holons: object }).holons).sort()).toEqual([id(101), id(200)]);
-    expect(read.asked.holon).toBeUndefined();
-    // Each turn's holons asked of all three stores together: the function, its type, the
-    // whole, its parts and their types, five turns in all.
-    expect(read.asked.holons).toBe(5 * 3);
-  });
-
-  test("an answer names the stores it asked: every store, for every holon", async () => {
-    const read = await field();
-
-    expect((await read(1)).asked).toEqual([]);
-    expect((await read(call("get", ref(101), "text"))).asked.sort()).toEqual(["glass", "home", "notes"]);
-  });
-
-  test("a holon two stores keep differently is said to have diverged, the first store's answering", async () => {
-    const read = await field([
-      { name: "other", holons: [{ ...note, body: { text: "Glass is otherwise" } }] },
-    ]);
-    const answer = await read(call("get", ref(101), "text"));
-
-    expect(answer).toMatchObject({ value: "Glass holds holons", diverged: [id(101)] });
-    expect((await read(call("get", ref(100), "name"))).diverged).toBeUndefined();
-  });
-
-  test("what refers to a holon is found in every store", async () => {
-    const read = await field();
-
-    expect((await read(call("in", ref(101)))).value).toEqual([{ key: "parts", from: ref(200), holds: true }]);
-    expect((await read(call("children", ref(200)))).value).toEqual([ref(101)]);
-  });
-
-  test("a pattern is joined across stores", async () => {
-    const read = await field();
-    const found = call(
-      "find",
-      { record: { whole: v("w"), part: v("p") } },
-      { list: [v("w"), "$holds", v("p")] },
-      { list: [v("p"), "instance", ref(100)] },
-    );
-
-    expect((await read(found)).value).toEqual([{ whole: ref(200), part: ref(101) }]);
-  });
-
-  test("a word said is found under its key, and not is held to what was found", async () => {
-    const read = await field();
-    const saying = (word: string) => call("find", v("h"), call("said", v("h"), "text", word));
-
-    expect((await read(saying("HOLDS"))).value).toEqual([ref(101)]);
-    expect(
-      idsOf(
-        (
-          await read(
-            call(
-              "find",
-              v("h"),
-              { list: [v("h"), "name", v("n")] },
-              call("not", { list: [v("h"), "instance", ref(1)] }),
-              call("not", { list: [v("h"), "instance", ref(100)] }),
-            ),
-          )
-        ).value,
-      ),
-    ).toEqual(untyped);
-  });
-
-  test("the words a holon known says are found with no word given; with neither known, it is refused", async () => {
-    const read = await field();
-
-    expect((await read(call("find", v("w"), call("said", ref(101), "text", v("w"))))).value).toEqual([
-      "glass",
-      "holds",
-      "holons",
-    ]);
-    expect(
-      (
-        await read(
-          call(
-            "find",
-            v("w"),
-            { list: [v("h"), "instance", ref(100)] },
-            call("said", v("h"), "text", v("w")),
-          ),
-        )
-      ).value,
-    ).toEqual(["glass", "holds", "holons"]);
-    expect(await read(call("find", v("w"), call("said", v("h"), "text", v("w"))))).toMatchObject({
-      problem: expect.stringContaining("a word known or a holon known"),
-    });
-  });
-
-  test("a store not yet written holds nothing, and is asked all the same", async () => {
-    const read = await field([{ name: "empty", holons: [] }]);
-    const answer = await read(call("get", ref(999), "text"));
-
-    expect(answer.value).toBeNull();
-    expect(answer.asked).toContain("empty");
-  });
-
-  test("a store's log is its commits, newest first", async () => {
-    const read = await field();
-
-    expect((await read(call("size", call("log", "notes")))).value).toBe(1);
-    expect((await read(call("log", "nowhere"))).value).toEqual([]);
-  });
-
-  test("what would scan every holon is refused, saying what to write instead", async () => {
-    const read = await field();
-
-    expect(await read(call("everything"))).toMatchObject({
-      problem: expect.stringContaining("scanned every holon"),
-    });
-  });
-});
-
-describe("reading uses", () => {
   test("values, lists and lambdas are worked out", async () => {
     const read = await field();
     const { holons, use, placeholder, function: lambda } = carried();
@@ -351,13 +215,28 @@ describe("reading uses", () => {
     expect((await read(ref(101))).value).toEqual(ref(101));
   });
 
-  test("a whole is read a layer at a time", async () => {
+  test("a whole is read a layer at a time, each layer one question of every store", async () => {
     const read = await field();
     const { holons, use } = carried();
     const answer = await read(use("whole", ref(200)), holons);
 
     expect(Object.keys((answer.value as { holons: object }).holons).sort()).toEqual([id(101), id(200)]);
     expect(read.asked.holon).toBeUndefined();
+    // Each turn's holons asked of all three stores together: the use's type, the function
+    // and its type, then the whole, its parts and their types, six turns in all.
+    expect(read.asked.holons).toBe(6 * 3);
+  });
+
+  test("an answer names the stores it asked: every store, for every holon", async () => {
+    const read = await field();
+    const { holons, use } = carried();
+
+    expect((await read(1)).asked).toEqual([]);
+    expect((await read(use("get", ref(101), "text"), holons)).asked.sort()).toEqual([
+      "glass",
+      "home",
+      "notes",
+    ]);
   });
 
   test("a holon two stores keep differently is said to have diverged", async () => {
@@ -420,22 +299,36 @@ describe("reading uses", () => {
     expect((await read(found, holons)).value).toEqual([ref(100)]);
   });
 
-  test("the words a holon known says are found with no word given", async () => {
+  test("the words a holon known says are found with no word given; with neither known, it is refused", async () => {
+    const read = await field();
+    const { holons, use } = carried();
+    const words = ["glass", "holds", "holons"];
+
+    expect((await read(use("find", v("w"), use("said", ref(101), "text", v("w"))), holons)).value).toEqual(
+      words,
+    );
+    const typed = use("find", v("w"), [v("h"), "instance", ref(100)], use("said", v("h"), "text", v("w")));
+    expect((await read(typed, holons)).value).toEqual(words);
+    expect(await read(use("find", v("w"), use("said", v("h"), "text", v("w"))), holons)).toMatchObject({
+      problem: expect.stringContaining("a word known or a holon known"),
+    });
+  });
+
+  test("a store not yet written holds nothing, and is asked all the same", async () => {
+    const read = await field([{ name: "empty", holons: [] }]);
+    const { holons, use } = carried();
+    const answer = await read(use("get", ref(999), "text"), holons);
+
+    expect(answer.value).toBeNull();
+    expect(answer.asked).toContain("empty");
+  });
+
+  test("a store's log is its commits, newest first, and what would scan every holon is refused", async () => {
     const read = await field();
     const { holons, use } = carried();
 
-    expect((await read(use("find", v("w"), use("said", ref(101), "text", v("w"))), holons)).value).toEqual([
-      "glass",
-      "holds",
-      "holons",
-    ]);
-  });
-
-  test("a store's log, and what would scan every holon refused", async () => {
-    const read = await field([{ name: "empty", holons: [] }]);
-    const { holons, use } = carried();
-
     expect((await read(use("size", use("log", "notes")), holons)).value).toBe(1);
+    expect((await read(use("log", "nowhere"), holons)).value).toEqual([]);
     expect((await read(use("everything"), holons)).problem).toContain("scanned every holon");
   });
 
@@ -488,6 +381,27 @@ describe("reading uses", () => {
     });
     expect((await read(use(held([value], use("get", value, "fn")), given), holons)).value).toBeNull();
     expect((await read(pointer(given), holons)).value).toBe(2);
+  });
+
+  test("parse gives a read of uses as a value, and print, its reverse, says it again", async () => {
+    const read = await field();
+    const { holons, use } = carried();
+    const texts = [
+      "add(1, 2)",
+      `map([1, 2, 3], x => add(x, mul(x, 2)))`,
+      `find(?h, [?h, "name", ?n], not([?h, "instance", @${id(1)}]), eq(?n, "note"))`,
+      `[@${id(101)}.text, {sum: add(1, 2)}]`,
+    ];
+
+    expect((await read(use("parse", "add(1, 2)"), holons)).value).toEqual({
+      gives: { $ref: "~1", $holds: true },
+      holons: [{ id: "~1", instance: [id(2)], body: { fn: { $ref: fn("add") }, args: [1, 2] } }],
+    });
+    for (const text of texts) expect((await read(use("print", use("parse", text)), holons)).value).toBe(text);
+    expect((await read(use("parse", "add(1,"), holons)).problem).toBe(
+      "an expression begins here, at 7 of “add(1,”",
+    );
+    expect((await read(use("print", 3), holons)).value).toBeNull();
   });
 
   test("a use naming no function is refused", async () => {

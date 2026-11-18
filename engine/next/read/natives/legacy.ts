@@ -3,11 +3,10 @@
 // everything, types, store, search, named and since, are not carried here: no store is
 // asked for every holon, so each is refused, naming what to write instead.
 
-import { isRef, type Value } from "../../../../language/expression.ts";
+import { isRef, list, type Value } from "../values.ts";
 import type { Calling, Native } from "./natives.ts";
 import { holdersOf, references } from "./holons.ts";
 import { inOrder } from "./sets.ts";
-import { list } from "../values.ts";
 
 const unread = (name: string, instead: string) => () => {
   throw new Error(`${name} scanned every holon of the field, which is not read; ${instead}`);

@@ -4,12 +4,11 @@
 // What refers to a holon is the one thing it cannot say of itself, so the stores are
 // asked for it, by the facts that refer to it.
 
-import { isRef, ref, type Value } from "../../../../language/expression.ts";
+import { isRecord, isRef, list, type Rec, ref, truly, type Value } from "../values.ts";
 import type { Holon } from "../../../../stores/store.ts";
 import type { Field } from "../field.ts";
 import { after } from "../maybe.ts";
 import type { Calling, Native } from "./natives.ts";
-import { isRecord, list, truly, type Rec } from "../values.ts";
 import { values } from "./values.ts";
 
 // A reference in a body, under its top key, and whether it holds.

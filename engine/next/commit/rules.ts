@@ -37,6 +37,8 @@ export type Judged = {
   kinds: Kinds;
   holding: readonly Holon[];
   referring: readonly Holon[];
+  // The functions of the field naming one the change writes as their reverse.
+  reversing: readonly Holon[];
 };
 
 // The rules, in the order their problems are said.
@@ -52,6 +54,7 @@ const rules = {
   placeholdersAreHoles,
   optionalOnlyInInput,
   argsFitInput,
+  pairsNameEachOther,
   readOnlyRefuses,
   storesAdmit,
   referencesResolve,
@@ -263,6 +266,40 @@ function argsFitInput(seen: Seen) {
     const found = isRef(arg) && known(arg.$ref);
     return found ? `@${said(found)}` : JSON.stringify(arg).slice(0, 60);
   }
+}
+
+// Two functions are a pair, each the reverse of the other, only where each names the
+// other: a function names as its reverse a function naming it back, and is named so by
+// none it does not name back.
+function pairsNameEachOther(seen: Seen) {
+  const { known, holonIn } = seen;
+  const reverseOf = (holon: Holon | undefined) => {
+    const reverse = holon?.body.reverse;
+    return isRef(reverse) ? reverse.$ref : undefined;
+  };
+  const changed = new Set(seen.landing.map(({ holon }) => holon.id));
+  const naming = [
+    ...seen.landing.map(({ holon }) => holon),
+    ...seen.reversing.filter(({ id }) => !changed.has(id)),
+  ];
+
+  return eachHolon(seen, ({ holon }) => {
+    const reverse = reverseOf(holon);
+    const found = reverse === undefined ? undefined : known(reverse);
+    const named = naming.filter((other) => reverseOf(other) === holon.id && other.id !== reverse);
+
+    return [
+      reverse !== undefined && !found ? `its reverse ${reverse} is not in the field` : undefined,
+      found && !found.applicable ? `its reverse ${said(found)} is not a function` : undefined,
+      found?.applicable && reverseOf(holonIn(reverse!)) !== holon.id
+        ? `its reverse ${said(found)} does not name it back: two functions are a pair only where each names the other`
+        : undefined,
+      ...named.map(
+        (other) =>
+          `${other.name ?? other.id} names it as its reverse, and it does not name ${other.name ?? other.id} back`,
+      ),
+    ];
+  });
 }
 
 const said = ({ holon }: Known) => holon.name ?? holon.id;

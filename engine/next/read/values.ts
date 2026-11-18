@@ -5,16 +5,24 @@
 // total: given what it cannot use, it gives null or nothing, never fails.
 
 import { canonical } from "../../../integrations/glass/canonical.ts";
-import { isRef, type Value } from "../../../language/expression.ts";
 
-// A lambda as a value: a function held where it was written, by its id, or the words it
-// takes and what it gives, in the earlier form; and what was around where it was
-// written. Only the evaluator makes one, so nothing written as data can pass for one.
-export type Closure = { fn: string | string[]; gives: unknown; scope: unknown };
+// What a read gives: values as JSON has them, and holons by reference.
+export type Ref = { $ref: string };
+export type Value = null | boolean | number | string | Ref | Value[] | { [key: string]: Value };
+
+export const isRef = (value: unknown): value is Ref =>
+  typeof value === "object" && value !== null && typeof (value as Ref).$ref === "string";
+
+export const ref = ($ref: string): Ref => ({ $ref });
+
+// A lambda as a value: a function held where it was written, by its id, and the frame
+// it was written in. Only the evaluator makes one, so nothing written as data can pass
+// for one.
+export type Closure = { fn: string; frame: unknown };
 const closures = new WeakSet<object>();
 
-export function closure(fn: string | string[], gives: unknown, scope: unknown): Value {
-  const made = { fn, gives, scope };
+export function closure(fn: string, frame: unknown): Value {
+  const made = { fn, frame };
   closures.add(made);
   return made as unknown as Value;
 }

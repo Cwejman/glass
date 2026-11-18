@@ -6,10 +6,9 @@
 // Not over a set would be every other holon of the field, which no store is asked for,
 // so it is refused.
 
-import { isRef, ref, type Value } from "../../../../language/expression.ts";
+import { isRef, list, ref, truly, type Value } from "../values.ts";
 import { after, each } from "../maybe.ts";
 import type { Lazy } from "./natives.ts";
-import { list, truly } from "../values.ts";
 
 const isSet = (value: unknown) => isRef(value) || (Array.isArray(value) && value.every(isRef));
 const idsOf = (value: unknown) => new Set(list(value).flatMap((each) => (isRef(each) ? [each.$ref] : [])));

@@ -49,6 +49,7 @@ export function planOf(known: Known, change: Change): Plan {
       kinds: known.kinds,
       holding: known.holding,
       referring: known.referring,
+      reversing: known.reversing,
     }),
     ...(touched.length ? [] : [changesNothing]),
   ];

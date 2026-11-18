@@ -1,9 +1,8 @@
 // The natives of values: those that need nothing but the values they are given. Every
 // one is total: given what it cannot use, it gives null or nothing, never fails.
 
-import type { Value } from "../../../../language/expression.ts";
+import { isRecord, kind, list, order, same, type Value } from "../values.ts";
 import { wordsOf } from "../words.ts";
-import { isRecord, kind, list, order, same } from "../values.ts";
 
 const number = (value: unknown) => (typeof value === "number" ? value : undefined);
 

@@ -12,7 +12,7 @@ import { isRoot } from "../engine/moulds.ts";
 import { namesUsed, type Names, type Route } from "./text.ts";
 
 // What walking a route needs to know of the field.
-type Known = {
+export type Known = {
   named(name: string): string[];
   storeOf(id: string): string | undefined;
   holdersOf(id: string): string[];
@@ -21,7 +21,7 @@ type Known = {
 
 // The holons a route reaches: the first name among all, or among a store's level, what
 // nothing in it holds but its root; each next name among what the one before holds.
-function reached({ store, names }: Route, known: Known) {
+export function reached({ store, names }: Route, known: Known) {
   const atLevel = (id: string) =>
     known.storeOf(id) === store &&
     !known.holdersOf(id).some((whole) => known.storeOf(whole) === store && !known.isRoot(whole));
