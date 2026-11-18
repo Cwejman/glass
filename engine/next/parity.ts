@@ -1,6 +1,8 @@
 // The new engine held to the earlier one: every store this repository holds converted
-// into strata, then each expression below asked of both, the earlier engine over the
-// stores as they are kept and the new one over the strata, and every answer compared.
+// into strata, its expressions written again as uses (uses/migrate.ts), then each text
+// below asked of both, the earlier engine over the stores as they are kept, read into the
+// earlier form, and the new one over the strata, read into uses, and every answer
+// compared. A text names holons by their names, never by the ids the migration mints.
 // What differs is shown, and the run fails; a native the new engine refuses, saying what
 // to write instead, is counted apart.
 //
@@ -14,7 +16,7 @@ import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { namesAsked } from "../../language/names.ts";
-import { parse } from "../../language/text.ts";
+import { parse, syntax, toRead } from "../../language/text.ts";
 import { sameThread, workers } from "../../runtime/runtime.ts";
 import { storesHere } from "../../stores.ts";
 import type { Store } from "../../stores/store.ts";
@@ -23,6 +25,7 @@ import { folderStorage } from "../../stores/strata/storage/folder.ts";
 import { strata } from "../../stores/strata/strata.ts";
 import { localEngine } from "../serve/local.ts";
 import { engine } from "./engine.ts";
+import { migrate } from "./uses/migrate.ts";
 
 // Each a question the field is asked today, one native or function at least once.
 const asked = [
@@ -147,13 +150,19 @@ const earlier = await localEngine();
 const runtime = inWorkers ? workers() : sameThread();
 const storeCode = new URL("../../stores/strata/machine.ts", import.meta.url);
 const next = await engine({ workers: runtime, count: inWorkers ? 4 : 2 });
-for (const name of names)
-  await next.mount(
-    name,
-    inWorkers
-      ? await runtime.run<Store>(storeCode, { folder: join(folder, name) })
-      : strata(folderStorage(join(folder, name))),
-  );
+const mounted = new Map<string, Store>();
+for (const name of names) {
+  const store = inWorkers
+    ? await runtime.run<Store>(storeCode, { folder: join(folder, name) })
+    : strata(folderStorage(join(folder, name)));
+  await next.mount(name, store, { write: true });
+  mounted.set(name, store);
+}
+
+const migrating = performance.now();
+const { language, commits } = await migrate(next, mounted);
+for (const { store, holons } of commits) console.log(`${store}: ${holons} holons written as uses`);
+console.log(`migrated in ${Math.round(performance.now() - migrating)} ms`);
 
 // An answer as JSON with records' keys in order, so two answers compare as text.
 const canonical = (value: unknown): string =>
@@ -169,21 +178,24 @@ const differ: string[] = [];
 const turnedAway: string[] = [];
 
 for (const text of asked) {
-  const expression = await namesAsked(earlier.read, text)
-    .then((names) => parse(text, names))
+  const read = await namesAsked(earlier.read, text)
+    .then((names) => ({
+      expression: parse(text, names),
+      uses: toRead(syntax(text), { ...names, typeOf: (name) => language[name as keyof typeof language] }),
+    }))
     .catch((error: Error) => error);
-  if (expression instanceof Error) {
+  if (read instanceof Error) {
     differ.push(text);
-    console.log(`UNREAD          ${text}\n        ${expression.message}`);
+    console.log(`UNREAD          ${text}\n        ${read.message}`);
     continue;
   }
-  const was = await earlier.read({ value: expression }).then(
+  const was = await earlier.read({ value: read.expression }).then(
     (value) => ({ value }),
     (error: Error) => ({ problem: error.message }),
   );
 
   const from = performance.now();
-  const answer = await next.read({ gives: expression });
+  const answer = await next.read(read.uses);
   const ms = Math.round(performance.now() - from);
   const now: { value: unknown } | { problem: string } =
     "value" in answer ? { value: answer.value } : { problem: answer.problem };

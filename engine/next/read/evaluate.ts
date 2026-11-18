@@ -37,10 +37,12 @@ import { fieldOf, type Field, type Stores } from "./field.ts";
 import {
   fits,
   inputOf,
+  kindsIn,
   knownAs,
   matched,
   placeAs,
   type Given,
+  type Kinds,
   type Known,
   type Link,
   type Place,
@@ -164,6 +166,13 @@ export function evaluator(field: Field) {
       }),
   );
 
+  // The kinds of value a placeholder may take, asked of the field once a read, and only
+  // when a placeholder is first held to what it is given.
+  let kindsFound: Maybe<Kinds> | undefined;
+  const kinds = () => (kindsFound ??= kindsIn(field).then((found) => (kindsFound = found)));
+  const fitting = (types: Holon[], given: Given) =>
+    after(kinds(), (kinds) => fits(types, given, known, kinds));
+
   const calling: Calling = { field, apply: (fn, values) => applied(fn, values.map(valueGiven), []) };
   const { given: byValue, lazy, structural } = natives(calling);
 
@@ -273,23 +282,36 @@ export function evaluator(field: Field) {
   // What a native is given: in the order of its input, where it has one.
   function valuesOf(input: Place[] | undefined, given: Given[], offers: readonly Ref[]): Maybe<Value[]> {
     if (!input) return all(given.map(({ value }) => value()));
-    return after(bind(input, given, offers), (bound) => input.map(({ id }) => bound.get(id) ?? null));
+    return placed(input, given, offers);
   }
 
-  // The placeholders of an input bound by id to what is given, in order. An optional one
-  // is passed over where what comes next does not fit its type, or nothing is left; one
-  // left unfilled is given the nearest offer of its type, else null.
+  // The placeholders of an input bound by id to what is given.
   function bind(input: Place[], given: Given[], offers: readonly Ref[]): Maybe<Map<string, Value>> {
-    const fit = (place: Place, arg: Given) => fits(place.types, arg, known);
+    return after(
+      placed(input, given, offers),
+      (values) => new Map(input.map(({ id }, i) => [id, values[i]!])),
+    );
+  }
 
-    return after(matched(input, given, fit), ({ taking }) => {
-      const values = input.map((place, i) => {
-        const arg = given[taking[i] ?? given.length];
-        if (!arg) return offered(place, offers);
-        return place.itself ? (arg.written as Value) : arg.value();
-      });
-      return after(all(values), (values) => new Map(input.map(({ id }, i) => [id, values[i]!])));
-    });
+  // What each placeholder of an input is given, in order. An optional one is passed over
+  // where what comes next does not fit its type, or nothing is left; one left unfilled is
+  // given the nearest offer of its type, else null. Where none is optional, each takes
+  // the next, and nothing need be held to a type.
+  function placed(input: Place[], given: Given[], offers: readonly Ref[]): Maybe<Value[]> {
+    const fit = (place: Place, arg: Given) => fitting(place.types, arg);
+    const taking = input.some(({ optional }) => optional)
+      ? after(matched(input, given, fit), ({ taking }) => taking)
+      : input.map((_, i) => i);
+
+    return after(taking, (taking) =>
+      all(
+        input.map((place, i) => {
+          const arg = given[taking[i] ?? given.length];
+          if (!arg) return offered(place, offers);
+          return place.itself ? (arg.written as Value) : arg.value();
+        }),
+      ),
+    );
   }
 
   function offered(place: Place, offers: readonly Ref[]): Maybe<Value> {
@@ -297,7 +319,7 @@ export function evaluator(field: Field) {
       offers,
       null as Value,
       (found, offer) =>
-        found ?? after(fits(place.types, valueGiven(offer), known), (fit) => (fit ? offer : null)),
+        found ?? after(fitting(place.types, valueGiven(offer)), (fit) => (fit ? offer : null)),
     );
   }
 

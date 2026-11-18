@@ -193,6 +193,18 @@ describe("the engine", () => {
     expect(committed).toMatchObject({ refused: [{ rule: "bodyFits", id: "~1" }] });
   });
 
+  test("untyped data is not wrong: a whole of no type lands, and is changed", async () => {
+    const glassEngine = await started();
+    const whole = (holds: unknown[], id = "~1") => ({
+      holons: [{ id, instance: [], name: "kept", body: { holds } }] as Holon[],
+      says: "a whole of no type",
+      at: {},
+    });
+    const { ids } = landed(await glassEngine.commit(whole([])));
+
+    expect("landed" in (await glassEngine.commit(whole([ref(100)], ids["~1"]!)))).toBe(true);
+  });
+
   test("nothing goes into a store only read", async () => {
     const glassEngine = await started();
     const committed = await glassEngine.commit(note("not here", {}, { into: "glass" }));

@@ -6,6 +6,7 @@
 
 import { isRef, type Ref, type Value } from "../../../language/expression.ts";
 import type { Holon } from "../../../stores/store.ts";
+import type { Field } from "./field.ts";
 import { after, each, type Maybe } from "./maybe.ts";
 import { isClosure, kind } from "./values.ts";
 
@@ -29,9 +30,31 @@ export const isUseType = (type: Holon) => declares(type, "fn") && declares(type,
 export const isFunctionType = (type: Holon) =>
   declares(type, "input") || (type.name === "function" && Boolean(type.mould));
 
-// The kinds of value a placeholder may take, each known by its type's name.
-export const kinds = new Set(["value", "number", "string", "boolean", "list", "record", "holon"]);
-export const isKind = (type: Holon) => Boolean(type.name && kinds.has(type.name));
+// The kinds of value a placeholder may take: types glass ships, each of an empty mould.
+// They are found once, a read or a commit, by their names, and known after by their ids,
+// so a type of another store that shares a kind's name, as main's list does, is never
+// taken for it. A field without them has no kinds: a placeholder's type is then held to
+// what is given as any type is, by what it is an instance of.
+export const kindNames = ["value", "number", "string", "boolean", "list", "record", "holon"] as const;
+export type Kind = (typeof kindNames)[number];
+export type Kinds = ReadonlyMap<string, Kind>;
+
+const isKindName = (name: string | undefined): name is Kind => kindNames.includes(name as Kind);
+const shipped = (type: Holon) =>
+  isKindName(type.name) && Boolean(type.mould) && !Object.keys(type.mould!).length;
+
+// The kinds among the holons given.
+export const kindsAmong = (holons: Iterable<Holon>): Kinds =>
+  new Map([...holons].flatMap((type) => (shipped(type) ? [[type.id, type.name as Kind] as const] : [])));
+
+// The kinds of a field, asked once of its facts by name.
+export async function kindsIn(field: Pick<Field, "facts" | "holon">): Promise<Kinds> {
+  const named = await Promise.all(kindNames.map((name) => field.facts({ a: "name", v: name })));
+  const found = await Promise.all(named.flat().map(async ({ e }) => (await field.holon(e))?.holon));
+  return kindsAmong(found.filter((type): type is Holon => Boolean(type)));
+}
+
+export const isKind = (type: Holon, kinds: Kinds) => kinds.has(type.id);
 
 export const knownAs = (holon: Holon, types: Holon[]): Known => ({
   holon,
@@ -80,15 +103,17 @@ export function fits(
   types: readonly Holon[],
   given: Given,
   known: (id: string) => Maybe<Known | null>,
+  kinds: Kinds,
 ): Maybe<boolean> {
   if (!types.length) return true;
-  return each(types, false as boolean, (fit, type) => fit || fitsType(type, given, known));
+  return each(types, false as boolean, (fit, type) => fit || fitsType(type, given, known, kinds));
 }
 
 function fitsType(
   type: Holon,
   { written, value }: Given,
   known: (id: string) => Maybe<Known | null>,
+  kinds: Kinds,
 ): Maybe<boolean> {
   const holonIs = (ref: unknown, is: (found: Known) => boolean) =>
     isRef(ref) && after(known(ref.$ref), (found) => Boolean(found && is(found)));
@@ -96,7 +121,8 @@ function fitsType(
   if (isUseType(type)) return holonIs(written, (found) => found.use);
   return after(value(), (value) => {
     if (isFunctionType(type)) return isClosure(value) || holonIs(value, (found) => found.applicable);
-    if (isKind(type)) return type.name === "value" || kind(value) === type.name;
+    const of = kinds.get(type.id);
+    if (of) return of === "value" || kind(value) === of;
     return holonIs(value, (found) => found.holon.instance.includes(type.id));
   });
 }

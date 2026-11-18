@@ -7,7 +7,7 @@
 import { isId } from "../../../integrations/glass/store.ts";
 import type { Holon } from "../../../stores/store.ts";
 import type { Field } from "../read/field.ts";
-import { inputOf, isUseType } from "../read/input.ts";
+import { inputOf, isUseType, kindsIn, type Kinds } from "../read/input.ts";
 import { references } from "../read/natives/holons.ts";
 import type { Change } from "./change.ts";
 import { anyLoose, looseStore } from "./plan.ts";
@@ -21,6 +21,8 @@ export type Known = {
   // each use it writes, the types of what it applies and is given, and the placeholders
   // of the function it applies, with their types.
   referred: ReadonlyMap<string, Holon>;
+  // The kinds of value a placeholder may take, as the field has them.
+  kinds: Kinds;
   // The holons of the field holding a holon the change writes.
   holding: readonly Holon[];
   // The holons of the field that refer to what goes.
@@ -53,6 +55,7 @@ export async function knownOf(field: Field, stores: Known["stores"], change: Cha
     stores,
     kept,
     referred: root ? new Map([...referred, ...(await referredBy(field, [root]))]) : referred,
+    kinds: await kindsIn(field),
     holding: await holdingOf(
       field,
       [...kept.keys()].filter((id) => !gone.includes(id)),

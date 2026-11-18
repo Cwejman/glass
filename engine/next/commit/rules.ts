@@ -9,10 +9,11 @@ import { bodyProblem, isRef, mouldProblem, references, type Mould } from "../../
 import {
   fits,
   inputOf,
-  isKind,
+  kindsAmong,
   knownAs,
   matched,
   placeAs,
+  type Kinds,
   type Known,
   type Matched,
   type Place,
@@ -32,6 +33,8 @@ export type Judged = {
   // judging its uses reads; those of the field holding what it writes; and those that
   // refer to what goes.
   referred: ReadonlyMap<string, Holon>;
+  // The kinds of value a placeholder may take, as the field has them.
+  kinds: Kinds;
   holding: readonly Holon[];
   referring: readonly Holon[];
 };
@@ -43,7 +46,6 @@ const rules = {
   refsAreIds,
   idsAreTheEngines,
   goneIsKept,
-  typedOrAType,
   mouldsAreSound,
   typesHaveMoulds,
   bodyFits,
@@ -73,7 +75,9 @@ export function judge(judged: Judged): Problem[] {
         )
       : null;
   };
-  const seen: Seen = { ...judged, holonIn, known, holes: new Set(holes) };
+  // The kinds of the field, and those the change ships.
+  const kinds = new Map([...judged.kinds, ...kindsAmong(byId.values())]);
+  const seen: Seen = { ...judged, kinds, holonIn, known, holes: new Set(holes) };
 
   return Object.entries(rules).flatMap(([rule, find]) => find(seen).map((found) => ({ rule, ...found })));
 }
@@ -139,12 +143,6 @@ function goneIsKept({ gone, kept }: Seen): Found[] {
     .map((id) => ({ id, says: "it is kept in no store, so it cannot go" }));
 }
 
-function typedOrAType(seen: Seen) {
-  return eachHolon(seen, ({ holon }) => [
-    !holon.mould && !holon.instance.length ? "it is an instance of nothing" : undefined,
-  ]);
-}
-
 function mouldsAreSound(seen: Seen) {
   return eachHolon(seen, ({ holon }) => {
     const problem = holon.mould && mouldProblem(holon.mould);
@@ -204,23 +202,22 @@ function optionalOnlyInInput(seen: Seen) {
 // a use naming no fn is found one by what shows it. What a use gives, and a placeholder
 // of the kind value or holon, is known only as it is read, so fits anything.
 function argsFitInput(seen: Seen) {
-  const { known } = seen;
+  const { known, kinds } = seen;
+  const kindOf = (type: Holon) => kinds.get(type.id);
   const unread = (found: Known) =>
-    found.use || found.types.some((type) => isKind(type) && ["value", "holon"].includes(type.name!));
+    found.use || found.types.some((type) => ["value", "holon"].includes(kindOf(type)!));
 
   const fit = (place: Place, arg: unknown) => {
     const found = isRef(arg) ? known(arg.$ref) : null;
     if (isRef(arg) && (!found || unread(found))) return true;
     // A placeholder of another kind stands for a value of that kind.
-    if (found?.types.some(isKind))
+    if (found?.types.some(kindOf))
       return (
         !place.types.length ||
-        place.types.some(
-          (type) => (isKind(type) && type.name === "value") || found.types.some(({ id }) => id === type.id),
-        )
+        place.types.some((type) => kindOf(type) === "value" || found.types.some(({ id }) => id === type.id))
       );
 
-    return fits(place.types, { written: arg, value: () => arg as never }, known) as boolean;
+    return fits(place.types, { written: arg, value: () => arg as never }, known, kinds) as boolean;
   };
 
   return eachHolon(seen, ({ holon }) => {
