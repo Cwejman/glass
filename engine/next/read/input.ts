@@ -27,6 +27,11 @@ const declares = (type: Holon, key: string) => Boolean(type.mould && key in type
 export const isUseType = (type: Holon) => declares(type, "fn") && declares(type, "args");
 export const isFunctionType = (type: Holon) => declares(type, "input");
 
+// A component is a function drawn rather than worked out: applied, it gives a drawing of
+// itself (values.ts), or what its body gives where it holds one. Its type is known by
+// its name, as glass ships it.
+export const isComponentType = (type: Holon) => isFunctionType(type) && type.name === "component";
+
 // The kinds of value a placeholder may take: types glass ships, each of an empty mould.
 // They are found once, a read or a commit, by their names, and known after by their ids,
 // so a type of another store that shares a kind's name, as main's list does, is never

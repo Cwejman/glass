@@ -146,10 +146,10 @@ export async function host({ port, stores, home, site }: Hosting) {
     return Bun.file(join(site, path.endsWith("/") ? `${path}index.html` : path));
   }
 
-  // The page, told its engine is here; a page that names no site is no page to start.
+  // The page, told its engine is here where it names a site to start from; a page that
+  // names none starts an engine of its own, as the page on the new engine does.
   async function pageOf(file: Bun.BunFile) {
     const page = await file.text();
-    if (!page.includes("data-site=")) throw new Error(`${file.name} names no site to start from`);
     return page.replace("data-site=", `data-engine="${enginePath}" data-site=`);
   }
 

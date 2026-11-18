@@ -403,11 +403,84 @@ describe("reading over stores", () => {
     );
     expect((await read(use("print", 3), holons)).value).toBeNull();
   });
+});
 
-  test("a use naming no function is refused", async () => {
+describe("drawing", () => {
+  // The component type, and a component of it taking a number, carried by the read.
+  function components() {
+    const made = carried();
+    const type: Holon = {
+      id: "~component",
+      instance: [],
+      name: "component",
+      mould: { input: { says: "", shape: { list: "ref" }, holds: true, optional: true } },
+      body: {},
+    };
+    const n = made.placeholder(kinds.number, "n");
+    const view: Holon = { id: "~view", instance: [type.id], body: { input: [{ ...n, $holds: true }] } };
+    made.holons.push(type, view);
+    const drawn = (given: Value[], at: string[]) => ({ $draw: { $ref: view.id }, given, at });
+
+    // A component holding a body: what it gives, drawn a step further along.
+    const framing = (body: unknown): Link => {
+      const holon = { id: `~framing${made.holons.length}`, instance: [type.id], body: { input: [], body } };
+      made.holons.push(holon);
+      return { $ref: holon.id };
+    };
+    return { ...made, view: { $ref: view.id }, drawn, framing };
+  }
+
+  test("a component applied gives a drawing: itself, what it was given bound to its input, and where", async () => {
     const read = await field();
-    const holons = [{ id: "~1", instance: [id(2)], body: { args: [] } }];
+    const { holons, use, view, drawn } = components();
+    const gives = use(view, use("add", 1, 2));
 
-    expect((await read({ $ref: "~1" }, holons)).problem).toContain("names no function");
+    expect((await read(gives, holons)).value).toEqual(drawn([3], [gives.$ref]));
+    expect((await read([gives, 4], holons)).value).toEqual([drawn([3], [gives.$ref]), 4]);
+  });
+
+  test("a component holding a body gives what its body gives, its drawings placed a step further", async () => {
+    const read = await field();
+    const { holons, use, view, drawn, framing } = components();
+    const [first, second] = [use(view, 1), use(view, 2)];
+    const gives = use(framing([first, second]));
+
+    expect((await read(gives, holons)).value).toEqual([
+      drawn([1], [gives.$ref, first.$ref]),
+      drawn([2], [gives.$ref, second.$ref]),
+    ]);
+  });
+
+  test("a component applied within a lambda is placed where the lambda was written", async () => {
+    const read = await field();
+    const { holons, use, placeholder, function: held, view, drawn } = components();
+    const x = placeholder(kinds.number, "x");
+    const each = use(view, x);
+
+    expect((await read(use("map", [1, 2], held([x], each)), holons)).value).toEqual([
+      drawn([1], [each.$ref]),
+      drawn([2], [each.$ref]),
+    ]);
+  });
+
+  test("a use naming no function is drawn, its component null, for what draws it to find one", async () => {
+    const read = await field();
+    const { holons, use } = components();
+    holons.push({ id: "~bare", instance: [id(2)], body: { args: [ref(101), use("add", 1, 1)] } });
+
+    expect((await read({ $ref: "~bare" }, holons)).value).toEqual({
+      $draw: null,
+      given: [ref(101), 2],
+      at: ["~bare"],
+    });
+  });
+
+  test("a drawing is no record to the natives, and a use naming what is no function is refused", async () => {
+    const read = await field();
+    const { holons, use, view } = components();
+    holons.push({ id: "~odd", instance: [id(2)], body: { fn: "add", args: [] } });
+
+    expect((await read(use("get", use(view, 1), "given"), holons)).value).toBeNull();
+    expect((await read({ $ref: "~odd" }, holons)).problem).toContain("names no function");
   });
 });

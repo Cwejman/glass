@@ -30,10 +30,33 @@ export function closure(fn: string, frame: unknown): Value {
 export const isClosure = (value: unknown): value is Closure =>
   typeof value === "object" && value !== null && closures.has(value);
 
+// A drawing: a component applied, what the use gave it bound to the component's input,
+// and where it stands, the uses walked through component bodies from the root down to
+// the one that applied it. A use naming no function is drawn too, its component null,
+// for what draws it to find one by type. Only the evaluator makes one, as it does a
+// lambda, so nothing written as data can pass for one; as it leaves the engine it is
+// the record it holds.
+export type Drawing = { $draw: Ref | null; given: Value[]; at: string[] };
+const drawings = new WeakSet<object>();
+
+export function drawing($draw: Ref | null, given: Value[], at: readonly string[]): Value {
+  const made = { $draw, given, at: [...at] };
+  drawings.add(made);
+  return made as unknown as Value;
+}
+
+export const isDrawing = (value: unknown): value is Drawing =>
+  typeof value === "object" && value !== null && drawings.has(value);
+
 export type Rec = { [key: string]: Value };
 
 export const isRecord = (value: unknown): value is Rec =>
-  typeof value === "object" && value !== null && !Array.isArray(value) && !isRef(value) && !isClosure(value);
+  typeof value === "object" &&
+  value !== null &&
+  !Array.isArray(value) &&
+  !isRef(value) &&
+  !isClosure(value) &&
+  !isDrawing(value);
 
 export const truly = (value: unknown) => value !== null && value !== undefined && value !== false;
 
@@ -42,7 +65,8 @@ export const list = (value: unknown): Value[] =>
   Array.isArray(value) ? value : value === null || value === undefined ? [] : [value as Value];
 
 // What a value is, said as one string, the same for values that are the same: a holon
-// by its id, a lambda by itself, everything else as its canonical text.
+// by its id, a lambda by itself, a drawing by what it draws, everything else as its
+// canonical text.
 const lambdas = new WeakMap<object, string>();
 let lambdasSeen = 0;
 
@@ -52,6 +76,8 @@ export function keyOf(value: unknown): string {
     if (!lambdas.has(value)) lambdas.set(value, `λ${lambdasSeen++}`);
     return lambdas.get(value)!;
   }
+  if (isDrawing(value))
+    return `draw(${keyOf(value.$draw)},${keyOf(value.given)},${JSON.stringify(value.at)})`;
   if (Array.isArray(value)) return `[${value.map(keyOf).join(",")}]`;
   if (isRecord(value))
     return `{${Object.keys(value)
@@ -77,6 +103,7 @@ export function kind(value: unknown) {
   if (Array.isArray(value)) return "list";
   if (isRef(value)) return "holon";
   if (isClosure(value)) return "function";
+  if (isDrawing(value)) return "drawing";
 
   return typeof value === "object" ? "record" : typeof value;
 }

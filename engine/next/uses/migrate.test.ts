@@ -358,9 +358,9 @@ describe("a field migrated", () => {
     });
     expect(await asking(call(print, call(parse, "size([1, 2])")))).toMatchObject({ value: "size([1, 2])" });
 
-    // The mount is a use now, naming no component, so what it gives is refused.
+    // The mount is a use now, naming no component, so it is drawn for one to be found.
     expect(await next.read({ gives: { $ref: id(32) } })).toMatchObject({
-      problem: "the use entry names no function, fn, to apply",
+      value: { $draw: null, given: [[{ $ref: id(40) }, { $ref: id(41) }]], at: [id(32)] },
     });
 
     expect((await migrate(next, new Map([["glass", store]]))).commits).toEqual([]);

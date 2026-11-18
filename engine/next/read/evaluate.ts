@@ -19,6 +19,12 @@
 // often, or JSON with held uses at their places, as a lambda's may be. A native is one
 // of three: given values; lazy, given what it is given unworked, to work out only what it
 // needs; or reading what it is given as written, as a pattern is.
+//
+// A component is a function drawn rather than worked out. Applied, it gives a drawing
+// (values.ts): itself, what it was given bound to its input, and where it stands, the
+// uses walked through component bodies from the root to the one applying it. One that
+// holds a body gives what its body gives, worked out a step further along. A use that
+// names no function is drawn too, its component null, for what draws it to find one.
 
 import type { Holon } from "../../../stores/store.ts";
 import type { Heads, Read } from "../engine.ts";
@@ -26,6 +32,7 @@ import { fieldOf, type Field, type Stores } from "./field.ts";
 import {
   fits,
   inputOf,
+  isComponentType,
   kindsIn,
   knownAs,
   matched,
@@ -39,11 +46,32 @@ import {
 import { natives, type Calling, type Deferred, type Written } from "./natives/natives.ts";
 import { after, all, each, waits, type Maybe } from "./maybe.ts";
 import { isVar } from "./patterns.ts";
-import { closure, isClosure, isRecord, isRef, type Rec, type Ref, type Value } from "./values.ts";
+import {
+  closure,
+  drawing,
+  isClosure,
+  isDrawing,
+  isRecord,
+  isRef,
+  ref,
+  type Rec,
+  type Ref,
+  type Value,
+} from "./values.ts";
 
-// The placeholders bound where a use is worked out, by id, and those around them; and
-// the offers nearest first, for an optional placeholder left unfilled.
-export type Frame = { bound: ReadonlyMap<string, Value>; up?: Frame; offers: readonly Ref[] };
+// The placeholders bound where a use is worked out, by id, and those around them; the
+// offers nearest first, for an optional placeholder left unfilled; and the uses walked
+// through component bodies to reach it, from the root.
+export type Frame = {
+  bound: ReadonlyMap<string, Value>;
+  up?: Frame;
+  offers: readonly Ref[];
+  at: readonly string[];
+};
+
+// Where a function is applied: the uses walked to the frame applying it, and the use
+// applying it, where a use does.
+type Where = { around: readonly string[]; use?: string; up?: Frame };
 
 // The most steps one read may take, so a function that never ends is stopped.
 const most = 10_000_000;
@@ -69,13 +97,13 @@ export async function evaluate(
   }
 }
 
-type Function = { name: string; native?: string; input?: Place[]; body?: unknown };
+type Function = { name: string; native?: string; input?: Place[]; body?: unknown; component: boolean };
 
-type Use = { fn: Link; args: unknown[]; offer: Ref[] };
+type Use = { fn: Link | null; args: unknown[]; offer: Ref[] };
 
 export function evaluator(field: Field) {
   let steps = 0;
-  const root: Frame = { bound: new Map(), offers: [] };
+  const root: Frame = { bound: new Map(), offers: [], at: [] };
 
   const known = remembered(
     (id): Maybe<Known | null> =>
@@ -98,7 +126,7 @@ export function evaluator(field: Field) {
       after(known(id), (found) => {
         if (!found) throw new Error(`the function ${id} is not in the field`);
 
-        const { holon, applicable } = found;
+        const { holon, types, applicable } = found;
         const name = holon.name ?? id;
         if (!applicable) throw new Error(`${name} is not a function`);
 
@@ -109,6 +137,7 @@ export function evaluator(field: Field) {
           native: typeof native === "string" ? native : undefined,
           input,
           body,
+          component: types.some(isComponentType),
         }));
       }),
   );
@@ -128,10 +157,11 @@ export function evaluator(field: Field) {
           args?: unknown;
           offer?: unknown;
         };
-        if (!isRef(fn)) throw new Error(`the use ${found?.holon.name ?? id} names no function, fn, to apply`);
+        if (fn !== undefined && fn !== null && !isRef(fn))
+          throw new Error(`the use ${found?.holon.name ?? id} names no function, fn, to apply`);
 
         return {
-          fn,
+          fn: fn ?? null,
           args: Array.isArray(args) ? args : [],
           offer: Array.isArray(offer) ? offer.filter(isRef).map(({ $ref }) => ({ $ref })) : [],
         };
@@ -145,7 +175,10 @@ export function evaluator(field: Field) {
   const fitting = (types: Holon[], given: Given) =>
     after(kinds(), (kinds) => fits(types, given, known, kinds));
 
-  const calling: Calling = { field, apply: (fn, values) => applied(fn, values.map(valueGiven), []) };
+  const calling: Calling = {
+    field,
+    apply: (fn, values) => applied(fn, values.map(valueGiven), [], { around: [] }),
+  };
   const { given: byValue, lazy, structural } = natives(calling);
 
   // ---- Uses
@@ -183,18 +216,25 @@ export function evaluator(field: Field) {
     if (++steps > most) throw new Error(`a read takes at most ${most.toLocaleString("en")} steps`);
 
     return after(useOf(id), ({ fn, args, offer }) => {
-      const at = offer.length ? { bound: new Map(), up: frame, offers: [...offer, ...frame.offers] } : frame;
-      const given = () => args.map((arg) => givenAt(arg, at));
+      const within: Frame = offer.length
+        ? { bound: new Map(), up: frame, offers: [...offer, ...frame.offers], at: frame.at }
+        : frame;
+      const given = () => args.map((arg) => givenAt(arg, within));
 
-      return after(argOf(fn, at), (applying) => {
-        if (isClosure(applying)) return applied(applying, given(), at.offers);
+      if (!fn)
+        return after(all(given().map(({ value }) => value())), (values) =>
+          drawing(null, values, [...frame.at, id]),
+        );
+
+      return after(argOf(fn, within), (applying) => {
+        if (isClosure(applying)) return applied(applying, given(), within.offers, { around: frame.at });
         if (!isRef(applying))
           throw new Error(`the use ${id} applies ${JSON.stringify(applying)}, not a function`);
 
         return after(functionOf(applying.$ref), ({ native }) => {
-          if (native && structural[native]) return structural[native]!(args, writtenAt(at));
-          if (native && lazy[native]) return lazy[native]!(args.map((arg) => deferredAt(arg, at)));
-          return applied(applying, given(), at.offers);
+          if (native && structural[native]) return structural[native]!(args, writtenAt(within));
+          if (native && lazy[native]) return lazy[native]!(args.map((arg) => deferredAt(arg, within)));
+          return applied(applying, given(), within.offers, { around: frame.at, use: id });
         });
       });
     });
@@ -217,27 +257,38 @@ export function evaluator(field: Field) {
 
   // ---- Functions
 
-  // A function, as a value or a holon, given its arguments, and the offers around.
-  function applied(fn: unknown, given: Given[], offers: readonly Ref[]): Maybe<Value> {
-    if (isClosure(fn)) return called(fn.fn, given, (fn.frame as Frame).offers, fn.frame as Frame);
+  // A function, as a value or a holon, given its arguments, the offers around, and where
+  // it is applied. A lambda is worked out where it was written.
+  function applied(fn: unknown, given: Given[], offers: readonly Ref[], where: Where): Maybe<Value> {
+    if (isClosure(fn)) {
+      const up = fn.frame as Frame;
+      return called(fn.fn, given, up.offers, { around: up.at, up });
+    }
 
     if (!isRef(fn)) return null;
-    return after(field.holon(fn.$ref), (kept) => (kept ? called(fn.$ref, given, offers) : null));
+    return after(field.holon(fn.$ref), (kept) => (kept ? called(fn.$ref, given, offers, where) : null));
   }
 
   // A function kept as a holon, given its arguments: its body worked out in a frame of
-  // its placeholders bound, within the frame it was written in, if it was held there.
-  function called(id: string, given: Given[], offers: readonly Ref[], up?: Frame): Maybe<Value> {
-    return after(functionOf(id), ({ name, native, input, body }) => {
+  // its placeholders bound, within the frame it was written in, if it was held there. A
+  // component is drawn where it is applied, or its body worked out a step further there.
+  function called(id: string, given: Given[], offers: readonly Ref[], where: Where): Maybe<Value> {
+    const { around, use, up } = where;
+    const place = use === undefined ? around : [...around, use];
+
+    return after(functionOf(id), ({ name, native, input, body, component }) => {
       if (native && structural[native])
         throw new Error(`${name} reads what it is given as written, so it is called, not given to another`);
       if (native && lazy[native])
         return after(all(given.map(({ value }) => value())), (values) => lazy[native]!(values.map(valued)));
       if (native && byValue[native]) return after(valuesOf(input, given, offers), byValue[native]!);
 
+      if (component && body === undefined)
+        return after(valuesOf(input, given, offers), (values) => drawing(ref(id), values, place));
       if (body === undefined) throw new Error(`${name} names no native and holds no body`);
 
-      return after(bind(input ?? [], given, offers), (bound) => argOf(body, { bound, up, offers }));
+      const at = component ? place : (up?.at ?? around);
+      return after(bind(input ?? [], given, offers), (bound) => argOf(body, { bound, up, offers, at }));
     });
   }
 
@@ -323,6 +374,7 @@ export function evaluator(field: Field) {
                           bound: new Map(names.map((name, i) => [`?${name}`, values[i] ?? null])),
                           up: frame,
                           offers: frame.offers,
+                          at: frame.at,
                         }),
                     }
                   : undefined,
@@ -379,9 +431,11 @@ function boundIn(frame: Frame | undefined, key: string): Value | undefined {
   return undefined;
 }
 
-// A value as it leaves the engine: a function held where it was written as its id.
+// A value as it leaves the engine: a function held where it was written as its id, a
+// drawing as the record it holds.
 function outward(value: Value): Value {
   if (isClosure(value)) return { function: value.fn };
+  if (isDrawing(value)) return { $draw: value.$draw, given: value.given.map(outward), at: value.at };
   if (Array.isArray(value)) return value.map(outward);
   if (typeof value === "object" && value !== null && !isRef(value))
     return Object.fromEntries(Object.entries(value).map(([key, inner]) => [key, outward(inner)]));

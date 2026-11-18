@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Glass</title>
+    <style>
+      :root {
+        --ink: #1d1d1b;
+        --quiet: #6b6a65;
+        --ground: #fbfaf7;
+        --link: #2b5a8a;
+        --line: #e3e0d8;
+        font:
+          17px / 1.45 system-ui,
+          sans-serif;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --ink: #e9e7e1;
+          --quiet: #9a978f;
+          --ground: #161614;
+          --link: #8db8e3;
+          --line: #33322e;
+        }
+      }
+      body {
+        margin: 0;
+        background: var(--ground);
+        color: var(--ink);
+      }
+      main {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 2rem 16px 4rem;
+      }
+      a {
+        color: var(--link);
+      }
+      h1 {
+        font:
+          600 1.8rem / 1.2 Georgia,
+          serif;
+        margin: 0 0 0.3em;
+      }
+      .drawn {
+        display: contents;
+      }
+      .meta,
+      .note {
+        color: var(--quiet);
+      }
+      .note {
+        font-style: italic;
+      }
+      .words {
+        white-space: pre-wrap;
+      }
+      .number {
+        font-variant-numeric: tabular-nums;
+      }
+      .fields {
+        display: grid;
+        grid-template-columns: max-content minmax(0, 1fr);
+        gap: 0.4em 1em;
+        margin: 0;
+      }
+      .fields dt {
+        color: var(--quiet);
+      }
+      .fields dd {
+        margin: 0;
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+      .items {
+        margin: 0;
+        padding-left: 1.4em;
+      }
+      .list {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5em;
+      }
+      .holon + .holon,
+      .list > .drawn + .drawn {
+        border-top: 1px solid var(--line);
+      }
+    </style>
+    <script type="module" src="./page.js"></script>
+  </head>
+  <body>
+    <main id="glass"></main>
+  </body>
+</html>

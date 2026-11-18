@@ -19,6 +19,7 @@ let noteId: string;
 
 beforeAll(async () => {
   await Bun.write(join(site, "index.html"), '<html lang="en" data-site="site=./stores/site/"></html>');
+  await Bun.write(join(site, "next", "index.html"), '<html lang="en"></html>');
 
   const notes = await openStore(folderFiles(folder));
   noteId = notes.minter()();
@@ -55,6 +56,11 @@ async function socketFrom(origin: string) {
 test("the page the host serves names its engine", async () => {
   const page = await (await fetch(hosted.url)).text();
   expect(page).toContain('data-engine="/engine"');
+});
+
+test("the page on the new engine is served as it is, starting an engine of its own", async () => {
+  const page = await (await fetch(`${hosted.url}next/`)).text();
+  expect(page).toBe('<html lang="en"></html>');
 });
 
 test("a socket from any other origin is refused", async () => {
