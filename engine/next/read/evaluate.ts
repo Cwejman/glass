@@ -33,10 +33,21 @@ import {
 import type { Holon } from "../../../stores/store.ts";
 import type { Heads, Read } from "../engine.ts";
 import { fieldOf, type Field, type Stores } from "./field.ts";
+import {
+  fits,
+  inputOf,
+  knownAs,
+  matched,
+  placeAs,
+  type Given,
+  type Known,
+  type Link,
+  type Place,
+} from "./input.ts";
 import { natives, type Calling, type Deferred, type Written } from "./natives/natives.ts";
 import { after, all, each, waits, type Maybe } from "./maybe.ts";
 import { isVar } from "./patterns.ts";
-import { closure, isClosure, isRecord, kind, type Closure, type Rec } from "./values.ts";
+import { closure, isClosure, isRecord, type Closure, type Rec } from "./values.ts";
 
 // What a lambda of the earlier form closes over: the words around it, and a function of
 // one's own's places.
@@ -45,9 +56,6 @@ export type Scope = { words: Record<string, Value>; up?: Scope; args?: Value[] }
 // The placeholders bound where a use is worked out, by id, and those around them; and
 // the offers nearest first, for an optional placeholder left unfilled.
 export type Frame = { bound: ReadonlyMap<string, Value>; up?: Frame; offers: readonly Ref[] };
-
-// A reference as written in a holon's body, holding or not, optional or not.
-type Link = Ref & { $holds?: boolean; $optional?: boolean };
 
 // The most steps one read may take, so a function that never ends is stopped.
 const most = 10_000_000;
@@ -83,29 +91,9 @@ export async function evaluate(
 
 const isEarlier = (gives: unknown) => isRecord(gives) && earlier.some((key) => key in (gives as object));
 
-// A holon, with its types, and what they make it.
-type Known = { holon: Holon; types: Holon[]; use: boolean; applicable: boolean };
-
-// A placeholder of a function's input: whether it may be left unfilled, its types, and
-// whether it takes a use itself rather than what the use gives.
-type Place = { id: string; optional: boolean; types: Holon[]; itself: boolean };
-
 type Function = { name: string; native?: string; input?: Place[]; body?: string; gives?: Expression };
 
 type Use = { fn: Link; args: unknown[]; offer: Ref[] };
-
-// What a function is given for one argument: as written, for a placeholder that takes a
-// use itself, and what it gives, worked out once and only if asked.
-type Given = { written: unknown; value: () => Maybe<Value> };
-
-const declares = (type: Holon, key: string) => Boolean(type.mould && key in type.mould);
-const isUseType = (type: Holon) => declares(type, "fn") && declares(type, "args");
-// The types of glass not yet given input are known by the name function until they are.
-const isFunctionType = (type: Holon) =>
-  declares(type, "input") || (type.name === "function" && Boolean(type.mould));
-
-// The kinds of value a placeholder may take, each known by its type's name.
-const kinds = new Set(["value", "number", "string", "boolean", "list", "record", "holon"]);
 
 export function evaluator(field: Field) {
   let steps = 0;
@@ -118,8 +106,10 @@ export function evaluator(field: Field) {
 
         const { holon } = kept;
         return after(all(holon.instance.map((type) => field.holon(type))), (found) => {
-          const types = found.flatMap((type) => (type ? [type.holon] : []));
-          return { holon, types, use: types.some(isUseType), applicable: types.some(isFunctionType) };
+          return knownAs(
+            holon,
+            found.flatMap((type) => (type ? [type.holon] : [])),
+          );
         });
       }),
   );
@@ -136,7 +126,8 @@ export function evaluator(field: Field) {
         const name = holon.name ?? id;
         if (!applicable) return { name, gives: body.gives };
 
-        const input = Array.isArray(body.input) ? all(body.input.filter(isRef).map(placeOf)) : undefined;
+        const links = inputOf(holon);
+        const input = links && all(links.map(placeOf));
         return after(input, (input) => ({
           name,
           native: typeof body.native === "string" ? body.native : undefined,
@@ -147,12 +138,10 @@ export function evaluator(field: Field) {
       }),
   );
 
-  function placeOf({ $ref: id, $optional }: Link): Maybe<Place> {
-    return after(known(id), (found) => {
-      if (!found) throw new Error(`the placeholder ${id} is not in the field`);
-
-      const { types } = found;
-      return { id, optional: $optional === true, types, itself: types.some(isUseType) };
+  function placeOf(link: Link): Maybe<Place> {
+    return after(known(link.$ref), (found) => {
+      if (!found) throw new Error(`the placeholder ${link.$ref} is not in the field`);
+      return placeAs(link, found);
     });
   }
 
@@ -289,50 +278,25 @@ export function evaluator(field: Field) {
   // is passed over where what comes next does not fit its type, or nothing is left; one
   // left unfilled is given the nearest offer of its type, else null.
   function bind(input: Place[], given: Given[], offers: readonly Ref[]): Maybe<Map<string, Value>> {
-    const bound = new Map<string, Value>();
+    const fit = (place: Place, arg: Given) => fits(place.types, arg, known);
 
-    const binding = each(input, 0, (next, place) => {
-      const arg = given[next];
-      return after(arg && (!place.optional || fits(place.types, arg)), (fit) =>
-        fit
-          ? after(place.itself ? (arg!.written as Value) : arg!.value(), (value) => {
-              bound.set(place.id, value);
-              return next + 1;
-            })
-          : after(offered(place, offers), (value) => {
-              bound.set(place.id, value);
-              return next;
-            }),
-      );
+    return after(matched(input, given, fit), ({ taking }) => {
+      const values = input.map((place, i) => {
+        const arg = given[taking[i] ?? given.length];
+        if (!arg) return offered(place, offers);
+        return place.itself ? (arg.written as Value) : arg.value();
+      });
+      return after(all(values), (values) => new Map(input.map(({ id }, i) => [id, values[i]!])));
     });
-    return after(binding, () => bound);
   }
 
   function offered(place: Place, offers: readonly Ref[]): Maybe<Value> {
     return each(
       offers,
       null as Value,
-      (found, offer) => found ?? after(fits(place.types, valueGiven(offer)), (fit) => (fit ? offer : null)),
+      (found, offer) =>
+        found ?? after(fits(place.types, valueGiven(offer), known), (fit) => (fit ? offer : null)),
     );
-  }
-
-  // Whether what is given fits a placeholder of these types, any of them; of none, it
-  // takes anything.
-  function fits(types: Holon[], given: Given): Maybe<boolean> {
-    if (!types.length) return true;
-    return each(types, false as boolean, (fit, type) => fit || fitsType(type, given));
-  }
-
-  function fitsType(type: Holon, { written, value }: Given): Maybe<boolean> {
-    const holonIs = (ref: unknown, is: (found: Known) => boolean) =>
-      isRef(ref) && after(known(ref.$ref), (found) => Boolean(found && is(found)));
-
-    if (isUseType(type)) return holonIs(written, (found) => found.use);
-    return after(value(), (value) => {
-      if (isFunctionType(type)) return isClosure(value) || holonIs(value, (found) => found.applicable);
-      if (type.name && kinds.has(type.name)) return type.name === "value" || kind(value) === type.name;
-      return holonIs(value, (found) => found.holon.instance.includes(type.id));
-    });
   }
 
   // ---- Patterns

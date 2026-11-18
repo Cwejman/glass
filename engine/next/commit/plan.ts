@@ -46,6 +46,7 @@ export function planOf(known: Known, change: Change): Plan {
       readOnly: new Set(known.stores.filter(({ write }) => !write).map(({ name }) => name)),
       admits: known.admits,
       referred: known.referred,
+      holding: known.holding,
       referring: known.referring,
     }),
     ...(touched.length ? [] : [changesNothing]),

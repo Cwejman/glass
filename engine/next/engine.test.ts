@@ -17,8 +17,8 @@ afterAll(() => made.forEach((at) => rmSync(at, { recursive: true, force: true })
 const id = (n: number) => String(n).padStart(15, "0");
 const ref = (n: number) => ({ $ref: id(n) });
 
-// The language's store: the types function, store and value, and the natives these
-// tests call.
+// The language's store: the types function, store, use and the kinds of value, and the
+// natives these tests call.
 const natives = ["get", "map", "size", "log", "holon"];
 const fn = (name: string) => id(10 + natives.indexOf(name));
 const glass: Holon[] = [
@@ -41,6 +41,18 @@ const glass: Holon[] = [
   },
   { id: id(3), instance: [id(2)], name: "glass", body: {} },
   { id: id(4), instance: [], name: "value", mould: {}, body: {} },
+  {
+    id: id(5),
+    instance: [],
+    name: "use",
+    mould: {
+      fn: { says: "the function it applies", shape: "ref", optional: true },
+      args: { says: "what it gives the function", shape: "json" },
+    },
+    body: {},
+  },
+  { id: id(6), instance: [], name: "number", mould: {}, body: {} },
+  { id: id(7), instance: [], name: "string", mould: {}, body: {} },
   ...natives.map((name) => ({ id: fn(name), instance: [id(1)], name, body: { native: name } })),
 ];
 
@@ -663,5 +675,100 @@ describe("names in a whole", () => {
     });
 
     expect(committed).toMatchObject({ refused: [{ rule: "namesAreOne", id: "~2" }] });
+  });
+});
+
+describe("uses", () => {
+  // A function of a number, an optional string and a note, each a placeholder of its
+  // type; the note's, of a type with a field required, held empty.
+  async function pairing() {
+    const glassEngine = await started();
+    const { ids } = landed(
+      await glassEngine.commit({
+        holons: [
+          {
+            id: "~1",
+            instance: [id(1)],
+            name: "pair",
+            body: {
+              input: [{ $ref: "~2" }, { $ref: "~3", $optional: true }, { $ref: "~4" }],
+            },
+          },
+          { id: "~2", instance: [id(6)], name: "first", body: {} },
+          { id: "~3", instance: [id(7)], name: "second", body: {} },
+          { id: "~4", instance: [id(100)], name: "third", body: {} },
+          { id: "~5", instance: [id(100)], name: "a note", body: { text: "kept" } },
+        ] as Holon[],
+        says: "a function of three placeholders, and a note",
+        at: {},
+      }),
+    );
+    const using = (...args: unknown[]) =>
+      glassEngine.commit({
+        holons: [{ id: "~1", instance: [id(5)], body: { fn: { $ref: ids["~1"]! }, args } }] as Holon[],
+        says: "a use of pair",
+        at: {},
+      });
+
+    return { glassEngine, ids, using };
+  }
+
+  test("a placeholder of a type with fields required is taken empty: it is a hole of its type", async () => {
+    const { glassEngine, ids } = await pairing();
+    const third = { id: ids["~4"]!, instance: [id(100)], name: "the third", body: {} };
+
+    expect("landed" in (await glassEngine.commit({ holons: [third], says: "renamed", at: {} }))).toBe(true);
+    expect(
+      await glassEngine.commit({ holons: [note(undefined).holons[0]!], says: "a note", at: {} }),
+    ).toMatchObject({ refused: [{ rule: "bodyFits" }] });
+    expect(
+      await glassEngine.commit({ holons: [{ ...third, body: { text: "filled" } }], says: "filled", at: {} }),
+    ).toMatchObject({ refused: [{ rule: "placeholdersAreHoles", id: ids["~4"] }] });
+  });
+
+  test("a use is taken where its args fit, an optional passed over where the next does not fit it", async () => {
+    const { ids, using } = await pairing();
+    const kept = { $ref: ids["~5"]! };
+
+    expect("landed" in (await using(1, kept))).toBe(true);
+    expect("landed" in (await using(1, "two", kept))).toBe(true);
+  });
+
+  test("a use is refused given too many args, or too few", async () => {
+    const { ids, using } = await pairing();
+
+    expect(await using(1, "two", { $ref: ids["~5"]! }, 4)).toMatchObject({
+      refused: [{ rule: "argsFitInput", id: "~1", says: "it gives pair 4 args, and pair takes at most 3" }],
+    });
+    expect(await using(1)).toMatchObject({
+      refused: [{ rule: "argsFitInput", says: "it gives pair 1 arg, and pair takes at least 2" }],
+    });
+  });
+
+  test("a use is refused an arg not of its placeholder's type, a literal or a holon", async () => {
+    const { ids, using } = await pairing();
+
+    expect(await using("one", { $ref: ids["~5"]! })).toMatchObject({
+      refused: [{ rule: "argsFitInput", says: 'it gives pair "one" for first, which takes a number' }],
+    });
+    expect(await using(1, { $ref: id(101) })).toMatchObject({
+      refused: [{ rule: "argsFitInput", says: "it gives pair @notes for third, which takes a note" }],
+    });
+  });
+
+  test("a use applies a function, or names none for what shows it to find", async () => {
+    const { glassEngine } = await pairing();
+    const use = (body: object) =>
+      glassEngine.commit({
+        holons: [{ id: "~1", instance: [id(5)], body }] as Holon[],
+        says: "a use",
+        at: {},
+      });
+
+    expect(await use({ fn: { $ref: id(101) }, args: [] })).toMatchObject({
+      refused: [{ rule: "argsFitInput", says: "it applies notes, which is not a function" }],
+    });
+    expect("landed" in (await use({ args: [] }))).toBe(true);
+    expect("landed" in (await use({ fn: { $ref: fn("size") }, args: [1, 2, 3] }))).toBe(true);
   });
 });

@@ -6,6 +6,17 @@
 import { isDerived, isId } from "../../../integrations/glass/store.ts";
 import type { Holon, Problem } from "../../../stores/store.ts";
 import { bodyProblem, isRef, mouldProblem, references, type Mould } from "../../moulds.ts";
+import {
+  fits,
+  inputOf,
+  isKind,
+  knownAs,
+  matched,
+  placeAs,
+  type Known,
+  type Matched,
+  type Place,
+} from "../read/input.ts";
 import { isHandle } from "./change.ts";
 import type { Landing } from "./plan.ts";
 
@@ -17,9 +28,11 @@ export type Judged = {
   readOnly: ReadonlySet<string>;
   // The types each store admits, where its shape names any.
   admits: ReadonlyMap<string, ReadonlySet<string>>;
-  // The holons of the field the change refers to, as types or by reference, and those
-  // of the field that refer to what goes.
+  // The holons of the field the change refers to, as types or by reference, and what
+  // judging its uses reads; those of the field holding what it writes; and those that
+  // refer to what goes.
   referred: ReadonlyMap<string, Holon>;
+  holding: readonly Holon[];
   referring: readonly Holon[];
 };
 
@@ -34,7 +47,9 @@ const rules = {
   mouldsAreSound,
   typesHaveMoulds,
   bodyFits,
+  placeholdersAreHoles,
   optionalOnlyInInput,
+  argsFitInput,
   readOnlyRefuses,
   storesAdmit,
   referencesResolve,
@@ -44,13 +59,32 @@ const rules = {
 // Every problem of a change, rule by rule.
 export function judge(judged: Judged): Problem[] {
   const byId = new Map(judged.landing.map(({ holon }) => [holon.id, holon]));
-  const seen: Seen = { ...judged, holonIn: (id) => byId.get(id) ?? judged.referred.get(id) };
+  const holonIn = (id: string) => byId.get(id) ?? judged.referred.get(id);
+  const holders = [...byId.values(), ...judged.holding.filter(({ id }) => !byId.has(id))];
+  const holes = holders.flatMap(({ body }) =>
+    references(body).flatMap(({ id, key, holds }) => (key === "input" && holds ? [id] : [])),
+  );
+  const known = (id: string) => {
+    const holon = holonIn(id);
+    return holon
+      ? knownAs(
+          holon,
+          holon.instance.flatMap((type) => holonIn(type) ?? []),
+        )
+      : null;
+  };
+  const seen: Seen = { ...judged, holonIn, known, holes: new Set(holes) };
 
   return Object.entries(rules).flatMap(([rule, find]) => find(seen).map((found) => ({ rule, ...found })));
 }
 
-// A change as a rule sees it: a holon found by id, in the change or else the field.
-type Seen = Judged & { holonIn: (id: string) => Holon | undefined };
+// A change as a rule sees it: a holon found by id, in the change or else the field, and
+// with its types; and the placeholders, those held at input, as the change leaves them.
+type Seen = Judged & {
+  holonIn: (id: string) => Holon | undefined;
+  known: (id: string) => Known | null;
+  holes: ReadonlySet<string>;
+};
 
 type Found = { id?: string; says: string };
 
@@ -127,14 +161,25 @@ function typesHaveMoulds(seen: Seen) {
 }
 
 // A body is held against its types where every one of them is a type; where one is
-// not, typesHaveMoulds says so.
+// not, typesHaveMoulds says so. A placeholder is not: it is a hole of its types.
 function bodyFits(seen: Seen) {
   return eachHolon(seen, ({ holon }) => {
+    if (seen.holes.has(holon.id)) return [];
+
     const moulds = holon.instance.map((type) => seen.holonIn(type)?.mould as Mould | undefined);
     if (!moulds.length || moulds.some((mould) => !mould)) return [];
 
     return [bodyProblem(holon.body, moulds as Mould[])];
   });
+}
+
+// A placeholder stands for what its function is given, so it holds nothing of its own.
+function placeholdersAreHoles(seen: Seen) {
+  return eachHolon(seen, ({ holon }) => [
+    seen.holes.has(holon.id) && Object.keys(holon.body).length
+      ? "it is a placeholder, a hole of its type, so its body is empty"
+      : undefined,
+  ]);
 }
 
 // A function may be given nothing for a placeholder its input marks $optional, so the
@@ -152,6 +197,80 @@ function optionalOnlyInInput(seen: Seen) {
     ];
   });
 }
+
+// A use fits the function it applies: it is a function, given no fewer args than its
+// input requires and no more than it has placeholders, each fitting the type of the one
+// it is matched to as a read binds them. A function declaring no input takes any args;
+// a use naming no fn is found one by what shows it. What a use gives, and a placeholder
+// of the kind value or holon, is known only as it is read, so fits anything.
+function argsFitInput(seen: Seen) {
+  const { known } = seen;
+  const unread = (found: Known) =>
+    found.use || found.types.some((type) => isKind(type) && ["value", "holon"].includes(type.name!));
+
+  const fit = (place: Place, arg: unknown) => {
+    const found = isRef(arg) ? known(arg.$ref) : null;
+    if (isRef(arg) && (!found || unread(found))) return true;
+    // A placeholder of another kind stands for a value of that kind.
+    if (found?.types.some(isKind))
+      return (
+        !place.types.length ||
+        place.types.some(
+          (type) => (isKind(type) && type.name === "value") || found.types.some(({ id }) => id === type.id),
+        )
+      );
+
+    return fits(place.types, { written: arg, value: () => arg as never }, known) as boolean;
+  };
+
+  return eachHolon(seen, ({ holon }) => {
+    const { fn, args: written } = holon.body;
+    const applying = known(holon.id)!.use && isRef(fn) ? known(fn.$ref) : null;
+    if (!applying || unread(applying)) return [];
+
+    const name = said(applying);
+    if (!applying.applicable) return [`it applies ${name}, which is not a function`];
+
+    const input = inputOf(applying.holon)?.map((link) => {
+      const place = known(link.$ref);
+      return place && placeAs(link, place);
+    });
+    if (!input || input.some((place) => !place)) return [];
+
+    const places = input as Place[];
+    const args = Array.isArray(written) ? written : [];
+    const required = places.filter(({ optional }) => !optional).length;
+    if (args.length < required)
+      return [`it gives ${name} ${counted(args.length)}, and ${name} takes at least ${required}`];
+    if (args.length > places.length)
+      return [`it gives ${name} ${counted(args.length)}, and ${name} takes at most ${places.length}`];
+
+    const { taking, taken } = matched(places, args, fit) as Matched;
+    return [
+      ...places.map((place, i) => {
+        const at = taking[i];
+        const placeName = said(known(place.id)!);
+        if (at === undefined) return place.optional ? undefined : `it gives ${name} nothing for ${placeName}`;
+        if (place.optional || fit(place, args[at])) return undefined;
+
+        const types = place.types.map((type) => type.name ?? type.id).join(" or ");
+        return `it gives ${name} ${shown(args[at])} for ${placeName}, which takes ${article(types)} ${types}`;
+      }),
+      taken < args.length
+        ? `it gives ${name} ${shown(args[taken])}, which no placeholder is left to take`
+        : undefined,
+    ];
+  });
+
+  function shown(arg: unknown) {
+    const found = isRef(arg) && known(arg.$ref);
+    return found ? `@${said(found)}` : JSON.stringify(arg).slice(0, 60);
+  }
+}
+
+const said = ({ holon }: Known) => holon.name ?? holon.id;
+const counted = (n: number) => (n === 1 ? "1 arg" : `${n} args`);
+const article = (word: string) => (/^[aeiou]/i.test(word) ? "an" : "a");
 
 // A holon kept in a store only read cannot be changed there, nothing new goes into one,
 // and nothing is taken out of one.
