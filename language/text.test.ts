@@ -1,5 +1,13 @@
-import { describe, expect, test } from "bun:test";
-import { parse, print, type Names } from "./text.ts";
+import { afterAll, describe, expect, test } from "bun:test";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { evaluate } from "../engine/next/read/evaluate.ts";
+import { contentOf, hashOf, partOf } from "../stores/act.ts";
+import type { Act, Holon } from "../stores/store.ts";
+import { folderStorage } from "../stores/strata/storage/folder.ts";
+import { strata } from "../stores/strata/strata.ts";
+import { parse, print, printRead, printUse, syntax, toExpression, toRead, type Names } from "./text.ts";
 
 // A small field of names: a few functions, and holons some of which share a name.
 const functions: Record<string, string> = {
@@ -12,6 +20,15 @@ const functions: Record<string, string> = {
   text: "F00000000000TXT",
   everything: "F0000000000EVRY",
   take: "F0000000000TAKE",
+  find: "F0000000000FIND",
+  not: "F00000000000NOT",
+};
+
+// The language's own types.
+const types: Record<string, string> = {
+  use: "L00000000000USE",
+  function: "L000000000FUNCT",
+  value: "L000000000VALUE",
 };
 
 const holons: { id: string; name?: string; in?: string }[] = [
@@ -39,6 +56,7 @@ const names: Names = {
   nameOf: (id) =>
     Object.entries(functions).find(([, each]) => each === id)?.[0] ??
     holons.find((holon) => holon.id === id)?.name,
+  typeOf: (name) => types[name],
 };
 
 const call = (name: string, ...given: unknown[]) => ({
@@ -145,4 +163,203 @@ describe("saying, and reading back", () => {
     expect(parsed(`?x`)).toEqual({ "?": "x" });
     expect(print(read(`[?x, "said", ?y]`), names)).toBe(`[?x, "said", ?y]`);
   });
+});
+
+// ---- Uses
+
+const reading = (text: string) => toRead(syntax(text), names);
+
+describe("reading into uses, and saying them again", () => {
+  const cases = [
+    `size(filter(type(@types/measure), m => eq(m.value, 3)))`,
+    `type(@types/measure) | filter(m => eq(m.value, 3)) | size`,
+    `map(@"The wiki", text)`,
+    `everything() | take(2)`,
+    `take(everything(), 2)`,
+    `(a, b) => map(a, x => eq(x, b))`,
+    `m => {note: m.note, "two words": [1, "x", null]}`,
+    `@P0000000000PARA`,
+    `text(@"The wiki").name`,
+    `get(1, "two words")`,
+    `(everything()) | size`,
+    `[1, -2.5, "a \\"b\\"", true, null]`,
+    `[?x, "said", ?y]`,
+  ];
+
+  for (const text of cases) {
+    test(text, () => {
+      const read = reading(text);
+      const said = printRead(read, names);
+
+      expect(said).toBe(print(parse(text, names), names));
+      expect(reading(said)).toEqual(read);
+    });
+  }
+
+  test("a call is a use carried under a handle; a pipe gives what came before first", () => {
+    expect(reading(`everything() | take(2)`)).toEqual({
+      gives: { $ref: "~1", $holds: true },
+      holons: [
+        {
+          id: "~1",
+          instance: [types.use],
+          body: { fn: { $ref: functions.take }, args: [{ $ref: "~2", $holds: true }, 2] },
+        },
+        { id: "~2", instance: [types.use], body: { fn: { $ref: functions.everything }, args: [] } },
+      ],
+    });
+    expect(reading(`3`)).toEqual({ gives: 3 });
+    expect(reading(`@"The wiki"`)).toEqual({ gives: { $ref: "W0000000000W1K1" } });
+  });
+
+  test("a lambda is a function held where it is written, its words placeholders of the kind value", () => {
+    expect(reading(`m => eq(m, 3)`)).toEqual({
+      gives: { $ref: "~1", $holds: true },
+      holons: [
+        {
+          id: "~1",
+          instance: [types.function],
+          body: { input: [{ $ref: "~2", $holds: true }], body: { $ref: "~3", $holds: true } },
+        },
+        { id: "~2", instance: [types.value], name: "m", body: {} },
+        { id: "~3", instance: [types.use], body: { fn: { $ref: functions.eq }, args: [{ $ref: "~2" }, 3] } },
+      ],
+    });
+  });
+
+  test("lists and records are JSON as they are, a held use at each place one is written", () => {
+    const { gives, holons } = reading(`{n: [1, size(2)], "two words": true}`);
+
+    expect(gives).toEqual({ n: [1, { $ref: "~1", $holds: true }], "two words": true });
+    expect(holons).toEqual([
+      { id: "~1", instance: [types.use], body: { fn: { $ref: functions.size }, args: [2] } },
+    ]);
+    expect(() => reading(`{"?": "x"}`)).toThrow("would be read as a holon or a variable");
+  });
+
+  test("within find a lambda is a test, its words the pattern's variables", () => {
+    const read = reading(`find(?n, [?h, "name", ?n], n => eq(n, "x"), not(m => eq(m, "y")))`);
+
+    expect(read.holons![0]!.body.args).toEqual([
+      { "?": "n" },
+      [{ "?": "h" }, "name", { "?": "n" }],
+      { $ref: "~2", $holds: true },
+      { $ref: "~3", $holds: true },
+    ]);
+    expect(read.holons![1]!.body.args).toEqual([{ "?": "n" }, "x"]);
+    expect(printRead(read, names)).toBe(`find(?n, [?h, "name", ?n], eq(?n, "x"), not(eq(?m, "y")))`);
+    expect(reading(printRead(read, names))).toEqual(read);
+  });
+
+  test("a stored use is said by its name where reused, and as it is written alone", () => {
+    const tally: Holon = {
+      id: "U000000000TALLY",
+      instance: [types.use],
+      name: "tally",
+      body: { fn: { $ref: functions.size }, args: [{ $ref: "W0000000000W1K1" }] },
+    };
+    const stored = (id: string) => (id === tally.id ? tally : undefined);
+    const named: Names = { ...names, holons: ({ names: [name] }) => (name === "tally" ? [tally.id] : []) };
+
+    expect(printRead({ gives: [{ $ref: tally.id }] }, named, stored)).toBe(`[@tally]`);
+    expect(printRead({ gives: { $ref: tally.id } }, names, stored)).toBe(`@${tally.id}`);
+    expect(printUse(tally.id, named, stored)).toBe(`size(@W0000000000W1K1)`);
+  });
+
+  test("the language's types not in the field, a text is not read into uses", () => {
+    expect(() => toRead(syntax(`size(1)`), { ...names, typeOf: undefined })).toThrow(
+      "type use is not in the field",
+    );
+  });
+});
+
+// ---- Uses worked out by the new engine, as the earlier form is
+
+const made: string[] = [];
+afterAll(() => made.forEach((at) => rmSync(at, { recursive: true, force: true })));
+
+const id = (n: number) => String(n).padStart(15, "0");
+
+// One store: the language's types and the natives the texts call, and a note.
+const natives = ["add", "map", "get", "find", "eq", "if", "lt", "size", "not"];
+const stored: Holon[] = [
+  {
+    id: id(1),
+    instance: [],
+    name: "function",
+    mould: { input: { says: "", shape: { list: "ref" }, holds: true, optional: true } },
+    body: {},
+  },
+  {
+    id: id(2),
+    instance: [],
+    name: "use",
+    mould: { fn: { says: "", shape: "ref" }, args: { says: "", shape: "json" } },
+    body: {},
+  },
+  { id: id(3), instance: [], name: "value", mould: {}, body: {} },
+  { id: id(4), instance: [], name: "note", mould: {}, body: {} },
+  { id: id(5), instance: [id(4)], name: "Notes", body: { text: "Glass holds holons" } },
+  ...natives.map((name, i) => ({ id: id(10 + i), instance: [id(1)], name, body: { native: name } })),
+];
+
+const storedNames: Names = {
+  functions: (name) =>
+    stored.filter((holon) => holon.name === name && holon.instance.includes(id(1))).map(({ id }) => id),
+  holons: ({ names }) => stored.filter((holon) => holon.name === names[0]).map(({ id }) => id),
+  isFunction: (each) => stored.some((holon) => holon.id === each && holon.instance.includes(id(1))),
+  nameOf: (each) => stored.find((holon) => holon.id === each)?.name,
+  typeOf: (name) => ({ function: id(1), use: id(2), value: id(3) })[name],
+};
+
+async function storeOf(holons: Holon[]) {
+  const folder = mkdtempSync(join(tmpdir(), "glass-text-"));
+  made.push(folder);
+  const store = strata(folderStorage(folder));
+  const part = partOf(holons);
+  const said = {
+    when: "2026-11-18T00:00:00.000Z",
+    at: [] as Act["at"],
+    says: "a test",
+    gone: [],
+    parts: [["glass", part && (await hashOf(part))]] as Act["parts"],
+  };
+  const reply = await store.offer({
+    ...said,
+    hash: await hashOf(contentOf(said)),
+    own: "glass",
+    holons,
+    born: holons.map((holon) => holon.id),
+    over: null,
+    touches: { ids: holons.map((holon) => holon.id), addresses: [] },
+  });
+  if (!("accepted" in reply)) throw new Error(JSON.stringify(reply));
+  return { stores: new Map([["glass", { store }]]), heads: { glass: reply.accepted } };
+}
+
+describe("a text read into uses is worked out as its earlier form is", () => {
+  const texts = [
+    `add(2, 3)`,
+    `[1, 2, 3] | map(x => add(x, x))`,
+    `[1, 2] | map(x => {n: x, twice: add(x, x)})`,
+    `[1, 2] | map(x => x)`,
+    `[1, 2] | map(x => map([10, 20], y => add(x, y)))`,
+    `if(lt(1, 2), "yes", "no")`,
+    `@Notes.text`,
+    `find(?h, [?h, "instance", @note])`,
+    `find(?h, [?h, "name", ?n], n => eq(n, "note"))`,
+    `find(?h, [?h, "name", ?n], not([?h, "instance", @note])) | size`,
+  ];
+
+  for (const text of texts)
+    test(text, async () => {
+      const { stores, heads } = await storeOf(stored);
+      const tree = syntax(text);
+      const earlier = await evaluate({ gives: toExpression(tree, storedNames) }, stores, heads);
+      const now = await evaluate(toRead(tree, storedNames), stores, heads);
+
+      expect(earlier).not.toHaveProperty("problem");
+      expect(now).not.toHaveProperty("problem");
+      expect((now as { value: unknown }).value).toEqual((earlier as { value: unknown }).value);
+    });
 });

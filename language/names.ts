@@ -67,11 +67,18 @@ export function namesIn(all: World): Names {
     },
   };
 
+  // A type of the language by its name: one with a mould, glass's own where several are.
+  const typeOf = (name: string) => {
+    const types = known.named(name).filter((id) => all.known.get(id)?.holon.mould);
+    return types.length > 1 ? types.find((id) => known.storeOf(id) === "glass") : types[0];
+  };
+
   return {
     functions: (name) => known.named(name).filter(isFunction),
     holons: (route) => reached(route, known),
     isFunction,
     nameOf: (id) => all.known.get(id)?.holon.name,
+    typeOf,
   };
 }
 

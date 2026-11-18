@@ -15,7 +15,8 @@
 //
 // A function is a holon of a type whose mould declares input, the placeholders it takes,
 // each held at its place and bound by its id. It gives in one of two ways: natively, by a
-// small act in code its body names, or by the use it holds as its body. A native is one
+// small act in code its body names, or by what its body gives: the use it holds, most
+// often, or JSON with held uses at their places, as a lambda's may be. A native is one
 // of three: given values; lazy, given what it is given unworked, to work out only what it
 // needs; or reading what it is given as written, as a pattern is.
 //
@@ -91,7 +92,7 @@ export async function evaluate(
 
 const isEarlier = (gives: unknown) => isRecord(gives) && earlier.some((key) => key in (gives as object));
 
-type Function = { name: string; native?: string; input?: Place[]; body?: string; gives?: Expression };
+type Function = { name: string; native?: string; input?: Place[]; body?: unknown; gives?: Expression };
 
 type Use = { fn: Link; args: unknown[]; offer: Ref[] };
 
@@ -132,7 +133,7 @@ export function evaluator(field: Field) {
           name,
           native: typeof body.native === "string" ? body.native : undefined,
           input,
-          body: isRef(body.body) ? body.body.$ref : undefined,
+          body: body.body,
           gives: body.gives,
         }));
       }),
@@ -256,7 +257,8 @@ export function evaluator(field: Field) {
         return after(all(given.map(({ value }) => value())), (values) => lazy[native]!(values.map(valued)));
       if (native && byValue[native]) return after(valuesOf(input, given, offers), byValue[native]!);
 
-      if (body) return after(bind(input ?? [], given, offers), (bound) => use(body, { bound, up, offers }));
+      if (body !== undefined)
+        return after(bind(input ?? [], given, offers), (bound) => argOf(body, { bound, up, offers }));
       if (gives === undefined) throw new Error(`${name} is not a function`);
 
       return after(all(given.map(({ value }) => value())), (values) => {

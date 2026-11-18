@@ -22,9 +22,16 @@
 //   @main:main.contents | map(h => {name: h.name, tokens: measure(h)})
 //   outline(@"The wiki", 3)
 //   @Sessions.sessions | sort(s => s.on) | reverse | take(2) | map(text)
+//
+// A text is read in two steps: its syntax, then its names found. It is read into the
+// earlier form of an expression, for the earlier engine, or into a read of uses the new
+// engine works out, and said again from either.
 
+import { isHandle } from "../engine/handles.ts";
+import type { Read } from "../engine/next/engine.ts";
 import { isId } from "../integrations/glass/store.ts";
-import type { Expression as Expr } from "./expression.ts";
+import type { Holon } from "../stores/store.ts";
+import { isRef, type Expression as Expr } from "./expression.ts";
 
 // A route of names through the wholes that hold each in turn: from anywhere, or, given
 // a store, from that store's level, what nothing in it holds.
@@ -39,6 +46,9 @@ export type Names = {
   nameOf(id: string): string | undefined;
   // What a holon is and what holds it, so a name that finds several can say which.
   about?(id: string): string;
+  // The language's own types by name: use, function, and the kinds of value a
+  // placeholder takes. Reading into uses needs them; the earlier form does not.
+  typeOf?(name: string): string | undefined;
 };
 
 // ---- Reading
@@ -167,14 +177,32 @@ function where(text: string, at: number) {
   return `line ${line}, column ${column}: “${text.split("\n")[line - 1]!.trim()}”`;
 }
 
-export function parse(text: string, names: Names): Expr {
+// What a text says, before any name in it is found: its tree, each part at the place in
+// the text it begins, so a name that finds nothing can say where. A lambda's word is
+// known as one here, by the lambdas around it; every other word names a function.
+export type Syntax = { text: string; tree: Node };
+
+export type Node = { at: number } & (
+  | { kind: "value"; value: null | boolean | number | string }
+  | { kind: "variable"; name: string }
+  | { kind: "word"; word: string }
+  | { kind: "function"; name: string }
+  | { kind: "holon"; route: Route }
+  | { kind: "call"; fn: Node; given: Node[] }
+  | { kind: "key"; of: Node; key: string }
+  | { kind: "list"; items: Node[] }
+  | { kind: "record"; fields: [string, Node][] }
+  | { kind: "lambda"; words: string[]; gives: Node }
+);
+
+export function syntax(text: string): Syntax {
   const tokens = tokensOf(text);
   let next = 0;
 
   const peek = (ahead = 0) => tokens[next + ahead]!;
 
-  const fail = (what: string, token = peek(), after = ""): never => {
-    throw new Error(`${what}, at ${where(text, token.at)}${after}`);
+  const fail = (what: string, token = peek()): never => {
+    throw new Error(`${what}, at ${where(text, token.at)}`);
   };
 
   const isMark = (value: string, token = peek()) => token.kind === "mark" && token.value === value;
@@ -194,28 +222,9 @@ export function parse(text: string, names: Names): Expr {
   const bound: string[][] = [];
   const isVariable = (word: string) => bound.some((names) => names.includes(word));
 
-  function one(found: string[], what: string, token: Token): string {
-    if (found.length === 0) fail(`there is no ${what}`, token);
-
-    if (found.length > 1) {
-      const which = found.map((id) => `\n  @${id}${names.about ? ` ${names.about(id)}` : ""}`).join("");
-      fail(
-        `${what} names ${found.length}`,
-        token,
-        `; say which by @id, or by a route through what holds it:${which}`,
-      );
-    }
-
-    return found[0]!;
-  }
-
-  function functionNamed(name: string, token: Token) {
-    return one(names.functions(name), `function ${name}`, token);
-  }
-
   // What may be given in a list: expressions set apart by commas, closed by the mark.
   function listed(close: string) {
-    const all: Expr[] = [];
+    const all: Node[] = [];
     if (take(close)) return all;
 
     do all.push(expression());
@@ -228,8 +237,8 @@ export function parse(text: string, names: Names): Expr {
 
   // A holon after @: its id, or a route of names, each a word or quoted, from anywhere,
   // or from a store's level when the store's key and a colon begin it.
-  function holon(): string {
-    const start = peek();
+  function holon(): Node {
+    const at = peek().at;
     const route: Route = { names: [] };
 
     if (isName(peek()) && isMark(":", peek(1))) {
@@ -244,33 +253,31 @@ export function parse(text: string, names: Names): Expr {
       next++;
     } while (take("/"));
 
-    if (!route.store && route.names.length === 1 && isId(route.names[0])) return route.names[0];
-
-    return one(names.holons(route), `holon ${routeText(route)}`, start);
+    return { at, kind: "holon", route };
   }
 
-  function atom(): Expr {
+  // A function or a holon, called if parentheses follow.
+  const called = (fn: Node): Node => (take("(") ? { at: fn.at, kind: "call", fn, given: listed(")") } : fn);
+
+  function atom(): Node {
     const token = peek();
+    const at = token.at;
 
     if (token.kind === "number" || token.kind === "string") {
       next++;
-      return token.value;
+      return { at, kind: "value", value: token.value };
     }
 
     if (token.kind === "variable") {
       next++;
-      return { "?": token.value };
+      return { at, kind: "variable", name: token.value };
     }
 
-    if (take("@")) {
-      const id = holon();
-      return isMark("(") ? (next++, call(id, listed(")"))) : { $ref: id };
-    }
-
-    if (take("[")) return { list: listed("]") };
+    if (take("@")) return called(holon());
+    if (take("[")) return { at, kind: "list", items: listed("]") };
 
     if (take("{")) {
-      const record: Record<string, Expr> = {};
+      const fields: [string, Node][] = [];
 
       if (!take("}")) {
         do {
@@ -279,13 +286,13 @@ export function parse(text: string, names: Names): Expr {
 
           next++;
           expect(":", "a record's key is followed by :");
-          record[(key as { value: string }).value] = expression();
+          fields.push([(key as { value: string }).value, expression()]);
         } while (take(","));
 
         expect("}", "a record is closed by }");
       }
 
-      return { record };
+      return { at, kind: "record", fields };
     }
 
     if (take("(")) {
@@ -298,18 +305,18 @@ export function parse(text: string, names: Names): Expr {
     if (token.kind === "word") {
       next++;
 
-      if (["true", "false", "null"].includes(token.value)) return JSON.parse(token.value);
-      if (isVariable(token.value)) return { var: token.value };
+      if (["true", "false", "null"].includes(token.value))
+        return { at, kind: "value", value: JSON.parse(token.value) };
+      if (isVariable(token.value)) return { at, kind: "word", word: token.value };
 
-      const id = functionNamed(token.value, token);
-      return isMark("(") ? (next++, call(id, listed(")"))) : { $ref: id };
+      return called({ at, kind: "function", name: token.value });
     }
 
     return fail("an expression begins here");
   }
 
-  // An atom, then what it is called with, or what it holds under a key.
-  function applied(): Expr {
+  // An atom, then what it holds under a key.
+  function applied(): Node {
     let value = atom();
 
     while (take(".")) {
@@ -317,7 +324,7 @@ export function parse(text: string, names: Names): Expr {
       if (key.kind !== "word" && key.kind !== "string") fail("a . is followed by a key");
 
       next++;
-      value = call(functionNamed("get", key), [value, (key as { value: string }).value]);
+      value = { at: key.at, kind: "key", of: value, key: (key as { value: string }).value };
     }
 
     return value;
@@ -352,20 +359,20 @@ export function parse(text: string, names: Names): Expr {
   }
 
   // What follows a | : a call given what came before as its first argument.
-  function stage(before: Expr): Expr {
+  function stage(before: Node): Node {
     const token = peek();
-    const id =
+    const fn: Node =
       token.kind === "word" && !isVariable(token.value)
-        ? (next++, functionNamed(token.value, token))
+        ? (next++, { at: token.at, kind: "function", name: token.value })
         : take("@")
           ? holon()
           : fail("a | is followed by a function");
 
-    const given = take("(") ? listed(")") : [];
-    return call(id, [before, ...given]);
+    return { at: fn.at, kind: "call", fn, given: [before, ...(take("(") ? listed(")") : [])] };
   }
 
-  function expression(): Expr {
+  function expression(): Node {
+    const at = peek().at;
     const words = parameters();
 
     if (words) {
@@ -373,7 +380,7 @@ export function parse(text: string, names: Names): Expr {
       const gives = expression();
       bound.pop();
 
-      return { fn: words, gives };
+      return { at, kind: "lambda", words, gives };
     }
 
     let value = applied();
@@ -382,10 +389,179 @@ export function parse(text: string, names: Names): Expr {
     return value;
   }
 
-  const read = expression();
+  const tree = expression();
   if (peek().kind !== "end") fail("what follows the expression is not part of it");
 
-  return read;
+  return { text, tree };
+}
+
+// How a text's names are found: a function by its name, a holon by its id or its route,
+// each found alone, or a problem saying where, and which ones a name finds.
+function finding(text: string, names: Names) {
+  const fail = (what: string, at: number, after = ""): never => {
+    throw new Error(`${what}, at ${where(text, at)}${after}`);
+  };
+
+  function one(found: string[], what: string, at: number): string {
+    if (found.length === 0) fail(`there is no ${what}`, at);
+
+    if (found.length > 1) {
+      const which = found.map((id) => `\n  @${id}${names.about ? ` ${names.about(id)}` : ""}`).join("");
+      fail(
+        `${what} names ${found.length}`,
+        at,
+        `; say which by @id, or by a route through what holds it:${which}`,
+      );
+    }
+
+    return found[0]!;
+  }
+
+  const functionAt = (name: string, at: number) => one(names.functions(name), `function ${name}`, at);
+
+  const holonAt = (route: Route, at: number) =>
+    !route.store && route.names.length === 1 && isId(route.names[0])
+      ? route.names[0]
+      : one(names.holons(route), `holon ${routeText(route)}`, at);
+
+  // What a call applies: a function by its name, or a holon by @.
+  const applying = (fn: Node) =>
+    fn.kind === "function" ? functionAt(fn.name, fn.at) : holonAt((fn as { route: Route }).route, fn.at);
+
+  return { fail, functionAt, holonAt, applying };
+}
+
+// A text read into the earlier form of an expression, as the earlier engine takes it.
+export function toExpression({ text, tree }: Syntax, names: Names): Expr {
+  const { functionAt, holonAt, applying } = finding(text, names);
+
+  const expression = (node: Node): Expr => {
+    switch (node.kind) {
+      case "value":
+        return node.value;
+      case "variable":
+        return { "?": node.name };
+      case "word":
+        return { var: node.word };
+      case "function":
+        return { $ref: functionAt(node.name, node.at) };
+      case "holon":
+        return { $ref: holonAt(node.route, node.at) };
+      case "call":
+        return call(applying(node.fn), node.given.map(expression));
+      case "key": {
+        const of = expression(node.of);
+        return call(functionAt("get", node.at), [of, node.key]);
+      }
+      case "list":
+        return { list: node.items.map(expression) };
+      case "record":
+        return { record: Object.fromEntries(node.fields.map(([key, inner]) => [key, expression(inner)])) };
+      case "lambda":
+        return { fn: node.words, gives: expression(node.gives) };
+    }
+  };
+
+  return expression(tree);
+}
+
+export const parse = (text: string, names: Names): Expr => toExpression(syntax(text), names);
+
+// The natives find reads as clauses of clauses.
+const combining = new Set(["not", "or", "and"]);
+
+// A text read into uses, carried by the read under handles: a call a use of its
+// function, `a | f(b)` the use f(a, b); a lambda a function held where it is written,
+// its words placeholders of the kind value; lists and records JSON as they are, a held
+// use at each place one is written. A holon is referred to, and a stored use so referred
+// to gives what it gives.
+//
+// Within find a clause that is a lambda is a test: its words are the pattern's
+// variables, so `n => gt(n, 3)` is read as the use gt(?n, 3).
+export function toRead({ text, tree }: Syntax, names: Names): Read {
+  const { fail, functionAt, holonAt, applying } = finding(text, names);
+  const holons: Holon[] = [];
+
+  const typed = (name: string) =>
+    names.typeOf?.(name) ?? fail(`the language's type ${name} is not in the field`, tree.at);
+
+  // A holon carried by the read, under the next handle.
+  const carried = (type: string): Holon => {
+    const holon: Holon = { id: `~${holons.length + 1}`, instance: [typed(type)], body: {} };
+    holons.push(holon);
+    return holon;
+  };
+
+  // What each lambda word around stands for: a placeholder, or a pattern's variable.
+  type Scope = ReadonlyMap<string, unknown>;
+
+  const use = (fn: string, args: () => unknown[]) => {
+    const holon = carried("use");
+    holon.body = { fn: { $ref: fn }, args: args() };
+    return { $ref: holon.id, $holds: true };
+  };
+
+  function arg(node: Node, scope: Scope): unknown {
+    switch (node.kind) {
+      case "value":
+        return node.value;
+      case "variable":
+        return { "?": node.name };
+      case "word":
+        return scope.get(node.word);
+      case "function":
+        return { $ref: functionAt(node.name, node.at) };
+      case "holon":
+        return { $ref: holonAt(node.route, node.at) };
+      case "call": {
+        const fn = applying(node.fn);
+        const pattern = names.nameOf(fn) === "find";
+        return use(fn, () =>
+          node.given.map((each, i) => (pattern && i > 0 ? clause(each, scope) : arg(each, scope))),
+        );
+      }
+      case "key":
+        return use(functionAt("get", node.at), () => [arg(node.of, scope), node.key]);
+      case "list":
+        return node.items.map((each) => arg(each, scope));
+      case "record":
+        return Object.fromEntries(
+          node.fields.map(([key, inner]) => {
+            if (key === "$ref" || key === "?")
+              fail(`a record's key ${key} would be read as a holon or a variable`, inner.at);
+            return [key, arg(inner, scope)];
+          }),
+        );
+      case "lambda": {
+        const fn = carried("function");
+        const input = node.words.map((word) => Object.assign(carried("value"), { name: word }).id);
+        const within = new Map([
+          ...scope,
+          ...node.words.map((word, i) => [word, { $ref: input[i] }] as const),
+        ]);
+        fn.body = { input: input.map(($ref) => ({ $ref, $holds: true })), body: arg(node.gives, within) };
+        return { $ref: fn.id, $holds: true };
+      }
+    }
+  }
+
+  // A clause of a pattern: a test written as a lambda, its words the pattern's
+  // variables; not, or and and, each a clause of clauses; anything else as it is.
+  function clause(node: Node, scope: Scope): unknown {
+    if (node.kind === "lambda")
+      return arg(
+        node.gives,
+        new Map([...scope, ...node.words.map((word) => [word, { "?": word }] as const)]),
+      );
+
+    const fn = node.kind === "call" ? applying(node.fn) : undefined;
+    if (!fn || !combining.has(names.nameOf(fn) ?? "")) return arg(node, scope);
+
+    return use(fn, () => (node as { given: Node[] }).given.map((each) => clause(each, scope)));
+  }
+
+  const gives = arg(tree, new Map());
+  return holons.length ? { gives, holons } : { gives };
 }
 
 // ---- Saying
@@ -397,12 +573,7 @@ const quoted = (text: string) => (isWord(text) ? text : JSON.stringify(text));
 // said stays true however the field's names move; a function by its name, where that
 // finds it alone.
 export function print(expression: Expr, names: Names): string {
-  const named = (id: string) => {
-    const name = names.nameOf(id);
-    const alone = name !== undefined && isWord(name) && names.functions(name).length === 1;
-
-    return alone ? name : `@${id}`;
-  };
+  const named = (id: string) => functionSaid(id, names);
 
   const said = (value: Expr): string => {
     if (value === null || typeof value !== "object") return JSON.stringify(value);
@@ -446,6 +617,94 @@ export function print(expression: Expr, names: Names): string {
 
   return said(expression);
 }
+
+// A function by its name, where that finds it alone, and else by its id.
+function functionSaid(id: string, names: Names) {
+  const name = names.nameOf(id);
+  const alone = name !== undefined && isWord(name) && names.functions(name).length === 1;
+
+  return alone ? name : `@${id}`;
+}
+
+type Link = { $ref: string; $holds?: boolean };
+
+// A read said in the same form: a use held where it is written as a call, a function
+// held there as a lambda, its placeholders by their names, and ?x as itself. A named use
+// held elsewhere and reused here is said by its name, where that finds it alone; any
+// other holon by its id. The holons a read does not carry are found by stored, if given.
+export function printRead(
+  { gives, holons = [] }: Read,
+  names: Names,
+  stored?: (id: string) => Holon | undefined,
+) {
+  const carried = new Map(holons.map((holon) => [holon.id, holon]));
+  const holonOf = (id: string) => carried.get(id) ?? stored?.(id);
+  const is = (holon: Holon | undefined, type: string) =>
+    holon !== undefined && holon.instance.includes(names.typeOf?.(type) ?? "");
+
+  // The placeholders of the lambdas around, by id, each said by its name.
+  type Around = ReadonlyMap<string, string>;
+
+  const said = (arg: unknown, around: Around): string => {
+    if (arg === null || typeof arg !== "object") return JSON.stringify(arg);
+    if (Array.isArray(arg)) return `[${arg.map((each) => said(each, around)).join(", ")}]`;
+    if (isRef(arg)) return referred(arg, around);
+
+    const record = arg as Record<string, unknown>;
+    if (typeof record["?"] === "string" && Object.keys(record).length === 1) return `?${record["?"]}`;
+
+    return `{${Object.entries(record)
+      .map(([key, inner]) => `${quoted(key)}: ${said(inner, around)}`)
+      .join(", ")}}`;
+  };
+
+  function referred({ $ref: id, $holds }: Link, around: Around): string {
+    if (around.has(id)) return around.get(id)!;
+
+    const holon = holonOf(id);
+    if (is(holon, "use")) return $holds || isHandle(id) ? used(holon!, around) : reused(holon!);
+    if (is(holon, "function") && $holds) return lambda(holon!, around);
+
+    return names.isFunction(id) ? functionSaid(id, names) : `@${id}`;
+  }
+
+  function reused({ id, name }: Holon) {
+    const alone = name !== undefined && names.holons({ names: [name] }).length === 1;
+    return alone ? `@${quotedName(name)}` : `@${id}`;
+  }
+
+  function used({ id, body }: Holon, around: Around): string {
+    const { fn, args } = body as { fn?: unknown; args?: unknown };
+    if (!isRef(fn)) throw new Error(`the use ${id} names no function, so it is said only where it is drawn`);
+
+    const given = Array.isArray(args) ? args : [];
+    const [of, key] = given;
+    const isGet = names.nameOf(fn.$ref) === "get" && given.length === 2;
+
+    if (isGet && typeof key === "string" && isWord(key)) {
+      const inner = said(of, around);
+      const isLambda = isRef(of) && (of as Link).$holds && is(holonOf(of.$ref), "function");
+      return isLambda ? `(${inner}).${key}` : `${inner}.${key}`;
+    }
+
+    return `${said(fn, around)}(${given.map((each) => said(each, around)).join(", ")})`;
+  }
+
+  function lambda({ body }: Holon, around: Around): string {
+    const input = (Array.isArray(body.input) ? body.input : []).filter(isRef);
+    const words = input.map(({ $ref }) => holonOf($ref)?.name ?? $ref);
+    const within = new Map([...around, ...input.map(({ $ref }, i) => [$ref, words[i]!] as const)]);
+    const head = words.length === 1 ? words[0] : `(${words.join(", ")})`;
+
+    return `${head} => ${said(body.body, within)}`;
+  }
+
+  return said(gives, new Map());
+}
+
+// A use kept in the field said as it is written, not by its name.
+export const printUse = (id: string, names: Names, stored: (id: string) => Holon | undefined) =>
+  printRead({ gives: { $ref: id, $holds: true } }, names, stored);
 
 // ---- Writing in code
 
