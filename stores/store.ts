@@ -39,7 +39,8 @@ export type Clause = { e?: string; a?: string; v?: Value };
 // holons of the types named by id in stop, as far as this store keeps them; the facts
 // matching a clause; the holons containing a word under a key; a holon's versions; the
 // acts before the head; or whether the store took an act, named by its content hash, and
-// where in its history.
+// where in its history, or kept: false where the store took it but keeps nothing of how
+// it stood then, as a buffer keeps only the present.
 export type Question =
   | { holon: string }
   | { holons: string[] }

@@ -24,7 +24,8 @@ export async function judge(change: Change, stores: Mounted, heads: Heads): Prom
   ]);
 
   const taken = await namesTaken(plan, now);
-  const strict = change.strict && !seen.length ? await moved(change, now, fieldOf(stores, change.at)) : [];
+  const strict =
+    change.strict && !seen.length ? await moved(change, now, fieldOf(stores, change.at), stores, heads) : [];
   return { ...plan, problems: [...seen, ...plan.problems, ...taken, ...strict] };
 }
 
@@ -45,17 +46,47 @@ async function atProblems(at: Heads, stores: Mounted, heads: Heads): Promise<Pro
 }
 
 // What the change touches that moved since its at: each holon it writes or takes out,
-// read as it stood then and as it stands now.
-async function moved(change: Change, now: Field, then: Field): Promise<Problem[]> {
+// read as it stood then and as it stands now. A store that keeps nothing of how it stood
+// at its head in at, as a buffer keeps only the present, cannot say what moved since, so
+// every holon it keeps is counted moved.
+async function moved(change: Change, now: Field, then: Field, stores: Mounted, heads: Heads) {
   const ids = [...change.holons.map(({ id }) => id), ...(change.gone ?? [])].filter((id) => !isHandle(id));
+  const unkept = await unkeptSince(change.at, stores, heads);
   const read = async (field: Field, id: string) => text((await field.holon(id))?.holon);
   const found = await Promise.all(
-    ids.map(async (id) => ((await read(then, id)) === (await read(now, id)) ? [] : [id])),
+    ids.map(async (id): Promise<Problem[]> => {
+      const store = (await now.keepers(id)).find((name) => unkept.has(name));
+      if (store !== undefined)
+        return [
+          { rule: "strict", id, says: `${store} keeps only the present, so cannot tell what moved since` },
+        ];
+
+      return (await read(then, id)) === (await read(now, id))
+        ? []
+        : [{ rule: "strict", id, says: "it moved since the heads the change was made from" }];
+    }),
   );
 
-  return found
-    .flat()
-    .map((id) => ({ rule: "strict", id, says: "it moved since the heads the change was made from" }));
+  return found.flat();
+}
+
+// The stores at gives an earlier head of that keep nothing of how they stood then.
+async function unkeptSince(at: Heads, stores: Mounted, heads: Heads) {
+  const unkept = await Promise.all(
+    Object.entries(at).map(async ([name, head]) => {
+      const now = heads[name] as Head | null | undefined;
+      if (!head || !now || head.commit === now.commit) return [];
+
+      const [taken] = new TextDecoder()
+        .decode(await stores.get(name)!.store.read(now, { act: head.act }))
+        .split("\n")
+        .filter(Boolean)
+        .map((line) => JSON.parse(line) as { kept?: boolean });
+      return taken?.kept === false ? [name] : [];
+    }),
+  );
+
+  return new Set(unkept.flat());
 }
 
 // The names the change places in wholes that another holon of the whole already has: a

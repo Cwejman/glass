@@ -7,6 +7,8 @@ import { contentOf, hashOf, partOf } from "../../stores/act.ts";
 import type { Act, Head, Holon, Store } from "../../stores/store.ts";
 import { folderStorage } from "../../stores/strata/storage/folder.ts";
 import { strata } from "../../stores/strata/strata.ts";
+import { buffer } from "../../stores/buffer/buffer.ts";
+import { begun as bufferBegun, typed } from "../../stores/buffer/string.ts";
 import { engine, type Answer, type Committed, type Engine, type Read } from "./engine.ts";
 import type { Landed } from "./commit/land.ts";
 
@@ -848,5 +850,70 @@ describe("pairs", () => {
         },
       ],
     });
+  });
+});
+
+describe("a buffer", () => {
+  // An engine on one thread over glass, read, and a string buffer named bar, written,
+  // begun through the engine: the id of the holon its string is kept in.
+  async function typing() {
+    const language = strata(folderStorage(folder()));
+    await begun(language, glass);
+
+    const glassEngine = await engine({ workers: sameThread(), count: 2 });
+    await glassEngine.mount("glass", language);
+    await glassEngine.mount("bar", buffer(), { write: true });
+    const query = landed(await glassEngine.commit(bufferBegun("bar", id(2)))).ids["~2"]!;
+    return { glassEngine, query };
+  }
+
+  test("text committed into it is read back as a string", async () => {
+    const { glassEngine, query } = await typing();
+    landed(await glassEngine.commit(typed(query, "get(@1, ")));
+
+    expect(await glassEngine.read(asking("get", { $ref: query }, "text"))).toMatchObject({
+      value: "get(@1, ",
+    });
+  });
+
+  test("a subscribed read runs again on every change, and nothing of earlier text is kept", async () => {
+    const { glassEngine, query } = await typing();
+    const heard: unknown[] = [];
+    let done: () => void = () => {};
+    const all = new Promise<void>((resolve) => (done = resolve));
+
+    const stop = await glassEngine.subscribe(asking("get", { $ref: query }, "text"), (answer) => {
+      heard.push("value" in answer ? answer.value : answer.problem);
+      if (heard.at(-1) === "gla") done();
+    });
+    for (const text of ["g", "gl", "gla"]) landed(await glassEngine.commit(typed(query, text)));
+    await all;
+    stop();
+
+    // Each answer the text as it then stood, in the order it was typed.
+    const typedAt = (text: unknown) => ["", "g", "gl", "gla"].indexOf(text as string);
+    expect(heard[0]).toBe("");
+    expect(heard.map(typedAt)).toEqual(heard.map(typedAt).sort());
+    expect(heard.length).toBeGreaterThan(2);
+    expect(await glassEngine.read(asking("log", "bar"))).toMatchObject({ value: [expect.anything()] });
+  });
+
+  test("from an earlier head a change is taken, but strict it is refused as moved", async () => {
+    const { glassEngine, query } = await typing();
+    const { at } = await glassEngine.read(asking("get", { $ref: query }, "text"));
+    landed(await glassEngine.commit(typed(query, "g", at)));
+
+    // The buffer keeps nothing of how it stood at at, so cannot say nothing moved.
+    expect(await glassEngine.commit({ ...typed(query, "gl", at), strict: true })).toEqual({
+      refused: [
+        { rule: "strict", id: query, says: "bar keeps only the present, so cannot tell what moved since" },
+      ],
+    });
+
+    landed(await glassEngine.commit(typed(query, "gl", at)));
+    const now = (await glassEngine.read(asking("get", { $ref: query }, "text"))) as Answer;
+    landed(await glassEngine.commit({ ...typed(query, "gla", now.at), strict: true }));
+
+    expect(await glassEngine.read(asking("get", { $ref: query }, "text"))).toMatchObject({ value: "gla" });
   });
 });
