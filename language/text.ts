@@ -49,6 +49,8 @@ export type Names = {
   // The language's own types by name: use, function, and the kinds of value a
   // placeholder takes. Reading into uses needs them; the earlier form does not.
   typeOf?(name: string): string | undefined;
+  // The route that reaches a holon alone, where one does, for saying it by its names.
+  routeOf?(id: string): Route | undefined;
 };
 
 // ---- Reading
@@ -631,7 +633,8 @@ type Link = { $ref: string; $holds?: boolean };
 // A read said in the same form: a use held where it is written as a call, a function
 // held there as a lambda, its placeholders by their names, and ?x as itself. A named use
 // held elsewhere and reused here is said by its name, where that finds it alone; any
-// other holon by its id. The holons a read does not carry are found by stored, if given.
+// other holon by the route that reaches it alone, where names give one, else by its id.
+// The holons a read does not carry are found by stored, if given.
 export function printRead(
   { gives, holons = [] }: Read,
   names: Names,
@@ -665,7 +668,9 @@ export function printRead(
     if (is(holon, "use")) return $holds || isHandle(id) ? used(holon!, around) : reused(holon!);
     if (is(holon, "function") && $holds) return lambda(holon!, around);
 
-    return names.isFunction(id) ? functionSaid(id, names) : `@${id}`;
+    if (names.isFunction(id)) return functionSaid(id, names);
+    const route = names.routeOf?.(id);
+    return route ? `@${routeText(route)}` : `@${id}`;
   }
 
   function reused({ id, name }: Holon) {

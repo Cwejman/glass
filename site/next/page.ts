@@ -58,7 +58,7 @@ try {
     engine,
     glass,
     realized,
-    find: finder((read) => engine.read(read), glass, [...realized.keys()], glass.Value),
+    find: finder((read) => engine.read(read), glass, [...realized.keys()]),
   });
 } catch (problem) {
   page.replaceChildren(note(problem instanceof Error ? problem.message : String(problem)));

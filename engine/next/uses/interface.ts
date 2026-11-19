@@ -3,11 +3,13 @@
 // the build after migrate.ts, as two commits through the new engine, into the store the
 // language ships in. What it writes:
 //
-//   the component type given a body, for a component made of data, and its kinds and
-//     takes made optional; the type direction, and its two, row and column;
-//   the natives holon, quote, back, each, and steps and chain, a pair;
-//   the components realized in code, each given its input: Value, List, Answer,
-//     ExpressionInput and Pill, all but Value drawn only where a use names them; and
+//   the component type reshaped to declare only: what it says, its input, and, for a
+//     component made of data, its body; the type direction, and its two, row and column;
+//   the natives holon, whole, quote, back, each, and steps and chain, a pair;
+//   the components realized in code, each declaring what it takes and nothing more:
+//     Value, List, Answer, ExpressionInput, Pill, Choose, and Brief, given a brief;
+//   the components realized nowhere taken out, the uses applying them left to find one
+//     by type, and Reader's template with them; and
 //   Reader and Search, components of data, their bodies written below in the language.
 //
 // Which code realizes a component is the chassis's own (interface/web/realized.ts); a
@@ -32,16 +34,24 @@ const written = {
 };
 
 const says = {
+  component:
+    "A function drawn rather than worked out: what it draws in a sentence, the placeholders it takes, and, made of data, the body it draws; the code that draws one is each surface's own.",
   Reader: "What one is looking at: the search for it, above what it gives.",
   Search: "A text searched by: its steps as pills, each to be taken out, beside the text typed into.",
   Answer: "A read, drawn as what it gives, again whenever that changes.",
   ExpressionInput: "A text, typed into: each keystroke proposed back as what it is given.",
   Pill: "A step of a read, said as text, which may be taken out of the read.",
   List: "A list, each item drawn in turn by what draws it: in a column, or in a row where it is given one.",
+  Choose: "The components that could draw a value, for the one drawing it to be chosen: none is guessed.",
+  Brief:
+    "A brief: its name, its flow, and its sections read through after it, each with the flow of its own.",
   direction: "Which way a list runs: in a row, or in a column.",
   row: "Side by side, wrapping where there is no room.",
   column: "One under another.",
 };
+
+// What a component declares, and nothing more: its code is the chassis's own.
+const declares = ["says", "input", "body"];
 
 const bodyOfData = {
   says: "For a component made of data, what it draws: most often a use held where it is written, over its placeholders.",
@@ -94,6 +104,16 @@ export async function shipInterface(
     ),
   );
   const isComponent = (holon: Holon) => holon.instance.includes(componentType!.id);
+  // A type of any store, by its name, as a placeholder's type may be.
+  const typeNamed = async (name: string) => {
+    const found = await keptAll(
+      field,
+      (await field.facts({ a: "name", v: name })).map(({ e }) => e),
+    );
+    const type = found.find(({ holon }) => isType(holon))?.holon;
+    if (!type) throw new Error(`no store holds the type ${name}`);
+    return type;
+  };
   const isFunction = (holon: Holon) => holon.instance.includes(functionType!.id);
 
   // ---- The components and natives
@@ -122,12 +142,14 @@ export async function shipInterface(
     });
     const directions = [direction, way("row"), way("column")];
 
-    const mould = componentType!.mould!;
-    const optional = (key: string) =>
-      mould[key] === undefined ? {} : { [key]: { ...(mould[key] as object), optional: true } };
+    // The component type declares only: its other keys go, from the type and from each
+    // component kept.
+    const declaring = (body: Holon["body"]) =>
+      Object.fromEntries(Object.entries(body).filter(([key]) => declares.includes(key)));
     const reshaped: Holon = {
       ...componentType!,
-      mould: { ...mould, ...optional("kinds"), ...optional("takes"), body: bodyOfData },
+      body: { ...componentType!.body, says: says.component },
+      mould: { ...declaring(componentType!.mould!), body: bodyOfData },
     };
 
     const native = (name: string, about: string, input: unknown[], body: Holon["body"] = {}): Holon => ({
@@ -145,6 +167,15 @@ export async function shipInterface(
               placeholder("holon", kinds.holon!),
             ]),
           ]),
+      native(
+        "whole",
+        "A holon and what it holds, down to a depth, entering no holon of the types named in stop, though reading it: { root, holons }, each holon as holon reads it.",
+        [
+          placeholder("holon", kinds.holon!),
+          placeholder("depth", kinds.number!, true),
+          placeholder("stop", kinds.list!, true),
+        ],
+      ),
       native("quote", "A value as it is written, nothing in it worked out: data given as it is.", [
         placeholder("value", kinds.value!),
       ]),
@@ -182,35 +213,74 @@ export async function shipInterface(
       },
     ];
 
-    // A component as declared: the one by its name kept, or a new one.
+    // A component as declared: the one by its name kept, saying only what it declares,
+    // or a new one.
     const value = await required("Value", isComponent);
     const declared = async (name: string, body: Holon["body"]): Promise<Holon> => {
       const kept = await named(name, isComponent);
       return {
         ...(kept ?? { id: mint(), instance: [componentType!.id], name }),
-        body: { ...kept?.body, ...body },
+        body: { ...declaring(kept?.body ?? {}), ...body },
       };
     };
-    const only = { named: true };
     const components = [
       await declared("Value", { input: [placeholder("value", kinds.value!)] }),
       await declared("List", {
         says: says.List,
         input: [placeholder("items", kinds.list!), placeholder("direction", direction.id, true)],
-        ...only,
       }),
-      await declared("Answer", { says: says.Answer, input: [placeholder("read", kinds.record!)], ...only }),
+      await declared("Answer", { says: says.Answer, input: [placeholder("read", kinds.record!)] }),
       await declared("ExpressionInput", {
         says: says.ExpressionInput,
         input: [placeholder("text", kinds.string!)],
-        ...only,
       }),
-      await declared("Pill", { says: says.Pill, input: [placeholder("step", kinds.record!)], ...only }),
-      await declared("Search", { says: says.Search, ...only }),
-      await declared("Reader", { says: says.Reader, ...only }),
+      await declared("Pill", { says: says.Pill, input: [placeholder("step", kinds.record!)] }),
+      await declared("Choose", {
+        says: says.Choose,
+        input: [placeholder("components", kinds.list!), placeholder("value", kinds.value!)],
+      }),
+      await declared("Brief", {
+        says: says.Brief,
+        input: [placeholder("brief", (await typeNamed("brief")).id)],
+      }),
+      await declared("Search", { says: says.Search }),
+      await declared("Reader", { says: says.Reader }),
     ];
     const born = (holons: Holon[]) => holons.filter(({ id }) => id.startsWith("~"));
     const parse = await required("parse", isFunction);
+
+    // The components realized nowhere go: a use applying one names none, to find one by
+    // type; and Reader's template goes with what it held.
+    const declaredNow = new Set(components.map(({ id }) => id));
+    const kept = (
+      await keptAll(
+        field,
+        (await field.facts({ a: "instance", v: { $ref: componentType!.id } })).map(({ e }) => e),
+      )
+    ).map(({ holon }) => holon);
+    const going = kept.filter(({ id }) => !declaredNow.has(id)).map(({ id }) => id);
+    const template = (kept.find(({ name }) => name === "Reader")?.body.template ?? []) as unknown[];
+    const templated = template.filter(isRef).map(({ $ref }) => $ref);
+    const applying = await keptAll(
+      field,
+      (await Promise.all(going.map((id) => field.facts({ a: "fn", v: { $ref: id } }))))
+        .flat()
+        .map(({ e }) => e),
+    );
+    const unnamed = applying
+      .filter(({ holon }) => !templated.includes(holon.id))
+      .map(({ holon: { body, ...use } }) => ({ ...use, body: withoutKey(body, "fn") }));
+    const gone = new Set(going);
+    const holder = await besideIn(field, value.id, born(components));
+    const holding = {
+      ...holder,
+      body: Object.fromEntries(
+        Object.entries(holder.body).map(([key, held]) => [
+          key,
+          Array.isArray(held) ? held.filter((each) => !(isRef(each) && gone.has(each.$ref))) : held,
+        ]),
+      ),
+    };
 
     await commit({
       holons: [
@@ -220,10 +290,12 @@ export async function shipInterface(
         ...natives,
         await besideIn(field, parse.id, natives),
         ...components,
-        ...(born(components).length ? [await besideIn(field, value.id, born(components))] : []),
+        holding,
+        ...unnamed,
         ...made,
       ],
-      says: "The interface's components, each declaring what it takes; the natives it reads by; and the way a list runs",
+      gone: [...going, ...templated],
+      says: "The interface's components, each declaring only what it takes; those realized nowhere taken out; the natives it reads by; and the way a list runs",
     });
     field = await fieldAt(stores);
   }
@@ -248,6 +320,9 @@ export async function shipInterface(
 
   return { commits };
 }
+
+const withoutKey = (body: Holon["body"], key: string) =>
+  Object.fromEntries(Object.entries(body).filter(([each]) => each !== key));
 
 // A lambda written in the language read into uses: its placeholders, each of the type
 // given, what it gives, and the holons both hold, under handles of the change.

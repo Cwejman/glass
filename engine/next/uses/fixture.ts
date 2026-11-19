@@ -1,6 +1,8 @@
 // For tests: the least of glass the interface ships over, in one store mounted as glass,
-// with two notes, the first referring to the second, and a text to read; and an engine over it, the
-// interface shipped (interface.ts).
+// with two notes, the first referring to the second, and a text to read; a brief of prose
+// with a brief in its flow and a section; a component of the earlier form, realized
+// nowhere, and a use of it; a use naming no component, given the brief; and an engine
+// over it, the interface shipped (interface.ts).
 
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -18,9 +20,34 @@ export const id = (n: number) => String(n).padStart(15, "0");
 const declared = { says: "Any JSON.", shape: "json", optional: true };
 const held = (n: number) => ({ $ref: id(n), $holds: true });
 const kinds = ["value", "number", "string", "list", "record", "holon"];
-const natives = ["get", "parse", "print", "add", "map", "size"];
+const natives = ["get", "parse", "print", "add", "map", "size", "keys"];
 
-export const notes = { first: id(80), second: id(81), query: id(82) };
+export const notes = {
+  first: id(80),
+  second: id(81),
+  query: id(82),
+  brief: id(100),
+  inner: id(104),
+  part: id(105),
+  session: id(31),
+  sessionUse: id(32),
+  unnamed: id(33),
+};
+
+const proseType = (n: number, name: string) => ({
+  id: id(n),
+  instance: [],
+  name,
+  mould: { ...prose },
+  body: {},
+});
+const prose = { prose: declared, parts: declared, sentences: declared, words: declared, text: declared };
+const thing = (n: number, type: number, body: Holon["body"], name?: string): Holon => ({
+  id: id(n),
+  instance: [id(type)],
+  ...(name !== undefined && { name }),
+  body,
+});
 
 export const glass: Holon[] = [
   {
@@ -35,7 +62,7 @@ export const glass: Holon[] = [
     id: id(3),
     instance: [],
     name: "component",
-    mould: { says: declared, input: declared, named: declared },
+    mould: { says: declared, input: declared, takes: declared, kinds: declared, code: declared },
     body: {},
   },
   {
@@ -55,6 +82,10 @@ export const glass: Holon[] = [
     mould: { admits: { says: "What it admits.", shape: { set: "ref" }, optional: true } },
     body: {},
   },
+  proseType(6, "brief"),
+  proseType(7, "paragraph"),
+  proseType(8, "sentence"),
+  proseType(9, "word"),
   ...kinds.map((name, i) => ({ id: id(10 + i), instance: [], name, mould: {}, body: {} })),
   ...natives.map((name, i) => ({
     id: id(20 + i),
@@ -67,14 +98,22 @@ export const glass: Holon[] = [
     },
   })),
   { id: id(30), instance: [id(3)], name: "Value", body: { says: "Any value, as what it is." } },
+  thing(
+    31,
+    3,
+    { says: "A session, in full.", takes: ["session"], kinds: ["full"], code: "export default 1" },
+    "Session",
+  ),
+  thing(32, 2, { fn: { $ref: id(31) }, args: ["said"] }),
+  thing(33, 2, { args: [{ $ref: id(100) }] }),
   {
     id: id(40),
     instance: [],
     name: "types",
-    body: { holds: [1, 2, 3, 4, 5, 10, 11, 12, 13, 14, 15].map(held) },
+    body: { holds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(held) },
   },
-  { id: id(41), instance: [], name: "functions", body: { holds: [20, 21, 22, 23, 24, 25].map(held) } },
-  { id: id(42), instance: [], name: "components", body: { holds: [held(30)] } },
+  { id: id(41), instance: [], name: "functions", body: { holds: natives.map((_, i) => held(20 + i)) } },
+  { id: id(42), instance: [], name: "components", body: { holds: [held(30), held(31)] } },
   {
     id: notes.first,
     instance: [],
@@ -83,11 +122,21 @@ export const glass: Holon[] = [
   },
   { id: notes.second, instance: [], name: "Second", body: {} },
   { id: notes.query, instance: [], name: "query", body: { text: "1 | add(2) | add(3)" } },
+  thing(100, 6, { prose: [held(101), held(104)], parts: [held(105)] }, "Notes"),
+  thing(101, 7, { sentences: [held(102)] }),
+  thing(102, 8, { words: [held(103), held(106)] }),
+  thing(103, 9, { text: "Notes" }),
+  thing(106, 9, { text: "hold", after: "." }),
+  thing(104, 6, { prose: [], parts: [] }, "Inner"),
+  thing(105, 6, { prose: [held(107)], parts: [] }, "Part"),
+  thing(107, 7, { sentences: [held(108)] }),
+  thing(108, 8, { words: [held(109)] }),
+  thing(109, 9, { text: "Within" }),
   {
     id: id(90),
     instance: [id(4)],
     name: "glass",
-    body: { shape: { $ref: id(91) }, contents: [40, 41, 42, 80, 81, 82].map(held) },
+    body: { shape: { $ref: id(91) }, contents: [40, 41, 42, 80, 81, 82, 32, 33, 100].map(held) },
   },
   { id: id(91), instance: [id(5)], name: "glass's own", body: {} },
 ];

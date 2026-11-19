@@ -6,17 +6,21 @@
 import type { Glass } from "./carried.ts";
 import type { Realization } from "./chassis.ts";
 import { answer } from "./answer.tsx";
+import { brief } from "./brief.tsx";
+import { choose } from "./choose.tsx";
 import { expressionInput } from "./expression-input.tsx";
 import { list } from "./list.tsx";
 import { pill } from "./pill.tsx";
 import { value } from "./value.tsx";
 
-const realizations = {
+export const realizations = {
   Value: value,
   List: list,
   Answer: answer,
   ExpressionInput: expressionInput,
   Pill: pill,
+  Choose: choose,
+  Brief: brief,
 } satisfies Partial<Record<keyof Glass, Realization>>;
 
 // The components realized here, by the ids glass ships them under.

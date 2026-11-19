@@ -1,5 +1,6 @@
 // A read, drawn as what it gives, again whenever that changes. Given another read, it
-// lets go of the first and keeps the second.
+// lets go of the first and keeps the second; given nothing, the read of a blank text, it
+// draws nothing.
 
 import { h } from "../../components/jsx.ts";
 import type { Read } from "../../engine/next/engine.ts";
@@ -24,6 +25,7 @@ export const answer: Realization = (given, space) => {
     asked = key;
     unsubscribe();
 
+    if (read === null) return space.redraw(() => arrange(node, []));
     if (!isRecord(read) || !("gives" in read))
       return space.redraw(() => arrange(node, [note("What answer is given is no read to draw.")]));
 

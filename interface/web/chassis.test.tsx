@@ -8,7 +8,7 @@ import { GlobalRegistrator } from "@happy-dom/global-registrator";
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { h } from "../../components/jsx.ts";
 import type { Answer, Engine, Read } from "../../engine/next/engine.ts";
-import { cleanUp, notes, shipped } from "../../engine/next/uses/fixture.ts";
+import { cleanUp, id, notes, shipped } from "../../engine/next/uses/fixture.ts";
 import type { Value } from "../../engine/next/read/values.ts";
 import { buffer } from "../../stores/buffer/buffer.ts";
 import { begun, typed } from "../../stores/buffer/string.ts";
@@ -17,7 +17,7 @@ import { applying, found, type Glass } from "./carried.ts";
 import { draw, type Drawer, type Realization } from "./chassis.ts";
 import { finder } from "./find.ts";
 import { list } from "./list.tsx";
-import { realizedIn } from "./realized.ts";
+import { realizations, realizedIn } from "./realized.ts";
 import { value } from "./value.tsx";
 
 beforeAll(() => {
@@ -27,7 +27,7 @@ beforeAll(() => {
 afterAll(cleanUp);
 
 const settled = async (test: () => unknown, within = 4000) => {
-  for (const start = performance.now(); !test(); await Bun.sleep(10))
+  for (const start = performance.now(); !(await test()); await Bun.sleep(10))
     if (performance.now() - start > within) throw new Error("it did not settle");
 };
 
@@ -74,7 +74,10 @@ describe("drawing what an engine gives", () => {
       [countId, count],
     ]);
     const page = document.createElement("main");
-    const find = (found: Value) => (Array.isArray(found) ? listId : valueId);
+    const find = (found: Value) => ({
+      component: Array.isArray(found) ? listId : valueId,
+      by: "fallback" as const,
+    });
     const stop = await draw(page, { gives: null }, { engine, glass, realized, find });
 
     giving([counted(1, "a"), counted(2, "b")]);
@@ -102,7 +105,11 @@ describe("drawing what an engine gives", () => {
     const { engine, answer: giving } = given();
     const realized = new Map([[valueId, value]]);
     const page = document.createElement("main");
-    await draw(page, { gives: null }, { engine, glass, realized, find: () => valueId });
+    await draw(
+      page,
+      { gives: null },
+      { engine, glass, realized, find: () => ({ component: valueId, by: "fallback" }) },
+    );
 
     giving({ $draw: null, given: ["found by type"], at: ["a"] });
     expect(page.textContent).toBe("found by type");
@@ -119,7 +126,7 @@ describe("the page's read over glass, the interface shipped", () => {
     const { engine } = await shipped();
     const glass = await found((read) => engine.read(read));
     const realized = realizedIn(glass);
-    const find = finder((read: Read) => engine.read(read), glass, [...realized.keys()], glass.Value);
+    const find = finder((read: Read) => engine.read(read), glass, [...realized.keys()]);
     const parsed = async (text: string) => {
       const answer = await engine.read(applying(glass, "parse", text));
       if (!("value" in answer)) throw new Error(answer.problem);
@@ -142,10 +149,130 @@ describe("the page's read over glass, the interface shipped", () => {
     stop();
   });
 
-  test("a value is found the component whose first placeholder takes it, but one drawn only where named", async () => {
+  test("a value is found the component whose first placeholder takes its type; a kind alone finds none", async () => {
     const { glass, find } = await page();
     for (const given of [3, "three", [1, 2], { gives: 1 }, { $ref: notes.first }])
-      expect(await find(given as Value)).toBe(glass.Value);
+      expect(await find(given as Value)).toEqual({ component: glass.Value, by: "fallback" });
+    expect(await find({ $ref: notes.brief })).toEqual({ component: glass.Brief, by: "type" });
+  });
+
+  test("each realization names a component without a body, and each such component has a realization", async () => {
+    const { engine, glass } = await page();
+    const answer = await engine.read(applying(glass, "parse", "@glass:components"));
+    if (!("value" in answer)) throw new Error(answer.problem);
+    const components = await engine.read(answer.value as unknown as Read);
+    const held = "value" in components ? await engine.read(applying(glass, "holon", components.value)) : null;
+    const ids = ((held && "value" in held ? (held.value as any).body.holds : []) as { $ref: string }[]).map(
+      ({ $ref }) => $ref,
+    );
+    const bodiless = [];
+    for (const id of ids) {
+      const read = await engine.read(applying(glass, "holon", { $ref: id }));
+      const holon = "value" in read ? (read.value as any) : null;
+      if (holon && holon.body.body === undefined) bodiless.push(holon.name as string);
+    }
+    expect(bodiless.length).toBeGreaterThan(0);
+    expect(bodiless.sort()).toEqual(Object.keys(realizations).sort());
+    for (const name of Object.keys(realizations))
+      expect(ids).toContain(glass[name as keyof typeof realizations]);
+  });
+
+  test("a brief is read as its name, its flow, a brief in its flow as a link, and its sections", async () => {
+    const { into, drawing } = await page();
+    const stop = await drawing(`@${notes.brief}`);
+
+    await settled(() => into.querySelector(".brief h2")?.textContent === "Part");
+    expect(into.querySelector(".brief h1")!.textContent).toBe("Notes");
+    expect([...into.querySelectorAll(".brief p")].map((p) => p.textContent)).toEqual([
+      "Notes hold.",
+      "Inner",
+      "Within",
+    ]);
+    expect(into.querySelector(".brief .face a")!.getAttribute("href")).toBe(`?q=@${notes.inner}`);
+    expect(into.querySelector(".brief h2 a")!.getAttribute("href")).toBe(`?q=@${notes.part}`);
+    stop();
+  });
+
+  // What a use is kept as now: what it applies, if anything.
+  async function fnOf(engine: Engine, glass: Glass, use: string) {
+    const answer = await engine.read(applying(glass, "holon", { $ref: use }));
+    return "value" in answer ? ((answer.value as any).body.fn?.$ref as string | undefined) : answer.problem;
+  }
+
+  test("the component found by type for a use that names none is written into it", async () => {
+    const { engine, glass, into } = await page();
+    const realized = realizedIn(glass);
+    const find = finder((read: Read) => engine.read(read), glass, [...realized.keys()]);
+    const stop = await draw(
+      into,
+      { gives: { $ref: notes.unnamed, $holds: true } },
+      { engine, glass, realized, find },
+    );
+
+    await settled(() => into.querySelector(".brief h1")?.textContent === "Notes");
+    await settled(async () => (await fnOf(engine, glass, notes.unnamed)) === glass.Brief);
+    stop();
+  });
+
+  test("where several components could draw it, the person chooses, and the pick is written", async () => {
+    const { engine, glass, into } = await page();
+    const made = await engine.commit({
+      holons: [
+        {
+          id: "~1",
+          instance: [id(3)],
+          name: "Outline",
+          body: { says: "A brief's headings.", input: [{ $ref: "~2", $holds: true }] },
+        },
+        { id: "~2", instance: [id(6)], name: "brief", body: {} },
+      ],
+      says: "a second way to draw a brief",
+      into: "glass",
+      at: {},
+    });
+    if (!("ids" in made)) throw new Error(JSON.stringify(made));
+    const outline = made.ids["~1"]!;
+    const realized = new Map([...realizedIn(glass), [outline, counting().count]]);
+    const find = finder((read: Read) => engine.read(read), glass, [...realized.keys()]);
+    const stop = await draw(
+      into,
+      { gives: { $ref: notes.unnamed, $holds: true } },
+      { engine, glass, realized, find },
+    );
+
+    await settled(() => into.querySelectorAll(".choose button").length === 2);
+    expect([...into.querySelectorAll(".choose button")].map((b) => b.textContent).sort()).toEqual([
+      "Brief",
+      "Outline",
+    ]);
+    expect(await fnOf(engine, glass, notes.unnamed)).toBeUndefined();
+
+    [...into.querySelectorAll<HTMLButtonElement>(".choose button")]
+      .find((b) => b.textContent === "Outline")!
+      .click();
+    await settled(() => into.querySelector(".count") && !into.querySelector(".choose"));
+    await settled(async () => (await fnOf(engine, glass, notes.unnamed)) === outline);
+    stop();
+  });
+
+  test("a use the read carries is found its component each time, and nothing is written", async () => {
+    const { engine, glass, into } = await page();
+    const read: Read = {
+      gives: { $ref: "~unnamed", $holds: true },
+      holons: [{ id: "~unnamed", instance: [glass.use], body: { args: [{ $ref: notes.brief }] } }],
+    };
+    let commits = 0;
+    const counted = {
+      ...engine,
+      commit: (change: Parameters<Engine["commit"]>[0]) => (commits++, engine.commit(change)),
+    };
+    const realized = realizedIn(glass);
+    const find = finder((read: Read) => engine.read(read), glass, [...realized.keys()]);
+    const stop = await draw(into, read, { engine: counted, glass, realized, find });
+
+    await settled(() => into.querySelector(".brief h1")?.textContent === "Notes");
+    expect(commits).toBe(0);
+    stop();
   });
 
   test("a text that does not read is said in place of what it gives", async () => {
@@ -202,7 +329,7 @@ describe("the page's read over glass, the interface shipped", () => {
 
     await settled(() => pills().length === 3 && pills().every(Boolean));
     expect(pills()).toEqual(["1", "add(2)", "add(3)"]);
-    expect(into.querySelector(".answer")!.textContent).toBe("6");
+    await settled(() => into.querySelector(".answer")!.textContent === "6");
     const steps = history.length;
 
     into.querySelectorAll<HTMLButtonElement>(".pill button")[1]!.click();
@@ -212,6 +339,29 @@ describe("the page's read over glass, the interface shipped", () => {
     expect(into.querySelector<HTMLInputElement>(".expression-input input")!.value).toBe("add(1, 3)");
     await settled(() => history.length === steps + 1);
     expect(decodeURIComponent(location.search)).toBe("?q=add(1, 3)");
+
+    unaddressed();
+    stop();
+  });
+
+  test("× says the holons left by their names, and the last one taken out leaves the text blank", async () => {
+    history.replaceState(null, "", `/next/?q=@First | get("see")`);
+    const { engine, glass, holon, into, stop, held, pills } = await reading("");
+    const unaddressed = await addressed(engine, glass, holon, into);
+
+    await settled(() => pills().length === 2 && pills().every(Boolean));
+    expect(pills()).toEqual(["@First", 'get("see")']);
+
+    into.querySelectorAll<HTMLButtonElement>(".pill button")[1]!.click();
+    await settled(() => pills().length === 1);
+    expect(await held()).toBe("@First");
+    await settled(() => decodeURIComponent(location.search) === "?q=@First");
+
+    into.querySelector<HTMLButtonElement>(".pill button")!.click();
+    await settled(() => pills().length === 0);
+    expect(await held()).toBe("");
+    expect(into.querySelector(".note")).toBeNull();
+    await settled(() => location.search === "");
 
     unaddressed();
     stop();

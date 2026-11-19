@@ -7,6 +7,7 @@
 // piped into it, left out, so f(a, b) gives the step f(b). Every step carries the read's
 // holons, its own use in its place, so each is said as text by print as it is.
 //
+// Nothing, null, the read of a blank text, has no steps, and no steps chain to nothing.
 // What is not a read gives null; a read that is no use of a carried use is one step.
 
 import type { Holon } from "../../../../stores/store.ts";
@@ -17,6 +18,7 @@ type Read = { gives: Value; holons: Holon[] };
 
 export const steps: Record<string, Native> = {
   steps([given]) {
+    if (given === null) return [];
     if (!isRead(given)) return null;
     const read = given as Rec;
 

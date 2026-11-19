@@ -141,6 +141,56 @@
       .expression-input.fixed input {
         color: var(--quiet);
       }
+      .brief section > section {
+        margin-top: 2em;
+      }
+      .brief h2,
+      .brief h3,
+      .brief h4 {
+        font:
+          600 1.25rem / 1.25 Georgia,
+          serif;
+        margin: 0 0 0.4em;
+      }
+      .brief h2 a,
+      .brief h3 a,
+      .brief h4 a {
+        color: inherit;
+        text-decoration: none;
+      }
+      .brief h2 a:hover,
+      .brief h3 a:hover,
+      .brief h4 a:hover {
+        text-decoration: underline;
+      }
+      .brief blockquote {
+        margin: 1em 0;
+        padding-left: 1em;
+        border-left: 2px solid var(--line);
+        color: var(--quiet);
+      }
+      .brief .unlinked {
+        border-bottom: 1px dotted var(--quiet);
+        cursor: help;
+      }
+      .brief .face a {
+        font-weight: 600;
+      }
+      .choose {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.4em;
+      }
+      .choose button {
+        padding: 0.2em 0.7em;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+      }
       .holon + .holon,
       .list:not(.row) > .drawn + .drawn {
         border-top: 1px solid var(--line);

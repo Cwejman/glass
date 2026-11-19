@@ -3,6 +3,12 @@
 // by that component's id, never by a name; a value that names none, or a component with
 // no realization here, is drawn by the component found for it by type (find.ts).
 //
+// What finding picks for a use that names no component is written into the use, as its
+// fn, where the use's store takes the change; where it does not, as in a store mounted
+// read-only, or a use the read carries, it is found again each time. Where several could
+// draw it, Choose is drawn in its place, and the person's pick is written the same way,
+// or held for the page where it cannot be.
+//
 // A realization makes a node from what its component was given, and updates it when a
 // new answer gives it something else, so what is drawn stays in place as answers come:
 // the same component at the same place, the uses it was reached through and its index
@@ -19,9 +25,10 @@
 import type { Change } from "../../engine/next/commit/change.ts";
 import type { Answer, Committed, Engine, Read } from "../../engine/next/engine.ts";
 import { after, waits } from "../../engine/next/read/maybe.ts";
-import { isRecord, type Ref, type Value } from "../../engine/next/read/values.ts";
-import { proposing, type Glass } from "./carried.ts";
-import type { Find } from "./find.ts";
+import { isHandle } from "../../engine/next/commit/change.ts";
+import { isRecord, ref, type Ref, type Value } from "../../engine/next/read/values.ts";
+import { applying, proposing, type Glass } from "./carried.ts";
+import { asHolon, type Find } from "./find.ts";
 
 // What a realization makes: its node, how it takes what it is given next, and how it
 // lets go of what it holds, a subscription for one.
@@ -39,7 +46,8 @@ export const removed = Object.freeze({ removed: true });
 // What a realization draws with: its place; what glass ships, by id; any value drawn
 // within it, at an index; the work of drawing, after which what it did not draw is let
 // go; the engine's reads; the change a value proposed at a place would make, or null;
-// and committing a change.
+// committing a change; and, where a component is to be chosen for what is drawn here,
+// the one chosen.
 export type Space = {
   place: Place;
   glass: Glass;
@@ -49,6 +57,7 @@ export type Space = {
   subscribe(read: Read, listener: (answer: Answer) => void): Promise<() => void>;
   propose(place: Place, value: Value | typeof removed): Promise<Change | null>;
   commit(change: Change): Promise<Committed>;
+  pick(component: string): void;
 };
 
 export type Drawer = {
@@ -68,7 +77,7 @@ export const isDrawing = (value: unknown): value is Drawing =>
 // Draws what the root read gives into the element, again whenever it changes, until the
 // function returned is called.
 export async function draw(into: Element, root: Read, given: Drawer): Promise<() => void> {
-  const drawer = { ...given, root };
+  const drawer: Rooted = { ...given, root, picked: new Map(), tried: new Set() };
   const top = spaceAt({ at: [] }, drawer);
   const unsubscribe = await drawer.engine.subscribe(root, (answer) =>
     top.redraw(() => arrange(into, ["value" in answer ? top.draw(answer.value) : note(answer.problem)])),
@@ -84,10 +93,17 @@ export async function draw(into: Element, root: Read, given: Drawer): Promise<()
 // within it to propose their removal from.
 type Kept = Space & { given: Value[]; dispose(): void };
 
-// A drawer, and the root read it draws, which every way back is walked through.
-type Rooted = Drawer & { root: Read };
+// A drawer, and the root read it draws, which every way back is walked through; with the
+// components picked for uses that could not be written, by the use, and the uses a pick
+// was already offered to.
+type Rooted = Drawer & { root: Read; picked: Map<string, string>; tried: Set<string> };
 
-function spaceAt(place: Place, drawer: Rooted, around?: Kept): Kept {
+function spaceAt(
+  place: Place,
+  drawer: Rooted,
+  around?: Kept,
+  pick: (component: string) => void = () => {},
+): Kept {
   const hosts = new Map<number, Host>();
   let drawn: Set<number> | undefined;
 
@@ -142,6 +158,7 @@ function spaceAt(place: Place, drawer: Rooted, around?: Kept): Kept {
     subscribe: (read, listener) => drawer.engine.subscribe(read, listener),
     propose,
     commit: (change) => drawer.engine.commit(change),
+    pick,
     dispose() {
       for (const host of hosts.values()) host.dispose();
       hosts.clear();
@@ -160,6 +177,9 @@ function hostAt(place: Place, drawer: Rooted, around: Kept): Host {
   node.className = "drawn";
   let now: { component: string; at: string; drawn: Drawn; space: Kept } | undefined;
   let turn = 0;
+  let shownNow: Value = null;
+  // The component picked here, for a value that is no use, so has nowhere to write it.
+  let chosen: string | undefined;
 
   const letGo = () => {
     now?.drawn.dispose?.();
@@ -167,7 +187,17 @@ function hostAt(place: Place, drawer: Rooted, around: Kept): Host {
     now = undefined;
   };
 
+  function pick(component: string) {
+    const use = useOf(shownNow);
+    if (use) {
+      drawer.picked.set(use, component);
+      void written(use, component, drawer);
+    } else chosen = component;
+    show(shownNow);
+  }
+
   function show(value: Value) {
+    shownNow = value;
     const mine = ++turn;
     const fail = (problem: unknown) => {
       if (mine !== turn) return;
@@ -176,7 +206,7 @@ function hostAt(place: Place, drawer: Rooted, around: Kept): Host {
     };
 
     try {
-      const shown = after(componentOf(value, place, drawer), ({ component, given, at }) => {
+      const shown = after(componentOf(value, place, drawer, chosen), ({ component, given, at }) => {
         if (mine !== turn) return;
         const where = at.join("/");
         if (now && now.component === component && now.at === where) {
@@ -187,7 +217,7 @@ function hostAt(place: Place, drawer: Rooted, around: Kept): Host {
         letGo();
         const realization = drawer.realized.get(component);
         if (!realization) throw new Error(`the component ${component} has no realization here`);
-        const space = spaceAt({ at, index: place.index }, drawer, around);
+        const space = spaceAt({ at, index: place.index }, drawer, around, pick);
         space.given = given;
         const drawn = realization(given, space);
         now = { component, at: where, drawn, space };
@@ -210,16 +240,49 @@ function hostAt(place: Place, drawer: Rooted, around: Kept): Host {
 }
 
 // The component that draws a value, what it is given, and where it stands: the one a
-// drawing names, where it is realized here, else the one found for what it was given.
-function componentOf(value: Value, place: Place, { realized, find }: Drawer) {
+// drawing names, where it is realized here; else the one picked for it; else the one
+// found for what it was given, its pick offered to the use that named none; or, where
+// several are found, Choose, given them and the value.
+function componentOf(value: Value, place: Place, drawer: Rooted, chosen?: string) {
   const drawing = isDrawing(value) ? value : undefined;
   if (drawing?.problem !== undefined) throw new Error(drawing.problem);
   const given = drawing ? drawing.given : [value];
   const at = drawing ? drawing.at : place.at;
   const named = drawing?.$draw?.$ref;
+  if (named && drawer.realized.has(named)) return { component: named, given, at };
 
-  if (named && realized.has(named)) return { component: named, given, at };
-  return after(find(given[0] ?? null), (component) => ({ component, given, at }));
+  const use = useOf(value);
+  const picked = chosen ?? (use && drawer.picked.get(use));
+  if (picked) return { component: picked, given, at };
+
+  return after(drawer.find(given[0] ?? null), (found) => {
+    if ("among" in found)
+      return { component: drawer.glass.Choose, given: [found.among.map(ref), given[0] ?? null], at };
+    if (found.by === "type" && use) void written(use, found.component, drawer);
+    return { component: found.component, given, at };
+  });
+}
+
+// The use a drawing that names no component stands for, where the field keeps it.
+function useOf(value: Value): string | undefined {
+  const use = isDrawing(value) && value.$draw === null ? value.at.at(-1) : undefined;
+  return use === undefined || isHandle(use) ? undefined : use;
+}
+
+// A component picked for a use written into it as its fn, once a page: whether the
+// use's store takes the change is the engine's to judge.
+async function written(use: string, component: string, { engine, glass, tried }: Rooted) {
+  if (tried.has(use)) return;
+  tried.add(use);
+
+  const answer = await engine.read(applying(glass, "holon", ref(use)));
+  if (!("value" in answer) || !isRecord(answer.value)) return;
+  const holon = asHolon(answer.value);
+  await engine.commit({
+    holons: [{ ...holon, body: { ...holon.body, fn: ref(component) } }],
+    says: `${holon.name ?? "a use"} drawn by the component found for it`,
+    at: {},
+  });
 }
 
 // The children of a node made these, touched only where they differ, so a node kept in

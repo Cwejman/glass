@@ -32,6 +32,21 @@ const valueOf = async (engine: Engine, text: string) => {
   return answer.value;
 };
 
+// A holon as it is kept, a use among them, which a reference to it would work out.
+async function holonOf(engine: Engine, holon: string) {
+  const [read, quote] = await Promise.all(
+    ["holon", "quote"].map(
+      async (name) => (await valueOf(engine, `@glass:functions/${name}`)) as { $ref: string },
+    ),
+  );
+  const answer = await engine.read({
+    gives: held("~holon"),
+    holons: [use("~holon", read!.$ref, [held("~quoted")]), use("~quoted", quote!.$ref, [{ $ref: holon }])],
+  });
+  if (!("value" in answer)) throw new Error(answer.problem);
+  return answer.value;
+}
+
 type Drawing = { $draw: { $ref: string }; given: Value[]; at: string[] };
 
 describe("the interface shipped", () => {
@@ -39,9 +54,50 @@ describe("the interface shipped", () => {
     const { engine, stores } = await shipped();
     expect((await shipInterface(engine, stores)).commits).toEqual([]);
 
-    expect(await valueOf(engine, 'get(@glass:components/Pill, "named")')).toBe(true);
     expect(await valueOf(engine, 'size(get(@glass:components/List, "input"))')).toBe(2);
     expect(await valueOf(engine, 'get(@glass:types/row, "says")')).toContain("Side by side");
+  });
+
+  test("a component declares what it says, its input, and its body, and nothing more", async () => {
+    const { engine } = await shipped();
+    expect(await valueOf(engine, 'keys(get(@glass:types/component, "mould"))')).toEqual([
+      "body",
+      "input",
+      "says",
+    ]);
+
+    const declared = (await valueOf(
+      engine,
+      'map(get(@glass:components, "holds"), (c) => [get(c, "name"), keys(get(holon(c), "body"))])',
+    )) as [string, string[]][];
+    for (const [, keys] of declared)
+      expect(keys.filter((key) => !["says", "input", "body"].includes(key))).toEqual([]);
+    expect(declared.map(([name]) => name).sort()).toEqual(
+      ["Answer", "Brief", "Choose", "ExpressionInput", "List", "Pill", "Reader", "Search", "Value"].sort(),
+    );
+
+    // Brief takes a brief; the component realized nowhere is gone, its use naming none.
+    expect(await valueOf(engine, 'get(get(get(@glass:components/Brief, "input"), 0), "instance")')).toEqual([
+      { $ref: id(6) },
+    ]);
+    expect(await holonOf(engine, notes.session)).toBeNull();
+    expect(await holonOf(engine, notes.sessionUse)).toMatchObject({ body: { args: ["said"] } });
+    expect(await holonOf(engine, notes.sessionUse)).not.toHaveProperty("body.fn");
+  });
+
+  test("print says a holon by the names that reach it alone, else by its id", async () => {
+    const { engine } = await shipped();
+    expect(await valueOf(engine, `print(parse("@${notes.first}"))`)).toBe("@First");
+    expect(await valueOf(engine, `print(parse("@${notes.first} | get(\\"see\\")"))`)).toBe("@First.see");
+    expect(await valueOf(engine, `print(parse("@${id(101)}"))`)).toBe(`@${id(101)}`);
+  });
+
+  test("a blank text reads as nothing, which has no steps, and nothing is said as a blank text", async () => {
+    const { engine } = await shipped();
+    expect(await valueOf(engine, 'parse("  ")')).toBeNull();
+    expect(await valueOf(engine, "steps(null)")).toEqual([]);
+    expect(await valueOf(engine, "chain([])")).toBeNull();
+    expect(await valueOf(engine, "print(chain(steps(null)))")).toBe("");
   });
 
   test("steps and chain are a pair, and chain(steps(r)) says what r says", async () => {

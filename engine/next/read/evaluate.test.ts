@@ -389,8 +389,8 @@ describe("reading over stores", () => {
     const texts = [
       "add(1, 2)",
       `map([1, 2, 3], x => add(x, mul(x, 2)))`,
-      `find(?h, [?h, "name", ?n], not([?h, "instance", @${id(1)}]), eq(?n, "note"))`,
-      `[@${id(101)}.text, {sum: add(1, 2)}]`,
+      `find(?h, [?h, "name", ?n], not([?h, "instance", @function]), eq(?n, "note"))`,
+      `[@Notes.text, {sum: add(1, 2)}]`,
     ];
 
     expect((await read(use("parse", "add(1, 2)"), holons)).value).toEqual({
@@ -398,6 +398,9 @@ describe("reading over stores", () => {
       holons: [{ id: "~1", instance: [id(2)], body: { fn: { $ref: fn("add") }, args: [1, 2] } }],
     });
     for (const text of texts) expect((await read(use("print", use("parse", text)), holons)).value).toBe(text);
+
+    // A holon is said by the name that reaches it alone, the id it was written by aside.
+    expect((await read(use("print", use("parse", `@${id(1)}`)), holons)).value).toBe("@function");
     expect((await read(use("parse", "add(1,"), holons)).problem).toBe(
       "an expression begins here, at 7 of “add(1,”",
     );
