@@ -35,7 +35,7 @@ export const value: Realization = (given, space) => {
 
       const mine = turn;
       void space
-        .subscribe(applying("holon", ref(holon)), (answer) => {
+        .subscribe(applying(space.glass, "holon", ref(holon)), (answer) => {
           if (mine === turn) space.redraw(() => arrange(node, [named(holonDrawn(answer), space)]));
         })
         .then((stopping) => (mine === turn ? (stop = stopping) : stopping()));
@@ -121,6 +121,7 @@ function named(node: Child, space: Space): Node {
   void space
     .read(
       applyingEach(
+        space.glass,
         "get",
         ids.map((id) => [ref(id), "name"]),
       ),

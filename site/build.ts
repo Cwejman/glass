@@ -8,6 +8,7 @@ import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } f
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { engine } from "../engine/next/engine.ts";
+import { shipInterface } from "../engine/next/uses/interface.ts";
 import { migrate } from "../engine/next/uses/migrate.ts";
 import { sameThread } from "../runtime/runtime.ts";
 import { storesHere } from "../stores.ts";
@@ -89,7 +90,7 @@ if (!builtNext.success) throw new AggregateError(builtNext.logs, "building the p
 cpSync(join(import.meta.dir, "next", "index.html"), join(next, "index.html"));
 
 // Each store in strata, as the new engine reads it: converted, its expressions written
-// again as uses, then its head and every blob the head reaches written gzipped to
+// again as uses, the interface shipped in glass, then its head and every blob the head reaches written gzipped to
 // next/strata/<name>/, which the browser unpacks.
 const converted = mkdtempSync(join(tmpdir(), "glass-strata-"));
 try {
@@ -103,6 +104,7 @@ try {
     await migrating.mount(name, stores.get(name)!, { write: true });
   }
   await migrate(migrating, stores);
+  await shipInterface(migrating, stores);
   for (const name of names) await migrating.unmount(name);
 
   for (const name of names) {

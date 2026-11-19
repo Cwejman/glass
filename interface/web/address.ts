@@ -1,15 +1,16 @@
 // The address and the buffer, kept as one. What ?q= asks is typed into the buffer's text
 // when the page opens and whenever the browser moves through its history; each change to
 // the text is written back into the address, in place of where it stands, or as a step
-// of its own after a deliberate one: Enter in a form, or following a link to another
-// address of this page, which is followed here rather than loaded again.
+// of its own after a deliberate one: a form submitted, as Enter in the input or a pill's
+// × is, or following a link to another address of this page, which is followed here
+// rather than loaded again.
 //
 // Visits are the browser's own history: nothing of them is kept in the field.
 
 import type { Engine } from "../../engine/next/engine.ts";
 import { ref } from "../../engine/next/read/values.ts";
 import { typed } from "../../stores/buffer/string.ts";
-import { applying } from "./carried.ts";
+import { applying, type Glass } from "./carried.ts";
 
 // What the address asks.
 export const asked = (at: string = location.href) => new URL(at).searchParams.get("q") ?? "";
@@ -24,6 +25,7 @@ export const addressOf = (text: string) =>
 // draws in, until the function returned is called.
 export async function addressed(
   engine: Pick<Engine, "subscribe" | "commit">,
+  glass: Glass,
   text: string,
   within: Element,
 ): Promise<() => void> {
@@ -34,7 +36,7 @@ export async function addressed(
 
   await type(asked());
 
-  const unsubscribe = await engine.subscribe(applying("get", ref(text), "text"), (answer) => {
+  const unsubscribe = await engine.subscribe(applying(glass, "get", ref(text), "text"), (answer) => {
     if (!("value" in answer) || typeof answer.value !== "string") return;
 
     const now = answer.value;

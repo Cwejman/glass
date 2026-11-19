@@ -1,27 +1,29 @@
-// Where each component is realized on the web: its code, by the id of the component it
-// realizes. This map is the one place that says so; a component drawn is never looked
-// up by its name. Whether code stays with the chassis that runs it, or moves into the
-// holons it realizes, is not yet settled, and only this file would change.
-//
-// Value and List are the field's own components, as glass holds them; answer and
-// expression-input are carried by the page's read until glass holds them.
+// Where each component is realized on the web: its code, by the name of the component
+// glass ships. This is the one place that says so; the page finds each component's id
+// once, by its route (carried.ts), and a component drawn is found here by that id, never
+// by its name. A chassis on another surface keeps a map of its own.
 
-import { answer as answerId, expressionInput as expressionInputId } from "./carried.ts";
+import type { Glass } from "./carried.ts";
 import type { Realization } from "./chassis.ts";
 import { answer } from "./answer.tsx";
 import { expressionInput } from "./expression-input.tsx";
 import { list } from "./list.tsx";
+import { pill } from "./pill.tsx";
 import { value } from "./value.tsx";
 
-// The component that draws any value no other component takes.
-export const fallback = "1M760BANMFZJ000";
+const realizations = {
+  Value: value,
+  List: list,
+  Answer: answer,
+  ExpressionInput: expressionInput,
+  Pill: pill,
+} satisfies Partial<Record<keyof Glass, Realization>>;
 
-// The component that draws a list, item by item.
-export const listed = "1M6YD90YH1TJ00V";
-
-export const realized: ReadonlyMap<string, Realization> = new Map([
-  [fallback, value],
-  [listed, list],
-  [answerId, answer],
-  [expressionInputId, expressionInput],
-]);
+// The components realized here, by the ids glass ships them under.
+export const realizedIn = (glass: Glass): ReadonlyMap<string, Realization> =>
+  new Map(
+    Object.entries(realizations).map(([name, realization]) => [
+      glass[name as keyof typeof realizations],
+      realization,
+    ]),
+  );

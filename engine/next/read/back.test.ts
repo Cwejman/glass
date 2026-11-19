@@ -18,7 +18,7 @@ afterAll(() => made.forEach((at) => rmSync(at, { recursive: true, force: true })
 const id = (n: number) => String(n).padStart(15, "0");
 const declared = { says: "", shape: "json", optional: true };
 
-const natives = ["back", "get", "add", "parse", "print"];
+const natives = ["back", "get", "add", "parse", "print", "each", "steps", "chain", "quote"];
 const fn = (name: string) => ({ $ref: id(10 + natives.indexOf(name)) });
 const text = id(100);
 
@@ -27,12 +27,14 @@ const language: Holon[] = [
   { id: id(2), instance: [], name: "use", mould: { fn: declared, args: declared }, body: {} },
   { id: id(3), instance: [], name: "component", mould: { input: declared }, body: {} },
   ...natives.map((name) => ({ id: fn(name).$ref, instance: [id(1)], name, body: { native: name } })),
-  { id: text, instance: [], name: "text", body: { text: "[3]", kept: true } },
+  { id: text, instance: [], name: "text", body: { text: "[3]", kept: true, texts: ["[1]", "[2]"] } },
 ];
 
 // Parse and print as a pair, each naming the other its reverse.
 language.find(({ name }) => name === "parse")!.body.reverse = fn("print");
 language.find(({ name }) => name === "print")!.body.reverse = fn("parse");
+language.find(({ name }) => name === "steps")!.body.reverse = fn("chain");
+language.find(({ name }) => name === "chain")!.body.reverse = fn("steps");
 
 async function field() {
   const folder = mkdtempSync(join(tmpdir(), "glass-back-"));
@@ -85,10 +87,18 @@ function carried() {
   return { holons, use, component };
 }
 
-// The read asking the way back from a place: what it gives, and the use it carries.
+// The read asking the way back from a place: what it gives, and the uses it carries, the
+// value quoted, so the references within it stay its own.
 const proposed = (at: string[], place: number, value: Value) => ({
   gives: { $ref: "~back", $holds: true },
-  holon: { id: "~back", instance: [id(2)], body: { fn: fn("back"), args: [at, place, value] } } as Holon,
+  holons: [
+    {
+      id: "~back",
+      instance: [id(2)],
+      body: { fn: fn("back"), args: [at, place, { $ref: "~value", $holds: true }] },
+    },
+    { id: "~value", instance: [id(2)], body: { fn: fn("quote"), args: [value] } },
+  ] as Holon[],
 });
 
 describe("the way back", () => {
@@ -98,8 +108,10 @@ describe("the way back", () => {
     use("~input", component("~view", ["~shown"]), use("~text", fn("get"), { $ref: text }, "text"));
     const asked = proposed(["~input"], 0, "[4]");
 
-    expect((await read(asked.gives, [...holons, asked.holon])).value).toEqual({
-      holons: [{ id: text, instance: [], name: "text", body: { text: "[4]", kept: true } }],
+    expect((await read(asked.gives, [...holons, ...asked.holons])).value).toEqual({
+      holons: [
+        { id: text, instance: [], name: "text", body: { text: "[4]", kept: true, texts: ["[1]", "[2]"] } },
+      ],
       says: "text of text set",
       at: {},
     });
@@ -113,7 +125,7 @@ describe("the way back", () => {
     use("~root", framing, use("~text", fn("get"), { $ref: text }, "text"));
     const asked = proposed(["~root", "~inner"], 0, "typed");
 
-    const { value } = await read(asked.gives, [...holons, asked.holon]);
+    const { value } = await read(asked.gives, [...holons, ...asked.holons]);
     expect((value as { holons: Holon[] }).holons[0]!.body.text).toBe("typed");
   });
 
@@ -130,7 +142,7 @@ describe("the way back", () => {
     use("~input", view, use("~parsed", fn("parse"), use("~text", fn("get"), { $ref: text }, "text")));
     const asked = proposed(["~input"], 0, parsed!);
 
-    const { value } = await read(asked.gives, [...holons, asked.holon]);
+    const { value } = await read(asked.gives, [...holons, ...asked.holons]);
     expect((value as { holons: Holon[] }).holons[0]!.body.text).toBe("[1, 2]");
   });
 
@@ -145,7 +157,7 @@ describe("the way back", () => {
 
     for (const at of [["~written"], ["~added"], ["~kept"], ["~loose"], [id(999)]]) {
       const asked = proposed(at, 0, "x");
-      expect((await read(asked.gives, [...holons, asked.holon])).value).toBeNull();
+      expect((await read(asked.gives, [...holons, ...asked.holons])).value).toBeNull();
     }
   });
 
@@ -169,6 +181,57 @@ describe("the way back", () => {
     use("~input", { $ref: "~view" }, use("~text", fn("get"), { $ref: text }, "text"));
     const asked = proposed(["~input"], 0, "x");
 
-    expect((await read(asked.gives, [...holons, asked.holon])).value).toBeNull();
+    expect((await read(asked.gives, [...holons, ...asked.holons])).value).toBeNull();
+  });
+
+  test("through each, a drawing of the component given back what it was given first", async () => {
+    const read = await field();
+    const { holons, use, component } = carried();
+    const pill = component("~pill", ["~step"]);
+    const listed = component("~list", ["~items"]);
+    const typed = use("~text", fn("get"), { $ref: text }, "text");
+    use(
+      "~pills",
+      listed,
+      use("~each", fn("each"), use("~steps", fn("steps"), use("~parsed", fn("parse"), typed)), pill),
+    );
+    const drawn = (step: Value) => ({ $draw: pill, given: [step], at: [] });
+
+    const steps = (
+      await read({ $ref: "~s", $holds: true }, [
+        { id: "~s", instance: [id(2)], body: { fn: fn("steps"), args: [{ $ref: "~p", $holds: true }] } },
+        { id: "~p", instance: [id(2)], body: { fn: fn("parse"), args: ["1 | add(2) | add(3)"] } },
+      ])
+    ).value as Value[];
+    expect(steps).toHaveLength(3);
+
+    // The second step taken out: the chain closes over it.
+    const asked = proposed(["~pills"], 0, [drawn(steps[0]!), drawn(steps[2]!)]);
+    const { value } = await read(asked.gives, [...holons, ...asked.holons]);
+    expect((value as { holons: Holon[] }).holons[0]!.body.text).toBe("add(1, 3)");
+
+    // An item drawn by another component has no way back.
+    const stranger = proposed(["~pills"], 0, [{ $draw: { $ref: "~list" }, given: [steps[0]!], at: [] }]);
+    expect((await read(stranger.gives, [...holons, ...stranger.holons])).value).toBeNull();
+  });
+
+  test("through each of a function naming its reverse, each item given the reverse", async () => {
+    const read = await field();
+    const { holons, use, component } = carried();
+    const view = component("~view", ["~shown"]);
+    use(
+      "~input",
+      view,
+      use("~each", fn("each"), use("~texts", fn("get"), { $ref: text }, "texts"), fn("parse")),
+    );
+    const parsed = (
+      await read({ $ref: "~p", $holds: true }, [
+        { id: "~p", instance: [id(2)], body: { fn: fn("parse"), args: ["[5]"] } },
+      ])
+    ).value!;
+
+    const asked = proposed(["~input"], 0, [parsed]);
+    const { value } = await read(asked.gives, [...holons, ...asked.holons]);
+    expect((value as { holons: Holon[] }).holons[0]!.body.texts).toEqual(["[5]"]);
   });
 });

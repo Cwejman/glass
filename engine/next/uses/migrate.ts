@@ -576,7 +576,7 @@ function textPair(language: Language, mint: () => string): Holon[] {
 
 // The whole holding a holon, holding beside it the holons given, in the list it holds
 // it in.
-async function besideIn(field: Field, id: string, holons: readonly Holon[]): Promise<Holon> {
+export async function besideIn(field: Field, id: string, holons: readonly Holon[]): Promise<Holon> {
   const facts = await field.facts({ a: "$holds", v: { $ref: id } });
   const whole = (
     await keptAll(
@@ -597,13 +597,13 @@ async function besideIn(field: Field, id: string, holons: readonly Holon[]): Pro
 }
 
 // A handle for each holon a change brings into being, ~1 on.
-function handles() {
+export function handles() {
   let made = 0;
   return () => `~${++made}`;
 }
 
 // The field as every store stands now.
-async function fieldAt(stores: ReadonlyMap<string, Store>): Promise<Field> {
+export async function fieldAt(stores: ReadonlyMap<string, Store>): Promise<Field> {
   const heads = Object.fromEntries(
     await Promise.all([...stores].map(async ([name, store]) => [name, await headOf(store)] as const)),
   );
@@ -619,7 +619,7 @@ async function headOf(store: Store): Promise<Head | null> {
 }
 
 // The holons with these ids, each once, with the store each is read from.
-async function keptAll(field: Field, ids: string[]) {
+export async function keptAll(field: Field, ids: string[]) {
   const kept = await Promise.all([...new Set(ids)].map((id) => field.holon(id)));
   return kept.filter((each): each is NonNullable<typeof each> => Boolean(each));
 }

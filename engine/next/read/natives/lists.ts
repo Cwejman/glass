@@ -15,6 +15,9 @@ export function lists({ apply }: Calling): Record<string, Native> {
     concat: (given) => given.flatMap(list),
 
     map: ([items, fn]) => each(items!, fn!),
+    // map by another name, for a list drawn item by item: its way back is known item by
+    // item (back.ts), so what is drawn of each may be taken back to what it was given.
+    each: ([items, fn]) => each(items!, fn!),
     filter: ([items, fn]) => after(each(items!, fn!), (kept) => list(items).filter((_, i) => truly(kept[i]))),
     sort: ([items, fn]) =>
       after(fn ? each(items!, fn) : list(items), (by) =>

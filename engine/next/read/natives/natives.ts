@@ -14,6 +14,7 @@ import { lazy } from "./lazy.ts";
 import { legacy } from "./legacy.ts";
 import { lists } from "./lists.ts";
 import { sets } from "./sets.ts";
+import { steps } from "./steps.ts";
 import { text } from "./text.ts";
 import { values } from "./values.ts";
 
@@ -54,6 +55,7 @@ export function natives(calling: Calling) {
       ...history(calling),
       ...legacy(calling),
       ...text(calling),
+      ...steps,
       ...back(calling),
       // A word said is a clause of a pattern, and nothing outside one.
       said: () => {
@@ -61,6 +63,11 @@ export function natives(calling: Calling) {
       },
     } as Record<string, Native>,
     lazy: { ...lazy, ...sets() } as Record<string, Lazy>,
-    structural: patterns(calling) as Record<string, Structural>,
+    structural: {
+      ...patterns(calling),
+      // A value as it is written, nothing in it worked out: for a value given to a read
+      // as data, as a drawing or a read is, whose references are its own.
+      quote: ([written]) => (written ?? null) as Value,
+    } as Record<string, Structural>,
   };
 }

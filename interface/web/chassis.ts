@@ -12,13 +12,15 @@
 //
 // A realization may also propose a value where it stands: the way back (back.ts) walks
 // it through the root read to a change, or to null where there is none, and the
-// realization commits the change, or shows it cannot be edited.
+// realization commits the change, or shows it cannot be edited. One drawn as an item of
+// another may propose its own removal: the drawing around it is proposed what it was
+// given first without that item.
 
 import type { Change } from "../../engine/next/commit/change.ts";
 import type { Answer, Committed, Engine, Read } from "../../engine/next/engine.ts";
 import { after, waits } from "../../engine/next/read/maybe.ts";
 import { isRecord, type Ref, type Value } from "../../engine/next/read/values.ts";
-import { proposing } from "./carried.ts";
+import { proposing, type Glass } from "./carried.ts";
 import type { Find } from "./find.ts";
 
 // What a realization makes: its node, how it takes what it is given next, and how it
@@ -31,21 +33,27 @@ export type Realization = (given: Value[], space: Space) => Drawn;
 // drawings beside it; and, for a value proposed there, which of what it was given.
 export type Place = { at: readonly string[]; index?: number; arg?: number };
 
-// What a realization draws with: its place; any value drawn within it, at an index; the
-// work of drawing, after which what it did not draw is let go; the engine's reads; the
-// change a value proposed at a place would make, or null; and committing a change.
+// Proposed in place of a value, the item proposing it taken out of the drawing around it.
+export const removed = Object.freeze({ removed: true });
+
+// What a realization draws with: its place; what glass ships, by id; any value drawn
+// within it, at an index; the work of drawing, after which what it did not draw is let
+// go; the engine's reads; the change a value proposed at a place would make, or null;
+// and committing a change.
 export type Space = {
   place: Place;
+  glass: Glass;
   draw(value: Value, index?: number): Node;
   redraw(work: () => void): void;
   read(read: Read): Promise<Answer>;
   subscribe(read: Read, listener: (answer: Answer) => void): Promise<() => void>;
-  propose(place: Place, value: Value): Promise<Change | null>;
+  propose(place: Place, value: Value | typeof removed): Promise<Change | null>;
   commit(change: Change): Promise<Committed>;
 };
 
 export type Drawer = {
   engine: Pick<Engine, "read" | "subscribe" | "commit">;
+  glass: Glass;
   realized: ReadonlyMap<string, Realization>;
   find: Find;
 };
@@ -72,12 +80,14 @@ export async function draw(into: Element, root: Read, given: Drawer): Promise<()
   };
 }
 
-type Kept = Space & { dispose(): void };
+// A space kept by the chassis: with what its drawing was given now, for the items drawn
+// within it to propose their removal from.
+type Kept = Space & { given: Value[]; dispose(): void };
 
 // A drawer, and the root read it draws, which every way back is walked through.
 type Rooted = Drawer & { root: Read };
 
-function spaceAt(place: Place, drawer: Rooted): Kept {
+function spaceAt(place: Place, drawer: Rooted, around?: Kept): Kept {
   const hosts = new Map<number, Host>();
   let drawn: Set<number> | undefined;
 
@@ -101,29 +111,43 @@ function spaceAt(place: Place, drawer: Rooted): Kept {
 
   function draw(value: Value, index = 0) {
     drawn?.add(index);
-    if (!hosts.has(index)) hosts.set(index, hostAt({ at: place.at, index }, drawer));
+    if (!hosts.has(index)) hosts.set(index, hostAt({ at: place.at, index }, drawer, space));
     const host = hosts.get(index)!;
     host.show(value);
     return host.node;
   }
 
-  return {
+  async function propose(
+    { at, arg = 0, index }: Place,
+    value: Value | typeof removed,
+  ): Promise<Change | null> {
+    if (value === removed) {
+      const items = around?.given[0];
+      if (!around || index === undefined || !Array.isArray(items)) return null;
+      return around.propose({ at: around.place.at }, items.toSpliced(index, 1));
+    }
+
+    const answer = await drawer.engine.read(proposing(drawer.glass, drawer.root, at, arg, value));
+    if (!("value" in answer)) throw new Error(answer.problem);
+    return answer.value as unknown as Change | null;
+  }
+
+  const space: Kept = {
     place,
+    glass: drawer.glass,
+    given: [],
     draw,
     redraw,
     read: (read) => drawer.engine.read(read),
     subscribe: (read, listener) => drawer.engine.subscribe(read, listener),
-    async propose({ at, arg = 0 }, value) {
-      const answer = await drawer.engine.read(proposing(drawer.root, at, arg, value));
-      if (!("value" in answer)) throw new Error(answer.problem);
-      return answer.value as unknown as Change | null;
-    },
+    propose,
     commit: (change) => drawer.engine.commit(change),
     dispose() {
       for (const host of hosts.values()) host.dispose();
       hosts.clear();
     },
   };
+  return space;
 }
 
 type Host = { node: Element; show(value: Value): void; dispose(): void };
@@ -131,7 +155,7 @@ type Host = { node: Element; show(value: Value): void; dispose(): void };
 // One place a drawing stands, and what is drawn there now: updated where the same
 // component draws at the same place, else made anew. Where finding a component waits on
 // the engine, an older value found later never lands over a newer one.
-function hostAt(place: Place, drawer: Rooted): Host {
+function hostAt(place: Place, drawer: Rooted, around: Kept): Host {
   const node = document.createElement("div");
   node.className = "drawn";
   let now: { component: string; at: string; drawn: Drawn; space: Kept } | undefined;
@@ -156,13 +180,15 @@ function hostAt(place: Place, drawer: Rooted): Host {
         if (mine !== turn) return;
         const where = at.join("/");
         if (now && now.component === component && now.at === where) {
+          now.space.given = given;
           return now.drawn.update(given);
         }
 
         letGo();
         const realization = drawer.realized.get(component);
         if (!realization) throw new Error(`the component ${component} has no realization here`);
-        const space = spaceAt({ at, index: place.index }, drawer);
+        const space = spaceAt({ at, index: place.index }, drawer, around);
+        space.given = given;
         const drawn = realization(given, space);
         now = { component, at: where, drawn, space };
         node.replaceChildren(drawn.node);

@@ -5,6 +5,9 @@
 // and what it was given is that use's arguments, in the order of its component's input.
 // From the argument a value is proposed for, the walk goes outward:
 //   - a use of get(holon, key) ends it: the change is that holon with key set to the value;
+//   - a use of each(list, fn) goes on into its list, given each item of the value taken
+//     back: a drawing of the component fn gives back what it was given first, any other
+//     item what the reverse fn names makes of it;
 //   - a use whose function names a reverse goes on into its first argument, given what
 //     the reverse makes of the value, the other arguments held as they are;
 //   - a placeholder goes on in the use one step out, at the placeholder's place in the
@@ -14,9 +17,9 @@
 // The walk only reads; whether the change is committed is for whoever proposed it.
 
 import type { Holon } from "../../../stores/store.ts";
-import { inputOf, knownAs, type Known } from "./input.ts";
+import { inputOf, isComponentType, knownAs, type Known } from "./input.ts";
 import type { Calling, Native } from "./natives/natives.ts";
-import { isRecord, isRef, type Value } from "./values.ts";
+import { isRecord, isRef, type Rec, type Value } from "./values.ts";
 
 // What a holon's own keys say, kept apart from its body, so get gives them and no change
 // of a body key reaches them.
@@ -65,6 +68,7 @@ export function back({ field, apply }: Calling): Record<string, Native> {
     if (use) {
       const { native, reverse } = use.fn.body;
       if (native === "get") return set(use.args, value);
+      if (native === "each") return unapplied(use.args, at, value);
       if (!isRef(reverse) || !use.args.length) return null;
 
       const [first, ...rest] = use.args;
@@ -76,6 +80,23 @@ export function back({ field, apply }: Calling): Record<string, Native> {
     const place = around && inputOf(around.fn)?.findIndex((link) => link.$ref === written.$ref);
     if (place === null || place === undefined || place < 0) return null;
     return argument(at.slice(0, -1), place, value);
+  }
+
+  // each(list, fn) given a list: the list it would be given, item by item, walked on.
+  async function unapplied([items, fn]: unknown[], at: readonly string[], value: Value): Promise<Value> {
+    const applying = isRef(fn) && !(fn as { $holds?: boolean }).$holds ? await known(fn.$ref) : null;
+    if (!applying?.applicable || !Array.isArray(value)) return null;
+
+    const { reverse } = applying.holon.body;
+    const drawn = applying.types.some(isComponentType);
+    const back = async (item: Value): Promise<Value | undefined> => {
+      if (drawn) return isDrawingOf(item, applying.holon.id) ? item.given[0] : undefined;
+      return isRef(reverse) ? apply(reverse, [item]) : undefined;
+    };
+
+    const given = await Promise.all(value.map(back));
+    if (given.some((item) => item === undefined)) return null;
+    return expression(items, at, given as Value[]);
   }
 
   // The change get(holon, key) is walked back to: the holon, its body's key the value.
@@ -104,6 +125,12 @@ export function back({ field, apply }: Calling): Record<string, Native> {
         ? argument(at as string[], place, value ?? null)
         : null,
   };
+}
+
+// A drawing as it leaves the engine, of the component given.
+function isDrawingOf(value: Value, component: string): value is { given: Value[] } & Rec {
+  const { $draw, given } = isRecord(value) ? (value as Rec) : {};
+  return isRef($draw) && $draw.$ref === component && Array.isArray(given);
 }
 
 // A value written as it is: no reference anywhere in it, so it gives itself.
