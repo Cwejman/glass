@@ -5,19 +5,28 @@
 // brief standing there, a break, is a link to it: it is read where it leads.
 //
 // Every brief read is drawn again whenever any of them changes, all at once, so each
-// drawing within keeps its place among the rest.
+// drawing within keeps its place among the rest. Given another brief, what is shown is
+// kept until the new one and its sections are read, or until waiting has been long
+// enough, so moving between briefs never blanks the page nor grows it piece by piece.
+//
+// The reader says where a brief stands, so a brief says nothing of what holds it.
 
 import { h, type Child } from "../../components/jsx.ts";
 import type { Answer } from "../../engine/next/engine.ts";
 import { isRecord, isRef, ref, type Value } from "../../engine/next/read/values.ts";
 import { applying } from "./carried.ts";
-import { arrange, note, type Realization, type Space } from "./chassis.ts";
+import { arrange, awaiting, note, type Realization, type Space } from "./chassis.ts";
 import { block, refsOf, type Holons, type Read } from "./prose.tsx";
 
 export const brief: Realization = (given, space) => {
   const node = (<article class="brief" />) as HTMLElement;
-  const read = new Map<string, { holons?: Holons; problem?: string; stop?: () => void }>();
+  const read = new Map<string, Reading>();
   let root: string | undefined;
+  // The brief drawn last, and whether waiting for the one given since has been enough.
+  let drawnRoot: string | undefined;
+  let late = false;
+  let lateness: ReturnType<typeof setTimeout> | undefined;
+  let done = () => {};
 
   // Each brief reached kept read, those no longer reached let go.
   function reading(ids: Set<string>) {
@@ -29,21 +38,43 @@ export const brief: Realization = (given, space) => {
 
     for (const id of ids) {
       if (read.has(id)) continue;
-      const each: { holons?: Holons; problem?: string; stop?: () => void } = {};
+      const each: Reading = {};
       read.set(id, each);
 
       void space
-        .subscribe(applying(space.glass, "whole", ref(id), ["brief"]), (answer) => {
-          if (read.get(id) !== each) return;
-          Object.assign(each, wholeOf(answer));
+        .subscribe(applying(space.glass, "whole", ref(id), null, ["brief"]), (answer) => {
+          // A store changing answers every read again; one answered as it was is not
+          // drawn again.
+          const said = JSON.stringify("value" in answer ? answer.value : answer.problem);
+          if (read.get(id) !== each || said === each.said) return;
+          Object.assign(each, wholeOf(answer), { said });
           draw();
         })
         .then((stop) => (read.get(id) === each ? (each.stop = stop) : stop()));
     }
   }
 
+  // The briefs reached from the root so far, and whether each of them is read.
+  function reachable(id: string, reached = new Set<string>()): { reached: Set<string>; read: boolean } {
+    reached.add(id);
+    const { holons, problem } = read.get(id) ?? {};
+    if (problem !== undefined) return { reached, read: true };
+    const brief = holons?.[id];
+    if (!brief) return { reached, read: false };
+    let all = true;
+    for (const part of refsOf(brief.body.parts))
+      if (!reached.has(part)) all = reachable(part, reached).read && all;
+    return { reached, read: all };
+  }
+
   function draw() {
     if (!root) return;
+    if (root !== drawnRoot && !late) {
+      const { reached, read: ready } = reachable(root);
+      if (!ready) return reading(reached);
+    }
+    drawnRoot = root;
+    done();
     const reached = new Set<string>();
     space.redraw(() => arrange(node, [section(root!, 1, reached, drawer(space))]));
     reading(reached);
@@ -87,12 +118,33 @@ export const brief: Realization = (given, space) => {
     }
     if (given.$ref === root) return;
     root = given.$ref;
+    late = false;
+    clearTimeout(lateness);
+    done();
+    done = awaiting(node);
+    lateness = setTimeout(() => {
+      late = true;
+      draw();
+    }, 2000);
     reading(new Set([root]));
+    // A brief already read, as a section of the one shown, is drawn without waiting on it.
+    if (read.get(root)?.holons) draw();
   }
 
   update(given);
-  return { node, update, dispose: () => reading(new Set()) };
+  return {
+    node,
+    update,
+    dispose: () => {
+      clearTimeout(lateness);
+      done();
+      reading(new Set());
+    },
+  };
 };
+
+// A brief as it is read: what its whole gives, or the problem it met, as last answered.
+type Reading = { holons?: Holons; problem?: string; said?: string; stop?: () => void };
 
 // A brief standing in another's flow: a link to it, by its name.
 const faceOf = (brief: Read): Node => (

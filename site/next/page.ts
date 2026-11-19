@@ -12,12 +12,20 @@ import { addressed } from "../../interface/web/address.ts";
 import { applying, found } from "../../interface/web/carried.ts";
 import { draw, note } from "../../interface/web/chassis.ts";
 import { finder } from "../../interface/web/find.ts";
+import { inspecting } from "../../interface/web/inspector.tsx";
 import { realizedIn } from "../../interface/web/realized.ts";
 import { workers } from "../../runtime/runtime.ts";
 import { begun } from "../../stores/buffer/string.ts";
 import type { Store } from "../../stores/store.ts";
 
 const page = document.getElementById("glass")!;
+
+// An answer slow to come shows the page working, as does the page while it opens.
+let awaited = 0;
+document.addEventListener("busy", (event) => {
+  awaited = Math.max(0, awaited + ((event as CustomEvent<boolean>).detail ? 1 : -1));
+  document.body.classList.toggle("busy", awaited > 0);
+});
 
 // Each started from its own file; the build writes each beside the page.
 const engineCode = new URL("../../engine/next/browser.ts", import.meta.url);
@@ -48,7 +56,7 @@ try {
   if (!("ids" in query)) throw new Error(`the query was not begun: ${JSON.stringify(query)}`);
 
   const text = query.ids["~2"]!;
-  await addressed(engine, glass, text, page);
+  await addressed(engine, glass, text, document.body);
 
   const read = await engine.read(applying(glass, "parse", root));
   if (!("value" in read)) throw new Error(`the page's read does not read: ${read.problem}`);
@@ -60,6 +68,9 @@ try {
     realized,
     find: finder((read) => engine.read(read), glass, [...realized.keys()]),
   });
+  inspecting(page, { engine, glass, root: read.value as unknown as Read });
 } catch (problem) {
   page.replaceChildren(note(problem instanceof Error ? problem.message : String(problem)));
+} finally {
+  document.body.classList.remove("opening");
 }

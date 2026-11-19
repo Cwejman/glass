@@ -74,10 +74,38 @@ export type Drawing = { $draw: Ref | null; given: Value[]; at: string[]; problem
 export const isDrawing = (value: unknown): value is Drawing =>
   isRecord(value) && "$draw" in value && Array.isArray(value.given) && Array.isArray(value.at);
 
+// What the chassis knows of a drawing where it stands: the component drawing it, by its
+// id and, where glass ships it, its name; what it was given; and its place.
+export type Standing = {
+  component: string;
+  name?: string;
+  given: Value[];
+  at: readonly string[];
+  index?: number;
+};
+
+const standing = new WeakMap<Element, Standing>();
+
+// The drawings standing at a node, the outermost first: what an inspector shows of a
+// place, as the chassis drew it, never worked out again.
+export function drawingsAt(node: Node | null): (Standing & { node: Element })[] {
+  const found: (Standing & { node: Element })[] = [];
+  for (let at = node instanceof Element ? node : (node?.parentElement ?? null); at; at = at.parentElement) {
+    const here = standing.get(at);
+    if (here) found.unshift({ ...here, node: at });
+  }
+  return found;
+}
+
+// So long a drawing made anew may take to show something before the one it replaces
+// goes, so moving between answers never blanks what is shown.
+const keptFor = 400;
+
 // Draws what the root read gives into the element, again whenever it changes, until the
 // function returned is called.
 export async function draw(into: Element, root: Read, given: Drawer): Promise<() => void> {
-  const drawer: Rooted = { ...given, root, picked: new Map(), tried: new Set() };
+  const names = new Map(Object.entries(given.glass).map(([name, id]) => [id, name]));
+  const drawer: Rooted = { ...given, root, names, picked: new Map(), tried: new Set() };
   const top = spaceAt({ at: [] }, drawer);
   const unsubscribe = await drawer.engine.subscribe(root, (answer) =>
     top.redraw(() => arrange(into, ["value" in answer ? top.draw(answer.value) : note(answer.problem)])),
@@ -96,7 +124,12 @@ type Kept = Space & { given: Value[]; dispose(): void };
 // A drawer, and the root read it draws, which every way back is walked through; with the
 // components picked for uses that could not be written, by the use, and the uses a pick
 // was already offered to.
-type Rooted = Drawer & { root: Read; picked: Map<string, string>; tried: Set<string> };
+type Rooted = Drawer & {
+  root: Read;
+  names: ReadonlyMap<string, string>;
+  picked: Map<string, string>;
+  tried: Set<string>;
+};
 
 function spaceAt(
   place: Place,
@@ -173,7 +206,7 @@ type Host = { node: Element; show(value: Value): void; dispose(): void };
 // component draws at the same place, else made anew. Where finding a component waits on
 // the engine, an older value found later never lands over a newer one.
 function hostAt(place: Place, drawer: Rooted, around: Kept): Host {
-  const node = document.createElement("div");
+  const node = document.createElement("div") as HTMLElement;
   node.className = "drawn";
   let now: { component: string; at: string; drawn: Drawn; space: Kept } | undefined;
   let turn = 0;
@@ -186,6 +219,39 @@ function hostAt(place: Place, drawer: Rooted, around: Kept): Host {
     now?.space.dispose();
     now = undefined;
   };
+
+  // A drawing made anew put in place: at once where nothing is shown here yet or it
+  // shows something already; else once it does, what was shown kept until then, at most
+  // so long.
+  let waiting: (() => void) | undefined;
+  function put(fresh: Node) {
+    waiting?.();
+    const shows = () => fresh.childNodes.length > 0 || Boolean(fresh.textContent);
+    if (!node.firstChild || shows()) return void node.replaceChildren(fresh);
+
+    const observer = new MutationObserver(() => shows() && swap());
+    const timer = setTimeout(swap, keptFor);
+    const stop = () => {
+      observer.disconnect();
+      clearTimeout(timer);
+      waiting = undefined;
+    };
+    function swap() {
+      stop();
+      node.replaceChildren(fresh);
+    }
+    waiting = stop;
+    observer.observe(fresh, { childList: true, subtree: true, characterData: true });
+  }
+
+  const stand = (component: string, given: Value[], at: readonly string[]) =>
+    standing.set(node, {
+      component,
+      ...(drawer.names.has(component) && { name: drawer.names.get(component) }),
+      given,
+      at,
+      ...(place.index !== undefined && { index: place.index }),
+    });
 
   function pick(component: string) {
     const use = useOf(shownNow);
@@ -202,6 +268,8 @@ function hostAt(place: Place, drawer: Rooted, around: Kept): Host {
     const fail = (problem: unknown) => {
       if (mine !== turn) return;
       letGo();
+      waiting?.();
+      standing.delete(node);
       node.replaceChildren(note(problem instanceof Error ? problem.message : String(problem)));
     };
 
@@ -211,6 +279,7 @@ function hostAt(place: Place, drawer: Rooted, around: Kept): Host {
         const where = at.join("/");
         if (now && now.component === component && now.at === where) {
           now.space.given = given;
+          stand(component, given, at);
           return now.drawn.update(given);
         }
 
@@ -221,7 +290,9 @@ function hostAt(place: Place, drawer: Rooted, around: Kept): Host {
         space.given = given;
         const drawn = realization(given, space);
         now = { component, at: where, drawn, space };
-        node.replaceChildren(drawn.node);
+        stand(component, given, at);
+        node.dataset.component = drawer.names.get(component) ?? component;
+        put(drawn.node);
       });
       if (waits(shown)) shown.catch(fail);
     } catch (problem) {
@@ -234,6 +305,7 @@ function hostAt(place: Place, drawer: Rooted, around: Kept): Host {
     show,
     dispose() {
       turn++;
+      waiting?.();
       letGo();
     },
   };
@@ -291,6 +363,26 @@ export function arrange(parent: Element, nodes: Node[]) {
   const now = [...parent.childNodes];
   if (now.length === nodes.length && now.every((node, i) => node === nodes[i])) return;
   parent.replaceChildren(...nodes);
+}
+
+// Work a drawing awaits, said by the event busy, bubbling from its node, or from the
+// document where the node is no longer in it: true once it has been awaited a moment,
+// and false, only then, when it is done. Gives what to call when it is done.
+export function awaiting(node: Element, patience = 150): () => void {
+  let said = false;
+  const say = (busy: boolean) =>
+    (node.isConnected ? node : document).dispatchEvent(
+      new CustomEvent("busy", { bubbles: true, detail: busy }),
+    );
+  const timer = setTimeout(() => {
+    said = true;
+    say(true);
+  }, patience);
+  return () => {
+    clearTimeout(timer);
+    if (said) say(false);
+    said = false;
+  };
 }
 
 // A line said in place of what could not be drawn.

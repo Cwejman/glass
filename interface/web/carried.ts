@@ -18,8 +18,11 @@ const routes = {
   holon: "functions/holon",
   whole: "functions/whole",
   get: "functions/get",
+  in: "functions/in",
   parse: "functions/parse",
   print: "functions/print",
+  steps: "functions/steps",
+  chain: "functions/chain",
   back: "functions/back",
   quote: "functions/quote",
   Value: "components/Value",
@@ -29,13 +32,15 @@ const routes = {
   Pill: "components/Pill",
   Choose: "components/Choose",
   Brief: "components/Brief",
+  Search: "components/Search",
+  Reader: "components/Reader",
 };
 
 // What glass ships that the interface asks for, each by its id.
 export type Glass = Record<keyof typeof routes, string>;
 
 // The natives the interface applies.
-export type Native = "holon" | "whole" | "get" | "parse" | "print" | "back";
+export type Native = "holon" | "whole" | "get" | "in" | "parse" | "print" | "steps" | "chain" | "back";
 
 // What glass ships, found by its routes in the store glass is mounted as.
 export async function found(read: Engine["read"], store = "glass"): Promise<Glass> {

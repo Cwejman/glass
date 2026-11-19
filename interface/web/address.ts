@@ -5,12 +5,16 @@
 // × is, or following a link to another address of this page, which is followed here
 // rather than loaded again.
 //
+// A link followed is typed with each holon it names said as the language says it: by its
+// name or the route that finds it alone, where names give one, and else by its id.
+//
 // Visits are the browser's own history: nothing of them is kept in the field.
 
 import type { Engine } from "../../engine/next/engine.ts";
 import { ref } from "../../engine/next/read/values.ts";
 import { typed } from "../../stores/buffer/string.ts";
 import { applying, type Glass } from "./carried.ts";
+import { awaiting } from "./chassis.ts";
 
 // What the address asks.
 export const asked = (at: string = location.href) => new URL(at).searchParams.get("q") ?? "";
@@ -24,7 +28,7 @@ export const addressOf = (text: string) =>
 // Keeps the address and the text held in a buffer as one, within the element the page
 // draws in, until the function returned is called.
 export async function addressed(
-  engine: Pick<Engine, "subscribe" | "commit">,
+  engine: Pick<Engine, "read" | "subscribe" | "commit">,
   glass: Glass,
   text: string,
   within: Element,
@@ -54,8 +58,7 @@ export async function addressed(
 
   const submitted = (event: Event) => {
     event.preventDefault();
-    const field = (event.target as HTMLFormElement).elements.namedItem("q");
-    steppedFrom = field instanceof HTMLInputElement ? field.value : asked();
+    steppedFrom = asked();
   };
 
   const followed = (event: MouseEvent) => {
@@ -69,8 +72,28 @@ export async function addressed(
 
     event.preventDefault();
     steppedFrom = asked();
-    void type(asked(to.href));
+    const done = awaiting(within);
+    void saying(asked(to.href)).then(type).finally(done);
   };
+
+  // A text with each holon it names by id named as the language says that holon, or as
+  // it is where that does not read.
+  async function saying(text: string): Promise<string> {
+    const ids = [...new Set(text.match(/@[0-9A-HJKMNP-TV-Z]{15}\b/g) ?? [])];
+    const said = await Promise.all(ids.map(holonSaid));
+    return ids.reduce((now, id, i) => now.replaceAll(id, said[i]!), text);
+  }
+
+  async function holonSaid(id: string): Promise<string> {
+    try {
+      const parsed = await engine.read(applying(glass, "parse", id));
+      if (!("value" in parsed)) return id;
+      const printed = await engine.read(applying(glass, "print", parsed.value));
+      return "value" in printed && typeof printed.value === "string" && printed.value ? printed.value : id;
+    } catch {
+      return id;
+    }
+  }
 
   addEventListener("popstate", moved);
   within.addEventListener("submit", submitted);

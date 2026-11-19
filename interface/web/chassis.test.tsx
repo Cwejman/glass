@@ -14,7 +14,8 @@ import { buffer } from "../../stores/buffer/buffer.ts";
 import { begun, typed } from "../../stores/buffer/string.ts";
 import { addressed } from "./address.ts";
 import { applying, found, type Glass } from "./carried.ts";
-import { draw, type Drawer, type Realization } from "./chassis.ts";
+import { draw, drawingsAt, type Drawer, type Realization } from "./chassis.ts";
+import { inspecting } from "./inspector.tsx";
 import { finder } from "./find.ts";
 import { list } from "./list.tsx";
 import { realizations, realizedIn } from "./realized.ts";
@@ -101,6 +102,39 @@ describe("drawing what an engine gives", () => {
     expect(seen.gone).toBe(3);
   });
 
+  test("a drawing made anew at a place keeps what was there shown until it shows something itself", async () => {
+    const { engine, answer: giving } = given();
+    const { count } = counting();
+    let fill: ((text: string) => void) | undefined;
+    const slow: Realization = () => {
+      const node = (<i class="slow" />) as HTMLElement;
+      fill = (text) => void (node.textContent = text);
+      return { node, update: () => {} };
+    };
+    const realized = new Map([
+      [countId, count],
+      ["slow", slow],
+    ]);
+    const page = document.createElement("main");
+    await draw(
+      page,
+      { gives: null },
+      { engine, glass, realized, find: () => ({ component: countId, by: "fallback" }) },
+    );
+
+    giving(counted(1, "a"));
+    expect(page.textContent).toBe("1");
+
+    giving({ $draw: { $ref: "slow" }, given: [], at: ["a"] });
+    expect(page.querySelector(".count")!.textContent).toBe("1");
+    expect(page.querySelector(".slow")).toBeNull();
+
+    fill!("ready");
+    await settled(() => page.querySelector(".slow"));
+    expect(page.textContent).toBe("ready");
+    expect(drawingsAt(page.querySelector(".slow")).map(({ component }) => component)).toEqual(["slow"]);
+  });
+
   test("a use naming no component, or one not realized here, is drawn by the one found for it", async () => {
     const { engine, answer: giving } = given();
     const realized = new Map([[valueId, value]]);
@@ -142,10 +176,11 @@ describe("the page's read over glass, the interface shipped", () => {
     const { into, drawing } = await page();
     const stop = await drawing('Answer(parse("@First"))');
 
-    await settled(() => into.querySelector("a[data-ref]")?.textContent === "Second");
+    const see = () => into.querySelector(".holon .fields a[data-ref]");
+    await settled(() => see()?.textContent === "Second");
     expect(into.querySelector("h1")!.textContent).toBe("First");
     expect(into.querySelector(".words")!.textContent).toBe("Glass holds holons");
-    expect(into.querySelector("a[data-ref]")!.getAttribute("href")).toBe(`?q=@${notes.second}`);
+    expect(see()!.getAttribute("href")).toBe(`?q=@${notes.second}`);
     stop();
   });
 
@@ -190,6 +225,48 @@ describe("the page's read over glass, the interface shipped", () => {
     ]);
     expect(into.querySelector(".brief .face a")!.getAttribute("href")).toBe(`?q=@${notes.inner}`);
     expect(into.querySelector(".brief h2 a")!.getAttribute("href")).toBe(`?q=@${notes.part}`);
+    stop();
+  });
+
+  test("moving from one brief to another keeps the first shown until the second and its sections are read", async () => {
+    const { engine, glass, into } = await page();
+    await engine.mount("query", buffer(), { write: true });
+    const begin = await engine.commit(begun("query", glass));
+    if (!("ids" in begin)) throw new Error(JSON.stringify(begin));
+    const holon = begin.ids["~2"]!;
+    await engine.commit(typed(holon, `@${notes.part}`));
+    const realized = realizedIn(glass);
+    const find = finder((read: Read) => engine.read(read), glass, [...realized.keys()]);
+    const read = await engine.read(applying(glass, "parse", 'Reader(get(@query:text, "text"))'));
+    if (!("value" in read)) throw new Error(read.problem);
+    const stop = await draw(into, read.value as unknown as Read, { engine, glass, realized, find });
+    await settled(() => into.querySelector(".brief h1")?.textContent === "Part");
+
+    const seen: string[] = [];
+    const observer = new MutationObserver(() =>
+      seen.push(into.querySelector(".answered")?.textContent ?? ""),
+    );
+    observer.observe(into, { childList: true, subtree: true, characterData: true });
+    await engine.commit(typed(holon, `@${notes.brief}`));
+    await settled(() => into.querySelector(".brief h2")?.textContent === "Part");
+    observer.disconnect();
+
+    expect(into.querySelector(".brief h1")!.textContent).toBe("Notes");
+    expect(seen.every((text) => text.length > 0)).toBe(true);
+    expect(seen.filter((text) => text.startsWith("Notes")).every((text) => text.includes("Within"))).toBe(
+      true,
+    );
+    stop();
+  });
+
+  test("a holon answered says where it stands: each whole holding it, from its store's root, a link back", async () => {
+    const { into, drawing } = await page();
+    const stop = await drawing('Answer(parse("@First"))');
+
+    await settled(() => into.querySelector(".trail [aria-current]")?.textContent === "First");
+    const wholes = [...into.querySelectorAll<HTMLAnchorElement>(".trail a")];
+    expect(wholes.map((a) => a.textContent)).toEqual(["glass"]);
+    expect(wholes[0]!.getAttribute("href")).toBe(`?q=@${id(90)}`);
     stop();
   });
 
@@ -301,24 +378,114 @@ describe("the page's read over glass, the interface shipped", () => {
     return { engine, glass, holon, into, stop, held, pills };
   }
 
-  test("typing goes back to the buffer, and the answer follows, the input kept in place", async () => {
-    const { into, stop, held } = await reading("@First");
+  test("a blank text starts at the field's roots, each store a row leading to it", async () => {
+    const { into, stop } = await reading("");
+    await settled(() => into.querySelector(".card .card-name")?.textContent === "glass");
+    expect(into.querySelector(".start h1")!.textContent).toBe("Glass");
+    expect(into.querySelector(".card")!.getAttribute("href")).toBe(`?q=@${id(90)}`);
+    stop();
+  });
+
+  test("pressed with the other button, a place shows what draws it, what it was given, the way to it, and what it shows", async () => {
+    const { engine, glass, into, stop } = await reading("@First");
+    const root = await engine.read(applying(glass, "parse", 'Reader(get(@query:text, "text"))'));
+    if (!("value" in root)) throw new Error(root.problem);
+    const stopInspecting = inspecting(into, { engine, glass, root: root.value as unknown as Read });
+    const see = () => into.querySelector(".holon .fields a[data-ref]");
+    await settled(() => see()?.textContent === "Second");
+
+    const pressed = (shiftKey = false) =>
+      see()!.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, shiftKey }));
+    // With shift held, the browser's own menu.
+    expect(pressed(true)).toBe(true);
+    expect(document.querySelector(".inspector")).toBeNull();
+
+    expect(pressed()).toBe(false);
+    await settled(() => document.querySelector(".inspector .shows"));
+    const panel = document.querySelector(".inspector")!;
+    expect(panel.querySelector("h2")!.textContent).toBe("Value");
+    // The place is the link pressed: drawn by the Value around it, given what it leads to.
+    expect([...panel.querySelectorAll(".path a")].map((a) => a.textContent)).toEqual([
+      "Reader",
+      "List",
+      "Answer",
+      "Value · First",
+    ]);
+    expect(panel.querySelector(".given")!.textContent).toBe("Second");
+    expect([...into.querySelectorAll(".inspected")]).toEqual([see()!]);
+    expect(panel.querySelector(".shows .name")!.textContent).toBe("Second");
+    expect(panel.querySelector(".shows code")!.textContent).toBe("@Second");
+    expect(panel.textContent).toContain(notes.second);
+    expect(panel.querySelector("footer a")!.getAttribute("href")).toBe(`?q=@${glass.Reader}`);
+
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    expect(document.querySelector(".inspector")).toBeNull();
+    expect(into.querySelector(".inspected")).toBeNull();
+
+    // Pressed on the record itself, the place is the drawing, its parents the way to it.
+    into
+      .querySelector("h1")!
+      .dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }));
+    await settled(() => document.querySelector(".inspector .given"));
+    const drawing = document.querySelector(".inspector")!;
+    expect(drawing.querySelector(".given")!.textContent).toBe("First");
+    expect([...drawing.querySelectorAll(".path a")].map((a) => a.textContent)).toEqual([
+      "Reader",
+      "List",
+      "Answer",
+    ]);
+    expect(into.querySelector(".inspected")!.classList.contains("value")).toBe(true);
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    stopInspecting();
+    stop();
+  });
+
+  // What is typed into the input, then Enter or another key pressed.
+  const typing = (input: HTMLInputElement, text: string, key = "Enter") => {
+    input.value = text;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    if (key === "Enter") input.form!.requestSubmit();
+    else input.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
+  };
+
+  test("the input holds only what is typed next: a step added with |, or a text asked anew", async () => {
+    const { into, stop, held, pills } = await reading("@First");
     await settled(() => into.querySelector("h1")?.textContent === "First");
 
     const input = into.querySelector<HTMLInputElement>(".expression-input input")!;
-    expect(input.value).toBe("@First");
+    expect(input.value).toBe("");
+    expect(input.placeholder).toContain("add a step");
     input.focus();
-    for (const typed of ["@Sec", "@Second"]) {
-      input.value = typed;
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-    }
 
+    typing(input, '| get("text")');
+    await settled(() => into.querySelector(".answer")!.textContent === "Glass holds holons");
+    expect(await held()).toBe('@First | get("text")');
+    await settled(() => pills().length === 2);
+    expect(input.value).toBe("");
+
+    typing(input, "@Second");
     await settled(() => into.querySelector("h1")?.textContent === "Second");
     expect(await held()).toBe("@Second");
     expect(into.querySelector(".expression-input input")).toBe(input);
     expect(document.activeElement).toBe(input);
-    expect(input.value).toBe("@Second");
+    expect(input.value).toBe("");
     expect(input.readOnly).toBe(false);
+    stop();
+  });
+
+  test("Backspace in the empty input takes the last step back into it, the text without it asked", async () => {
+    const { into, stop, held, pills } = await reading('@First | get("text")');
+    await settled(() => pills().length === 2 && pills().every(Boolean));
+    const input = into.querySelector<HTMLInputElement>(".expression-input input")!;
+
+    typing(input, "", "Backspace");
+    await settled(() => input.value === '| get("text")');
+    expect(await held()).toBe("@First");
+    await settled(() => pills().length === 1);
+
+    typing(input, '| get("see")');
+    await settled(async () => (await held()) === '@First | get("see")');
+    expect(input.value).toBe("");
     stop();
   });
 
@@ -336,7 +503,8 @@ describe("the page's read over glass, the interface shipped", () => {
     await settled(() => pills().length === 2 && into.querySelector(".answer")!.textContent === "4");
     expect(await held()).toBe("add(1, 3)");
     expect(pills()).toEqual(["1", "add(3)"]);
-    expect(into.querySelector<HTMLInputElement>(".expression-input input")!.value).toBe("add(1, 3)");
+    // The input holds none of what is asked: the pills say it.
+    expect(into.querySelector<HTMLInputElement>(".expression-input input")!.value).toBe("");
     await settled(() => history.length === steps + 1);
     expect(decodeURIComponent(location.search)).toBe("?q=add(1, 3)");
 
@@ -373,15 +541,16 @@ describe("the page's read over glass, the interface shipped", () => {
     const unaddressed = await addressed(engine, glass, holon, into);
 
     expect(await held()).toBe("@First");
-    await settled(() => into.querySelector("a[data-ref]")?.textContent === "Second");
+    const see = () => into.querySelector<HTMLAnchorElement>(".holon .fields a[data-ref]");
+    await settled(() => see()?.textContent === "Second");
     const steps = history.length;
 
-    const link = into.querySelector<HTMLAnchorElement>("a[data-ref]")!;
-    link.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, button: 0 }));
+    see()!.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, button: 0 }));
     await settled(() => into.querySelector("h1")?.textContent === "Second");
-    expect(location.search).toBe(`?q=@${notes.second}`);
+    // The link leads by the holon's id, and is typed as the language says it: by name.
+    expect(decodeURIComponent(location.search)).toBe("?q=@Second");
     expect(history.length).toBe(steps + 1);
-    expect(await held()).toBe(`@${notes.second}`);
+    expect(await held()).toBe("@Second");
 
     unaddressed();
     stop();

@@ -20,7 +20,7 @@ export const id = (n: number) => String(n).padStart(15, "0");
 const declared = { says: "Any JSON.", shape: "json", optional: true };
 const held = (n: number) => ({ $ref: id(n), $holds: true });
 const kinds = ["value", "number", "string", "list", "record", "holon"];
-const natives = ["get", "parse", "print", "add", "map", "size", "keys"];
+const natives = ["get", "parse", "print", "add", "map", "size", "keys", "in", "find"];
 
 export const notes = {
   first: id(80),
