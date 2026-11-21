@@ -1,0 +1,25 @@
+{"body":{"as":"typed","flow":[{"$holds":true,"$ref":"1M6YBY3G00021EA"}],"order":4},"id":"1M6YBY3G00021E9","instance":["1M6YBY3G0000001"]}
+{"body":{"sentences":[{"$holds":true,"$ref":"1M6YBY3G00021EB"},{"$holds":true,"$ref":"1M6YBY3G00021EQ"}]},"id":"1M6YBY3G00021EA","instance":["1M6YBY3G0000002"]}
+{"body":{"words":[{"$holds":true,"$ref":"1M6YBY3G00021EC"},{"$holds":true,"$ref":"1M6YBY3G00021ED"},{"$holds":true,"$ref":"1M6YBY3G00021EE"},{"$holds":true,"$ref":"1M6YBY3G00021EF"},{"$holds":true,"$ref":"1M6YBY3G00021EG"},{"$holds":true,"$ref":"1M6YBY3G00021EH"},{"$holds":true,"$ref":"1M6YBY3G00021EJ"},{"$holds":true,"$ref":"1M6YBY3G00021EK"},{"$holds":true,"$ref":"1M6YBY3G00021EM"},{"$holds":true,"$ref":"1M6YBY3G00021EN"},{"$holds":true,"$ref":"1M6YBY3G00021EP"}]},"id":"1M6YBY3G00021EB","instance":["1M6YBY3G0000004"]}
+{"body":{"text":"Blockchaining"},"id":"1M6YBY3G00021EC","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"is"},"id":"1M6YBY3G00021ED","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"a mode","typed":"mode"},"id":"1M6YBY3G00021EE","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"of"},"id":"1M6YBY3G00021EF","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"the"},"id":"1M6YBY3G00021EG","instance":["1M6YBY3G0000005"]}
+{"body":{"after":",","text":"store"},"id":"1M6YBY3G00021EH","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"decoupled"},"id":"1M6YBY3G00021EJ","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"as"},"id":"1M6YBY3G00021EK","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"I","typed":"i"},"id":"1M6YBY3G00021EM","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"see"},"id":"1M6YBY3G00021EN","instance":["1M6YBY3G0000005"]}
+{"body":{"after":".","text":"it"},"id":"1M6YBY3G00021EP","instance":["1M6YBY3G0000005"]}
+{"body":{"words":[{"$holds":true,"$ref":"1M6YBY3G00021ER"},{"$holds":true,"$ref":"1M6YBY3G00021ES"},{"$holds":true,"$ref":"1M6YBY3G00021ET"},{"$holds":true,"$ref":"1M6YBY3G00021EV"},{"$holds":true,"$ref":"1M6YBY3G00021EW"},{"$holds":true,"$ref":"1M6YBY3G00021EX"},{"$holds":true,"$ref":"1M6YBY3G00021EY"},{"$holds":true,"$ref":"1M6YBY3G00021EZ"},{"$holds":true,"$ref":"1M6YBY3G00021F0"},{"$holds":true,"$ref":"1M6YBY3G00021F1"}]},"id":"1M6YBY3G00021EQ","instance":["1M6YBY3G0000004"]}
+{"body":{"text":"interfaceable","typed":"intefaceable"},"id":"1M6YBY3G00021ER","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"to"},"id":"1M6YBY3G00021ES","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"the"},"id":"1M6YBY3G00021ET","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"other"},"id":"1M6YBY3G00021EV","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"primitives"},"id":"1M6YBY3G00021EW","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"of"},"id":"1M6YBY3G00021EX","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"course"},"id":"1M6YBY3G00021EY","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"through","typed":"thourgh"},"id":"1M6YBY3G00021EZ","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"full"},"id":"1M6YBY3G00021F0","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"transparency"},"id":"1M6YBY3G00021F1","instance":["1M6YBY3G0000005"]}

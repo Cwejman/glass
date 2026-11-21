@@ -1,0 +1,54 @@
+{"body":{"parts":[{"$holds":true,"$ref":"1M6YBY3G0001QY3"},{"$holds":true,"$ref":"1M6YBY3G0001QZM"},{"$holds":true,"$ref":"1M6YBY3G0001R0R"},{"$holds":true,"$ref":"1M6YBY3G0001R2S"},{"$holds":true,"$ref":"1M6YBY3G0001R4P"},{"$holds":true,"$ref":"1M6YBY3G0001R62"},{"$holds":true,"$ref":"1M6YBY3G0001R75"},{"$holds":true,"$ref":"1M6YBY3G0001R89"},{"$holds":true,"$ref":"1M6YBY3G0001R9T"},{"$holds":true,"$ref":"1M6YBY3G0001RB8"},{"$holds":true,"$ref":"1M6YBY3G0001RCP"},{"$holds":true,"$ref":"1M6YBY3G0001RT2"},{"$holds":true,"$ref":"1M6YBY3G0001S6R"},{"$holds":true,"$ref":"1M6YBY3G0001SS2"},{"$holds":true,"$ref":"1M6YBY3G0001SXQ"},{"$holds":true,"$ref":"1M6YBY3G0001T93"},{"$holds":true,"$ref":"1M6YBY3G0001TEJ"},{"$holds":true,"$ref":"1M6YBY3G0001TM4"},{"$holds":true,"$ref":"1M6YBY3G0001TT2"},{"$holds":true,"$ref":"1M6YBY3G0001TZH"},{"$holds":true,"$ref":"1M6YBY3G0001V4H"},{"$holds":true,"$ref":"1M6YBY3G0001VKZ"},{"$holds":true,"$ref":"1M6YBY3G0001WFW"},{"$holds":true,"$ref":"1M6YBY3G0001WKM"},{"$holds":true,"$ref":"1M6YBY3G0001WPN"}],"path":"history.md","prose":[{"$ref":"1M6YBY3G0001QFA"},{"$ref":"1M6YBY3G0001QH9"}],"title":"History"},"id":"1M6YBY3G0001QF9","instance":["1M6YBY3G000000X"]}
+{"body":{"after":{"$ref":"1M6YBY3G0001QZM"},"in":[{"$ref":"1M6YBY3G00023BX"}],"on":"2026-11-08","parts":[],"prose":[{"$ref":"1M6YBY3G0001QY4"}],"status":"done","title":"Said measured as complementary"},"id":"1M6YBY3G0001QY3","instance":["1M6YBY3G000000X","1M6YBY3G000001A"]}
+{"body":{"sentences":[{"$holds":true,"$ref":"1M6YBY3G0001QY5"},{"$holds":true,"$ref":"1M6YBY3G0001QZD"}]},"id":"1M6YBY3G0001QY4","instance":["1M6YBY3G0000002"]}
+{"body":{"words":[{"$holds":true,"$ref":"1M6YBY3G0001QY6"},{"$holds":true,"$ref":"1M6YBY3G0001QY7"},{"$holds":true,"$ref":"1M6YBY3G0001QY8"},{"$holds":true,"$ref":"1M6YBY3G0001QY9"},{"$holds":true,"$ref":"1M6YBY3G0001QYA"},{"$holds":true,"$ref":"1M6YBY3G0001QYB"},{"$holds":true,"$ref":"1M6YBY3G0001QYC"},{"$holds":true,"$ref":"1M6YBY3G0001QYD"},{"$holds":true,"$ref":"1M6YBY3G0001QYE"},{"$holds":true,"$ref":"1M6YBY3G0001QYF"},{"$holds":true,"$ref":"1M6YBY3G0001QYG"},{"$holds":true,"$ref":"1M6YBY3G0001QYH"},{"$holds":true,"$ref":"1M6YBY3G0001QYJ"},{"$holds":true,"$ref":"1M6YBY3G0001QYK"},{"$holds":true,"$ref":"1M6YBY3G0001QYM"},{"$holds":true,"$ref":"1M6YBY3G0001QYN"},{"$holds":true,"$ref":"1M6YBY3G0001QYP"},{"$holds":true,"$ref":"1M6YBY3G0001QYQ"},{"$holds":true,"$ref":"1M6YBY3G0001QYR"},{"$holds":true,"$ref":"1M6YBY3G0001QYS"},{"$holds":true,"$ref":"1M6YBY3G0001QYT"},{"$holds":true,"$ref":"1M6YBY3G0001QYV"},{"$holds":true,"$ref":"1M6YBY3G0001QYW"},{"$holds":true,"$ref":"1M6YBY3G0001QYX"},{"$holds":true,"$ref":"1M6YBY3G0001QYY"},{"$holds":true,"$ref":"1M6YBY3G0001QYZ"},{"$holds":true,"$ref":"1M6YBY3G0001QZ0"},{"$holds":true,"$ref":"1M6YBY3G0001QZ1"},{"$holds":true,"$ref":"1M6YBY3G0001QZ2"},{"$holds":true,"$ref":"1M6YBY3G0001QZ3"},{"$holds":true,"$ref":"1M6YBY3G0001QZ4"},{"$holds":true,"$ref":"1M6YBY3G0001QZ5"},{"$holds":true,"$ref":"1M6YBY3G0001QZ6"},{"$holds":true,"$ref":"1M6YBY3G0001QZ7"},{"$holds":true,"$ref":"1M6YBY3G0001QZ8"},{"$holds":true,"$ref":"1M6YBY3G0001QZ9"},{"$holds":true,"$ref":"1M6YBY3G0001QZA"},{"$holds":true,"$ref":"1M6YBY3G0001QZB"},{"$holds":true,"$ref":"1M6YBY3G0001QZC"}]},"id":"1M6YBY3G0001QY5","instance":["1M6YBY3G0000004"]}
+{"body":{"text":"The"},"id":"1M6YBY3G0001QY6","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"marks"},"id":"1M6YBY3G0001QY7","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"on"},"id":"1M6YBY3G0001QY8","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"the"},"id":"1M6YBY3G0001QY9","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"author's"},"id":"1M6YBY3G0001QYA","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"record"},"id":"1M6YBY3G0001QYB","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"became"},"id":"1M6YBY3G0001QYC","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"measures"},"id":"1M6YBY3G0001QYD","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"of"},"id":"1M6YBY3G0001QYE","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"what"},"id":"1M6YBY3G0001QYF","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"it"},"id":"1M6YBY3G0001QYG","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"adds"},"id":"1M6YBY3G0001QYH","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"to"},"id":"1M6YBY3G0001QYJ","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"the"},"id":"1M6YBY3G0001QYK","instance":["1M6YBY3G0000005"]}
+{"body":{"after":",","text":"briefs"},"id":"1M6YBY3G0001QYM","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"the"},"id":"1M6YBY3G0001QYN","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"record"},"id":"1M6YBY3G0001QYP","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"itself"},"id":"1M6YBY3G0001QYQ","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"was"},"id":"1M6YBY3G0001QYR","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"measured"},"id":"1M6YBY3G0001QYS","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"so"},"id":"1M6YBY3G0001QYT","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"a"},"id":"1M6YBY3G0001QYV","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"reader"},"id":"1M6YBY3G0001QYW","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"need"},"id":"1M6YBY3G0001QYX","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"not"},"id":"1M6YBY3G0001QYY","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"read"},"id":"1M6YBY3G0001QYZ","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"it"},"id":"1M6YBY3G0001QZ0","instance":["1M6YBY3G0000005"]}
+{"body":{"after":",","text":"whole"},"id":"1M6YBY3G0001QZ1","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"and"},"id":"1M6YBY3G0001QZ2","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"the"},"id":"1M6YBY3G0001QZ3","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"measures"},"id":"1M6YBY3G0001QZ4","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"that"},"id":"1M6YBY3G0001QZ5","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"only"},"id":"1M6YBY3G0001QZ6","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"repeated"},"id":"1M6YBY3G0001QZ7","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"their"},"id":"1M6YBY3G0001QZ8","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"threads"},"id":"1M6YBY3G0001QZ9","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"were"},"id":"1M6YBY3G0001QZA","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"let"},"id":"1M6YBY3G0001QZB","instance":["1M6YBY3G0000005"]}
+{"body":{"after":".","text":"go"},"id":"1M6YBY3G0001QZC","instance":["1M6YBY3G0000005"]}
+{"body":{"words":[{"$holds":true,"$ref":"1M6YBY3G0001QZE"},{"$holds":true,"$ref":"1M6YBY3G0001QZF"},{"$holds":true,"$ref":"1M6YBY3G0001QZG"},{"$holds":true,"$ref":"1M6YBY3G0001QZH"},{"$holds":true,"$ref":"1M6YBY3G0001QZJ"},{"$holds":true,"$ref":"1M6YBY3G0001QZK"}]},"id":"1M6YBY3G0001QZD","instance":["1M6YBY3G0000004"]}
+{"body":{"text":"The"},"id":"1M6YBY3G0001QZE","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"record"},"id":"1M6YBY3G0001QZF","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"stays"},"id":"1M6YBY3G0001QZG","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"as"},"id":"1M6YBY3G0001QZH","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"it"},"id":"1M6YBY3G0001QZJ","instance":["1M6YBY3G0000005"]}
+{"body":{"after":".","text":"is"},"id":"1M6YBY3G0001QZK","instance":["1M6YBY3G0000005"]}
+{"body":{"after":{"$ref":"1M6YBY3G0001R0R"},"commits":["sha256-5c7d380374537d1864b38e31b7062b843c81c22b41e4b7bd63df2d704659a4b0"],"in":[{"$ref":"1M6YBY3G00023BX"}],"on":"2026-11-08","parts":[],"prose":[{"$ref":"1M6YBY3G0001QZN"}],"status":"done","title":"The sessions measured"},"id":"1M6YBY3G0001QZM","instance":["1M6YBY3G000000X","1M6YBY3G000001A"]}
+{"body":{"threads":[{"$holds":true,"$ref":"1M6YBY3G0001XAR"},{"$holds":true,"$ref":"1M6YBY3G0001XAS"},{"$holds":true,"$ref":"1M6YBY3G0001XAT"},{"$holds":true,"$ref":"1M6YBY3G0001XAV"},{"$holds":true,"$ref":"1M6YBY3G0001XAW"},{"$holds":true,"$ref":"1M6YBY3G0001XAX"},{"$holds":true,"$ref":"1M6YBY3G0001XAY"},{"$holds":true,"$ref":"1M6YBY3G0001XAZ"},{"$holds":true,"$ref":"1M6YBY3G0001XB0"},{"$holds":true,"$ref":"1M6YBY3G0001XB1"},{"$holds":true,"$ref":"1M6YBY3G0001XB2"},{"$holds":true,"$ref":"1M6YBY3G0001XB3"},{"$holds":true,"$ref":"1M6YBY3G0001XB4"},{"$holds":true,"$ref":"1M6YBY3G0001XB5"},{"$holds":true,"$ref":"1M6YBY3G0001XB6"},{"$holds":true,"$ref":"1M6YBY3G0001XB7"},{"$holds":true,"$ref":"1M6YBY3G0001XB8"},{"$holds":true,"$ref":"1M6YBY3G0001XB9"},{"$holds":true,"$ref":"1M6YBY3G0001XBA"},{"$holds":true,"$ref":"1M6YBY3G0001XBB"},{"$holds":true,"$ref":"1M6YBY3G0001XBC"},{"$holds":true,"$ref":"1M6YBY3G0001XBD"},{"$holds":true,"$ref":"1M6YBY3G0001XBE"},{"$holds":true,"$ref":"1M6YBY3G0001XBF"},{"$holds":true,"$ref":"1M6YBY3G0001XBG"},{"$holds":true,"$ref":"1M6YBY3G0001XBH"},{"$holds":true,"$ref":"1M6YBY3G0001XBJ"},{"$holds":true,"$ref":"1M6YBY3G0001XBK"},{"$holds":true,"$ref":"1M6YBY3G0001XBM"},{"$holds":true,"$ref":"1M6YBY3G0001XBN"},{"$holds":true,"$ref":"1M6YBY3G0001XBP"},{"$holds":true,"$ref":"1M6YBY3G0001XBQ"}]},"id":"1M6YBY3G0001XAQ","instance":["1M6YBY3G000001C"],"name":"raised"}
+{"body":{"asks":"The days of the record could become sessions, marked as constructed afterwards since they are not sessions in the same regard, and could be mapped to the actual sessions from Claude's own transcripts. Worth doing only if it simplifies; left as it is until there is an interface to see it in.","raised":[{"$ref":"1M6YBY3G0002417"},{"$ref":"1M6YBY3G000241B"},{"$ref":"1M6YBY3G000244B"}],"stands":"open","title":"Said as sessions, honestly"},"id":"1M6YBY3G0001XBP","instance":["1M6YBY3G000001E"]}
+{"body":{"asks":"A session spanning days has no one date, so perhaps the text inside it has the date and not the session; a session's single day already says too little of this one.","raised":[{"$ref":"1M6YBY3G000242N"},{"$ref":"1M6YBY3G000243S"}],"stands":"open","title":"Where a date belongs"},"id":"1M6YBY3G0001XBQ","instance":["1M6YBY3G000001E"]}

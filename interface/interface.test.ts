@@ -10,7 +10,7 @@ import { serving } from "../engine/serve/serving.ts";
 import type { HolonRead, Read } from "../engine/compat.ts";
 import { memoryFiles } from "../integrations/glass/files.ts";
 import { openStore } from "../integrations/glass/store.ts";
-import { openStores } from "../stores.ts";
+import { openStores } from "../integrations/glass/found.ts";
 import type { Component } from "./component.ts";
 import { connect, type Connection, type Port } from "./connection.ts";
 import { mount } from "./interface.ts";

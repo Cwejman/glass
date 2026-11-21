@@ -1,0 +1,1 @@
+{"body":{"says":"One word where it stands; it points at its lexeme, the word as one."},"id":"1M6YBY3G000000F","instance":[],"mould":{"after":{"optional":true,"says":"Marks after it.","shape":"string"},"before":{"optional":true,"says":"Marks before it.","shape":"string"},"text":{"says":"The word, without the marks around it.","shape":"string"}},"name":"word"}

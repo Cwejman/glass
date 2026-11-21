@@ -15,11 +15,11 @@
 //
 // A function named alone is the function itself, to be given to another, as in
 // map(xs, text); it is called only with parentheses, everything(), or after a pipe.
-// A store is named by its key as a string, store("main"); stores() gives the keys.
+// A store is named by its key as a string, store("wiki"); stores() gives the keys.
 // A holon's own values are id, name, store, instance, a list of its types, and mould;
-// the rest are its body's, so a type's fields are @types/session.mould | keys.
+// the rest are its body's, so a type's fields are @author:types/session.mould | keys.
 //
-//   @main:main.contents | map(h => {name: h.name, tokens: measure(h)})
+//   @wiki:wiki.contents | map(h => {name: h.name, tokens: measure(h)})
 //   outline(@"The wiki", 3)
 //   @Sessions.sessions | sort(s => s.on) | reverse | take(2) | map(text)
 //

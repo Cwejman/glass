@@ -18,7 +18,7 @@ import {
   type Store as OldStore,
   type Version as OldVersion,
 } from "../../integrations/glass/store.ts";
-import { holonsOf, storesHere } from "../../stores.ts";
+import { holonsOf, storesKept as storesHere } from "../../integrations/glass/found.ts";
 import { contentOf, hashOf, partOf } from "../act.ts";
 import type { Act, Head, Holon } from "../store.ts";
 import { folderStorages } from "./storage/folder.ts";

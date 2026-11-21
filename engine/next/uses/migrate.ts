@@ -371,11 +371,15 @@ export async function migrate(
   const fnType = fnTypes.find(({ store }) => store === ships)?.holon;
   if (!fnType) throw new Error(`${ships} ships no type function`);
 
-  const shipped = async (name: string) =>
-    (await typesNamed(name)).find(({ store }) => store === ships)?.holon;
-  const found = Object.fromEntries(
-    await Promise.all(["use", ...kindNames].map(async (name) => [name, (await shipped(name))?.id] as const)),
-  );
+  // A kind is a type of an empty mould, so a type of the prose that shares a kind's name,
+  // as list does, is never taken for it.
+  const shipped = async (name: string, is: (holon: Holon) => boolean = () => true) =>
+    (await typesNamed(name)).find(({ store, holon }) => store === ships && is(holon))?.holon;
+  const isKind = (holon: Holon) => !Object.keys(holon.mould!).length;
+  const found = Object.fromEntries([
+    ["use", (await shipped("use"))?.id] as const,
+    ...(await Promise.all(kindNames.map(async (name) => [name, (await shipped(name, isKind))?.id] as const))),
+  ]);
 
   const mint = handles();
   const made: Holon[] = [];

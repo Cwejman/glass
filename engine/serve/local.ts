@@ -8,7 +8,7 @@ import { join } from "node:path";
 import { memoryFiles } from "../../integrations/glass/files.ts";
 import { openStore } from "../../integrations/glass/store.ts";
 import { gitSource } from "../../integrations/git/git.ts";
-import { openStores } from "../../stores.ts";
+import { openStores } from "../../integrations/glass/found.ts";
 import { startEngine, type Engine } from "../compat.ts";
 
 type Local = {

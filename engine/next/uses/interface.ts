@@ -27,9 +27,9 @@ import { besideIn, fieldAt, handles, keptAll } from "./migrate.ts";
 // The components of data, as their bodies read: each a lambda over the text searched.
 const written = {
   Search: `text => List([
-    text | parse | steps | each(Pill) | List(@glass:types/row),
+    text | parse | steps | each(Pill) | List(@glass:interface/row),
     ExpressionInput(text)
-  ], @glass:types/row)`,
+  ], @glass:interface/row)`,
   Reader: "text => List([Search(text), Answer(parse(text))])",
 };
 
@@ -93,13 +93,15 @@ export async function shipInterface(
   };
 
   const isType = (holon: Holon) => Boolean(holon.mould);
+  // A kind is a type of an empty mould: the prose's list is no kind.
+  const isKind = (holon: Holon) => isType(holon) && !Object.keys(holon.mould!).length;
   const [componentType, functionType] = await Promise.all(
     ["component", "function"].map((name) => required(name, isType)),
   );
   const kinds = Object.fromEntries(
     await Promise.all(
       ["value", "number", "string", "list", "record", "holon"].map(
-        async (name) => [name, (await required(name, isType)).id] as const,
+        async (name) => [name, (await required(name, isKind)).id] as const,
       ),
     ),
   );

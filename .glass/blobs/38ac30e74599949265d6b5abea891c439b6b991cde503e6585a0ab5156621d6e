@@ -1,0 +1,15 @@
+{"body":{"native":"everything","says":"Every holon in the field."},"id":"1M6YD90YH1TJ006","instance":["1M6YD90YH1TJ000"],"name":"everything"}
+{"body":{"native":"type","says":"The instances of the types given.","takes":["set"]},"id":"1M6YD90YH1TJ007","instance":["1M6YD90YH1TJ000"],"name":"type"}
+{"body":{"native":"children","says":"What the holons given hold, as parts.","takes":["set"]},"id":"1M6YD90YH1TJ008","instance":["1M6YD90YH1TJ000"],"name":"children"}
+{"body":{"native":"parents","says":"What holds the holons given.","takes":["set"]},"id":"1M6YD90YH1TJ009","instance":["1M6YD90YH1TJ000"],"name":"parents"}
+{"body":{"native":"points-to","says":"What the holons given point at, without holding.","takes":["set"]},"id":"1M6YD90YH1TJ00A","instance":["1M6YD90YH1TJ000"],"name":"points"}
+{"body":{"native":"pointed-from","says":"What points at the holons given, without holding.","takes":["set"]},"id":"1M6YD90YH1TJ00B","instance":["1M6YD90YH1TJ000"],"name":"pointers"}
+{"body":{"native":"text","says":"What contains each of the words given.","takes":["words"]},"id":"1M6YD90YH1TJ00C","instance":["1M6YD90YH1TJ000"],"name":"search"}
+{"body":{"native":"named","says":"What is called by each of the words given.","takes":["words"]},"id":"1M6YD90YH1TJ00D","instance":["1M6YD90YH1TJ000"],"name":"named"}
+{"body":{"native":"store","says":"What the store given holds.","takes":["store"]},"id":"1M6YD90YH1TJ00E","instance":["1M6YD90YH1TJ000"],"name":"store"}
+{"body":{"native":"types","says":"Every type."},"id":"1M6YD90YH1TJ00F","instance":["1M6YD90YH1TJ000"],"name":"types"}
+{"body":{"native":"and","says":"What every set given holds.","takes":["set","sets"]},"id":"1M6YD90YH1TJ00G","instance":["1M6YD90YH1TJ000"],"name":"and"}
+{"body":{"native":"or","says":"What any set given holds.","takes":["set","sets"]},"id":"1M6YD90YH1TJ00H","instance":["1M6YD90YH1TJ000"],"name":"or"}
+{"body":{"native":"not","says":"Everything but the set given.","takes":["set"]},"id":"1M6YD90YH1TJ00J","instance":["1M6YD90YH1TJ000"],"name":"not"}
+{"body":{"native":"group","says":"The set given, in collections along the axis chosen: type, parent or store.","takes":["set","axis"]},"id":"1M6YD90YH1TJ00K","instance":["1M6YD90YH1TJ000"],"name":"group"}
+{"body":{"native":"flat","says":"All of the set given, looked at as it is, where a set is otherwise seen at its level: what nothing in it holds.","takes":["set"]},"id":"1M6ZXAZFQ20K000","instance":["1M6YD90YH1TJ000"],"name":"flat"}

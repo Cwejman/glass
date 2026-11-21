@@ -9,14 +9,14 @@ describe("a holon said compactly", () => {
     const brief: Said = {
       name: "Knowledge",
       types: ["brief"],
-      store: "main",
+      store: "wiki",
       body: { prose: [ref("p1")], says: "x" },
     };
     expect(ledeOf(brief)).toBe("p1");
     expect(summaryOf(brief, "b", "Glass is an operating system.")).toEqual({
       title: "Knowledge",
       says: "Glass is an operating system.",
-      kind: "brief · in main",
+      kind: "brief · in wiki",
     });
     // An utterance's flow opens with a paragraph as well.
     expect(ledeOf({ types: ["utterance"], body: { flow: [ref("p2")] } })).toBe("p2");
@@ -31,24 +31,24 @@ describe("a holon said compactly", () => {
       "Glass holds holons",
     );
     expect(
-      summaryOf({ name: "lexicon", types: ["lexicon"], store: "main", body: { lexemes: refs(4486) } }, "l"),
+      summaryOf({ name: "lexicon", types: ["lexicon"], store: "wiki", body: { lexemes: refs(4486) } }, "l"),
     ).toEqual({
       title: "lexicon",
       says: "4,486 lexemes",
-      kind: "lexicon · in main",
+      kind: "lexicon · in wiki",
     });
     expect(countsOf({ contents: refs(11), dependencies: refs(1), shape: ref("s") })).toBe(
       "11 held · 1 dependency",
     );
-    expect(summaryOf({ name: "main", types: ["store"], store: "main", body: {} }, "m")).toEqual({
-      title: "main",
+    expect(summaryOf({ name: "wiki", types: ["store"], store: "wiki", body: {} }, "m")).toEqual({
+      title: "wiki",
       kind: "store",
     });
   });
 
   test("one with no name is called by its short text, else by what it is", () => {
-    const lexeme: Said = { types: ["lexeme"], store: "main", body: { text: "consultant" } };
-    expect(summaryOf(lexeme, "x")).toEqual({ title: "consultant", kind: "lexeme · in main" });
+    const lexeme: Said = { types: ["lexeme"], store: "wiki", body: { text: "consultant" } };
+    expect(summaryOf(lexeme, "x")).toEqual({ title: "consultant", kind: "lexeme · in wiki" });
     expect(titleOf({ types: ["utterance"], body: {} }, "u")).toBe("an utterance");
     expect(titleOf({ types: ["paragraph"], body: { text: "a\nb" } }, "p")).toBe("a paragraph");
     expect(titleOf(undefined, "ID")).toBe("@ID");

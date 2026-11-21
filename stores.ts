@@ -1,31 +1,41 @@
 // The stores this repository holds, found where they lie: every folder keeping a .glass/
-// is one, beside what it is about, and each is named by its own root, the one holon in it
-// of the type store (the author's, 2026-11-10: a store is a field with one root, which
-// says what it stands on, never where it is served). No file says which folder holds
-// which store. The folder the search begins in comes first, the rest the nearer first,
-// then by where they lie; what is built or installed is not searched.
+// is one, beside what it is about, and each is named by its own root, the holon its
+// latest commit is owned by (the author's, 2026-11-10: a store is a field with one root,
+// which says what it stands on, never where it is served). No file says which folder
+// holds which store. The folder the search begins in comes first, the rest the nearer
+// first, then by where they lie; what is built or installed is not searched.
+//
+// Each .glass/ is a strata store: its history, a head and the blobs it reaches, kept in
+// git, and its index within, at index/, rebuilt from the history when it is missing.
+// Whatever reads or writes the field from this machine does it through the engine here,
+// engineHere, every store mounted as itself and those named written.
 
-import { readdirSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
-import { isRoot } from "./engine/moulds.ts";
-import { folderFiles } from "./integrations/glass/folder.ts";
-import { asHolon, openStore, type Holon, type Store } from "./integrations/glass/store.ts";
+import { engine, type Engine } from "./engine/next/engine.ts";
+import { sameThread } from "./runtime/runtime.ts";
+import type { Holon, Store } from "./stores/store.ts";
+import { commitAt, headAt, latestCommit } from "./stores/strata/head.ts";
+import { folderStorages } from "./stores/strata/storage/folder.ts";
+import { strata } from "./stores/strata/strata.ts";
 
 export type { Holon, Store };
 
-export const open = (folder: string) => openStore(folderFiles(folder));
+// A store opened from its folder.
+export const open = (folder: string): Store => strata(folderStorages(folder));
 
 const unsearched = new Set(["node_modules", "dist", ".git"]);
 
-// Every .glass/ beneath a folder, the folder's own first.
+// Every .glass/ beneath a folder that keeps a store's history, the folder's own first.
 function glassFolders(dir: string): string[] {
   const found: string[] = [];
 
   const walk = (at: string) => {
     for (const entry of readdirSync(at, { withFileTypes: true })) {
       if (!entry.isDirectory()) continue;
-      if (entry.name === ".glass") found.push(join(at, entry.name));
-      else if (!entry.name.startsWith(".") && !unsearched.has(entry.name)) walk(join(at, entry.name));
+      if (entry.name === ".glass") {
+        if (existsSync(join(at, entry.name, "head"))) found.push(join(at, entry.name));
+      } else if (!entry.name.startsWith(".") && !unsearched.has(entry.name)) walk(join(at, entry.name));
     }
   };
   walk(dir);
@@ -34,33 +44,41 @@ function glassFolders(dir: string): string[] {
   return found.sort((x, y) => depth(x) - depth(y) || (x < y ? -1 : 1));
 }
 
-export type Found = { folder: string; store: Store };
+export type Found = { folder: string; root: string };
+
+const decoder = new TextDecoder();
+const linesOf = (bytes: Uint8Array) =>
+  decoder
+    .decode(bytes)
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+
+// A store's latest head and its root, the holon its latest commit is owned by.
+async function rootOf(folder: string) {
+  const { history } = folderStorages(folder);
+  const latest = await latestCommit(history);
+  if (!latest) throw new Error(`the store at ${folder} has no commit`);
+
+  const { own } = await commitAt(history, latest);
+  return { head: await headAt(history, latest), root: own };
+}
 
 // The stores beneath a folder, each by the name its root gives it.
 export async function storesIn(dir: string): Promise<Map<string, Found>> {
-  const opened = await Promise.all(
-    glassFolders(dir).map(async (folder) => {
-      const store = await open(folder);
-      return { folder, store, holons: await holonsOf(store) };
-    }),
-  );
-
-  const everywhere = new Map(
-    opened.flatMap(({ holons }) => holons.map((holon) => [holon.id, holon] as const)),
-  );
-
   const found = new Map<string, Found>();
-  for (const { folder, store, holons } of opened) {
-    const roots = holons.filter((holon) => isRoot(holon, (id) => everywhere.get(id)));
-    if (roots.length !== 1)
-      throw new Error(`the store at ${folder} has ${roots.length ? "more than one root" : "no root"}`);
 
-    const name = roots[0]!.name;
-    if (!name) throw new Error(`the root of the store at ${folder} has no name`);
-    if (found.has(name))
-      throw new Error(`two stores are called ${name}: at ${found.get(name)!.folder} and ${folder}`);
+  for (const folder of glassFolders(dir)) {
+    const { head, root } = await rootOf(folder);
+    const [holon] = linesOf(await open(folder).read(head, { holon: root })) as Holon[];
+    if (!holon) throw new Error(`the store at ${folder} does not hold its root, ${root}`);
+    if (!holon.name) throw new Error(`the root of the store at ${folder} has no name`);
+    if (found.has(holon.name))
+      throw new Error(
+        `two stores are called ${holon.name}: at ${found.get(holon.name)!.folder} and ${folder}`,
+      );
 
-    found.set(name, { folder, store });
+    found.set(holon.name, { folder, root });
   }
 
   return found;
@@ -78,13 +96,34 @@ export async function storeFolder(name: string) {
   return found.folder;
 }
 
-// Every store, opened as it stands now, by its name.
-export const openStores = async (): Promise<Record<string, Store>> =>
-  Object.fromEntries(
-    await Promise.all(
-      [...(await storesHere())].map(async ([name, { folder }]) => [name, await open(folder)] as const),
-    ),
+// An engine on this machine over stores found beneath a folder, this repository's by
+// default: every one mounted as itself, those named written through it.
+export async function engineOver(
+  found: ReadonlyMap<string, Found>,
+  { writes = [] as readonly string[] } = {},
+): Promise<Engine> {
+  const started = await engine({ workers: sameThread(), count: 2 });
+  for (const [name, { folder }] of found)
+    await started.mount(name, open(folder), { write: writes.includes(name) });
+  return started;
+}
+
+export const engineHere = async (as: { writes?: readonly string[] } = {}) =>
+  engineOver(await storesHere(), as);
+
+// Every holon a store holds now, its root and all it holds, as the author's tools read
+// them.
+export async function holonsOf(folder: string): Promise<Holon[]> {
+  const { head, root } = await rootOf(folder);
+  return linesOf(await open(folder).read(head, { whole: { id: root } })) as Holon[];
+}
+
+// The holons of the stores named, by store, each read as it stands now.
+export async function holonsHere(...names: string[]): Promise<Record<string, Holon[]>> {
+  return Object.fromEntries(
+    await Promise.all(names.map(async (name) => [name, await holonsOf(await storeFolder(name))] as const)),
   );
+}
 
 // The types among holons, each id by the name it is asked by: the first of a name. Only
 // names are in it, so a type called constructor is a type like any other.
@@ -104,7 +143,3 @@ export function typeNamed(types: Record<string, string>, name: string) {
   if (!id) throw new Error(`there is no type ${name}`);
   return id;
 }
-
-// Every holon a store holds, as the author's tools and the components' making read them.
-export const holonsOf = async (store: Store) =>
-  [...(await store.all()).values()].map(({ version }) => asHolon(version));

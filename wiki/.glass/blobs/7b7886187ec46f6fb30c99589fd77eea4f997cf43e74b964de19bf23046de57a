@@ -1,0 +1,3 @@
+{"body":{"shape":{"$ref":"1M75HB35AC75003"}},"id":"1M75HK6NRRDX000","instance":["1M75HB35AC75001"],"name":"glass"}
+{"body":{"contents":[{"$holds":true,"$ref":"1M6YBY3G00010TW"},{"$holds":true,"$ref":"1M6YBY3G0001WT4"},{"$holds":true,"$ref":"1M6YBY3G0001XAQ"},{"$holds":true,"$ref":"1M6ZXAZDW3QP000"}],"dependencies":[{"$holds":true,"$ref":"1M75HK6NRRDX000"},{"$holds":true,"$ref":"1M75HK7A8XSNJG0"}],"shape":{"$ref":"1M75HB35AC75003"}},"id":"1M75HK6NRRDX001","instance":["1M75HB35AC75002"],"name":"wiki"}
+{"body":{"shape":{"$ref":"1M75HB35AC75003"}},"id":"1M75HK7A8XSNJG0","instance":["1M75HB35AC75001"],"name":"author"}

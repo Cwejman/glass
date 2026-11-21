@@ -11,4 +11,4 @@ bun engine/ask.ts 'text(@Knowledge)'
 
 The second line reads Knowledge, the top of what is known: what glass is, its design, the way from here, how the work is done, and its words. Start there. `outline(@Knowledge, 3)` gives its shape instead, and any other expression asks the field the same way.
 
-To see it drawn: `bun run field`, `bun run build` and `bun run serve`, then open `http://127.0.0.1:4330/`.
+To see it drawn: `bun run build` and `bun run serve`, then open `http://127.0.0.1:4330/`.

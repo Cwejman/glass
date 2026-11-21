@@ -1,0 +1,14 @@
+{"body":{"body":{"$holds":true,"$ref":"1M7Z0CP5X2T0001"},"input":[{"$holds":true,"$ref":"1M7Z0CP5X2T0000"}],"says":"A text searched by: its steps as pills, each to be taken out, beside the text typed into."},"id":"1M6YD90YH1TJ00T","instance":["1M6YD90YH1TJ003"],"name":"Search"}
+{"body":{"body":{"$holds":true,"$ref":"1M7Z0CP5X2T0008"},"input":[{"$holds":true,"$ref":"1M7Z0CP5X2T0007"}],"says":"What one is looking at: the search for it, above what it gives."},"id":"1M6YD90YH1TJ00Y","instance":["1M6YD90YH1TJ003"],"name":"Reader"}
+{"body":{},"id":"1M7Z0CP5X2T0000","instance":["1M7Z0CEYH385003"],"name":"text"}
+{"body":{"args":[[{"$holds":true,"$ref":"1M7Z0CP5X2T0002"},{"$holds":true,"$ref":"1M7Z0CP5X2T0006"}],{"$ref":"1M7Z0CF9HHJN001"}],"fn":{"$ref":"1M6YD90YH1TJ00V"}},"id":"1M7Z0CP5X2T0001","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CP5X2T0003"},{"$ref":"1M7Z0CF9HHJN001"}],"fn":{"$ref":"1M6YD90YH1TJ00V"}},"id":"1M7Z0CP5X2T0002","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CP5X2T0004"},{"$ref":"1M7Z0CF9HHJN00C"}],"fn":{"$ref":"1M7Z0CF9HHJN007"}},"id":"1M7Z0CP5X2T0003","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CP5X2T0005"}],"fn":{"$ref":"1M7Z0CF9HHJN008"}},"id":"1M7Z0CP5X2T0004","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$ref":"1M7Z0CP5X2T0000"}],"fn":{"$ref":"1M7Z0CF1M37E000"}},"id":"1M7Z0CP5X2T0005","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$ref":"1M7Z0CP5X2T0000"}],"fn":{"$ref":"1M7Z0CF9HHJN00B"}},"id":"1M7Z0CP5X2T0006","instance":["1M7Z0CEYH385000"]}
+{"body":{},"id":"1M7Z0CP5X2T0007","instance":["1M7Z0CEYH385003"],"name":"text"}
+{"body":{"args":[[{"$holds":true,"$ref":"1M7Z0CP5X2T0009"},{"$holds":true,"$ref":"1M7Z0CP5X2T000A"}]],"fn":{"$ref":"1M6YD90YH1TJ00V"}},"id":"1M7Z0CP5X2T0008","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$ref":"1M7Z0CP5X2T0007"}],"fn":{"$ref":"1M6YD90YH1TJ00T"}},"id":"1M7Z0CP5X2T0009","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CP5X2T000B"}],"fn":{"$ref":"1M7Z0CF9HHJN00A"}},"id":"1M7Z0CP5X2T000A","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$ref":"1M7Z0CP5X2T0007"}],"fn":{"$ref":"1M7Z0CF1M37E000"}},"id":"1M7Z0CP5X2T000B","instance":["1M7Z0CEYH385000"]}

@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { evaluate } from "../engine/next/read/evaluate.ts";
 import { contentOf, hashOf, partOf } from "../stores/act.ts";
 import type { Act, Holon } from "../stores/store.ts";
-import { folderStorage } from "../stores/strata/storage/folder.ts";
+import { folderStorages } from "../stores/strata/storage/folder.ts";
 import { strata } from "../stores/strata/strata.ts";
 import { parse, print, printRead, printUse, syntax, toExpression, toRead, type Names } from "./text.ts";
 
@@ -315,7 +315,7 @@ const storedNames: Names = {
 async function storeOf(holons: Holon[]) {
   const folder = mkdtempSync(join(tmpdir(), "glass-text-"));
   made.push(folder);
-  const store = strata(folderStorage(folder));
+  const store = strata(folderStorages(folder));
   const part = partOf(holons);
   const said = {
     when: "2026-11-18T00:00:00.000Z",

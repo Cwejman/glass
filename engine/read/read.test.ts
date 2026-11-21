@@ -7,7 +7,7 @@ import { describe, expect, test } from "bun:test";
 import { namesAsked } from "../../language/names.ts";
 import { parse } from "../../language/text.ts";
 import type { Holon, Store } from "../../integrations/glass/store.ts";
-import { holonsOf, openStores } from "../../stores.ts";
+import { holonsOf, openStores } from "../../integrations/glass/found.ts";
 import { startEngine } from "../compat.ts";
 import type { Looking as Expression } from "../compat.ts";
 import { wordsOf as cut } from "./patterns/words.ts";

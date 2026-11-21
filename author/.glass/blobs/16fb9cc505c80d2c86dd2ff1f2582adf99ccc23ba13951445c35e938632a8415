@@ -1,0 +1,6 @@
+{"body":{"as":"typed","flow":[{"$holds":true,"$ref":"1M6YBY3G000207M"}],"order":27},"id":"1M6YBY3G000207K","instance":["1M6YBY3G0000001"]}
+{"body":{"sentences":[{"$holds":true,"$ref":"1M6YBY3G000207N"}]},"id":"1M6YBY3G000207M","instance":["1M6YBY3G0000002"]}
+{"body":{"words":[{"$holds":true,"$ref":"1M6YBY3G000207P"},{"$holds":true,"$ref":"1M6YBY3G000207Q"},{"$holds":true,"$ref":"1M6YBY3G000207R"}]},"id":"1M6YBY3G000207N","instance":["1M6YBY3G0000004"]}
+{"body":{"text":"Commit"},"id":"1M6YBY3G000207P","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"in"},"id":"1M6YBY3G000207Q","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"slices"},"id":"1M6YBY3G000207R","instance":["1M6YBY3G0000005"]}

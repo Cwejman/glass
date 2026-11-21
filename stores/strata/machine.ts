@@ -1,7 +1,7 @@
 // Entry for running strata on a machine over a .glass folder: as a module a runtime
 // starts, given the folder; or as a process of its own, which hosts it on a Unix socket.
 //
-//   bun stores/strata/machine.ts .glass /tmp/glass/main.sock
+//   bun stores/strata/machine.ts .glass /tmp/glass/glass.sock
 
 import { host } from "../../wire/socket.ts";
 import { folderStorages } from "./storage/folder.ts";

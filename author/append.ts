@@ -7,9 +7,8 @@
 //   { "add": [{ "title": "...", "opens": "...", "restsOn": ["..."] }],
 //     "edit": [{ "title": "...", "opens": "..." }] }
 
-import { handles } from "../engine/handles.ts";
-import { localEngine } from "../engine/serve/local.ts";
-import { holonsOf, open, storeFolder, type Holon } from "../stores.ts";
+import { handles } from "../engine/next/uses/migrate.ts";
+import { authorsField, commitOf, type Holon } from "./field.ts";
 import { markedWriter, proseWriter } from "./prose.ts";
 
 type Patch = {
@@ -23,10 +22,9 @@ const [named, file, as, patchFile] = process.argv.slice(2);
 if (!named || !file || !["typed", "spoken", "answered"].includes(as ?? ""))
   throw new Error("usage: append.ts <session> <utterance.txt> <typed|spoken|answered> [paths.json]");
 
-const store = await open(await storeFolder("main"));
-const holons = await holonsOf(store);
+const { holons, types: fieldTypes } = await authorsField();
 
-const writer = proseWriter(holons, handles());
+const writer = proseWriter(holons, handles(), fieldTypes);
 const { types, put, flow } = writer;
 const marked = markedWriter(writer);
 
@@ -90,14 +88,15 @@ if (running) {
   changed.add(running);
 }
 
-const done = await (
-  await localEngine({ writes: ["main"] })
-).commit({
+const done = await commitOf({
   holons: [...changed, ...writer.born],
   says: `${session.name}: utterance ${order}`,
 });
 console.log({
   utterance: order,
   holons: changed.size + writer.born.length,
-  commit: done.commit,
+  landed: done.landed,
 });
+
+// The engine here keeps its stores open; the tool is done.
+process.exit(0);

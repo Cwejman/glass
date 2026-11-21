@@ -8,7 +8,7 @@ import { memoryFiles } from "../../../integrations/glass/files.ts";
 import { commit, openStore, type Holon, type Store } from "../../../integrations/glass/store.ts";
 import { namesAsked } from "../../../language/names.ts";
 import { parse } from "../../../language/text.ts";
-import { openStores } from "../../../stores.ts";
+import { openStores } from "../../../integrations/glass/found.ts";
 import { startEngine, type Engine } from "../../compat.ts";
 import { fieldOf } from "../../field.ts";
 import { indexOf } from "./facts.ts";

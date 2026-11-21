@@ -1,0 +1,15 @@
+{"body":{"as":"typed","flow":[{"$holds":true,"$ref":"1M6YBY3G0001ZQ6"}],"order":19},"id":"1M6YBY3G0001ZQ5","instance":["1M6YBY3G0000001"]}
+{"body":{"sentences":[{"$holds":true,"$ref":"1M6YBY3G0001ZQ7"}]},"id":"1M6YBY3G0001ZQ6","instance":["1M6YBY3G0000002"]}
+{"body":{"words":[{"$holds":true,"$ref":"1M6YBY3G0001ZQ8"},{"$holds":true,"$ref":"1M6YBY3G0001ZQ9"},{"$holds":true,"$ref":"1M6YBY3G0001ZQA"},{"$holds":true,"$ref":"1M6YBY3G0001ZQB"},{"$holds":true,"$ref":"1M6YBY3G0001ZQC"},{"$holds":true,"$ref":"1M6YBY3G0001ZQD"},{"$holds":true,"$ref":"1M6YBY3G0001ZQE"},{"$holds":true,"$ref":"1M6YBY3G0001ZQF"},{"$holds":true,"$ref":"1M6YBY3G0001ZQG"},{"$holds":true,"$ref":"1M6YBY3G0001ZQH"},{"$holds":true,"$ref":"1M6YBY3G0001ZQJ"},{"$holds":true,"$ref":"1M6YBY3G0001ZQK"}]},"id":"1M6YBY3G0001ZQ7","instance":["1M6YBY3G0000004"]}
+{"body":{"text":"Persist"},"id":"1M6YBY3G0001ZQ8","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"yourself","typed":"youtrself"},"id":"1M6YBY3G0001ZQ9","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"in"},"id":"1M6YBY3G0001ZQA","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"what"},"id":"1M6YBY3G0001ZQB","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"is"},"id":"1M6YBY3G0001ZQC","instance":["1M6YBY3G0000005"]}
+{"body":{"after":",","text":"available"},"id":"1M6YBY3G0001ZQD","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"then"},"id":"1M6YBY3G0001ZQE","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"I","typed":"i"},"id":"1M6YBY3G0001ZQF","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"continue"},"id":"1M6YBY3G0001ZQG","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"with"},"id":"1M6YBY3G0001ZQH","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"my"},"id":"1M6YBY3G0001ZQJ","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"answer","typed":"asnwer"},"id":"1M6YBY3G0001ZQK","instance":["1M6YBY3G0000005"]}

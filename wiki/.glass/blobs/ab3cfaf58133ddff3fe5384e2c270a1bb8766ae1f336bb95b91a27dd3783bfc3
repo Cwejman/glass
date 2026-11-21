@@ -1,0 +1,530 @@
+{"body":{"forms":[{"$holds":true,"$ref":"1M6YBY3G0001WT5"},{"$holds":true,"$ref":"1M6YBY3G00029F0"},{"$holds":true,"$ref":"1M6YBY3G00029F1"},{"$holds":true,"$ref":"1M6YBY3G00029F2"},{"$holds":true,"$ref":"1M6YBY3G00029F3"},{"$holds":true,"$ref":"1M6YBY3G00029F4"},{"$holds":true,"$ref":"1M6YBY3G00029F5"},{"$holds":true,"$ref":"1M6YBY3G00029F6"},{"$holds":true,"$ref":"1M6YBY3G00029F7"},{"$holds":true,"$ref":"1M6YBY3G0001WT6"},{"$holds":true,"$ref":"1M6YBY3G00029F8"},{"$holds":true,"$ref":"1M6YBY3G00029F9"},{"$holds":true,"$ref":"1M6YBY3G00029FA"},{"$holds":true,"$ref":"1M6YBY3G00029FB"},{"$holds":true,"$ref":"1M6YBY3G00029FC"},{"$holds":true,"$ref":"1M6YBY3G00029FD"},{"$holds":true,"$ref":"1M6YBY3G0001WT7"},{"$holds":true,"$ref":"1M6YBY3G0001WT8"},{"$holds":true,"$ref":"1M6YBY3G0001WT9"},{"$holds":true,"$ref":"1M6YBY3G0001WTA"},{"$holds":true,"$ref":"1M6YBY3G0001WTB"},{"$holds":true,"$ref":"1M6YBY3G0001WTC"},{"$holds":true,"$ref":"1M6YBY3G0001WTD"},{"$holds":true,"$ref":"1M6YBY3G0001WTE"},{"$holds":true,"$ref":"1M6YBY3G0001WTF"},{"$holds":true,"$ref":"1M6YBY3G0001WTG"},{"$holds":true,"$ref":"1M6YBY3G0001WTH"},{"$holds":true,"$ref":"1M6YBY3G0001WTJ"},{"$holds":true,"$ref":"1M6YBY3G0001WTK"},{"$holds":true,"$ref":"1M6YBY3G0001WTM"},{"$holds":true,"$ref":"1M6YBY3G0001WTN"},{"$holds":true,"$ref":"1M6YBY3G0001WTP"},{"$holds":true,"$ref":"1M6YBY3G0001WTQ"},{"$holds":true,"$ref":"1M6YBY3G0001WTR"},{"$holds":true,"$ref":"1M6YBY3G0001WTS"},{"$holds":true,"$ref":"1M6YBY3G0001WTT"},{"$holds":true,"$ref":"1M6YBY3G0001WTV"},{"$holds":true,"$ref":"1M6YBY3G0001WTW"},{"$holds":true,"$ref":"1M6YBY3G0001WTX"},{"$holds":true,"$ref":"1M6YBY3G0001WTY"},{"$holds":true,"$ref":"1M6YBY3G0001WTZ"},{"$holds":true,"$ref":"1M6YBY3G0001WV0"},{"$holds":true,"$ref":"1M6YBY3G0001WV1"},{"$holds":true,"$ref":"1M6YBY3G0001WV2"},{"$holds":true,"$ref":"1M6YBY3G0001WV3"},{"$holds":true,"$ref":"1M6YBY3G0001WV4"},{"$holds":true,"$ref":"1M6YBY3G0001WV5"},{"$holds":true,"$ref":"1M6YBY3G0001WV6"},{"$holds":true,"$ref":"1M6YBY3G0001WV7"},{"$holds":true,"$ref":"1M6YBY3G0001WV8"},{"$holds":true,"$ref":"1M6YBY3G0001WV9"},{"$holds":true,"$ref":"1M6YBY3G0001WVA"},{"$holds":true,"$ref":"1M6YBY3G0001WVB"},{"$holds":true,"$ref":"1M6YBY3G0001WVC"},{"$holds":true,"$ref":"1M6YBY3G0001WVD"},{"$holds":true,"$ref":"1M6YBY3G0001WVE"},{"$holds":true,"$ref":"1M6YBY3G0001WVF"},{"$holds":true,"$ref":"1M6YBY3G0001WVG"},{"$holds":true,"$ref":"1M6YBY3G0001WVH"},{"$holds":true,"$ref":"1M6YBY3G0001WVJ"},{"$holds":true,"$ref":"1M6YBY3G0001WVK"},{"$holds":true,"$ref":"1M6YBY3G0001WVM"},{"$holds":true,"$ref":"1M6YBY3G0001WVN"},{"$holds":true,"$ref":"1M6YBY3G0001WVP"},{"$holds":true,"$ref":"1M6YBY3G0001WVQ"},{"$holds":true,"$ref":"1M6YBY3G0001WVR"},{"$holds":true,"$ref":"1M6YBY3G0001WVS"},{"$holds":true,"$ref":"1M6YBY3G0001WVT"},{"$holds":true,"$ref":"1M6YBY3G0001WVV"},{"$holds":true,"$ref":"1M6YBY3G0001WVW"},{"$holds":true,"$ref":"1M6YBY3G0001WVX"},{"$holds":true,"$ref":"1M6YBY3G0001WVY"},{"$holds":true,"$ref":"1M6YBY3G0001WVZ"},{"$holds":true,"$ref":"1M6YBY3G0001WW0"},{"$holds":true,"$ref":"1M6YBY3G0001WW1"},{"$holds":true,"$ref":"1M6YBY3G0001WW2"},{"$holds":true,"$ref":"1M6YBY3G0001WW3"},{"$holds":true,"$ref":"1M6YBY3G0001WW4"},{"$holds":true,"$ref":"1M6YBY3G0001WW5"},{"$holds":true,"$ref":"1M6YBY3G0001WW6"},{"$holds":true,"$ref":"1M6YBY3G0001WW7"},{"$holds":true,"$ref":"1M6YBY3G0001WW8"},{"$holds":true,"$ref":"1M6YBY3G0001WW9"},{"$holds":true,"$ref":"1M6YBY3G0001WWA"},{"$holds":true,"$ref":"1M6YBY3G0001WWB"},{"$holds":true,"$ref":"1M6YBY3G0001WWC"},{"$holds":true,"$ref":"1M6YBY3G0001WWD"},{"$holds":true,"$ref":"1M6YBY3G0001WWE"},{"$holds":true,"$ref":"1M6YBY3G0001WWF"},{"$holds":true,"$ref":"1M6YBY3G0001WWG"},{"$holds":true,"$ref":"1M6YBY3G0001WWH"},{"$holds":true,"$ref":"1M6YBY3G0001WWJ"},{"$holds":true,"$ref":"1M6YBY3G0001WWK"},{"$holds":true,"$ref":"1M6YBY3G0001WWM"},{"$holds":true,"$ref":"1M6YBY3G0001WWN"},{"$holds":true,"$ref":"1M6YBY3G0001WWP"},{"$holds":true,"$ref":"1M6YBY3G0001WWQ"},{"$holds":true,"$ref":"1M6YBY3G0001WWR"},{"$holds":true,"$ref":"1M6YBY3G0001WWS"},{"$holds":true,"$ref":"1M6YBY3G0001WWT"},{"$holds":true,"$ref":"1M6YBY3G0001WWV"},{"$holds":true,"$ref":"1M6YBY3G0001WWW"},{"$holds":true,"$ref":"1M6YBY3G0001WWX"},{"$holds":true,"$ref":"1M6YBY3G0001WWY"},{"$holds":true,"$ref":"1M6YBY3G0001WWZ"},{"$holds":true,"$ref":"1M6YBY3G0001WX0"},{"$holds":true,"$ref":"1M6YBY3G0001WX1"},{"$holds":true,"$ref":"1M6YBY3G0001WX2"},{"$holds":true,"$ref":"1M6YBY3G0001WX3"},{"$holds":true,"$ref":"1M6YBY3G0001WX4"},{"$holds":true,"$ref":"1M6YBY3G0001WX5"},{"$holds":true,"$ref":"1M6YBY3G0001WX6"},{"$holds":true,"$ref":"1M6YBY3G0001WX7"},{"$holds":true,"$ref":"1M6YBY3G0001WX8"},{"$holds":true,"$ref":"1M6YBY3G0001WX9"},{"$holds":true,"$ref":"1M6YBY3G0001WXA"},{"$holds":true,"$ref":"1M6YBY3G0001WXB"},{"$holds":true,"$ref":"1M6YBY3G0001WXC"},{"$holds":true,"$ref":"1M6YBY3G0001WXD"},{"$holds":true,"$ref":"1M6YBY3G0001WXE"},{"$holds":true,"$ref":"1M6YBY3G0001WXF"},{"$holds":true,"$ref":"1M6YBY3G0001WXG"},{"$holds":true,"$ref":"1M6YBY3G0001WXH"},{"$holds":true,"$ref":"1M6YBY3G0001WXJ"},{"$holds":true,"$ref":"1M6YBY3G0001WXK"},{"$holds":true,"$ref":"1M6YBY3G0001WXM"},{"$holds":true,"$ref":"1M6YBY3G0001WXN"},{"$holds":true,"$ref":"1M6YBY3G0001WXP"},{"$holds":true,"$ref":"1M6YBY3G0001WXQ"},{"$holds":true,"$ref":"1M6YBY3G0001WXR"},{"$holds":true,"$ref":"1M6YBY3G0001WXS"},{"$holds":true,"$ref":"1M6YBY3G0001WXT"},{"$holds":true,"$ref":"1M6YBY3G0001WXV"},{"$holds":true,"$ref":"1M6YBY3G0001WXW"},{"$holds":true,"$ref":"1M6YBY3G0001WXX"},{"$holds":true,"$ref":"1M6YBY3G0001WXY"},{"$holds":true,"$ref":"1M6YBY3G0001WXZ"},{"$holds":true,"$ref":"1M6YBY3G0001WY0"},{"$holds":true,"$ref":"1M6YBY3G0001WY1"},{"$holds":true,"$ref":"1M6YBY3G0001WY2"},{"$holds":true,"$ref":"1M6YBY3G0001WY3"},{"$holds":true,"$ref":"1M6YBY3G0001WY4"},{"$holds":true,"$ref":"1M6YBY3G0001WY5"},{"$holds":true,"$ref":"1M6YBY3G0001WY6"},{"$holds":true,"$ref":"1M6YBY3G0001WY7"},{"$holds":true,"$ref":"1M6YBY3G0001WY8"},{"$holds":true,"$ref":"1M6YBY3G0001WY9"},{"$holds":true,"$ref":"1M6YBY3G0001WYA"},{"$holds":true,"$ref":"1M6YBY3G0001WYB"},{"$holds":true,"$ref":"1M6YBY3G0001WYC"},{"$holds":true,"$ref":"1M6YBY3G0001WYD"},{"$holds":true,"$ref":"1M6YBY3G0001WYE"},{"$holds":true,"$ref":"1M6YBY3G0001WYF"},{"$holds":true,"$ref":"1M6YBY3G0001WYG"},{"$holds":true,"$ref":"1M6YBY3G0001WYH"},{"$holds":true,"$ref":"1M6YBY3G0001WYJ"},{"$holds":true,"$ref":"1M6YBY3G0001WYK"},{"$holds":true,"$ref":"1M6YBY3G0001WYM"},{"$holds":true,"$ref":"1M6YBY3G0001WYN"},{"$holds":true,"$ref":"1M6YBY3G0001WYP"},{"$holds":true,"$ref":"1M6YBY3G0001WYQ"},{"$holds":true,"$ref":"1M6YBY3G0001WYR"},{"$holds":true,"$ref":"1M6YBY3G0001WYS"},{"$holds":true,"$ref":"1M6YBY3G0001WYT"},{"$holds":true,"$ref":"1M6YBY3G0001WYV"},{"$holds":true,"$ref":"1M6YBY3G0001WYW"},{"$holds":true,"$ref":"1M6YBY3G0001WYX"},{"$holds":true,"$ref":"1M6YBY3G0001WYY"},{"$holds":true,"$ref":"1M6YBY3G0001WYZ"},{"$holds":true,"$ref":"1M6YBY3G0001WZ0"},{"$holds":true,"$ref":"1M6YBY3G0001WZ1"},{"$holds":true,"$ref":"1M6YBY3G0001WZ2"},{"$holds":true,"$ref":"1M6YBY3G0001WZ3"},{"$holds":true,"$ref":"1M6YBY3G0001WZ4"},{"$holds":true,"$ref":"1M6YBY3G0001WZ5"},{"$holds":true,"$ref":"1M6YBY3G0001WZ6"},{"$holds":true,"$ref":"1M6YBY3G0001WZ7"},{"$holds":true,"$ref":"1M6YBY3G0001WZ8"},{"$holds":true,"$ref":"1M6YBY3G0001WZ9"},{"$holds":true,"$ref":"1M6YBY3G0001WZA"},{"$holds":true,"$ref":"1M6YBY3G0001WZB"},{"$holds":true,"$ref":"1M6YBY3G0001WZC"},{"$holds":true,"$ref":"1M6YBY3G0001WZD"},{"$holds":true,"$ref":"1M6YBY3G0001WZE"},{"$holds":true,"$ref":"1M6YBY3G0001WZF"},{"$holds":true,"$ref":"1M6YBY3G0001WZG"},{"$holds":true,"$ref":"1M6YBY3G0001WZH"},{"$holds":true,"$ref":"1M6YBY3G0001WZJ"},{"$holds":true,"$ref":"1M6YBY3G0001WZK"},{"$holds":true,"$ref":"1M6YBY3G0001WZM"},{"$holds":true,"$ref":"1M6YBY3G0001WZN"},{"$holds":true,"$ref":"1M6YBY3G0001WZP"},{"$holds":true,"$ref":"1M6YBY3G0001WZQ"},{"$holds":true,"$ref":"1M6YBY3G0001WZR"},{"$holds":true,"$ref":"1M6YBY3G0001WZS"},{"$holds":true,"$ref":"1M6YBY3G0001WZT"},{"$holds":true,"$ref":"1M6YBY3G0001WZV"},{"$holds":true,"$ref":"1M6YBY3G0001WZW"},{"$holds":true,"$ref":"1M6YBY3G0001WZX"},{"$holds":true,"$ref":"1M6YBY3G0001WZY"},{"$holds":true,"$ref":"1M6YBY3G0001WZZ"},{"$holds":true,"$ref":"1M6YBY3G00029FE"},{"$holds":true,"$ref":"1M6YBY3G0001X00"},{"$holds":true,"$ref":"1M6YBY3G00029FF"},{"$holds":true,"$ref":"1M6YBY3G0001X01"},{"$holds":true,"$ref":"1M6YBY3G0001X02"},{"$holds":true,"$ref":"1M6YBY3G0001X03"},{"$holds":true,"$ref":"1M6YBY3G00029FG"},{"$holds":true,"$ref":"1M6YBY3G0001X04"},{"$holds":true,"$ref":"1M6YBY3G0001X05"},{"$holds":true,"$ref":"1M6YBY3G0001X06"},{"$holds":true,"$ref":"1M6YBY3G0001X07"},{"$holds":true,"$ref":"1M6YBY3G0001X08"},{"$holds":true,"$ref":"1M6YBY3G0001X09"},{"$holds":true,"$ref":"1M6YBY3G0001X0A"},{"$holds":true,"$ref":"1M6YBY3G0001X0B"},{"$holds":true,"$ref":"1M6YBY3G0001X0C"},{"$holds":true,"$ref":"1M6YBY3G0001X0D"},{"$holds":true,"$ref":"1M6YBY3G0001X0E"},{"$holds":true,"$ref":"1M6YBY3G0001X0F"},{"$holds":true,"$ref":"1M6YBY3G0001X0G"},{"$holds":true,"$ref":"1M6YBY3G0001X0H"},{"$holds":true,"$ref":"1M6YBY3G0001X0J"},{"$holds":true,"$ref":"1M6YBY3G0001X0K"},{"$holds":true,"$ref":"1M6YBY3G0001X0M"},{"$holds":true,"$ref":"1M6YBY3G0001X0N"},{"$holds":true,"$ref":"1M6YBY3G0001X0P"},{"$holds":true,"$ref":"1M6YBY3G0001X0Q"},{"$holds":true,"$ref":"1M6YBY3G0001X0R"},{"$holds":true,"$ref":"1M6YBY3G0001X0S"},{"$holds":true,"$ref":"1M6YBY3G0001X0T"},{"$holds":true,"$ref":"1M6YBY3G0001X0V"},{"$holds":true,"$ref":"1M6YBY3G0001X0W"},{"$holds":true,"$ref":"1M6YBY3G0001X0X"},{"$holds":true,"$ref":"1M6YBY3G0001X0Y"},{"$holds":true,"$ref":"1M6YBY3G0001X0Z"},{"$holds":true,"$ref":"1M6YBY3G0001X10"},{"$holds":true,"$ref":"1M6YBY3G0001X11"},{"$holds":true,"$ref":"1M6YBY3G0001X12"},{"$holds":true,"$ref":"1M6YBY3G0001X13"},{"$holds":true,"$ref":"1M6YBY3G0001X14"},{"$holds":true,"$ref":"1M6YBY3G0001X15"},{"$holds":true,"$ref":"1M6YBY3G0001X16"},{"$holds":true,"$ref":"1M6YBY3G0001X17"},{"$holds":true,"$ref":"1M6YBY3G0001X18"},{"$holds":true,"$ref":"1M6YBY3G0001X19"},{"$holds":true,"$ref":"1M6YBY3G0001X1A"},{"$holds":true,"$ref":"1M6YBY3G0001X1B"},{"$holds":true,"$ref":"1M6YBY3G0001X1C"},{"$holds":true,"$ref":"1M6YBY3G0001X1D"},{"$holds":true,"$ref":"1M6YBY3G0001X1E"},{"$holds":true,"$ref":"1M6YBY3G0001X1F"},{"$holds":true,"$ref":"1M6YBY3G0001X1G"},{"$holds":true,"$ref":"1M6YBY3G0001X1H"},{"$holds":true,"$ref":"1M6YBY3G0001X1J"},{"$holds":true,"$ref":"1M6YBY3G0001X1K"},{"$holds":true,"$ref":"1M6YBY3G0001X1M"},{"$holds":true,"$ref":"1M6YBY3G0001X1N"},{"$holds":true,"$ref":"1M6YBY3G0001X1P"},{"$holds":true,"$ref":"1M6YBY3G0001X1Q"},{"$holds":true,"$ref":"1M6YBY3G0001X1R"},{"$holds":true,"$ref":"1M6YBY3G0001X1S"},{"$holds":true,"$ref":"1M6YBY3G0001X1T"},{"$holds":true,"$ref":"1M6YBY3G0001X1V"},{"$holds":true,"$ref":"1M6YBY3G0001X1W"},{"$holds":true,"$ref":"1M6YBY3G0001X1X"},{"$holds":true,"$ref":"1M6YBY3G0001X1Y"},{"$holds":true,"$ref":"1M6YBY3G0001X1Z"},{"$holds":true,"$ref":"1M6YBY3G0001X20"},{"$holds":true,"$ref":"1M6YBY3G0001X21"},{"$holds":true,"$ref":"1M6YBY3G0001X22"},{"$holds":true,"$ref":"1M6YBY3G0001X23"},{"$holds":true,"$ref":"1M6YBY3G0001X24"},{"$holds":true,"$ref":"1M6YBY3G0001X25"},{"$holds":true,"$ref":"1M6YBY3G0001X26"},{"$holds":true,"$ref":"1M6YBY3G0001X27"},{"$holds":true,"$ref":"1M6YBY3G0001X28"},{"$holds":true,"$ref":"1M6YBY3G0001X29"},{"$holds":true,"$ref":"1M6YBY3G0001X2A"},{"$holds":true,"$ref":"1M6YBY3G0001X2B"},{"$holds":true,"$ref":"1M6YBY3G0001X2C"},{"$holds":true,"$ref":"1M6YBY3G0001X2D"},{"$holds":true,"$ref":"1M6YBY3G0001X2E"},{"$holds":true,"$ref":"1M6YBY3G0001X2F"},{"$holds":true,"$ref":"1M6YBY3G0001X2G"},{"$holds":true,"$ref":"1M6YBY3G0001X2H"},{"$holds":true,"$ref":"1M6YBY3G0001X2J"},{"$holds":true,"$ref":"1M6YBY3G0001X2K"},{"$holds":true,"$ref":"1M6YBY3G0001X2M"},{"$holds":true,"$ref":"1M6YBY3G0001X2N"},{"$holds":true,"$ref":"1M6YBY3G0001X2P"},{"$holds":true,"$ref":"1M6YBY3G0001X2Q"},{"$holds":true,"$ref":"1M6YBY3G0001X2R"},{"$holds":true,"$ref":"1M6YBY3G0001X2S"},{"$holds":true,"$ref":"1M6YBY3G0001X2T"},{"$holds":true,"$ref":"1M6YBY3G0001X2V"},{"$holds":true,"$ref":"1M6YBY3G0001X2W"},{"$holds":true,"$ref":"1M6YBY3G0001X2X"},{"$holds":true,"$ref":"1M6YBY3G0001X2Y"},{"$holds":true,"$ref":"1M6YBY3G0001X2Z"},{"$holds":true,"$ref":"1M6YBY3G0001X30"},{"$holds":true,"$ref":"1M6YBY3G0001X31"},{"$holds":true,"$ref":"1M6YBY3G0001X32"},{"$holds":true,"$ref":"1M6YBY3G0001X33"},{"$holds":true,"$ref":"1M6YBY3G0001X34"},{"$holds":true,"$ref":"1M6YBY3G0001X35"},{"$holds":true,"$ref":"1M6YBY3G0001X36"},{"$holds":true,"$ref":"1M6YBY3G0001X37"},{"$holds":true,"$ref":"1M6YBY3G0001X38"},{"$holds":true,"$ref":"1M6YBY3G0001X39"},{"$holds":true,"$ref":"1M6YBY3G0001X3A"},{"$holds":true,"$ref":"1M6YBY3G0001X3B"},{"$holds":true,"$ref":"1M6YBY3G0001X3C"},{"$holds":true,"$ref":"1M6YBY3G0001X3D"},{"$holds":true,"$ref":"1M6YBY3G0001X3E"},{"$holds":true,"$ref":"1M6YBY3G0001X3F"},{"$holds":true,"$ref":"1M6YBY3G0001X3G"},{"$holds":true,"$ref":"1M6YBY3G0001X3H"},{"$holds":true,"$ref":"1M6YBY3G0001X3J"},{"$holds":true,"$ref":"1M6YBY3G0001X3K"},{"$holds":true,"$ref":"1M6YBY3G0001X3M"},{"$holds":true,"$ref":"1M6YBY3G0001X3N"},{"$holds":true,"$ref":"1M6YBY3G0001X3P"},{"$holds":true,"$ref":"1M6YBY3G0001X3Q"},{"$holds":true,"$ref":"1M6YBY3G0001X3R"},{"$holds":true,"$ref":"1M6YBY3G0001X3S"},{"$holds":true,"$ref":"1M6YBY3G0001X3T"},{"$holds":true,"$ref":"1M6YBY3G0001X3V"},{"$holds":true,"$ref":"1M6YBY3G0001X3W"},{"$holds":true,"$ref":"1M6YBY3G0001X3X"},{"$holds":true,"$ref":"1M6YBY3G0001X3Y"},{"$holds":true,"$ref":"1M6YBY3G0001X3Z"},{"$holds":true,"$ref":"1M6YBY3G0001X40"},{"$holds":true,"$ref":"1M6YBY3G0001X41"},{"$holds":true,"$ref":"1M6YBY3G0001X42"},{"$holds":true,"$ref":"1M6YBY3G0001X43"},{"$holds":true,"$ref":"1M6YBY3G0001X44"},{"$holds":true,"$ref":"1M6YBY3G0001X45"},{"$holds":true,"$ref":"1M6YBY3G0001X46"},{"$holds":true,"$ref":"1M6YBY3G0001X47"},{"$holds":true,"$ref":"1M6YBY3G0001X48"},{"$holds":true,"$ref":"1M6YBY3G0001X49"},{"$holds":true,"$ref":"1M6YBY3G0001X4A"},{"$holds":true,"$ref":"1M6YBY3G0001X4B"},{"$holds":true,"$ref":"1M6YBY3G0001X4C"},{"$holds":true,"$ref":"1M6YBY3G0001X4D"},{"$holds":true,"$ref":"1M6YBY3G0001X4E"},{"$holds":true,"$ref":"1M6YBY3G0001X4F"},{"$holds":true,"$ref":"1M6YBY3G0001X4G"},{"$holds":true,"$ref":"1M6YBY3G0001X4H"},{"$holds":true,"$ref":"1M6YBY3G0001X4J"},{"$holds":true,"$ref":"1M6YBY3G0001X4K"},{"$holds":true,"$ref":"1M6YBY3G0001X4M"},{"$holds":true,"$ref":"1M6YBY3G0001X4N"},{"$holds":true,"$ref":"1M6YBY3G0001X4P"},{"$holds":true,"$ref":"1M6YBY3G0001X4Q"},{"$holds":true,"$ref":"1M6YBY3G0001X4R"},{"$holds":true,"$ref":"1M6YBY3G0001X4S"},{"$holds":true,"$ref":"1M6YBY3G0001X4T"},{"$holds":true,"$ref":"1M6YBY3G0001X4V"},{"$holds":true,"$ref":"1M6YBY3G0001X4W"},{"$holds":true,"$ref":"1M6YBY3G0001X4X"},{"$holds":true,"$ref":"1M6YBY3G0001X4Y"},{"$holds":true,"$ref":"1M6YBY3G0001X4Z"},{"$holds":true,"$ref":"1M6YBY3G0001X50"},{"$holds":true,"$ref":"1M6YBY3G0001X51"},{"$holds":true,"$ref":"1M6YBY3G0001X52"},{"$holds":true,"$ref":"1M6YBY3G0001X53"},{"$holds":true,"$ref":"1M6YBY3G0001X54"},{"$holds":true,"$ref":"1M6YBY3G0001X55"},{"$holds":true,"$ref":"1M6YBY3G0001X56"},{"$holds":true,"$ref":"1M6YBY3G0001X57"},{"$holds":true,"$ref":"1M6YBY3G0001X58"},{"$holds":true,"$ref":"1M6YBY3G0001X59"},{"$holds":true,"$ref":"1M6YBY3G0001X5A"},{"$holds":true,"$ref":"1M6YBY3G0001X5B"},{"$holds":true,"$ref":"1M6YBY3G0001X5C"},{"$holds":true,"$ref":"1M6YBY3G0001X5D"},{"$holds":true,"$ref":"1M6YBY3G0001X5E"},{"$holds":true,"$ref":"1M6YBY3G0001X5F"},{"$holds":true,"$ref":"1M6YBY3G0001X5G"},{"$holds":true,"$ref":"1M6YBY3G0001X5H"},{"$holds":true,"$ref":"1M6YBY3G0001X5J"},{"$holds":true,"$ref":"1M6YBY3G0001X5K"},{"$holds":true,"$ref":"1M6YBY3G0001X5M"},{"$holds":true,"$ref":"1M6YBY3G0001X5N"},{"$holds":true,"$ref":"1M6YBY3G0001X5P"},{"$holds":true,"$ref":"1M6YBY3G0001X5Q"},{"$holds":true,"$ref":"1M6YBY3G0001X5R"},{"$holds":true,"$ref":"1M6YBY3G0001X5S"},{"$holds":true,"$ref":"1M6YBY3G0001X5T"},{"$holds":true,"$ref":"1M6YBY3G0001X5V"},{"$holds":true,"$ref":"1M6YBY3G0001X5W"},{"$holds":true,"$ref":"1M6YBY3G0001X5X"},{"$holds":true,"$ref":"1M6YBY3G0001X5Y"},{"$holds":true,"$ref":"1M6YBY3G0001X5Z"},{"$holds":true,"$ref":"1M6YBY3G0001X60"},{"$holds":true,"$ref":"1M6YBY3G0001X61"},{"$holds":true,"$ref":"1M6YBY3G0001X62"},{"$holds":true,"$ref":"1M6YBY3G0001X63"},{"$holds":true,"$ref":"1M6YBY3G0001X64"},{"$holds":true,"$ref":"1M6YBY3G0001X65"},{"$holds":true,"$ref":"1M6YBY3G0001X66"},{"$holds":true,"$ref":"1M6YBY3G0001X67"},{"$holds":true,"$ref":"1M6YBY3G0001X68"},{"$holds":true,"$ref":"1M6YBY3G0001X69"},{"$holds":true,"$ref":"1M6YBY3G0001X6A"},{"$holds":true,"$ref":"1M6YBY3G0001X6B"},{"$holds":true,"$ref":"1M6YBY3G0001X6C"},{"$holds":true,"$ref":"1M6YBY3G0001X6D"},{"$holds":true,"$ref":"1M6YBY3G0001X6E"},{"$holds":true,"$ref":"1M6YBY3G0001X6F"},{"$holds":true,"$ref":"1M6YBY3G0001X6G"},{"$holds":true,"$ref":"1M6YBY3G0001X6H"},{"$holds":true,"$ref":"1M6YBY3G0001X6J"},{"$holds":true,"$ref":"1M6YBY3G0001X6K"},{"$holds":true,"$ref":"1M6YBY3G0001X6M"},{"$holds":true,"$ref":"1M6YBY3G0001X6N"},{"$holds":true,"$ref":"1M6YBY3G0001X6P"},{"$holds":true,"$ref":"1M6YBY3G0001X6Q"},{"$holds":true,"$ref":"1M6YBY3G0001X6R"},{"$holds":true,"$ref":"1M6YBY3G0001X6S"},{"$holds":true,"$ref":"1M6YBY3G0001X6T"},{"$holds":true,"$ref":"1M6YBY3G0001X6V"},{"$holds":true,"$ref":"1M6YBY3G0001X6W"},{"$holds":true,"$ref":"1M6YBY3G0001X6X"},{"$holds":true,"$ref":"1M6YBY3G0001X6Y"},{"$holds":true,"$ref":"1M6YBY3G0001X6Z"},{"$holds":true,"$ref":"1M6YBY3G0001X70"},{"$holds":true,"$ref":"1M6YBY3G0001X71"},{"$holds":true,"$ref":"1M6YBY3G0001X72"},{"$holds":true,"$ref":"1M6YBY3G0001X73"},{"$holds":true,"$ref":"1M6YBY3G0001X74"},{"$holds":true,"$ref":"1M6YBY3G0001X75"},{"$holds":true,"$ref":"1M6YBY3G0001X76"},{"$holds":true,"$ref":"1M6YBY3G0001X77"},{"$holds":true,"$ref":"1M6YBY3G0001X78"},{"$holds":true,"$ref":"1M6YBY3G0001X79"},{"$holds":true,"$ref":"1M6YBY3G0001X7A"},{"$holds":true,"$ref":"1M6YBY3G0001X7B"},{"$holds":true,"$ref":"1M6YBY3G0001X7C"},{"$holds":true,"$ref":"1M6YBY3G0001X7D"},{"$holds":true,"$ref":"1M6YBY3G0001X7E"},{"$holds":true,"$ref":"1M6YBY3G0001X7F"},{"$holds":true,"$ref":"1M6YBY3G0001X7G"},{"$holds":true,"$ref":"1M6YBY3G0001X7H"},{"$holds":true,"$ref":"1M6YBY3G0001X7J"},{"$holds":true,"$ref":"1M6YBY3G0001X7K"},{"$holds":true,"$ref":"1M6YBY3G0001X7M"},{"$holds":true,"$ref":"1M6YBY3G0001X7N"},{"$holds":true,"$ref":"1M6YBY3G0001X7P"},{"$holds":true,"$ref":"1M6YBY3G0001X7Q"},{"$holds":true,"$ref":"1M6YBY3G0001X7R"},{"$holds":true,"$ref":"1M6YBY3G0001X7S"},{"$holds":true,"$ref":"1M6YBY3G0001X7T"},{"$holds":true,"$ref":"1M6YBY3G0001X7V"},{"$holds":true,"$ref":"1M6YBY3G0001X7W"},{"$holds":true,"$ref":"1M6YBY3G0001X7X"},{"$holds":true,"$ref":"1M6YBY3G0001X7Y"},{"$holds":true,"$ref":"1M6YBY3G0001X7Z"},{"$holds":true,"$ref":"1M6YBY3G0001X80"},{"$holds":true,"$ref":"1M6YBY3G0001X81"},{"$holds":true,"$ref":"1M6YBY3G0001X82"},{"$holds":true,"$ref":"1M6YBY3G0001X83"},{"$holds":true,"$ref":"1M6YBY3G0001X84"},{"$holds":true,"$ref":"1M6YBY3G0001X85"},{"$holds":true,"$ref":"1M6YBY3G0001X86"},{"$holds":true,"$ref":"1M6YBY3G0001X87"},{"$holds":true,"$ref":"1M6YBY3G0001X88"},{"$holds":true,"$ref":"1M6YBY3G0001X89"},{"$holds":true,"$ref":"1M6YBY3G0001X8A"},{"$holds":true,"$ref":"1M6YBY3G0001X8B"},{"$holds":true,"$ref":"1M6YBY3G0001X8C"},{"$holds":true,"$ref":"1M6YBY3G0001X8D"},{"$holds":true,"$ref":"1M6YBY3G0001X8E"},{"$holds":true,"$ref":"1M6YBY3G0001X8F"},{"$holds":true,"$ref":"1M6YBY3G0001X8G"},{"$holds":true,"$ref":"1M6YBY3G0001X8H"},{"$holds":true,"$ref":"1M6YBY3G0001X8J"},{"$holds":true,"$ref":"1M6YBY3G0001X8K"},{"$holds":true,"$ref":"1M6YBY3G0001X8M"},{"$holds":true,"$ref":"1M6YBY3G0001X8N"},{"$holds":true,"$ref":"1M6YBY3G0001X8P"},{"$holds":true,"$ref":"1M6YBY3G0001X8Q"},{"$holds":true,"$ref":"1M6YBY3G0001X8R"},{"$holds":true,"$ref":"1M6YBY3G0001X8S"},{"$holds":true,"$ref":"1M6YBY3G0001X8T"},{"$holds":true,"$ref":"1M6YBY3G0001X8V"},{"$holds":true,"$ref":"1M6YBY3G0001X8W"},{"$holds":true,"$ref":"1M6YBY3G0001X8X"},{"$holds":true,"$ref":"1M6YBY3G0001X8Y"},{"$holds":true,"$ref":"1M6YBY3G0001X8Z"},{"$holds":true,"$ref":"1M6YBY3G0001X90"},{"$holds":true,"$ref":"1M6YBY3G0001X91"},{"$holds":true,"$ref":"1M6YBY3G0001X92"},{"$holds":true,"$ref":"1M6YBY3G0001X93"},{"$holds":true,"$ref":"1M6YBY3G0001X94"},{"$holds":true,"$ref":"1M6YBY3G0001X95"},{"$holds":true,"$ref":"1M6YBY3G0001X96"},{"$holds":true,"$ref":"1M6YBY3G0001X97"},{"$holds":true,"$ref":"1M6YBY3G0001X98"},{"$holds":true,"$ref":"1M6YBY3G0001X99"},{"$holds":true,"$ref":"1M6YBY3G0001X9A"},{"$holds":true,"$ref":"1M6YBY3G0001X9B"},{"$holds":true,"$ref":"1M6YBY3G0001X9C"},{"$holds":true,"$ref":"1M6YBY3G0001X9D"},{"$holds":true,"$ref":"1M6YBY3G0001X9E"},{"$holds":true,"$ref":"1M6YBY3G0001X9F"},{"$holds":true,"$ref":"1M6YBY3G0001X9G"},{"$holds":true,"$ref":"1M6YBY3G0001X9H"},{"$holds":true,"$ref":"1M6YBY3G0001X9J"},{"$holds":true,"$ref":"1M6YBY3G0001X9K"},{"$holds":true,"$ref":"1M6YBY3G0001X9M"},{"$holds":true,"$ref":"1M6YBY3G0001X9N"},{"$holds":true,"$ref":"1M6YBY3G0001X9P"},{"$holds":true,"$ref":"1M6YBY3G0001X9Q"},{"$holds":true,"$ref":"1M6YBY3G0001X9R"},{"$holds":true,"$ref":"1M6YBY3G0001X9S"},{"$holds":true,"$ref":"1M6YBY3G0001X9T"},{"$holds":true,"$ref":"1M6YBY3G0001X9V"},{"$holds":true,"$ref":"1M6YBY3G0001X9W"},{"$holds":true,"$ref":"1M6YBY3G0001X9X"},{"$holds":true,"$ref":"1M6YBY3G0001X9Y"},{"$holds":true,"$ref":"1M6YBY3G0001X9Z"},{"$holds":true,"$ref":"1M6YBY3G0001XA0"},{"$holds":true,"$ref":"1M6YBY3G0001XA1"},{"$holds":true,"$ref":"1M6YBY3G0001XA2"},{"$holds":true,"$ref":"1M6YBY3G0001XA3"},{"$holds":true,"$ref":"1M6YBY3G0001XA4"},{"$holds":true,"$ref":"1M6YBY3G0001XA5"},{"$holds":true,"$ref":"1M6YBY3G0001XA6"},{"$holds":true,"$ref":"1M6YBY3G0001XA7"},{"$holds":true,"$ref":"1M6YBY3G0001XA8"},{"$holds":true,"$ref":"1M6YBY3G0001XA9"},{"$holds":true,"$ref":"1M6YBY3G0001XAA"},{"$holds":true,"$ref":"1M6YBY3G00029FH"},{"$holds":true,"$ref":"1M6YBY3G00029FJ"},{"$holds":true,"$ref":"1M6YBY3G00029FK"},{"$holds":true,"$ref":"1M6YBY3G00029FM"},{"$holds":true,"$ref":"1M6YBY3G00029FN"},{"$holds":true,"$ref":"1M6YBY3G00029FP"},{"$holds":true,"$ref":"1M6YBY3G00029FQ"},{"$holds":true,"$ref":"1M6YBY3G00029FR"},{"$holds":true,"$ref":"1M6YBY3G0001XAB"},{"$holds":true,"$ref":"1M6YBY3G0001XAC"},{"$holds":true,"$ref":"1M6YBY3G0001XAD"},{"$holds":true,"$ref":"1M6YBY3G0001XAE"},{"$holds":true,"$ref":"1M6YBY3G0001XAF"},{"$holds":true,"$ref":"1M6YBY3G0001XAG"},{"$holds":true,"$ref":"1M6YBY3G0001XAH"},{"$holds":true,"$ref":"1M6YBY3G0001XAJ"},{"$holds":true,"$ref":"1M6YBY3G0001XAK"},{"$holds":true,"$ref":"1M6YBY3G0001XAM"},{"$holds":true,"$ref":"1M6YBY3G0001XAN"},{"$holds":true,"$ref":"1M6YBY3G0001XAP"}]},"id":"1M6YBY3G0001WT4","instance":["1M6YBY3G0000019"],"name":"wiki-markdown"}
+{"body":{"level":0,"on":{"$ref":"1M6YBY3G00010TW"}},"id":"1M6YBY3G0001WT5","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"1.1 ","on":{"$ref":"1M6YBY3G0001B6H"}},"id":"1M6YBY3G0001WT8","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G0001B1G"}},"id":"1M6YBY3G0001WT9","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"2.1 ","on":{"$ref":"1M6YBY3G0001B91"}},"id":"1M6YBY3G0001WTA","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"2.2 ","on":{"$ref":"1M6YBY3G0001BBG"}},"id":"1M6YBY3G0001WTB","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"2.3 ","on":{"$ref":"1M6YBY3G0001BDZ"}},"id":"1M6YBY3G0001WTC","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G0001B86"}},"id":"1M6YBY3G0001WTD","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001BJ5"},"to":"../plan.md#3-what-is-open"},"id":"1M6YBY3G0001WTE","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G0001BG6"}},"id":"1M6YBY3G0001WTF","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"4. ","on":{"$ref":"1M6YBY3G0001BMN"}},"id":"1M6YBY3G0001WTG","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"5. ","on":{"$ref":"1M6YBY3G0001BQ6"}},"id":"1M6YBY3G0001WTH","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G00019MH"}},"id":"1M6YBY3G0001WTK","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"2.a ","on":{"$ref":"1M6YBY3G00019RD"}},"id":"1M6YBY3G0001WTM","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00019ZQ"}},"id":"1M6YBY3G0001WTN","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"2.b ","on":{"$ref":"1M6YBY3G00019W2"}},"id":"1M6YBY3G0001WTP","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001A17"}},"id":"1M6YBY3G0001WTQ","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"2.c ","on":{"$ref":"1M6YBY3G0001A05"}},"id":"1M6YBY3G0001WTR","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001A5S"}},"id":"1M6YBY3G0001WTS","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"2.d ","on":{"$ref":"1M6YBY3G0001A52"}},"id":"1M6YBY3G0001WTT","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"2.e ","on":{"$ref":"1M6YBY3G0001A7K"}},"id":"1M6YBY3G0001WTV","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G00019QC"}},"id":"1M6YBY3G0001WTW","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001AC2"},"to":"../plan.md#3-what-is-open"},"id":"1M6YBY3G0001WTX","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G0001A9D"}},"id":"1M6YBY3G0001WTY","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"4.1 ","on":{"$ref":"1M6YBY3G0001AGQ"}},"id":"1M6YBY3G0001WTZ","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"4. ","on":{"$ref":"1M6YBY3G0001ACD"}},"id":"1M6YBY3G0001WV0","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001BZJ"}},"id":"1M6YBY3G0001WV2","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001BZG"}},"id":"1M6YBY3G0001WV3","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001C0E"}},"id":"1M6YBY3G0001WV4","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001C0C"}},"id":"1M6YBY3G0001WV5","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001C13"}},"id":"1M6YBY3G0001WV6","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001C11"}},"id":"1M6YBY3G0001WV7","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001C1W"}},"id":"1M6YBY3G0001WV8","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001C1T"}},"id":"1M6YBY3G0001WV9","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001C2E"}},"id":"1M6YBY3G0001WVA","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001C2C"}},"id":"1M6YBY3G0001WVB","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001C2W"}},"id":"1M6YBY3G0001WVC","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001C3A"},"to":"#42-data-belongs-to-its-source"},"id":"1M6YBY3G0001WVD","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001C2T"}},"id":"1M6YBY3G0001WVE","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G0001BYM"}},"id":"1M6YBY3G0001WVF","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G0001C51"}},"id":"1M6YBY3G0001WVG","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G0001C70"}},"id":"1M6YBY3G0001WVH","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"4.1 ","on":{"$ref":"1M6YBY3G0001CBK"}},"id":"1M6YBY3G0001WVJ","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"4.2 ","on":{"$ref":"1M6YBY3G0001CF7"}},"id":"1M6YBY3G0001WVK","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"4. ","on":{"$ref":"1M6YBY3G0001CA6"}},"id":"1M6YBY3G0001WVM","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"5. ","on":{"$ref":"1M6YBY3G0001CJQ"}},"id":"1M6YBY3G0001WVN","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001CSJ"},"to":"../said/2026-11-03.md#25-what-consumes-from-everything"},"id":"1M6YBY3G0001WVP","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G0001CSQ"},"to":"interface.md#8-moving-is-a-new-address"},"id":"1M6YBY3G0001WVQ","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"6. ","on":{"$ref":"1M6YBY3G0001CND"}},"id":"1M6YBY3G0001WVR","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"7. ","on":{"$ref":"1M6YBY3G0001CSV"}},"id":"1M6YBY3G0001WVS","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001CZE"},"to":"../said/2026-11-03.md#10-the-interface-as-a-mirror"},"id":"1M6YBY3G0001WVV","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G0001D54"},"to":"#8-moving-is-a-new-address"},"id":"1M6YBY3G0001WVW","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001D5D"},"to":"../said/2026-11-03.md#17-the-root-as-a-mount"},"id":"1M6YBY3G0001WVX","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G0001D0R"}},"id":"1M6YBY3G0001WVY","instance":["1M6YBY3G0000018"]}
+{"body":{"fence":"```","on":{"$ref":"1M6YBY3G0001DED"}},"id":"1M6YBY3G0001WVZ","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G0001D78"}},"id":"1M6YBY3G0001WW0","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001DN4"},"ticks":"`"},"id":"1M6YBY3G0001WW1","instance":["1M6YBY3G0000018"]}
+{"body":{"fence":"```","on":{"$ref":"1M6YBY3G0001DPX"}},"id":"1M6YBY3G0001WW2","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001DSZ"},"ticks":"`"},"id":"1M6YBY3G0001WW3","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001DTB"},"ticks":"`"},"id":"1M6YBY3G0001WW4","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G0001DTF"},"ticks":"`"},"id":"1M6YBY3G0001WW5","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G0001DHX"}},"id":"1M6YBY3G0001WW6","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G0001DZB"},"to":"client.md#5-a-full-client-preloaded"},"id":"1M6YBY3G0001WW7","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"4. ","on":{"$ref":"1M6YBY3G0001DVH"}},"id":"1M6YBY3G0001WW8","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G0001EDE"},"ticks":"`"},"id":"1M6YBY3G0001WW9","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001EKG"},"to":"#8-moving-is-a-new-address"},"id":"1M6YBY3G0001WWA","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"5. ","on":{"$ref":"1M6YBY3G0001E57"}},"id":"1M6YBY3G0001WWB","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001EP0"},"ticks":"`"},"id":"1M6YBY3G0001WWC","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001EP8"},"ticks":"`"},"id":"1M6YBY3G0001WWD","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001EPQ"},"ticks":"`"},"id":"1M6YBY3G0001WWE","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001F04"},"ticks":"`"},"id":"1M6YBY3G0001WWF","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G0001F3W"},"to":"relations.md#3-a-reference-holds-or-points"},"id":"1M6YBY3G0001WWG","instance":["1M6YBY3G0000018"]}
+{"body":{"fence":"```","on":{"$ref":"1M6YBY3G0001F4C"}},"id":"1M6YBY3G0001WWH","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"6. ","on":{"$ref":"1M6YBY3G0001EMC"}},"id":"1M6YBY3G0001WWJ","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"7. ","on":{"$ref":"1M6YBY3G0001FCY"}},"id":"1M6YBY3G0001WWK","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001G7C"},"ticks":"`"},"id":"1M6YBY3G0001WWM","instance":["1M6YBY3G0000018"]}
+{"body":{"fence":"```","on":{"$ref":"1M6YBY3G0001H94"}},"id":"1M6YBY3G0001WWN","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G0001HGA"},"to":"relations.md#6-a-holon-is-named-by-itself"},"id":"1M6YBY3G0001WWP","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"8. ","on":{"$ref":"1M6YBY3G0001G6Q"},"trail":"\n\n"},"id":"1M6YBY3G0001WWQ","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00015P0"},"to":"../said/2026-11-04.md#15-holding-said-in-the-fields-themselves"},"id":"1M6YBY3G0001WWS","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00015SW"},"to":"#6-a-holon-is-named-by-itself"},"id":"1M6YBY3G0001WWT","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G00015PF"}},"id":"1M6YBY3G0001WWV","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00015WT"},"ticks":"`"},"id":"1M6YBY3G0001WWW","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00015WY"},"ticks":"`"},"id":"1M6YBY3G0001WWX","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00015X0"},"ticks":"`"},"id":"1M6YBY3G0001WWY","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00015X4"},"ticks":"`"},"id":"1M6YBY3G0001WWZ","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G000162X"},"ticks":"`"},"id":"1M6YBY3G0001WX0","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001639"},"ticks":"`"},"id":"1M6YBY3G0001WX1","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G000163G"},"ticks":"`"},"id":"1M6YBY3G0001WX2","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G000163P"},"ticks":"`"},"id":"1M6YBY3G0001WX3","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G000163Z"},"ticks":"`"},"id":"1M6YBY3G0001WX4","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G000164Y"},"ticks":"`"},"id":"1M6YBY3G0001WX5","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G000166H"},"ticks":"`"},"id":"1M6YBY3G0001WX6","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G000166P"},"ticks":"`"},"id":"1M6YBY3G0001WX7","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G000166R"},"ticks":"`"},"id":"1M6YBY3G0001WX8","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G000166W"},"ticks":"`"},"id":"1M6YBY3G0001WX9","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G00015W0"}},"id":"1M6YBY3G0001WXA","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"3.1 ","on":{"$ref":"1M6YBY3G00016CN"}},"id":"1M6YBY3G0001WXB","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00016PV"},"ticks":"`"},"id":"1M6YBY3G0001WXC","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00016Q1"},"ticks":"`"},"id":"1M6YBY3G0001WXD","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"3.2 ","on":{"$ref":"1M6YBY3G00016GK"}},"id":"1M6YBY3G0001WXE","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"3.3 ","on":{"$ref":"1M6YBY3G00016VT"}},"id":"1M6YBY3G0001WXF","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G000173C"},"to":"../knowledge.md#2-prose-made-native"},"id":"1M6YBY3G0001WXG","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"3.4 ","on":{"$ref":"1M6YBY3G00016Z2"}},"id":"1M6YBY3G0001WXH","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G0001674"}},"id":"1M6YBY3G0001WXJ","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G000175N"},"to":"store.md#10-every-source-is-an-integration"},"id":"1M6YBY3G0001WXK","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G000179R"},"to":"interface.md#8-moving-is-a-new-address"},"id":"1M6YBY3G0001WXM","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00017A3"},"to":"../plan.md#3-what-is-open"},"id":"1M6YBY3G0001WXN","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"4. ","on":{"$ref":"1M6YBY3G000173F"}},"id":"1M6YBY3G0001WXP","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"5. ","on":{"$ref":"1M6YBY3G00017BB"}},"id":"1M6YBY3G0001WXQ","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00017QN"},"ticks":"`"},"id":"1M6YBY3G0001WXR","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00017TN"},"ticks":"`"},"id":"1M6YBY3G0001WXS","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00017TQ"},"ticks":"`"},"id":"1M6YBY3G0001WXT","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00017VT"},"ticks":"`"},"id":"1M6YBY3G0001WXV","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00017VW"},"ticks":"`"},"id":"1M6YBY3G0001WXW","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G000180T"},"ticks":"`"},"id":"1M6YBY3G0001WXX","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"6.1 ","on":{"$ref":"1M6YBY3G00017T4"}},"id":"1M6YBY3G0001WXY","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"6. ","on":{"$ref":"1M6YBY3G00017N5"}},"id":"1M6YBY3G0001WXZ","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001881"},"ticks":"`"},"id":"1M6YBY3G0001WY0","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"7.1 ","on":{"$ref":"1M6YBY3G000187B"}},"id":"1M6YBY3G0001WY1","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"7.2 ","on":{"$ref":"1M6YBY3G00018EN"}},"id":"1M6YBY3G0001WY2","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"7. ","on":{"$ref":"1M6YBY3G000183T"}},"id":"1M6YBY3G0001WY3","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00018Q9"},"to":"../said/2026-11-03.md#25-what-consumes-from-everything"},"id":"1M6YBY3G0001WY4","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"8.a ","on":{"$ref":"1M6YBY3G00018MG"}},"id":"1M6YBY3G0001WY5","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"8.b ","on":{"$ref":"1M6YBY3G00018SG"}},"id":"1M6YBY3G0001WY6","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"8.c ","on":{"$ref":"1M6YBY3G00018VD"}},"id":"1M6YBY3G0001WY7","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"8. ","on":{"$ref":"1M6YBY3G00018KM"}},"id":"1M6YBY3G0001WY8","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G000194S"},"to":"../plan.md#3-what-is-open"},"id":"1M6YBY3G0001WY9","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"9. ","on":{"$ref":"1M6YBY3G00018Y5"}},"id":"1M6YBY3G0001WYA","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001970"}},"id":"1M6YBY3G0001WYB","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G000197D"},"to":"../knowledge.md#11-a-brief-may-be-a-dimension"},"id":"1M6YBY3G0001WYC","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G000196Y"}},"id":"1M6YBY3G0001WYD","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G000197K"}},"id":"1M6YBY3G0001WYE","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G000197W"},"to":"#72-the-whole-keeps-them-out-of-sight"},"id":"1M6YBY3G0001WYF","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G000197H"}},"id":"1M6YBY3G0001WYG","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001984"}},"id":"1M6YBY3G0001WYH","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G000198E"},"to":"#5-a-part-stands-whole-in-many-wholes"},"id":"1M6YBY3G0001WYJ","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001982"}},"id":"1M6YBY3G0001WYK","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G000198K"}},"id":"1M6YBY3G0001WYM","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G000198H"}},"id":"1M6YBY3G0001WYN","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001999"}},"id":"1M6YBY3G0001WYP","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001997"}},"id":"1M6YBY3G0001WYQ","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"10. ","on":{"$ref":"1M6YBY3G0001967"}},"id":"1M6YBY3G0001WYR","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001HYS"},"to":"../said/2026-10-30.md#43-glass"},"id":"1M6YBY3G0001WYT","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G0001HTT"}},"id":"1M6YBY3G0001WYV","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001J1B"},"to":"../plan.md#3-what-is-open"},"id":"1M6YBY3G0001WYW","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G0001HZ2"}},"id":"1M6YBY3G0001WYX","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G0001J28"}},"id":"1M6YBY3G0001WYY","instance":["1M6YBY3G0000018"]}
+{"body":{"fence":"```","on":{"$ref":"1M6YBY3G0001J7Z"}},"id":"1M6YBY3G0001WYZ","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001JF9"},"to":"../said/2026-11-03.md#5-code-stays-as-files"},"id":"1M6YBY3G0001WZ0","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"4.1 ","on":{"$ref":"1M6YBY3G0001JAD"}},"id":"1M6YBY3G0001WZ1","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"4. ","on":{"$ref":"1M6YBY3G0001J5Y"}},"id":"1M6YBY3G0001WZ2","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00013CT"},"ticks":"`"},"id":"1M6YBY3G0001WZ4","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G00013BQ"}},"id":"1M6YBY3G0001WZ5","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00013GH"},"ticks":"`"},"id":"1M6YBY3G0001WZ6","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"2.1 ","on":{"$ref":"1M6YBY3G00013G9"}},"id":"1M6YBY3G0001WZ7","instance":["1M6YBY3G0000018"]}
+{"body":{"fence":"```","on":{"$ref":"1M6YBY3G00013KM"}},"id":"1M6YBY3G0001WZ8","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00013YY"},"to":"../said/2026-11-03.md#25-what-consumes-from-everything"},"id":"1M6YBY3G0001WZ9","instance":["1M6YBY3G0000018"]}
+{"body":{"level":4,"number":"2.2.1 ","on":{"$ref":"1M6YBY3G00013QB"}},"id":"1M6YBY3G0001WZA","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"2.2 ","on":{"$ref":"1M6YBY3G00013HP"}},"id":"1M6YBY3G0001WZB","instance":["1M6YBY3G0000018"]}
+{"body":{"fence":"```","on":{"$ref":"1M6YBY3G0001446"}},"id":"1M6YBY3G0001WZC","instance":["1M6YBY3G0000018"]}
+{"body":{"level":4,"number":"2.3.1 ","on":{"$ref":"1M6YBY3G000148N"}},"id":"1M6YBY3G0001WZD","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00014B6"},"ticks":"`"},"id":"1M6YBY3G0001WZE","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00014DG"},"to":"relations.md#6-a-holon-is-named-by-itself"},"id":"1M6YBY3G0001WZF","instance":["1M6YBY3G0000018"]}
+{"body":{"level":4,"number":"2.3.2 ","on":{"$ref":"1M6YBY3G00014A6"}},"id":"1M6YBY3G0001WZG","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"2.3 ","on":{"$ref":"1M6YBY3G000142H"}},"id":"1M6YBY3G0001WZH","instance":["1M6YBY3G0000018"]}
+{"body":{"fence":"```","on":{"$ref":"1M6YBY3G00014GJ"}},"id":"1M6YBY3G0001WZJ","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00014JJ"},"ticks":"`"},"id":"1M6YBY3G0001WZK","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00014N8"},"to":"#7-laid-out-as-files"},"id":"1M6YBY3G0001WZM","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00014NN"},"ticks":"`"},"id":"1M6YBY3G0001WZN","instance":["1M6YBY3G0000018"]}
+{"body":{"fence":"```","on":{"$ref":"1M6YBY3G00014P2"}},"id":"1M6YBY3G0001WZP","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"2.4 ","on":{"$ref":"1M6YBY3G00014EB"}},"id":"1M6YBY3G0001WZQ","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G00013EY"}},"id":"1M6YBY3G0001WZR","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00014S0"},"ticks":"`"},"id":"1M6YBY3G0001WZS","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"3.1 ","on":{"$ref":"1M6YBY3G00014VG"}},"id":"1M6YBY3G0001WZT","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G00014RK"}},"id":"1M6YBY3G0001WZV","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"4. ","on":{"$ref":"1M6YBY3G00014Y0"}},"id":"1M6YBY3G0001WZW","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"5. ","on":{"$ref":"1M6YBY3G00014ZY"}},"id":"1M6YBY3G0001WZX","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"6. ","on":{"$ref":"1M6YBY3G000151E"}},"id":"1M6YBY3G0001WZY","instance":["1M6YBY3G0000018"]}
+{"body":{"fence":"```","on":{"$ref":"1M6YBY3G0001550"}},"id":"1M6YBY3G0001WZZ","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"7. ","on":{"$ref":"1M6YBY3G000153Z"}},"id":"1M6YBY3G0001X00","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00019GR"},"to":"#221-a-commit-across-the-fields-cuts"},"id":"1M6YBY3G0001X01","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"8.1 ","on":{"$ref":"1M6YBY3G00019B8"}},"id":"1M6YBY3G0001X02","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"8. ","on":{"$ref":"1M6YBY3G00015F1"}},"id":"1M6YBY3G0001X03","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"9. ","on":{"$ref":"1M6YBY3G00019GV"}},"id":"1M6YBY3G0001X04","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"10. ","on":{"$ref":"1M6YBY3G0001AND"}},"id":"1M6YBY3G0001X05","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G0001JJH"},"ticks":"`"},"id":"1M6YBY3G0001X07","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001JMA"},"to":"#2-the-address-is-where-one-looks"},"id":"1M6YBY3G0001X08","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001JNN"},"ticks":"`"},"id":"1M6YBY3G0001X09","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001JNQ"},"ticks":"`"},"id":"1M6YBY3G0001X0A","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001JNS"},"ticks":"`"},"id":"1M6YBY3G0001X0B","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G0001JJW"}},"id":"1M6YBY3G0001X0C","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G0001JQZ"},"to":"interface.md#8-moving-is-a-new-address"},"id":"1M6YBY3G0001X0D","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G0001JT5"},"to":"../said/2026-11-03.md#25-what-consumes-from-everything"},"id":"1M6YBY3G0001X0E","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G0001JNV"}},"id":"1M6YBY3G0001X0F","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G0001JTT"}},"id":"1M6YBY3G0001X0G","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001107"},"to":"said/2026-11-02.md#11-the-grounds"},"id":"1M6YBY3G0001X0J","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G000112F"},"to":"primitives.md"},"id":"1M6YBY3G0001X0K","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G000110S"}},"id":"1M6YBY3G0001X0M","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001182"},"to":"primitives.md#4-engine"},"id":"1M6YBY3G0001X0N","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G000113V"}},"id":"1M6YBY3G0001X0P","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00011CR"},"to":"said/2026-11-02.md#13-fields-as-connectors"},"id":"1M6YBY3G0001X0Q","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G0001186"}},"id":"1M6YBY3G0001X0R","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00011GC"},"to":"said/2026-11-02.md#14-both-ways"},"id":"1M6YBY3G0001X0S","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"4. ","on":{"$ref":"1M6YBY3G00011CV"}},"id":"1M6YBY3G0001X0T","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G0001RSW"},"to":"said/2026-11-04.md#21-the-right-open-ended-way-to-dimensions"},"id":"1M6YBY3G0001X0W","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001RSZ"},"to":"said/2026-11-05.md"},"id":"1M6YBY3G0001X0X","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"on":{"$ref":"1M6YBY3G0001RCP"}},"id":"1M6YBY3G0001X0Y","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G0001S6J"},"to":"said/2026-11-03.md#20-expressions-are-ontology"},"id":"1M6YBY3G0001X0Z","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001S6N"},"to":"said/2026-11-04.md"},"id":"1M6YBY3G0001X10","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"on":{"$ref":"1M6YBY3G0001RT2"}},"id":"1M6YBY3G0001X11","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001SCV"},"ticks":"`"},"id":"1M6YBY3G0001X12","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G0001SEJ"},"ticks":"`"},"id":"1M6YBY3G0001X13","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001SEM"},"ticks":"`"},"id":"1M6YBY3G0001X14","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"on":{"$ref":"1M6YBY3G0001S6R"}},"id":"1M6YBY3G0001X15","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001SVQ"},"ticks":"`"},"id":"1M6YBY3G0001X16","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"on":{"$ref":"1M6YBY3G0001SS2"}},"id":"1M6YBY3G0001X17","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"on":{"$ref":"1M6YBY3G0001SXQ"}},"id":"1M6YBY3G0001X18","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"on":{"$ref":"1M6YBY3G0001T93"}},"id":"1M6YBY3G0001X19","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"on":{"$ref":"1M6YBY3G0001TEJ"}},"id":"1M6YBY3G0001X1A","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"on":{"$ref":"1M6YBY3G0001TM4"}},"id":"1M6YBY3G0001X1B","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"on":{"$ref":"1M6YBY3G0001TT2"}},"id":"1M6YBY3G0001X1C","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"on":{"$ref":"1M6YBY3G0001TZH"}},"id":"1M6YBY3G0001X1D","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"on":{"$ref":"1M6YBY3G0001V7H"}},"id":"1M6YBY3G0001X1E","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"on":{"$ref":"1M6YBY3G0001VB9"}},"id":"1M6YBY3G0001X1F","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"on":{"$ref":"1M6YBY3G0001VE1"}},"id":"1M6YBY3G0001X1G","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"on":{"$ref":"1M6YBY3G0001V4H"}},"id":"1M6YBY3G0001X1H","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G0001VP0"},"ticks":"`"},"id":"1M6YBY3G0001X1J","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"on":{"$ref":"1M6YBY3G0001VNP"}},"id":"1M6YBY3G0001X1K","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G0001VYS"},"ticks":"`"},"id":"1M6YBY3G0001X1M","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001VZX"}},"id":"1M6YBY3G0001X1N","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"on":{"$ref":"1M6YBY3G0001VS3"}},"id":"1M6YBY3G0001X1P","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"on":{"$ref":"1M6YBY3G0001W01"}},"id":"1M6YBY3G0001X1Q","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"on":{"$ref":"1M6YBY3G0001W2E"}},"id":"1M6YBY3G0001X1R","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"on":{"$ref":"1M6YBY3G0001W57"}},"id":"1M6YBY3G0001X1S","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"on":{"$ref":"1M6YBY3G0001W8P"}},"id":"1M6YBY3G0001X1T","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"on":{"$ref":"1M6YBY3G0001WAW"}},"id":"1M6YBY3G0001X1V","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"on":{"$ref":"1M6YBY3G0001VKZ"}},"id":"1M6YBY3G0001X1W","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"on":{"$ref":"1M6YBY3G0001WFW"}},"id":"1M6YBY3G0001X1X","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"on":{"$ref":"1M6YBY3G0001WKM"}},"id":"1M6YBY3G0001X1Y","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G0001WR0"},"to":"origins.md"},"id":"1M6YBY3G0001X1Z","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"on":{"$ref":"1M6YBY3G0001WPN"}},"id":"1M6YBY3G0001X20","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001KCY"},"to":"said/2026-11-05.md#2-knowledge-schema-and-the-next-question"},"id":"1M6YBY3G0001X22","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"1.1 ","on":{"$ref":"1M6YBY3G0001K6M"}},"id":"1M6YBY3G0001X23","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G0001K1K"}},"id":"1M6YBY3G0001X24","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001KTR"},"ticks":"`"},"id":"1M6YBY3G0001X25","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"2.1 ","on":{"$ref":"1M6YBY3G0001KQQ"}},"id":"1M6YBY3G0001X26","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"2.2 ","on":{"$ref":"1M6YBY3G0001M3Q"}},"id":"1M6YBY3G0001X27","instance":["1M6YBY3G0000018"]}
+{"body":{"fence":"```","on":{"$ref":"1M6YBY3G0001M99"}},"id":"1M6YBY3G0001X28","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"2.3 ","on":{"$ref":"1M6YBY3G0001M8B"}},"id":"1M6YBY3G0001X29","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G0001KH5"}},"id":"1M6YBY3G0001X2A","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G0001MDP"}},"id":"1M6YBY3G0001X2B","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"4. ","on":{"$ref":"1M6YBY3G0001MND"}},"id":"1M6YBY3G0001X2C","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"1.1 ","on":{"$ref":"1M6YBY3G0001Q03"}},"id":"1M6YBY3G0001X2E","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"1.2 ","on":{"$ref":"1M6YBY3G0001Q2N"}},"id":"1M6YBY3G0001X2F","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G0001PVK"}},"id":"1M6YBY3G0001X2G","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G0001Q55"}},"id":"1M6YBY3G0001X2H","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G0001Q8X"}},"id":"1M6YBY3G0001X2J","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"1. ","on":{"$ref":"1M6YBY3G0001MYR"}},"id":"1M6YBY3G0001X2M","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001N1F"},"to":"architecture/client.md#3-one-protocol"},"id":"1M6YBY3G0001X2N","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"2. ","on":{"$ref":"1M6YBY3G0001N0J"}},"id":"1M6YBY3G0001X2P","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G0001N36"},"to":"primitives.md#9-interface"},"id":"1M6YBY3G0001X2Q","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"3. ","on":{"$ref":"1M6YBY3G0001N1X"}},"id":"1M6YBY3G0001X2R","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G0001N4B"},"to":"knowledge.md#3-the-first-reader-component"},"id":"1M6YBY3G0001X2S","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"4. ","on":{"$ref":"1M6YBY3G0001N3Q"}},"id":"1M6YBY3G0001X2T","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"5. ","on":{"$ref":"1M6YBY3G0001N50"}},"id":"1M6YBY3G0001X2V","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001N7S"},"to":"said/2026-11-02.md#16-well-done-when-i-arrive"},"id":"1M6YBY3G0001X2W","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"1.1 ","on":{"$ref":"1M6YBY3G0001N87"}},"id":"1M6YBY3G0001X2X","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001NB7"}},"id":"1M6YBY3G0001X2Y","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001NB5"}},"id":"1M6YBY3G0001X2Z","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001NCE"}},"id":"1M6YBY3G0001X30","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001NCC"}},"id":"1M6YBY3G0001X31","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001NDK"}},"id":"1M6YBY3G0001X32","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001NDH"}},"id":"1M6YBY3G0001X33","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001NF7"}},"id":"1M6YBY3G0001X34","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001NFC"},"to":"architecture/interface.md"},"id":"1M6YBY3G0001X35","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001NF5"}},"id":"1M6YBY3G0001X36","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001NJ5"}},"id":"1M6YBY3G0001X37","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001NJ3"}},"id":"1M6YBY3G0001X38","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"1.2 ","on":{"$ref":"1M6YBY3G0001NAN"}},"id":"1M6YBY3G0001X39","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"1.3 ","on":{"$ref":"1M6YBY3G0001NPG"}},"id":"1M6YBY3G0001X3A","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G0001MXG"}},"id":"1M6YBY3G0001X3B","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001NWY"}},"id":"1M6YBY3G0001X3C","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001NYX"}},"id":"1M6YBY3G0001X3D","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001NYV"}},"id":"1M6YBY3G0001X3E","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001NZK"}},"id":"1M6YBY3G0001X3F","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001P10"}},"id":"1M6YBY3G0001X3G","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001P0Y"}},"id":"1M6YBY3G0001X3H","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001P1S"}},"id":"1M6YBY3G0001X3J","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001P1Q"}},"id":"1M6YBY3G0001X3K","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001P25"}},"id":"1M6YBY3G0001X3M","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001P23"}},"id":"1M6YBY3G0001X3N","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001P2J"}},"id":"1M6YBY3G0001X3P","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001P2G"}},"id":"1M6YBY3G0001X3Q","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001P3C"}},"id":"1M6YBY3G0001X3R","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001P3A"}},"id":"1M6YBY3G0001X3S","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001P3V"}},"id":"1M6YBY3G0001X3T","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G0001NVW"}},"id":"1M6YBY3G0001X3V","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001P5M"}},"id":"1M6YBY3G0001X3W","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001P6Q"},"to":"architecture/interface.md#4-which-component-draws-a-mount"},"id":"1M6YBY3G0001X3X","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001P5J"}},"id":"1M6YBY3G0001X3Y","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001P7G"}},"id":"1M6YBY3G0001X3Z","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G0001P8C"},"to":"architecture/interface.md#5-a-slot-and-the-kind-it-is"},"id":"1M6YBY3G0001X40","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001P7E"}},"id":"1M6YBY3G0001X41","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001PA5"}},"id":"1M6YBY3G0001X42","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001PCK"}},"id":"1M6YBY3G0001X43","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G0001PF8"},"to":"architecture/store.md#24-a-version-is-one-holon-as-it-stood"},"id":"1M6YBY3G0001X44","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001PCH"}},"id":"1M6YBY3G0001X45","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001PFD"}},"id":"1M6YBY3G0001X46","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001PGD"}},"id":"1M6YBY3G0001X47","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001PH7"}},"id":"1M6YBY3G0001X48","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001PHT"}},"id":"1M6YBY3G0001X49","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001PJY"}},"id":"1M6YBY3G0001X4A","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G0001PK4"},"to":"knowledge.md#2-prose-made-native"},"id":"1M6YBY3G0001X4B","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G0001PKS"},"to":"architecture/relations.md#7-what-is-finer-than-a-holon"},"id":"1M6YBY3G0001X4C","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001PJW"}},"id":"1M6YBY3G0001X4D","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001PM1"}},"id":"1M6YBY3G0001X4E","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001PKZ"}},"id":"1M6YBY3G0001X4F","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001PMH"}},"id":"1M6YBY3G0001X4G","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001PN2"},"to":"architecture/relations.md#10-what-is-open"},"id":"1M6YBY3G0001X4H","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001PMF"}},"id":"1M6YBY3G0001X4J","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001PNJ"}},"id":"1M6YBY3G0001X4K","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G0001PP6"},"to":"architecture/store.md#221-a-commit-across-the-fields-cuts"},"id":"1M6YBY3G0001X4M","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001PNG"}},"id":"1M6YBY3G0001X4N","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001PPE"}},"id":"1M6YBY3G0001X4P","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G0001PPY"},"to":"architecture/store.md#10-every-source-is-an-integration"},"id":"1M6YBY3G0001X4Q","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001PPC"}},"id":"1M6YBY3G0001X4R","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001PQ6"}},"id":"1M6YBY3G0001X4S","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001PQ4"}},"id":"1M6YBY3G0001X4T","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001PQR"}},"id":"1M6YBY3G0001X4V","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G0001PR2"},"to":"architecture/home.md#7-when-the-shape-of-state-changes"},"id":"1M6YBY3G0001X4W","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001PQP"}},"id":"1M6YBY3G0001X4X","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G0001PR9"}},"id":"1M6YBY3G0001X4Y","instance":["1M6YBY3G0000018"]}
+{"body":{"marker":"- ","on":{"$ref":"1M6YBY3G0001PR7"}},"id":"1M6YBY3G0001X4Z","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G0001P4W"}},"id":"1M6YBY3G0001X50","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00011M5"},"to":"said/2026-10-31.md#12-what-is-new"},"id":"1M6YBY3G0001X52","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00011M9"},"to":"said/2026-10-31.md#2-a-runtime"},"id":"1M6YBY3G0001X53","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00011MR"},"to":"said/2026-11-01.md#15-reading-the-primitives"},"id":"1M6YBY3G0001X54","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00011TJ"},"to":"architecture/store.md"},"id":"1M6YBY3G0001X55","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G00011MV"}},"id":"1M6YBY3G0001X56","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00011XZ"},"to":"plan.md#3-what-is-open"},"id":"1M6YBY3G0001X57","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G0001252"},"to":"architecture/store.md#24-a-version-is-one-holon-as-it-stood"},"id":"1M6YBY3G0001X58","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G00011TP"}},"id":"1M6YBY3G0001X59","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G000127M"},"to":"architecture/store.md"},"id":"1M6YBY3G0001X5A","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G000128P"},"to":"architecture/store.md#81-taking-a-whole-away"},"id":"1M6YBY3G0001X5B","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00012A5"},"to":"architecture/store.md#10-every-source-is-an-integration"},"id":"1M6YBY3G0001X5C","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G0001256"}},"id":"1M6YBY3G0001X5D","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"4. ","on":{"$ref":"1M6YBY3G00012A9"}},"id":"1M6YBY3G0001X5E","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00012FW"},"to":"architecture/relations.md"},"id":"1M6YBY3G0001X5F","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"5. ","on":{"$ref":"1M6YBY3G00012D1"}},"id":"1M6YBY3G0001X5G","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00012MC"},"to":"architecture/home.md"},"id":"1M6YBY3G0001X5H","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"6. ","on":{"$ref":"1M6YBY3G00012G0"}},"id":"1M6YBY3G0001X5J","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"7. ","on":{"$ref":"1M6YBY3G00012R2"}},"id":"1M6YBY3G0001X5K","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"8. ","on":{"$ref":"1M6YBY3G00012V8"}},"id":"1M6YBY3G0001X5M","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G000133J"},"to":"said/2026-11-03.md#17-the-root-as-a-mount"},"id":"1M6YBY3G0001X5N","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"9. ","on":{"$ref":"1M6YBY3G00012YG"}},"id":"1M6YBY3G0001X5P","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G00010A1"}},"id":"1M6YBY3G0001X5R","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G00010B8"}},"id":"1M6YBY3G0001X5S","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G00010C1"}},"id":"1M6YBY3G0001X5T","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"4.1 ","on":{"$ref":"1M6YBY3G00010ER"}},"id":"1M6YBY3G0001X5V","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"4.2 ","on":{"$ref":"1M6YBY3G00010G3"}},"id":"1M6YBY3G0001X5W","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"4.3 ","on":{"$ref":"1M6YBY3G00010GT"}},"id":"1M6YBY3G0001X5X","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"4. ","on":{"$ref":"1M6YBY3G00010D7"}},"id":"1M6YBY3G0001X5Y","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"5. ","on":{"$ref":"1M6YBY3G00010KX"}},"id":"1M6YBY3G0001X5Z","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"6. ","on":{"$ref":"1M6YBY3G00010MW"}},"id":"1M6YBY3G0001X60","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"7. ","on":{"$ref":"1M6YBY3G00010NK"}},"id":"1M6YBY3G0001X61","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"8. ","on":{"$ref":"1M6YBY3G00010R3"}},"id":"1M6YBY3G0001X62","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"9. ","on":{"$ref":"1M6YBY3G00010RS"}},"id":"1M6YBY3G0001X63","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"1.1 ","on":{"$ref":"1M6YBY3G0000YZN"}},"id":"1M6YBY3G0001X65","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"1.2 ","on":{"$ref":"1M6YBY3G0000Z1C"}},"id":"1M6YBY3G0001X66","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"1.3 ","on":{"$ref":"1M6YBY3G0000Z4B"}},"id":"1M6YBY3G0001X67","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"1.4 ","on":{"$ref":"1M6YBY3G0000Z75"}},"id":"1M6YBY3G0001X68","instance":["1M6YBY3G0000018"]}
+{"body":{"level":3,"number":"1.5 ","on":{"$ref":"1M6YBY3G0000Z9S"}},"id":"1M6YBY3G0001X69","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G0000YZ6"}},"id":"1M6YBY3G0001X6A","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G0000ZBP"}},"id":"1M6YBY3G0001X6B","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G0000ZNS"}},"id":"1M6YBY3G0001X6C","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"4. ","on":{"$ref":"1M6YBY3G0000ZPN"}},"id":"1M6YBY3G0001X6D","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"5. ","on":{"$ref":"1M6YBY3G0000ZQF"}},"id":"1M6YBY3G0001X6E","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"6. ","on":{"$ref":"1M6YBY3G0000ZR1"}},"id":"1M6YBY3G0001X6F","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"7. ","on":{"$ref":"1M6YBY3G0000ZSC"}},"id":"1M6YBY3G0001X6G","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"8. ","on":{"$ref":"1M6YBY3G0000ZTK"}},"id":"1M6YBY3G0001X6H","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"9. ","on":{"$ref":"1M6YBY3G0000ZW7"}},"id":"1M6YBY3G0001X6J","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"10. ","on":{"$ref":"1M6YBY3G0000ZYH"}},"id":"1M6YBY3G0001X6K","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G0000VYN"}},"id":"1M6YBY3G0001X6N","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G0000VZF"}},"id":"1M6YBY3G0001X6P","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G0000W62"}},"id":"1M6YBY3G0001X6Q","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"4. ","on":{"$ref":"1M6YBY3G0000WFA"}},"id":"1M6YBY3G0001X6R","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"5. ","on":{"$ref":"1M6YBY3G0000WJZ"}},"id":"1M6YBY3G0001X6S","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"6. ","on":{"$ref":"1M6YBY3G0000WPS"}},"id":"1M6YBY3G0001X6T","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"7. ","on":{"$ref":"1M6YBY3G0000WZK"}},"id":"1M6YBY3G0001X6V","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"8. ","on":{"$ref":"1M6YBY3G0000X1B"}},"id":"1M6YBY3G0001X6W","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"9. ","on":{"$ref":"1M6YBY3G0000XB8"}},"id":"1M6YBY3G0001X6X","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"10. ","on":{"$ref":"1M6YBY3G0000XDQ"}},"id":"1M6YBY3G0001X6Y","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"11. ","on":{"$ref":"1M6YBY3G0000XMS"}},"id":"1M6YBY3G0001X6Z","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"12. ","on":{"$ref":"1M6YBY3G0000XQR"}},"id":"1M6YBY3G0001X70","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"13. ","on":{"$ref":"1M6YBY3G0000XZ6"}},"id":"1M6YBY3G0001X71","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"14. ","on":{"$ref":"1M6YBY3G0000YBE"}},"id":"1M6YBY3G0001X72","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"15. ","on":{"$ref":"1M6YBY3G0000YPM"}},"id":"1M6YBY3G0001X73","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G0000R9A"}},"id":"1M6YBY3G0001X75","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G0000RE2"}},"id":"1M6YBY3G0001X76","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G0000RN5"}},"id":"1M6YBY3G0001X77","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"4. ","on":{"$ref":"1M6YBY3G0000S1F"}},"id":"1M6YBY3G0001X78","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"5. ","on":{"$ref":"1M6YBY3G0000SAK"}},"id":"1M6YBY3G0001X79","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"6. ","on":{"$ref":"1M6YBY3G0000SDJ"}},"id":"1M6YBY3G0001X7A","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"7. ","on":{"$ref":"1M6YBY3G0000SQ6"}},"id":"1M6YBY3G0001X7B","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"8. ","on":{"$ref":"1M6YBY3G0000T10"}},"id":"1M6YBY3G0001X7C","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"9. ","on":{"$ref":"1M6YBY3G0000TDK"}},"id":"1M6YBY3G0001X7D","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"10. ","on":{"$ref":"1M6YBY3G0000TK4"}},"id":"1M6YBY3G0001X7E","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"11. ","on":{"$ref":"1M6YBY3G0000TQA"}},"id":"1M6YBY3G0001X7F","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"12. ","on":{"$ref":"1M6YBY3G0000V1V"}},"id":"1M6YBY3G0001X7G","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"13. ","on":{"$ref":"1M6YBY3G0000V6C"}},"id":"1M6YBY3G0001X7H","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"14. ","on":{"$ref":"1M6YBY3G0000VF3"}},"id":"1M6YBY3G0001X7J","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"15. ","on":{"$ref":"1M6YBY3G0000VKT"}},"id":"1M6YBY3G0001X7K","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"16. ","on":{"$ref":"1M6YBY3G0000VQD"}},"id":"1M6YBY3G0001X7M","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"17. ","on":{"$ref":"1M6YBY3G0000VVY"}},"id":"1M6YBY3G0001X7N","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G0000D41"}},"id":"1M6YBY3G0001X7Q","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G0000D5V"}},"id":"1M6YBY3G0001X7R","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G0000D6F"}},"id":"1M6YBY3G0001X7S","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"4. ","on":{"$ref":"1M6YBY3G0000D71"}},"id":"1M6YBY3G0001X7T","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"5. ","on":{"$ref":"1M6YBY3G0000D9X"}},"id":"1M6YBY3G0001X7V","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"6. ","on":{"$ref":"1M6YBY3G0000DB3"}},"id":"1M6YBY3G0001X7W","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"7. ","on":{"$ref":"1M6YBY3G0000DE8"}},"id":"1M6YBY3G0001X7X","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"8. ","on":{"$ref":"1M6YBY3G0000DG2"}},"id":"1M6YBY3G0001X7Y","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"9. ","on":{"$ref":"1M6YBY3G0000DJ7"}},"id":"1M6YBY3G0001X7Z","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"10. ","on":{"$ref":"1M6YBY3G0000DK0"}},"id":"1M6YBY3G0001X80","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"11. ","on":{"$ref":"1M6YBY3G0000E5T"}},"id":"1M6YBY3G0001X81","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"12. ","on":{"$ref":"1M6YBY3G0000E65"}},"id":"1M6YBY3G0001X82","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"13. ","on":{"$ref":"1M6YBY3G0000EJ7"}},"id":"1M6YBY3G0001X83","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"14. ","on":{"$ref":"1M6YBY3G0000FV6"}},"id":"1M6YBY3G0001X84","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"15. ","on":{"$ref":"1M6YBY3G0000FVA"}},"id":"1M6YBY3G0001X85","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"16. ","on":{"$ref":"1M6YBY3G0000G1H"}},"id":"1M6YBY3G0001X86","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"17. ","on":{"$ref":"1M6YBY3G0000GBX"}},"id":"1M6YBY3G0001X87","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"18. ","on":{"$ref":"1M6YBY3G0000HTX"}},"id":"1M6YBY3G0001X88","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"19. ","on":{"$ref":"1M6YBY3G0000HXH"}},"id":"1M6YBY3G0001X89","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"20. ","on":{"$ref":"1M6YBY3G0000JF0"}},"id":"1M6YBY3G0001X8A","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"21. ","on":{"$ref":"1M6YBY3G0000K83"}},"id":"1M6YBY3G0001X8B","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"22. ","on":{"$ref":"1M6YBY3G0000KHG"}},"id":"1M6YBY3G0001X8C","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"23. ","on":{"$ref":"1M6YBY3G0000KV6"}},"id":"1M6YBY3G0001X8D","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"24. ","on":{"$ref":"1M6YBY3G0000KXP"}},"id":"1M6YBY3G0001X8E","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"25. ","on":{"$ref":"1M6YBY3G0000MCS"}},"id":"1M6YBY3G0001X8F","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G000063X"}},"id":"1M6YBY3G0001X8H","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G00006GH"}},"id":"1M6YBY3G0001X8J","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G00006JB"}},"id":"1M6YBY3G0001X8K","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"4. ","on":{"$ref":"1M6YBY3G00006V0"}},"id":"1M6YBY3G0001X8M","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"5. ","on":{"$ref":"1M6YBY3G00006X1"}},"id":"1M6YBY3G0001X8N","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"6. ","on":{"$ref":"1M6YBY3G000070C"}},"id":"1M6YBY3G0001X8P","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"7. ","on":{"$ref":"1M6YBY3G000073G"}},"id":"1M6YBY3G0001X8Q","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"8. ","on":{"$ref":"1M6YBY3G00007TX"}},"id":"1M6YBY3G0001X8R","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"9. ","on":{"$ref":"1M6YBY3G0000829"}},"id":"1M6YBY3G0001X8S","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"10. ","on":{"$ref":"1M6YBY3G000095P"}},"id":"1M6YBY3G0001X8T","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"11. ","on":{"$ref":"1M6YBY3G00009RX"}},"id":"1M6YBY3G0001X8V","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"12. ","on":{"$ref":"1M6YBY3G00009W9"}},"id":"1M6YBY3G0001X8W","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"13. ","on":{"$ref":"1M6YBY3G0000A4M"}},"id":"1M6YBY3G0001X8X","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"14. ","on":{"$ref":"1M6YBY3G0000AE1"}},"id":"1M6YBY3G0001X8Y","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"15. ","on":{"$ref":"1M6YBY3G0000AFP"}},"id":"1M6YBY3G0001X8Z","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"16. ","on":{"$ref":"1M6YBY3G0000B6A"}},"id":"1M6YBY3G0001X90","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"17. ","on":{"$ref":"1M6YBY3G0000BJC"}},"id":"1M6YBY3G0001X91","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"18. ","on":{"$ref":"1M6YBY3G0000BMS"}},"id":"1M6YBY3G0001X92","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"19. ","on":{"$ref":"1M6YBY3G0000CC1"}},"id":"1M6YBY3G0001X93","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"20. ","on":{"$ref":"1M6YBY3G0000CMN"}},"id":"1M6YBY3G0001X94","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"21. ","on":{"$ref":"1M6YBY3G0000CVT"}},"id":"1M6YBY3G0001X95","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"22. ","on":{"$ref":"1M6YBY3G0000CZS"}},"id":"1M6YBY3G0001X96","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G0000376"}},"id":"1M6YBY3G0001X98","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G0000381"}},"id":"1M6YBY3G0001X99","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G00003D0"}},"id":"1M6YBY3G0001X9A","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"4. ","on":{"$ref":"1M6YBY3G00003N5"}},"id":"1M6YBY3G0001X9B","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"5. ","on":{"$ref":"1M6YBY3G00003RD"}},"id":"1M6YBY3G0001X9C","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"6. ","on":{"$ref":"1M6YBY3G00003VP"}},"id":"1M6YBY3G0001X9D","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"7. ","on":{"$ref":"1M6YBY3G00003XC"}},"id":"1M6YBY3G0001X9E","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"8. ","on":{"$ref":"1M6YBY3G00003Y7"}},"id":"1M6YBY3G0001X9F","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"9. ","on":{"$ref":"1M6YBY3G000047V"}},"id":"1M6YBY3G0001X9G","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"10. ","on":{"$ref":"1M6YBY3G000048J"}},"id":"1M6YBY3G0001X9H","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"11. ","on":{"$ref":"1M6YBY3G00004DP"}},"id":"1M6YBY3G0001X9J","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"12. ","on":{"$ref":"1M6YBY3G00004GE"}},"id":"1M6YBY3G0001X9K","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"13. ","on":{"$ref":"1M6YBY3G00004GM"}},"id":"1M6YBY3G0001X9M","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"14. ","on":{"$ref":"1M6YBY3G00004V1"}},"id":"1M6YBY3G0001X9N","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"15. ","on":{"$ref":"1M6YBY3G000052A"}},"id":"1M6YBY3G0001X9P","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"16. ","on":{"$ref":"1M6YBY3G00005R1"}},"id":"1M6YBY3G0001X9Q","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"17. ","on":{"$ref":"1M6YBY3G00005RV"}},"id":"1M6YBY3G0001X9R","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"18. ","on":{"$ref":"1M6YBY3G00005TK"}},"id":"1M6YBY3G0001X9S","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"19. ","on":{"$ref":"1M6YBY3G00005WT"}},"id":"1M6YBY3G0001X9T","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"20. ","on":{"$ref":"1M6YBY3G00005Z2"}},"id":"1M6YBY3G0001X9V","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"21. ","on":{"$ref":"1M6YBY3G00005ZJ"}},"id":"1M6YBY3G0001X9W","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"22. ","on":{"$ref":"1M6YBY3G00005ZW"}},"id":"1M6YBY3G0001X9X","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G000004K"}},"id":"1M6YBY3G0001X9Z","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G00000G5"}},"id":"1M6YBY3G0001XA0","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G000012F"}},"id":"1M6YBY3G0001XA1","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"4. ","on":{"$ref":"1M6YBY3G000014X"}},"id":"1M6YBY3G0001XA2","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"5. ","on":{"$ref":"1M6YBY3G00001N8"}},"id":"1M6YBY3G0001XA3","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"6. ","on":{"$ref":"1M6YBY3G0000201"}},"id":"1M6YBY3G0001XA4","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"7. ","on":{"$ref":"1M6YBY3G000023J"}},"id":"1M6YBY3G0001XA5","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"8. ","on":{"$ref":"1M6YBY3G000028C"}},"id":"1M6YBY3G0001XA6","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"9. ","on":{"$ref":"1M6YBY3G00002H2"}},"id":"1M6YBY3G0001XA7","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"10. ","on":{"$ref":"1M6YBY3G00002QM"}},"id":"1M6YBY3G0001XA8","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"11. ","on":{"$ref":"1M6YBY3G000034Z"}},"id":"1M6YBY3G0001XA9","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G0001599"},"ticks":"`"},"id":"1M6YBY3G0001XAC","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00015A0"},"ticks":"`"},"id":"1M6YBY3G0001XAD","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"1. ","on":{"$ref":"1M6YBY3G0001596"}},"id":"1M6YBY3G0001XAE","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00015AY"},"ticks":"`"},"id":"1M6YBY3G0001XAF","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00015BD"},"ticks":"`"},"id":"1M6YBY3G0001XAG","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"2. ","on":{"$ref":"1M6YBY3G00015AV"}},"id":"1M6YBY3G0001XAH","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00015DC"},"ticks":"`"},"id":"1M6YBY3G0001XAJ","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00015DR"},"ticks":"`"},"id":"1M6YBY3G0001XAK","instance":["1M6YBY3G0000018"]}
+{"body":{"gap":"","on":{"$ref":"1M6YBY3G00015EE"},"ticks":"`"},"id":"1M6YBY3G0001XAM","instance":["1M6YBY3G0000018"]}
+{"body":{"level":2,"number":"3. ","on":{"$ref":"1M6YBY3G00015D9"}},"id":"1M6YBY3G0001XAN","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00029AY"},"to":"grounds.md"},"id":"1M6YBY3G00029F0","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00029B3"},"to":"primitives.md"},"id":"1M6YBY3G00029F1","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00029B8"},"to":"architecture/README.md"},"id":"1M6YBY3G00029F2","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00029BF"},"to":"knowledge.md"},"id":"1M6YBY3G00029F3","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00029BM"},"to":"plan.md"},"id":"1M6YBY3G00029F4","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00029BV"},"to":"origins.md"},"id":"1M6YBY3G00029F5","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00029BZ"},"to":"history.md"},"id":"1M6YBY3G00029F6","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00029C6"},"to":"said/README.md"},"id":"1M6YBY3G00029F7","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00029CB"},"to":"store.md"},"id":"1M6YBY3G00029F8","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00029CG"},"to":"client.md"},"id":"1M6YBY3G00029F9","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00029CN"},"to":"home.md"},"id":"1M6YBY3G00029FA","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00029D0"},"to":"interface.md"},"id":"1M6YBY3G00029FB","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00029D6"},"to":"remotes.md"},"id":"1M6YBY3G00029FC","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00029DB"},"to":"url.md"},"id":"1M6YBY3G00029FD","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00029DH"},"to":"../vectors/README.md"},"id":"1M6YBY3G00029FE","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00029DQ"},"to":"relations.md"},"id":"1M6YBY3G00029FF","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00029DX"},"to":"formats.md"},"id":"1M6YBY3G00029FG","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00029E1"},"to":"2026-11-06.md"},"id":"1M6YBY3G00029FH","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00029E5"},"to":"2026-11-05.md"},"id":"1M6YBY3G00029FJ","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00029E9"},"to":"2026-11-04.md"},"id":"1M6YBY3G00029FK","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00029ED"},"to":"2026-11-03.md"},"id":"1M6YBY3G00029FM","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00029EH"},"to":"2026-11-02.md"},"id":"1M6YBY3G00029FN","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00029EN"},"to":"2026-11-01.md"},"id":"1M6YBY3G00029FP","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00029ES"},"to":"2026-10-31.md"},"id":"1M6YBY3G00029FQ","instance":["1M6YBY3G0000018"]}
+{"body":{"on":{"$ref":"1M6YBY3G00029EX"},"to":"2026-10-30.md"},"id":"1M6YBY3G00029FR","instance":["1M6YBY3G0000018"]}

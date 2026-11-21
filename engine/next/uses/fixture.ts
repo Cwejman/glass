@@ -106,12 +106,11 @@ export const glass: Holon[] = [
   ),
   thing(32, 2, { fn: { $ref: id(31) }, args: ["said"] }),
   thing(33, 2, { args: [{ $ref: id(100) }] }),
-  {
-    id: id(40),
-    instance: [],
-    name: "types",
-    body: { holds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(held) },
-  },
+  // glass's types, in the wholes glass groups them in.
+  { id: id(40), instance: [], name: "language", body: { holds: [1, 2, 10, 11, 12, 13, 14, 15].map(held) } },
+  { id: id(43), instance: [], name: "store", body: { holds: [4, 5].map(held) } },
+  { id: id(44), instance: [], name: "prose", body: { holds: [6, 7, 8, 9].map(held) } },
+  { id: id(45), instance: [], name: "interface", body: { holds: [held(3)] } },
   { id: id(41), instance: [], name: "functions", body: { holds: natives.map((_, i) => held(20 + i)) } },
   { id: id(42), instance: [], name: "components", body: { holds: [held(30), held(31)] } },
   {
@@ -136,7 +135,7 @@ export const glass: Holon[] = [
     id: id(90),
     instance: [id(4)],
     name: "glass",
-    body: { shape: { $ref: id(91) }, contents: [40, 41, 42, 80, 81, 82, 32, 33, 100].map(held) },
+    body: { shape: { $ref: id(91) }, contents: [40, 43, 44, 45, 41, 42, 80, 81, 82, 32, 33, 100].map(held) },
   },
   { id: id(91), instance: [id(5)], name: "glass's own", body: {} },
 ];

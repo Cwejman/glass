@@ -6,10 +6,8 @@
     "test": "bun test --isolate",
     "check": "tsc --noEmit -p .",
     "format": "prettier --write \"**/*.{ts,tsx,css,json}\" site/index.html",
-    "field": "bun components/make.ts",
     "build": "bun site/build.ts",
-    "serve": "bun site/serve.ts",
-    "site": "bun site/make.ts"
+    "serve": "bun site/serve.ts"
   },
   "devDependencies": {
     "@happy-dom/global-registrator": "^21.0.4",

@@ -1,0 +1,23 @@
+{"body":{"notes":[{"$ref":"1M6YBY3G0001XAQ"},{"$ref":"1M6YBY3G0001XBR"}],"on":"2026-11-07","paths":[],"said":[{"$holds":true,"$ref":"1M6YBY3G00023BY"},{"$holds":true,"$ref":"1M6YBY3G00023CX"},{"$holds":true,"$ref":"1M6YBY3G00023FW"},{"$holds":true,"$ref":"1M6YBY3G00023JF"},{"$holds":true,"$ref":"1M6YBY3G00023NV"},{"$holds":true,"$ref":"1M6YBY3G00023TX"},{"$holds":true,"$ref":"1M6YBY3G00023VE"}],"title":"A third session: the store read through the probe, then mended, its log made steps, and what was said measured"},"id":"1M6YBY3G00023BX","instance":["1M6YBY3G0000000"]}
+{"body":{"as":"typed","flow":[{"$holds":true,"$ref":"1M6YBY3G00023TY"}],"order":6,"voice":{"$ref":"1M6YBY3G000001K"}},"id":"1M6YBY3G00023TX","instance":["1M6YBY3G0000001"]}
+{"body":{"sentences":[{"$holds":true,"$ref":"1M6YBY3G00023TZ"},{"$holds":true,"$ref":"1M6YBY3G00023V8"}]},"id":"1M6YBY3G00023TY","instance":["1M6YBY3G0000002"]}
+{"body":{"words":[{"$holds":true,"$ref":"1M6YBY3G00023V0"},{"$holds":true,"$ref":"1M6YBY3G00023V1"},{"$holds":true,"$ref":"1M6YBY3G00023V2"},{"$holds":true,"$ref":"1M6YBY3G00023V3"},{"$holds":true,"$ref":"1M6YBY3G00023V4"},{"$holds":true,"$ref":"1M6YBY3G00023V5"},{"$holds":true,"$ref":"1M6YBY3G00023V6"},{"$holds":true,"$ref":"1M6YBY3G00023V7"}]},"id":"1M6YBY3G00023TZ","instance":["1M6YBY3G0000004"]}
+{"body":{"text":"Well"},"id":"1M6YBY3G00023V0","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"are"},"id":"1M6YBY3G00023V1","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"there"},"id":"1M6YBY3G00023V2","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"variances","typed":"variance"},"id":"1M6YBY3G00023V3","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"to"},"id":"1M6YBY3G00023V4","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"the"},"id":"1M6YBY3G00023V5","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"measures","typed":"meassures"},"id":"1M6YBY3G00023V6","instance":["1M6YBY3G0000005"]}
+{"body":{"after":"?","text":"here"},"id":"1M6YBY3G00023V7","instance":["1M6YBY3G0000005"]}
+{"body":{"words":[{"$holds":true,"$ref":"1M6YBY3G00023V9"},{"$holds":true,"$ref":"1M6YBY3G00023VA"},{"$holds":true,"$ref":"1M6YBY3G00023VB"},{"$holds":true,"$ref":"1M6YBY3G00023VC"},{"$holds":true,"$ref":"1M6YBY3G00023VD"}]},"id":"1M6YBY3G00023V8","instance":["1M6YBY3G0000004"]}
+{"body":{"text":"Such"},"id":"1M6YBY3G00023V9","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"as"},"id":"1M6YBY3G00023VA","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"not"},"id":"1M6YBY3G00023VB","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"integrated"},"id":"1M6YBY3G00023VC","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"etc"},"id":"1M6YBY3G00023VD","instance":["1M6YBY3G0000005"]}
+{"body":{"as":"typed","flow":[{"$holds":true,"$ref":"1M6YBY3G00023VF"}],"order":7,"voice":{"$ref":"1M6YBY3G000001K"}},"id":"1M6YBY3G00023VE","instance":["1M6YBY3G0000001"]}
+{"body":{"sentences":[{"$holds":true,"$ref":"1M6YBY3G00023VG"}]},"id":"1M6YBY3G00023VF","instance":["1M6YBY3G0000002"]}
+{"body":{"words":[{"$holds":true,"$ref":"1M6YBY3G00023VH"},{"$holds":true,"$ref":"1M6YBY3G00023VJ"}]},"id":"1M6YBY3G00023VG","instance":["1M6YBY3G0000004"]}
+{"body":{"text":"Don't","typed":"Dont"},"id":"1M6YBY3G00023VH","instance":["1M6YBY3G0000005"]}
+{"body":{"text":"know"},"id":"1M6YBY3G00023VJ","instance":["1M6YBY3G0000005"]}

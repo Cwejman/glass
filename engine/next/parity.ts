@@ -18,7 +18,7 @@ import { join } from "node:path";
 import { namesAsked } from "../../language/names.ts";
 import { parse, syntax, toRead } from "../../language/text.ts";
 import { sameThread, workers } from "../../runtime/runtime.ts";
-import { storesHere } from "../../stores.ts";
+import { storesKept as storesHere } from "../../integrations/glass/found.ts";
 import type { Store } from "../../stores/store.ts";
 import { convert } from "../../stores/strata/convert.ts";
 import { folderStorages } from "../../stores/strata/storage/folder.ts";

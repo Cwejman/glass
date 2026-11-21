@@ -2,7 +2,7 @@
 // repository holds, the index built first and timed apart, so what a pattern costs is
 // seen whole.
 // Usage: bun engine/bench.ts
-import { openStores } from "../stores.ts";
+import { openStores } from "../integrations/glass/found.ts";
 import { fieldOf } from "./field.ts";
 import { evaluator } from "./read/evaluate.ts";
 import { namesIn } from "../language/names.ts";

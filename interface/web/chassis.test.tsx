@@ -394,7 +394,7 @@ describe("the page's read over glass, the interface shipped", () => {
   test("a card says what its holon is: a whole, how many it holds", async () => {
     const { into, stop } = await reading("");
     const glass = () => into.querySelector<HTMLAnchorElement>(`.card[href="?q=@${id(90)}"]`);
-    await settled(() => glass()?.querySelector(".card-says")?.textContent === "9 held");
+    await settled(() => glass()?.querySelector(".card-says")?.textContent === "12 held");
     expect(glass()!.querySelector(".card-kind")!.textContent).toBe("store");
     stop();
   });
@@ -403,7 +403,7 @@ describe("the page's read over glass, the interface shipped", () => {
     localStorage.clear();
     const { into, stop } = await reading(`@${id(90)}`);
     const contents = () => into.querySelector<HTMLElement>(".holon .field .holons");
-    await settled(() => contents()?.querySelector(".card-name")?.textContent === "types");
+    await settled(() => contents()?.querySelector(".card-name")?.textContent === "language");
     // Short fields stand beside their keys; the list is a section of its own, under its key.
     expect([...into.querySelectorAll(".holon .fields dt")].map((dt) => dt.textContent)).toEqual(["shape"]);
     expect(contents()!.querySelector("h2.key")!.textContent).toBe("contents");
@@ -418,7 +418,9 @@ describe("the page's read over glass, the interface shipped", () => {
 
     // Drawn again, the list is shown as it was last.
     const again = await reading(`@${id(90)}`);
-    await settled(() => again.into.querySelector(".holon .field .holons .card-name")?.textContent === "types");
+    await settled(
+      () => again.into.querySelector(".holon .field .holons .card-name")?.textContent === "language",
+    );
     expect(again.into.querySelector(".holon .field .rows")!.getAttribute("data-mode")).toBe("rows");
     again.stop();
   });
@@ -430,7 +432,10 @@ describe("the page's read over glass, the interface shipped", () => {
     await settled(() => table() && !table()!.hidden);
     table()!.click();
     await settled(() => into.querySelector(".table tbody"));
-    expect([...into.querySelectorAll(".table thead th")].map((th) => th.textContent)).toEqual(["name", "text"]);
+    expect([...into.querySelectorAll(".table thead th")].map((th) => th.textContent)).toEqual([
+      "name",
+      "text",
+    ]);
     expect([...into.querySelectorAll(".table tbody tr")].map((tr) => tr.textContent)).toEqual([
       "FirstGlass holds holons",
       "query1 | add(2) | add(3)",

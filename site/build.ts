@@ -1,54 +1,27 @@
-// Builds the client into the site: the page, the chassis it loads, the engine it
-// starts on its own thread, and each store as plain files, out of its dot folder so
-// any static host serves it. Beside it, at next/, the page on the new engine, and the
-// stores it reads in strata. What it writes, site/dist/, is output only.
+// Builds the site: the page, and each module it starts on a thread of its own, from
+// site/ into one folder, sharing what they share as chunks beside them, so a thread
+// running two of them runs each module they share once; the faces the page names; and
+// each store this repository holds, as the page reads it in strata: its history and its
+// index, each head and every blob it reaches, gzipped, at strata/<name>/ and its index/
+// within, which the browser unpacks. The stores are read as they stand, with nothing
+// converted. What it writes, site/dist/, is output only.
 
 import type { BunPlugin } from "bun";
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
-import { engine } from "../engine/next/engine.ts";
-import { shipInterface } from "../engine/next/uses/interface.ts";
-import { migrate } from "../engine/next/uses/migrate.ts";
-import { sameThread } from "../runtime/runtime.ts";
 import { storesHere } from "../stores.ts";
-import type { Store } from "../stores/store.ts";
-import { convert } from "../stores/strata/convert.ts";
 import { blobsOf } from "../stores/strata/head.ts";
 import { folderStorages } from "../stores/strata/storage/folder.ts";
-import { strata } from "../stores/strata/strata.ts";
 
 const repo = join(import.meta.dir, "..");
 const dist = join(import.meta.dir, "dist");
 
-// The site's store is made first, so what is shipped starts from what the field holds.
-await import("./make.ts");
-
 rmSync(dist, { recursive: true, force: true });
 
-const built = await Bun.build({
-  entrypoints: [join(repo, "interface/chassis.ts"), join(repo, "engine/serve/worker.ts")],
-  outdir: dist,
-  naming: { entry: "[name].js" },
-  format: "esm",
-  target: "browser",
-});
-
-if (!built.success) throw new AggregateError(built.logs, "building the client");
-
-// The faces the material names, served beside the page.
-cpSync(join(import.meta.dir, "fonts"), join(dist, "fonts"), { recursive: true });
-
-for (const [name, { folder }] of await storesHere())
-  cpSync(folder, join(dist, "stores", name), { recursive: true });
-
-// The page on the new engine, and each module it starts on a thread of its own, built
-// from site/next/ into one folder, sharing what they share as chunks beside them, so a
-// thread running two of them runs each module they share once. The code names a module
-// it starts by its source's URL; built, that URL names the file built for it.
-const next = join(dist, "next");
+// The code names a module it starts by its source's URL; built, that URL names the file
+// built for it.
 const startedAs: Record<string, string> = {
-  "site/next/page.ts": "page.js",
+  "site/page.ts": "page.js",
   "engine/next/browser.ts": "engine.js",
   "engine/next/worker.ts": "engine-worker.js",
   "stores/strata/browser.ts": "strata.js",
@@ -74,61 +47,34 @@ const startedByBuiltName: BunPlugin = {
   },
 };
 
-const builtNext = await Bun.build({
-  entrypoints: Object.values(startedAs).map((name) =>
-    join(import.meta.dir, "next", name.replace(".js", ".ts")),
-  ),
-  outdir: next,
+const built = await Bun.build({
+  entrypoints: Object.values(startedAs).map((name) => join(import.meta.dir, name.replace(".js", ".ts"))),
+  outdir: dist,
   naming: { entry: "[name].[ext]", chunk: "chunk-[hash].[ext]" },
   splitting: true,
   format: "esm",
   target: "browser",
   plugins: [startedByBuiltName],
 });
-if (!builtNext.success) throw new AggregateError(builtNext.logs, "building the page on the new engine");
+if (!built.success) throw new AggregateError(built.logs, "building the page");
 
-cpSync(join(import.meta.dir, "next", "index.html"), join(next, "index.html"));
+cpSync(join(import.meta.dir, "index.html"), join(dist, "index.html"));
+cpSync(join(import.meta.dir, "fonts"), join(dist, "fonts"), { recursive: true });
 
-// Each store in strata, as the new engine reads it: converted, its expressions written
-// again as uses, the interface shipped in glass, then its history and its index, each
-// head and every blob it reaches, written gzipped to next/strata/<name>/ and its index/
-// within, which the browser unpacks.
-const converted = mkdtempSync(join(tmpdir(), "glass-strata-"));
-try {
-  const names = [...(await storesHere()).keys()];
-  const stores = new Map<string, Store>();
-  const migrating = await engine({ workers: sameThread(), count: 2 });
-
-  for (const name of names) {
-    await convert(name, join(converted, name));
-    stores.set(name, strata(folderStorages(join(converted, name))));
-    await migrating.mount(name, stores.get(name)!, { write: true });
+// Each store as it stands in its folder. A store whose index is missing or behind, as one
+// cloned from git, has it caught up from its history as it is found (stores.ts reads its
+// root through strata).
+for (const [name, { folder }] of await storesHere()) {
+  const blobs = await blobsOf(folderStorages(folder));
+  for (const [from, out, reached] of [
+    [folder, join(dist, "strata", name), blobs.history],
+    [join(folder, "index"), join(dist, "strata", name, "index"), blobs.index],
+  ] as const) {
+    mkdirSync(join(out, "blobs"), { recursive: true });
+    writeFileSync(join(out, "head"), readFileSync(join(from, "head")));
+    for (const blob of reached)
+      writeFileSync(join(out, "blobs", blob), Bun.gzipSync(readFileSync(join(from, "blobs", blob))));
   }
-  await migrate(migrating, stores);
-  await shipInterface(migrating, stores);
-  for (const name of names) await migrating.unmount(name);
-
-  for (const name of names) {
-    const blobs = await blobsOf(folderStorages(join(converted, name)));
-    for (const [from, out, reached] of [
-      [join(converted, name), join(next, "strata", name), blobs.history],
-      [join(converted, name, "index"), join(next, "strata", name, "index"), blobs.index],
-    ] as const) {
-      mkdirSync(join(out, "blobs"), { recursive: true });
-      writeFileSync(join(out, "head"), readFileSync(join(from, "head")));
-      for (const blob of reached)
-        writeFileSync(join(out, "blobs", blob), Bun.gzipSync(readFileSync(join(from, "blobs", blob))));
-    }
-  }
-} finally {
-  rmSync(converted, { recursive: true, force: true });
 }
 
-// The page names the site's store, which says what else to attach and what to boot into.
-const page = await Bun.file(join(import.meta.dir, "index.html")).text();
-if (!page.includes('data-site=""')) throw new Error("site/index.html has no empty data-site to fill");
-
-await Bun.write(join(dist, "index.html"), page.replace('data-site=""', 'data-site="site=./stores/site/"'));
-
-for (const output of [...built.outputs, ...builtNext.outputs])
-  console.log(output.path.slice(repo.length + 1));
+for (const output of built.outputs) console.log(output.path.slice(repo.length + 1));

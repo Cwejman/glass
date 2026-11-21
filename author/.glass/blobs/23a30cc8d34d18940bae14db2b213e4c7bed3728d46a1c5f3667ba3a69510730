@@ -1,0 +1,13 @@
+{"body":{"drawn":"a spread, and its longest tail named","gives":{"$holds":true,"$ref":"1M7Z0V7Q6TVF000"},"says":"How many words say each lexeme, the field's words cut and folded as lexicon() gives them, the most said first: most are said once, a few run through everything. A code span saying one is counted with them.","status":"proposed"},"id":"1M6YBY3G0001XEG","instance":["1M6YBY3G000000M"],"name":"Lexeme arity"}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0V7Q6TVF001"}],"fn":{"$ref":"1M734SKYDXQ200C"}},"id":"1M7Z0V7Q6TVF000","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0V7Q6TVF002"},{"$holds":true,"$ref":"1M7Z0V7Q6TVF009"}],"fn":{"$ref":"1M734SKYDXQ200B"}},"id":"1M7Z0V7Q6TVF001","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0V7Q6TVF003"},{"$holds":true,"$ref":"1M7Z0V7Q6TVF004"}],"fn":{"$ref":"1M734SKYDXQ2008"}},"id":"1M7Z0V7Q6TVF002","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[],"fn":{"$ref":"1M75ZAAAVQBP000"}},"id":"1M7Z0V7Q6TVF003","instance":["1M7Z0CEYH385000"]}
+{"body":{"body":{"lexeme":{"$ref":"1M7Z0V7Q6TVF005"},"words":{"$holds":true,"$ref":"1M7Z0V7Q6TVF006"}},"input":[{"$holds":true,"$ref":"1M7Z0V7Q6TVF005"}]},"id":"1M7Z0V7Q6TVF004","instance":["1M6YD90YH1TJ000"]}
+{"body":{},"id":"1M7Z0V7Q6TVF005","instance":["1M7Z0CEYH385001"],"name":"x"}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0V7Q6TVF007"}],"fn":{"$ref":"1M734SKYDXQ200H"}},"id":"1M7Z0V7Q6TVF006","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"?":"w"},{"$holds":true,"$ref":"1M7Z0V7Q6TVF008"}],"fn":{"$ref":"1M7382A692CE000"}},"id":"1M7Z0V7Q6TVF007","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"?":"w"},"text",{"$ref":"1M7Z0V7Q6TVF005"}],"fn":{"$ref":"1M75ZQWHAQPD000"}},"id":"1M7Z0V7Q6TVF008","instance":["1M7Z0CEYH385000"]}
+{"body":{"body":{"$holds":true,"$ref":"1M7Z0V7Q6TVF00B"},"input":[{"$holds":true,"$ref":"1M7Z0V7Q6TVF00A"}]},"id":"1M7Z0V7Q6TVF009","instance":["1M6YD90YH1TJ000"]}
+{"body":{},"id":"1M7Z0V7Q6TVF00A","instance":["1M7Z0CEYH385001"],"name":"l"}
+{"body":{"args":[{"$ref":"1M7Z0V7Q6TVF00A"},"words"],"fn":{"$ref":"1M734SKYDXQ2004"}},"id":"1M7Z0V7Q6TVF00B","instance":["1M7Z0CEYH385000"]}

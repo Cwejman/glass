@@ -35,7 +35,7 @@ import {
   type Store as OldStore,
   type Version,
 } from "../../integrations/glass/store.ts";
-import { storesHere } from "../../stores.ts";
+import { storesKept as storesHere } from "../../integrations/glass/found.ts";
 import { contentOf, hashOf, partOf } from "../act.ts";
 import type { Act, Head, Holon } from "../store.ts";
 import { marked, typesEverywhere } from "./convert.ts";

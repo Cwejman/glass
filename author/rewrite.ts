@@ -1,4 +1,4 @@
-// Rewrites briefs in the main store, as one commit. Each brief gets a new version and
+// Rewrites briefs of the wiki or the author's, as one commit. Each brief gets a new version and
 // its old flow stays in its history; ids stay, so every link to a brief still leads there.
 // Usage: bun author/rewrite.ts <patch.json>
 //
@@ -24,10 +24,9 @@
 // every sentence whose text is unchanged.
 
 import { mouldOf, partsOf, references } from "../engine/moulds.ts";
-import { handles } from "../engine/handles.ts";
-import { localEngine } from "../engine/serve/local.ts";
+import { handles } from "../engine/next/uses/migrate.ts";
 import { markedWriter, proseWriter } from "./prose.ts";
-import { holonsOf, open, storeFolder, type Holon } from "../stores.ts";
+import { authorsField, commitOf, type Holon } from "./field.ts";
 
 type FlowItem =
   | string
@@ -47,12 +46,11 @@ type Edit =
 const held = (id: string) => ({ $ref: id, $holds: true });
 
 const patch: Edit[] = await Bun.file(process.argv[2]!).json();
-const store = await open(await storeFolder("main"));
-const holons = await holonsOf(store);
+const { holons, types: fieldTypes } = await authorsField();
 const byId = new Map(holons.map((holon) => [holon.id, holon]));
 const handle = handles();
 
-const writer = proseWriter(holons, handle);
+const writer = proseWriter(holons, handle, fieldTypes);
 const marked = markedWriter(writer);
 const { types, put } = writer;
 const changed = new Set<Holon>();
@@ -68,7 +66,7 @@ function said(id: string): string {
   const type = byId.get(instance[0]!)?.name;
 
   if (type === "word") return `${body.before ?? ""}${body.text}${body.after ?? ""}`;
-  if (type === "codespan" || type === "closed") return `\`${body.text}\``;
+  if (type === "codespan") return `\`${body.text}\``;
 
   const inside = [...refsOf(body.sentences), ...refsOf(body.words)].map(said).join(" ");
 
@@ -214,19 +212,6 @@ function nothingElseHolds() {
     queue.push(...partsOf(byId.get(id)!.body, mouldFor(byId.get(id)!)));
   }
 
-  // A markdown form only says how a holon was written, so it goes with that holon.
-  const formsHolder = holons.find(({ name }) => name === "wiki-markdown");
-  const isForm = (holon: Holon) => byId.get(holon.instance[0]!)?.name === "markdown";
-
-  for (const holon of holons) {
-    if (isForm(holon) && references(holon.body).some(({ id }) => going.has(id))) going.add(holon.id);
-  }
-
-  if (formsHolder) {
-    formsHolder.body.forms = formsHolder.body.forms.filter(({ $ref }: { $ref: string }) => !going.has($ref));
-    changed.add(formsHolder);
-  }
-
   const staying = holons.filter((holon) => !going.has(holon.id));
 
   for (let settled = false; !settled; ) {
@@ -250,9 +235,7 @@ const gone = nothingElseHolds();
 
 const born = writer.born;
 
-const done = await (
-  await localEngine({ writes: ["main"] })
-).commit({
+const done = await commitOf({
   holons: [...changed, ...born],
   gone,
   says: patch.flatMap((edit) => ("says" in edit ? [edit.says] : [])).join(" ") || "Briefs rewritten",
@@ -260,4 +243,7 @@ const done = await (
 
 for (const { id, name, instance } of born)
   if (instance[0] === types.brief) console.log(`born: ${done.ids[id]} ${name}`);
-console.log({ changed: changed.size, born: born.length, gone: gone.length, commit: done.commit });
+console.log({ changed: changed.size, born: born.length, gone: gone.length, landed: done.landed });
+
+// The engine here keeps its stores open; the tool is done.
+process.exit(0);

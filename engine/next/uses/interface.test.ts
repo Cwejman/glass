@@ -55,12 +55,12 @@ describe("the interface shipped", () => {
     expect((await shipInterface(engine, stores)).commits).toEqual([]);
 
     expect(await valueOf(engine, 'size(get(@glass:components/List, "input"))')).toBe(2);
-    expect(await valueOf(engine, 'get(@glass:types/row, "says")')).toContain("Side by side");
+    expect(await valueOf(engine, 'get(@glass:interface/row, "says")')).toContain("Side by side");
   });
 
   test("a component declares what it says, its input, and its body, and nothing more", async () => {
     const { engine } = await shipped();
-    expect(await valueOf(engine, 'keys(get(@glass:types/component, "mould"))')).toEqual([
+    expect(await valueOf(engine, 'keys(get(@glass:interface/component, "mould"))')).toEqual([
       "body",
       "input",
       "says",

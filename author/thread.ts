@@ -11,9 +11,9 @@
 //   { "move": "its name", "stands": "leaning", "asks": "..." }   where one stands, said again
 //   { "says": "..." }                                     what the commit says of itself
 
-import { handles } from "../engine/handles.ts";
-import { localEngine } from "../engine/serve/local.ts";
-import { holonsOf, open, storeFolder, typeNamed, typesOf, type Holon } from "../stores.ts";
+import { handles } from "../engine/next/uses/migrate.ts";
+import { authorsField, commitOf, type Holon } from "./field.ts";
+import { typeNamed } from "../stores.ts";
 
 type Raise = {
   name: string;
@@ -30,12 +30,11 @@ const ref = (id: string) => ({ $ref: id });
 const refsOf = (list: unknown) => ((list ?? []) as { $ref: string }[]).map(({ $ref }) => $ref);
 
 const steps: Step[] = await Bun.file(process.argv[2]!).json();
-const store = await open(await storeFolder("main"));
-const holons = await holonsOf(store);
+const { holons, types: fieldTypes } = await authorsField();
 const byId = new Map(holons.map((holon) => [holon.id, holon]));
 const handle = handles();
 
-const types = typesOf(holons);
+const types = fieldTypes;
 const threadType = typeNamed(types, "thread");
 const threads = holons.find((holon) => holon.instance[0] === typeNamed(types, "threads"))!;
 const threadNamed = (name: string) =>
@@ -125,12 +124,13 @@ const says =
     ...moved.map(({ name, body }) => `${name}: ${body.stands}.`),
   ].join(" ");
 
-const done = await (
-  await localEngine({ writes: ["main"] })
-).commit({ holons: [...born, ...moved, ...holding], says });
+const done = await commitOf({ holons: [...born, ...moved, ...holding], says });
 
 console.log({
   raised: born.map(({ name }) => name),
   moved: moved.map(({ name }) => name),
-  commit: done.commit,
+  landed: done.landed,
 });
+
+// The engine here keeps its stores open; the tool is done.
+process.exit(0);

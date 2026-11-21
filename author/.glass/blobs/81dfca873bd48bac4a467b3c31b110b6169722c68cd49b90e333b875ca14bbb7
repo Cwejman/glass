@@ -1,0 +1,82 @@
+{"body":{"input":[{"$holds":true,"$ref":"1M7Z0CF6E71700A"}],"native":"within","says":"Everything the holons given hold, all the way down.","status":"proposed"},"id":"1M6YBY3G0001XE3","instance":["1M6YBY3G000000N"],"name":"Within"}
+{"body":{"input":[{"$holds":true,"$ref":"1M7Z0CF6E71700B"},{"$holds":true,"$ref":"1M7Z0CF6E71700C"}],"native":"measure","says":"For each holon of the set given, a number along an axis: held, how many parts it holds; pointed, how many point at it; depth, how far below a whole given it first stands; words, how many words it reaches.","status":"proposed"},"id":"1M6YBY3G0001XE4","instance":["1M6YBY3G000000N"],"name":"Measure"}
+{"body":{"native":"overlap","says":"For sets given in turn, how much each pair shares: what both reach over what either reaches.","status":"proposed"},"id":"1M6YBY3G0001XE5","instance":["1M6YBY3G000000N"],"name":"Overlap"}
+{"body":{"input":[{"$holds":true,"$ref":"1M7Z0CF6E71700D"}],"native":"count","says":"How many holons the set given holds.","status":"proposed"},"id":"1M6YBY3G0001XE6","instance":["1M6YBY3G000000N"],"name":"Count"}
+{"body":{"input":[{"$holds":true,"$ref":"1M7Z0CF6E71700E"}],"native":"claims","says":"Every claim about the same thing, from every source, side by side, disagreement kept.","status":"proposed"},"id":"1M6YBY3G0001XE7","instance":["1M6YBY3G000000N"],"name":"Claims of"}
+{"body":{"input":[{"$holds":true,"$ref":"1M7Z0CF6E71700F"},{"$holds":true,"$ref":"1M7Z0CF6E71700G"}],"native":"since","says":"What the set given holds that came after a moment: the basis of following, a commit's worth of the new.","status":"proposed"},"id":"1M6YBY3G0001XE8","instance":["1M6YBY3G000000N"],"name":"Since"}
+{"body":{"input":[{"$holds":true,"$ref":"1M7Z0CF6E71700H"},{"$holds":true,"$ref":"1M7Z0CF6E71700J"}],"native":"shared","says":"Where two holons meet in the lexicon: the lexemes both reach, a reading across sources.","status":"proposed"},"id":"1M6YBY3G0001XE9","instance":["1M6YBY3G000000N"],"name":"Shared words"}
+{"body":{"input":[{"$holds":true,"$ref":"1M7Z0CF6E71700K"}],"native":"near","says":"What stands close to a word: its sentence, then its paragraph, then its utterance, each farther; the locality the author named.","status":"proposed"},"id":"1M6YBY3G0001XEA","instance":["1M6YBY3G000000N"],"name":"Near"}
+{"body":{"drawn":"a landscape by height","gives":{"$holds":true,"$ref":"1M7Z0CF6E71700N"},"says":"For each branch, what its understandings say matters, gathered by how far below the top they stand: the variable as it changes with ascension and descension.","status":"proposed"},"id":"1M6YBY3G0001XEB","instance":["1M6YBY3G000000M"],"name":"What matters by height"}
+{"body":{"drawn":"a matrix, read along model and seed","gives":{"$holds":true,"$ref":"1M7Z0CF6E71700R"},"says":"How far apart isolated readings stand over the same held space: what two branches both hold over what either holds.","status":"proposed"},"id":"1M6YBY3G0001XEC","instance":["1M6YBY3G000000M"],"name":"Branches by what they hold"}
+{"body":{"drawn":"a matrix, its diagonal each utterance's own words","gives":{"$holds":true,"$ref":"1M7Z0CF6E71700W"},"says":"Which of the author's utterances meet in the same words: the near relation within an utterance set against the far relation across them.","status":"proposed"},"id":"1M6YBY3G0001XED","instance":["1M6YBY3G000000M"],"name":"Utterances by shared words"}
+{"body":{"drawn":"a table by kind, median and most","gives":{"$holds":true,"$ref":"1M7Z0CF6E71700Z"},"says":"For each kind, how many parts its holons hold: where the field branches wide, as a sentence into words, and where it is thin, as a paragraph that is mostly one sentence.","status":"proposed"},"id":"1M6YBY3G0001XEE","instance":["1M6YBY3G000000M"],"name":"Held arity"}
+{"body":{"drawn":"a table by kind","gives":{"$holds":true,"$ref":"1M7Z0CF6E717012"},"says":"How the field is made: every holon counted under its type, the first view of any store or union.","status":"proposed"},"id":"1M6YBY3G0001XEF","instance":["1M6YBY3G000000M"],"name":"Holons by kind"}
+{"body":{"drawn":"a spread, and its longest tail named","gives":{"$holds":true,"$ref":"1M7Z0CF6E717014"},"says":"How many words point at each word as one: most words are said once, a few run through everything.","status":"proposed"},"id":"1M6YBY3G0001XEG","instance":["1M6YBY3G000000M"],"name":"Lexeme arity"}
+{"body":{"body":{"$holds":true,"$ref":"1M7Z0CF6E717000"},"input":[],"says":"The threads that wait on the author's word."},"id":"1M75H3JE62P5000","instance":["1M6YD90YH1TJ000"],"name":"awaiting"}
+{"body":{"body":{"$holds":true,"$ref":"1M7Z0CF6E717009"},"input":[],"says":"The latest session in short: its cycles, each by its step, where it stands and what it set out to do, and what waits on the author's word."},"id":"1M75MT9GAPZJ000","instance":["1M6YD90YH1TJ000"],"name":"tldr"}
+{"body":{"widgets":[{"says":"Waiting on you","shows":{"$holds":true,"$ref":"1M7Z0CF6E717015"}},{"says":"Unratified, yours to ratify","shows":{"$holds":true,"$ref":"1M7Z0CF6E717017"}},{"says":"Threads open","shows":{"$holds":true,"$ref":"1M7Z0CF6E71701E"}},{"says":"Threads by where they stand","settings":{"by":"stands"},"shows":{"$holds":true,"$ref":"1M7Z0CF6E71701N"}},{"says":"This session's cycles","settings":{"from":"began","to":"ended"},"shows":{"$holds":true,"$ref":"1M7Z0CF6E71701Q"},"span":2},{"says":"What waits on you","shows":{"$holds":true,"$ref":"1M7Z0CF6E71701Z"},"span":3}]},"id":"1M75V5H7T0F7000","instance":["1M75V4A7YBN2000"],"name":"The work, live"}
+{"body":{"args":[{"?":"t"},[{"?":"t"},"instance",{"$ref":"1M6YBY3G000001E"}],[{"?":"t"},"awaits",true]],"fn":{"$ref":"1M7382A692CE000"}},"id":"1M7Z0CF6E717000","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$ref":"1M6YBY3G0001XEH"},"sessions"],"fn":{"$ref":"1M734SKYDXQ2004"}},"id":"1M7Z0CF6E717001","instance":["1M7Z0CEYH385000"]}
+{"body":{},"id":"1M7Z0CF6E717002","instance":["1M7Z0CEYH385001"],"name":"s"}
+{"body":{"args":[{"$ref":"1M7Z0CF6E717002"},"on"],"fn":{"$ref":"1M734SKYDXQ2004"}},"id":"1M7Z0CF6E717003","instance":["1M7Z0CEYH385000"]}
+{"body":{"body":{"$holds":true,"$ref":"1M7Z0CF6E717003"},"input":[{"$holds":true,"$ref":"1M7Z0CF6E717002"}]},"id":"1M7Z0CF6E717004","instance":["1M6YD90YH1TJ000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CF6E717001"},{"$holds":true,"$ref":"1M7Z0CF6E717004"}],"fn":{"$ref":"1M734SKYDXQ200B"}},"id":"1M7Z0CF6E717005","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CF6E717005"}],"fn":{"$ref":"1M734SKYDXQ200G"}},"id":"1M7Z0CF6E717006","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CF6E717006"},"cycles"],"fn":{"$ref":"1M734SKYDXQ2004"}},"id":"1M7Z0CF6E717007","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[],"fn":{"$ref":"1M75H3JE62P5000"}},"id":"1M7Z0CF6E717008","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CF6E717007"},{"$holds":true,"$ref":"1M7Z0CF6E717008"}],"fn":{"$ref":"1M6YD90YH1TJ00H"}},"id":"1M7Z0CF6E717009","instance":["1M7Z0CEYH385000"]}
+{"body":{},"id":"1M7Z0CF6E71700A","instance":["1M7Z0CEYH385005","1M7Z0CEYH385007"],"name":"set"}
+{"body":{},"id":"1M7Z0CF6E71700B","instance":["1M7Z0CEYH385005","1M7Z0CEYH385007"],"name":"set"}
+{"body":{},"id":"1M7Z0CF6E71700C","instance":["1M7Z0CEYH385003"],"name":"axis"}
+{"body":{},"id":"1M7Z0CF6E71700D","instance":["1M7Z0CEYH385005","1M7Z0CEYH385007"],"name":"set"}
+{"body":{},"id":"1M7Z0CF6E71700E","instance":["1M7Z0CEYH385003","1M7Z0CEYH385005"],"name":"words"}
+{"body":{},"id":"1M7Z0CF6E71700F","instance":["1M7Z0CEYH385005","1M7Z0CEYH385007"],"name":"set"}
+{"body":{},"id":"1M7Z0CF6E71700G","instance":["1M7Z0CEYH385003"],"name":"moment"}
+{"body":{},"id":"1M7Z0CF6E71700H","instance":["1M7Z0CEYH385005","1M7Z0CEYH385007"],"name":"set 1"}
+{"body":{},"id":"1M7Z0CF6E71700J","instance":["1M7Z0CEYH385005","1M7Z0CEYH385007"],"name":"set 2"}
+{"body":{},"id":"1M7Z0CF6E71700K","instance":["1M7Z0CEYH385005","1M7Z0CEYH385007"],"name":"set"}
+{"body":{"args":[{"$ref":"1M6YBY3G000000K"}],"fn":{"$ref":"1M6YD90YH1TJ007"}},"id":"1M7Z0CF6E71700M","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CF6E71700M"},"depth"],"fn":{"$ref":"1M6YBY3G0001XE4"}},"id":"1M7Z0CF6E71700N","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$ref":"1M6YBY3G000000J"}],"fn":{"$ref":"1M6YD90YH1TJ007"}},"id":"1M7Z0CF6E71700P","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CF6E71700P"}],"fn":{"$ref":"1M6YBY3G0001XE3"}},"id":"1M7Z0CF6E71700Q","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CF6E71700Q"}],"fn":{"$ref":"1M6YBY3G0001XE5"}},"id":"1M7Z0CF6E71700R","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$ref":"1M6YBY3G0000001"}],"fn":{"$ref":"1M6YD90YH1TJ007"}},"id":"1M7Z0CF6E71700S","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CF6E71700S"}],"fn":{"$ref":"1M6YBY3G0001XE3"}},"id":"1M7Z0CF6E71700T","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CF6E71700T"}],"fn":{"$ref":"1M6YD90YH1TJ008"}},"id":"1M7Z0CF6E71700V","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CF6E71700V"}],"fn":{"$ref":"1M6YBY3G0001XE5"}},"id":"1M7Z0CF6E71700W","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[],"fn":{"$ref":"1M6YD90YH1TJ006"}},"id":"1M7Z0CF6E71700X","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CF6E71700X"},"type"],"fn":{"$ref":"1M6YD90YH1TJ00K"}},"id":"1M7Z0CF6E71700Y","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CF6E71700Y"},"held"],"fn":{"$ref":"1M6YBY3G0001XE4"}},"id":"1M7Z0CF6E71700Z","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[],"fn":{"$ref":"1M6YD90YH1TJ006"}},"id":"1M7Z0CF6E717010","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CF6E717010"},"type"],"fn":{"$ref":"1M6YD90YH1TJ00K"}},"id":"1M7Z0CF6E717011","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CF6E717011"}],"fn":{"$ref":"1M6YBY3G0001XE6"}},"id":"1M7Z0CF6E717012","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[],"fn":{"$ref":"1M6YD90YH1TJ007"}},"id":"1M7Z0CF6E717013","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CF6E717013"},"pointed"],"fn":{"$ref":"1M6YBY3G0001XE4"}},"id":"1M7Z0CF6E717014","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CF6E717016"}],"fn":{"$ref":"1M75V4A7YBN2002"}},"id":"1M7Z0CF6E717015","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[],"fn":{"$ref":"1M75H3JE62P5000"}},"id":"1M7Z0CF6E717016","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CF6E71701D"}],"fn":{"$ref":"1M75V4A7YBN2002"}},"id":"1M7Z0CF6E717017","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$ref":"1M6YBY3G000001D"}],"fn":{"$ref":"1M6YD90YH1TJ007"}},"id":"1M7Z0CF6E717018","instance":["1M7Z0CEYH385000"]}
+{"body":{},"id":"1M7Z0CF6E717019","instance":["1M7Z0CEYH385001"],"name":"m"}
+{"body":{"args":[{"$ref":"1M7Z0CF6E717019"},"as"],"fn":{"$ref":"1M734SKYDXQ2004"}},"id":"1M7Z0CF6E71701A","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CF6E71701A"},"unratified"],"fn":{"$ref":"1M734SKYDXQ200R"}},"id":"1M7Z0CF6E71701B","instance":["1M7Z0CEYH385000"]}
+{"body":{"body":{"$holds":true,"$ref":"1M7Z0CF6E71701B"},"input":[{"$holds":true,"$ref":"1M7Z0CF6E717019"}]},"id":"1M7Z0CF6E71701C","instance":["1M6YD90YH1TJ000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CF6E717018"},{"$holds":true,"$ref":"1M7Z0CF6E71701C"}],"fn":{"$ref":"1M734SKYDXQ2009"}},"id":"1M7Z0CF6E71701D","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CF6E71701M"}],"fn":{"$ref":"1M75V4A7YBN2002"}},"id":"1M7Z0CF6E71701E","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$ref":"1M6YBY3G000001E"}],"fn":{"$ref":"1M6YD90YH1TJ007"}},"id":"1M7Z0CF6E71701F","instance":["1M7Z0CEYH385000"]}
+{"body":{},"id":"1M7Z0CF6E71701G","instance":["1M7Z0CEYH385001"],"name":"t"}
+{"body":{"args":[{"$ref":"1M7Z0CF6E71701G"},"stands"],"fn":{"$ref":"1M734SKYDXQ2004"}},"id":"1M7Z0CF6E71701H","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CF6E71701H"},"open"],"fn":{"$ref":"1M734SKYDXQ200R"}},"id":"1M7Z0CF6E71701J","instance":["1M7Z0CEYH385000"]}
+{"body":{"body":{"$holds":true,"$ref":"1M7Z0CF6E71701J"},"input":[{"$holds":true,"$ref":"1M7Z0CF6E71701G"}]},"id":"1M7Z0CF6E71701K","instance":["1M6YD90YH1TJ000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CF6E71701F"},{"$holds":true,"$ref":"1M7Z0CF6E71701K"}],"fn":{"$ref":"1M734SKYDXQ2009"}},"id":"1M7Z0CF6E71701M","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CF6E71701P"}],"fn":{"$ref":"1M75V4A7YBN2004"}},"id":"1M7Z0CF6E71701N","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$ref":"1M6YBY3G000001E"}],"fn":{"$ref":"1M6YD90YH1TJ007"}},"id":"1M7Z0CF6E71701P","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CF6E71701Y"}],"fn":{"$ref":"1M75V4A7YBN2001"}},"id":"1M7Z0CF6E71701Q","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$ref":"1M6YBY3G0001XEH"},"sessions"],"fn":{"$ref":"1M734SKYDXQ2004"}},"id":"1M7Z0CF6E71701R","instance":["1M7Z0CEYH385000"]}
+{"body":{},"id":"1M7Z0CF6E71701S","instance":["1M7Z0CEYH385001"],"name":"s"}
+{"body":{"args":[{"$ref":"1M7Z0CF6E71701S"},"on"],"fn":{"$ref":"1M734SKYDXQ2004"}},"id":"1M7Z0CF6E71701T","instance":["1M7Z0CEYH385000"]}
+{"body":{"body":{"$holds":true,"$ref":"1M7Z0CF6E71701T"},"input":[{"$holds":true,"$ref":"1M7Z0CF6E71701S"}]},"id":"1M7Z0CF6E71701V","instance":["1M6YD90YH1TJ000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CF6E71701R"},{"$holds":true,"$ref":"1M7Z0CF6E71701V"}],"fn":{"$ref":"1M734SKYDXQ200B"}},"id":"1M7Z0CF6E71701W","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CF6E71701W"}],"fn":{"$ref":"1M734SKYDXQ200G"}},"id":"1M7Z0CF6E71701X","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CF6E71701X"},"cycles"],"fn":{"$ref":"1M734SKYDXQ2004"}},"id":"1M7Z0CF6E71701Y","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M7Z0CF6E717020"}],"fn":{"$ref":"1M6YD90YH1TJ00V"}},"id":"1M7Z0CF6E71701Z","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[],"fn":{"$ref":"1M75H3JE62P5000"}},"id":"1M7Z0CF6E717020","instance":["1M7Z0CEYH385000"]}

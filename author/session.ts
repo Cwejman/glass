@@ -11,9 +11,8 @@
 //   "letGo": ["the title of an earlier path"]
 // }
 
-import { handles } from "../engine/handles.ts";
-import { localEngine } from "../engine/serve/local.ts";
-import { holonsOf, open, storeFolder, type Holon } from "../stores.ts";
+import { handles } from "../engine/next/uses/migrate.ts";
+import { authorsField, commitOf, type Holon } from "./field.ts";
 import { markedWriter, proseWriter } from "./prose.ts";
 
 type Said = { order: number; as: "typed" | "spoken" | "answered by the session"; text: string };
@@ -31,11 +30,10 @@ type Session = {
 const ref = (to: string) => ({ $ref: to });
 
 const session: Session = await Bun.file(process.argv[2]!).json();
-const store = await open(await storeFolder("main"));
-const holons = await holonsOf(store);
+const { holons, types: fieldTypes } = await authorsField();
 const handle = handles();
 
-const writer = proseWriter(holons, handle);
+const writer = proseWriter(holons, handle, fieldTypes);
 const { types, put, flow } = writer;
 const marked = markedWriter(writer);
 
@@ -104,7 +102,8 @@ sessions.body.sessions.push(ref(sessionId));
 const changed = [sessions, ...letGo];
 const born = [...writer.born, sessionHolon];
 
-const done = await (
-  await localEngine({ writes: ["main"] })
-).commit({ holons: [...changed, ...born], says: session.name });
-console.log({ holons: changed.length + born.length, commit: done.commit });
+const done = await commitOf({ holons: [...changed, ...born], says: session.name });
+console.log({ holons: changed.length + born.length, landed: done.landed });
+
+// The engine here keeps its stores open; the tool is done.
+process.exit(0);

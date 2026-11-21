@@ -5,7 +5,7 @@
 // In the text, {typed|meant} marks a correction, and _ inside the braces stands
 // for a space. Marks and spaces around a word are kept on the word.
 
-import type { Holon } from "../integrations/glass/store.ts";
+import type { Holon } from "./field.ts";
 import { typeNamed, typesOf } from "../stores.ts";
 
 const ref = (to: string) => ({ $ref: to });
@@ -41,10 +41,14 @@ function tokens(sentence: string) {
 
 const splitSentences = (paragraph: string) => paragraph.split(/(?<=[.?!])\s+(?=\S)/);
 
-// A writer over the field as it stands. Holons it makes come under the handles it is
-// given, so everything it was asked to make belongs in one commit, which gives them ids.
-export function proseWriter(holons: Holon[], handle: () => string) {
-  const types = typesOf(holons);
+// A writer over the field as it stands, its types by name, those given or the first of
+// each name among the holons. Holons it makes come under the handles it is given, so
+// everything it was asked to make belongs in one commit, which gives them ids.
+export function proseWriter(
+  holons: Holon[],
+  handle: () => string,
+  types: Record<string, string> = typesOf(holons),
+) {
   const born: Holon[] = [];
 
   const put = (type: string, body: Record<string, unknown>, name?: string) => {

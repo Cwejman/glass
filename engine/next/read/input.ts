@@ -34,7 +34,7 @@ export const isComponentType = (type: Holon) => isFunctionType(type) && type.nam
 
 // The kinds of value a placeholder may take: types glass ships, each of an empty mould.
 // They are found once, a read or a commit, by their names, and known after by their ids,
-// so a type of another store that shares a kind's name, as main's list does, is never
+// so a type of another store that shares a kind's name, as prose's list does, is never
 // taken for it. A field without them has no kinds: a placeholder's type is then held to
 // what is given as any type is, by what it is an instance of.
 export const kindNames = ["value", "number", "string", "boolean", "list", "record", "holon"] as const;
