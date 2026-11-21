@@ -12,7 +12,12 @@
 //   bun stores/strata/convert.ts <store name> <folder for the strata>
 
 import { isRef, isRoot, mouldOf, references } from "../../engine/moulds.ts";
-import { asHolon, goneIds, type Version as OldVersion } from "../../integrations/glass/store.ts";
+import {
+  asHolon,
+  goneIds,
+  type Store as OldStore,
+  type Version as OldVersion,
+} from "../../integrations/glass/store.ts";
 import { holonsOf, storesHere } from "../../stores.ts";
 import { contentOf, hashOf, partOf } from "../act.ts";
 import type { Act, Head, Holon } from "../store.ts";
@@ -28,7 +33,7 @@ export async function convert(name: string, into: string, converted: (spent: Spe
   const old = found.get(name)?.store;
   if (!old) throw new Error(`no store here is called ${name}`);
 
-  const types = await typesEverywhere(found);
+  const types = await typesEverywhere([...found.values()].map(({ store }) => store));
   const root = (await holonsOf(old)).find((holon) => isRoot(holon, (id) => types.get(id)))!.id;
   const entries = await old.fullLog();
   const placed = entries.find(({ line }) => line.conversion)?.line.conversion?.blocks ?? [];
@@ -99,7 +104,7 @@ export async function convert(name: string, into: string, converted: (spent: Spe
 }
 
 // A holon's references, each holding one given $holds, as its types' mould says.
-function marked(holon: Holon, types: Map<string, Holon>): Holon {
+export function marked(holon: Holon, types: Map<string, Holon>): Holon {
   const mould = mouldOf(holon.instance.map((type) => types.get(type)));
   const holding = new Set(
     references(holon.body, mould)
@@ -120,11 +125,11 @@ function marked(holon: Holon, types: Map<string, Holon>): Holon {
   };
 }
 
-// Every type, a holon with a mould, as it stands now in any store found.
-async function typesEverywhere(found: Awaited<ReturnType<typeof storesHere>>) {
+// Every type, a holon with a mould, as it stands now in any of the stores given.
+export async function typesEverywhere(stores: Iterable<OldStore>) {
   const types = new Map<string, Holon>();
 
-  for (const { store } of found.values())
+  for (const store of stores)
     for (const [id, { version }] of await store.all()) if (version.mould) types.set(id, asHolon(version));
 
   return types;
