@@ -1,66 +1,72 @@
 // And, or and not are one lattice: over truths, the first false, the first true, the
-// opposite; over sets of holons, their meet, their join, and everything else the field
-// holds. A set is a holon or a list of holons, the empty list the empty set, and what a
-// set gives comes in the field's order.
+// opposite; over sets of holons, their meet and their join. A set is a holon or a list of
+// holons, the empty list the empty set, and what a set gives comes in the order its
+// holons were born, which their ids sort in.
+//
+// Not over a set would be every other holon of the field, which no store is asked for,
+// so it is refused.
 
-import { isRef, ref, type Value } from "../../../language/expression.ts";
-import type { Calling, Lazy } from "./natives.ts";
-import { list, truly } from "../values.ts";
+import { isRef, list, ref, truly, type Value } from "../values.ts";
+import { after, each } from "../maybe.ts";
+import type { Lazy } from "./natives.ts";
 
 const isSet = (value: unknown) => isRef(value) || (Array.isArray(value) && value.every(isRef));
 const idsOf = (value: unknown) => new Set(list(value).flatMap((each) => (isRef(each) ? [each.$ref] : [])));
 
-export function sets({ world }: Calling): Record<string, Lazy> {
-  // The holons a test keeps, in the field's order.
-  const keep = (test: (id: string) => boolean): Value[] => [...world.known.keys()].filter(test).map(ref);
+// Holons in the order they were born.
+export const inOrder = (ids: Iterable<string>): Value[] => [...ids].sort().map(ref);
 
+export function sets(): Record<string, Lazy> {
   return {
+    // The first false of truths, else the last; the meet of the sets among them.
     and(given) {
-      let last: Value = true;
       const meet: Set<string>[] = [];
+      let failed: Value | undefined;
 
-      for (const each of given) {
-        last = each();
-        if (isSet(last)) meet.push(idsOf(last));
-        else if (!truly(last)) return last;
-      }
-
-      if (!meet.length) return last;
-      const [smallest, ...rest] = meet.sort((a, b) => a.size - b.size);
-      return inOrder(
-        world.place,
-        [...smallest!].filter((id) => rest.every((set) => set.has(id))),
+      return after(
+        each(given, true as Value, (last, next) => {
+          if (failed !== undefined) return last;
+          return after(next(), (value) => {
+            if (isSet(value)) meet.push(idsOf(value));
+            else if (!truly(value)) failed = value;
+            return value;
+          });
+        }),
+        (last) => {
+          if (failed !== undefined) return failed;
+          if (!meet.length) return last;
+          const [smallest, ...rest] = meet.sort((a, b) => a.size - b.size);
+          return inOrder([...smallest!].filter((id) => rest.every((set) => set.has(id))));
+        },
       );
     },
 
+    // The first true of truths; the join of the sets among them.
     or(given) {
       const join = new Set<string>();
       let anySet = false;
+      let found: Value | undefined;
 
-      for (const each of given) {
-        const value = each();
-        if (isSet(value)) {
-          anySet = true;
-          for (const id of idsOf(value)) join.add(id);
-        } else if (truly(value)) return value;
-      }
-
-      return anySet ? inOrder(world.place, [...join]) : false;
+      return after(
+        each(given, null as Value, (last, next) => {
+          if (found !== undefined) return last;
+          return after(next(), (value) => {
+            if (isSet(value)) {
+              anySet = true;
+              for (const id of idsOf(value)) join.add(id);
+            } else if (truly(value)) found = value;
+            return value;
+          });
+        }),
+        () => (found !== undefined ? found : anySet ? inOrder(join) : false),
+      );
     },
 
-    not([given]) {
-      const value = given?.() ?? null;
-      if (!isSet(value)) return !truly(value);
-
-      const out = idsOf(value);
-      return keep((id) => !out.has(id));
-    },
+    not: ([given]) =>
+      after(given?.() ?? null, (value) => {
+        if (isSet(value))
+          throw new Error("not of a set is every other holon of the field, which is not read");
+        return !truly(value);
+      }),
   };
 }
-
-// Holons in the field's order, those the field does not hold let go.
-export const inOrder = (place: ReadonlyMap<string, number>, ids: Iterable<string>): Value[] =>
-  [...ids]
-    .filter((id) => place.has(id))
-    .sort((a, b) => place.get(a)! - place.get(b)!)
-    .map(ref);

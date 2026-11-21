@@ -8,8 +8,8 @@
 // the instances of the type function, the holons those with a name. Each is read once a
 // page, and what matches what is typed is found here.
 
-import type { Read } from "../../engine/next/engine.ts";
-import { isRecord, isRef, ref, type Value } from "../../engine/next/read/values.ts";
+import type { Read } from "../../engine/engine.ts";
+import { isRecord, isRef, ref, type Value } from "../../engine/read/values.ts";
 import { applying, applyingEach } from "./carried.ts";
 import type { Space } from "./chassis.ts";
 

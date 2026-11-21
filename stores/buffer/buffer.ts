@@ -18,7 +18,7 @@
 // head that is no longer the present is answered changed, whatever it touches, and the
 // engine judges it again.
 
-import { canonical } from "../../integrations/glass/canonical.ts";
+import { canonical } from "../canonical.ts";
 import { hashOf, lineOf } from "../act.ts";
 import type { Act, Clause, Fact, Head, Holon, Question, Reply, Store } from "../store.ts";
 import { factsOf, heldBy, wordsOf } from "../strata/entries.ts";

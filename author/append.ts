@@ -7,7 +7,7 @@
 //   { "add": [{ "title": "...", "opens": "...", "restsOn": ["..."] }],
 //     "edit": [{ "title": "...", "opens": "..." }] }
 
-import { handles } from "../engine/next/uses/migrate.ts";
+import { handles } from "../engine/uses/migrate.ts";
 import { authorsField, commitOf, type Holon } from "./field.ts";
 import { markedWriter, proseWriter } from "./prose.ts";
 

@@ -1,156 +1,286 @@
-// The engine governs: it is the one way into the field, and is itself governed by what
-// the field declares. It keeps no store of its own. It mounts stores so that work can
-// be done, and does these few things:
+// The engine: mount, unmount, read, subscribe and commit.
 //
-//   attach     mount a store, through an integration, to be read or also written; an
-//              act some writer cut short in it is settled then
-//   detach     let a store go
-//   read       work an expression out over the field
-//   judge      weigh a change against the field, writing nothing
-//   commit     judge a change and write it, one act in every store it touches
-//   onChange   hear that the field changed, whatever changed
-//   moved      take a store another moved as it now stands
+// The engine holds no holons. Each store keeps its own holons, their history and their
+// index, and reports where it stands as a head. Stores are started by whoever sets glass
+// up, the page for instance, and passed to mount already running, local or reached over
+// the wire.
 //
-// What changes the field, attaching, detaching, committing, a store moved by another,
-// is done one at a time, each making the next field from the one before. Reading and
-// judging ask the field as it stands.
+// The engine's own thread keeps only what has to be one, seen by every verb: the mounts
+// and the current head of each, the subscriptions and the heads each stood on, and the
+// changes under way. All other work is done by workers (worker.ts), started on the
+// runtime the engine is given: workers() for one thread each, or sameThread() for an
+// engine on one thread. Every worker is the same and has its own connection to every
+// store; it reads, and it takes a commit through judging, minting and offering.
 //
-// Drawn in folders as it is said here:
+// Workers are one pool. Reads and commits each hold at most all but one of them, so a
+// burst of either never leaves the other waiting for a worker.
 //
-//   field.ts    the field as a value, a holon or a whole read from it by identity
-//   moulds.ts   what a type says: a mould, what holds, what is wrong with a body
-//   handles.ts  how a change names what is not yet born, "~1"
-//   read/       a read answered (answer.ts), over the world (world.ts), by the bare
-//               language (evaluate.ts) and its natives (natives/), patterns answered
-//               from an index carried from field to field (patterns/)
-//   change/     a commit: what the field knows of it (known.ts), its plan (plan.ts),
-//               the rules it is judged by (rules.ts), and its writing (write.ts)
-//   serve/      the engine carried: its protocol, serving, a worker in the browser, and
-//               the engine of this machine's stores
-//   compat.ts   the old forms of read, where all outside enters today
+// A change waits only for the changes under way that touch the same holons or addresses,
+// or put new holons into the root of the same store, strict or not, since one under way
+// may yet be refused. It is then judged against the
+// field as it stands: refused if it can no longer stand, and, if strict, if anything it
+// touches moved since its at.
 //
-// Whoever is given an engine is given these verbs alone: the interface, the command line,
-// and in time a program. Who asks is not yet said with a read or a change; where what one
-// may read or change is to be governed, it enters there, into evaluation and judging, for
-// no wrapper can narrow what an expression reaches.
+// Anyone can subscribe to a read. When a store's head moves, whoever moved it,
+// the engine records the new head and reruns the reads that stood on that store. A store
+// that stops is unmounted, and its subscribers are told.
 
-import type { Source } from "../integrations/source.ts";
-import type { Expression, Value } from "../language/expression.ts";
-import type { Change, Problem } from "./change/plan.ts";
-import { attached, detached, fieldOf, isWritable, withStores, type Attachment, type Field } from "./field.ts";
-import { answer } from "./read/answer.ts";
-import { idAt, type Holon } from "../integrations/glass/store.ts";
-import { knownOf } from "./change/known.ts";
-import { planOf } from "./change/plan.ts";
-import { refusal, settled, write, type Committed } from "./change/write.ts";
+import type { Value } from "./read/values.ts";
+import type { Runtime } from "../runtime/runtime.ts";
+import type { Head, Holon, Problem, Store, Touches } from "../stores/store.ts";
+import { anotherConnectionTo, disconnect, disconnected } from "../wire/wire.ts";
+import type { EngineWorker } from "./worker.ts";
+import type { Change } from "./commit/change.ts";
+import { touchesOf, meet, placesInRoot } from "./commit/touches.ts";
+import type { Landed } from "./commit/land.ts";
 
-export type { Attachment, Change, Committed, Problem };
+// A mounted store: the store, whether this engine writes to it, and the function that
+// ends the engine's subscription to it.
+export type Mount = { store: Store; write: boolean; unsubscribe: () => void };
 
+// Heads by mount name. A read answers with the heads of the stores it read, and a
+// subscriber is rerun when one of them moves. A change carries the heads it was made
+// from, empty when made without reading, and its commit keeps those of the stores it
+// touches.
+export type Heads = Readonly<Record<string, Head | null>>;
+
+// A read: what it gives, a value with references at any depth, and the holons it carries
+// of its own, kept in no store. Each comes under a handle, "~1", as a change's new holons
+// do, and is found by it before the stores are asked. What it gives is worked out as
+// read/evaluate.ts says: a use held there gives what its function gives.
+export type Read = { gives: unknown; holons?: Holon[] };
+
+// A read's answer: its value or its problem, the heads it stood on, and the holons it
+// found kept differently in two stores, the first store's version answering, where any.
+export type Answer = { at: Heads; diverged?: string[] } & ({ value: Value } | { problem: string });
+
+export type Committed = Landed | { refused: Problem[] };
+
+// The engine's public interface.
 export type Engine = {
-  attach(attachment: Attachment): Promise<void>;
-  detach(key: string): Promise<void>;
-  read(expression: Expression): Promise<Value>;
-  judge(change: Change): Promise<Problem[]>;
+  mount(name: string, store: Store, as?: { write?: boolean }): Promise<void>;
+  unmount(name: string): Promise<void>;
+  read(read: Read): Promise<Answer>;
+  subscribe(read: Read, listener: (answer: Answer) => void): Promise<() => void>;
   commit(change: Change): Promise<Committed>;
-  // Told whenever the field changes, whatever changed.
-  onChange(listener: () => void): () => void;
-  // A store moved by another, taken as it now stands: told by whoever watches it.
-  moved(key: string, store: Source): Promise<void>;
 };
 
-// The engine, and the field it stands at, for what translates the forms of read before
-// expressions; nothing else asks for the field.
-export function engine(attachments: readonly Attachment[] = []): Engine & { field(): Field } {
-  let field = fieldOf(attachments);
-  const inTurn = turns();
-  const listeners = new Set<() => void>();
+// What an engine is started with: the runtime its workers run on, and how many to start.
+export type Starting = { workers: Runtime; count?: number };
 
-  // The next field, and whoever listens told.
-  function become(next: Field) {
-    if (next === field) return;
-    field = next;
-    for (const listener of listeners) listener();
+type Work = "read" | "commit";
+type Waiting = { work: Work; resolve: (worker: EngineWorker) => void };
+// A kept read: what it stood on last, whether it has answered yet, and whether a rerun is
+// under way and another is due after it, so its answers come one at a time, in order.
+type Subscriber = {
+  read: Read;
+  listener: (answer: Answer) => void;
+  stoodOn: Heads;
+  answered: boolean;
+  running: boolean;
+  again: boolean;
+};
+type Underway = { touches: Touches; done: Promise<void> };
+
+const workerCode = new URL("./worker.ts", import.meta.url);
+
+const sameHead = (a: Head | null | undefined, b: Head | null | undefined) =>
+  (a?.commit ?? null) === (b?.commit ?? null);
+
+export async function engine({ workers: runtime, count = 1 }: Starting): Promise<Engine> {
+  const workers = await Promise.all(
+    Array.from({ length: count }, () => runtime.run<EngineWorker>(workerCode)),
+  );
+  const mounts = new Map<string, Mount>();
+  const heads = new Map<string, Head | null>();
+  const subscribers = new Set<Subscriber>();
+  const underway = new Set<Underway>();
+
+  const idle = [...workers];
+  const waiting: Waiting[] = [];
+  const busy: Record<Work, number> = { read: 0, commit: 0 };
+  const most = Math.max(1, count - 1);
+
+  // Mounts a store under a name, gives every worker its own connection to it, and
+  // subscribes to its head. Each move records the new head and reruns the subscribers
+  // that stood on this store. If the store stops, it is unmounted.
+  async function mount(name: string, store: Store, { write = false } = {}) {
+    for (const worker of workers) await worker.mount(name, await anotherConnectionTo(store), { write });
+
+    const unsubscribe = await store.subscribe((head) => moved(name, head));
+
+    mounts.set(name, { store, write, unsubscribe });
+    disconnected(store).then(() => {
+      if (mounts.get(name)?.store === store) void unmount(name);
+    });
   }
 
-  // A commit's one try: what was cut short settled, the change planned over the field as
-  // it stands, refused where it may not be made, else written.
-  async function committed(change: Change) {
-    const { field: now, waiting } = await settled(field);
-    become(now);
+  // Ends the subscription to the store, and closes every connection to it.
+  async function unmount(name: string) {
+    const mount = mounts.get(name);
+    mounts.delete(name);
+    heads.delete(name);
 
-    const plan = await planIn(field, change);
-    const held = plan.stores.find(({ key }) => waiting.has(key));
-    if (held) throw new Error(`${held.key} refuses writes: ${waiting.get(held.key)}`);
-    if (plan.problems.length) throw refusal(plan.problems, change);
-
-    const written = await write(field, plan, change);
-    become(written.field);
-    return written;
+    mount?.unsubscribe();
+    if (mount) disconnect(mount.store);
+    await Promise.all(workers.map((worker) => worker.unmount(name)));
+    for (const subscriber of subscribers) if (stoodOn(subscriber, name)) notify(subscriber);
   }
 
-  return {
-    attach: (attachment) =>
-      inTurn(async () => {
-        become(attached(field, attachment));
-        if (attachment.write) become((await settled(field)).field);
-      }),
+  // Works the read out on a worker, over every store as it stood when the read began.
+  async function read(asked: Read): Promise<Answer> {
+    const worker = await take("read");
 
-    detach: (key) => inTurn(async () => become(detached(field, key))),
+    try {
+      return await worker.read(asked, Object.fromEntries(heads));
+    } finally {
+      give("read", worker);
+    }
+  }
 
-    read: (expression) => answer(field, expression),
+  // Keeps a read: its listener is called now, and again whenever a store it read moves.
+  async function subscribe(asked: Read, listener: (answer: Answer) => void) {
+    const subscriber: Subscriber = {
+      read: asked,
+      listener,
+      stoodOn: {},
+      answered: false,
+      running: false,
+      again: false,
+    };
+    subscribers.add(subscriber);
+    notify(subscriber);
 
-    judge: async (change) => (await planIn(field, change)).problems,
+    return () => void subscribers.delete(subscriber);
+  }
 
-    // A commit, once more where a store it writes moved under it since it was read,
-    // planned again over the store as it now stands.
-    commit: (change) =>
-      inTurn(async () => {
-        for (let tries = 1; ; tries++) {
-          const before = field;
-          const written = await committed(change);
-          if (!("failed" in written)) return written.committed;
-          if (tries > 1 || field === before) throw written.failed;
+  // Waits for the changes under way that touch what this one touches, then has a worker
+  // judge it against the stores as they stand, mint its ids, and offer it to them.
+  async function commit(change: Change): Promise<Committed> {
+    const done = await turnAmong(touching(change));
+    const worker = await take("commit");
+
+    try {
+      const { committed, judgedAt } = await worker.commit(change, Object.fromEntries(heads));
+
+      // Where it landed the store's head is now its commit, unless the store has told of a
+      // move the worker did not judge at; so a read after a commit reads it.
+      if ("landed" in committed)
+        for (const [name, head] of Object.entries(committed.landed))
+          if (judgedAt.some((at) => sameHead(heads.get(name), at[name]))) moved(name, head);
+
+      return committed;
+    } finally {
+      give("commit", worker);
+      done();
+    }
+  }
+
+  // What a change touches, and the root of the store it puts a holon nothing holds into:
+  // the store it names, or the only one written.
+  function touching(change: Change): Touches {
+    const touches = touchesOf(change);
+    const written = [...mounts].filter(([, { write }]) => write).map(([name]) => name);
+    const into = change.into ?? (written.length === 1 ? written[0] : undefined);
+    if (into === undefined || !placesInRoot(change)) return touches;
+
+    return { ...touches, ids: [...touches.ids, `the root of ${into}`] };
+  }
+
+  // A store's head moved: recorded, and the reads that stood on that store rerun.
+  function moved(name: string, head: Head | null) {
+    if (heads.has(name) && sameHead(heads.get(name), head)) return;
+
+    heads.set(name, head);
+    for (const subscriber of subscribers) if (stoodOn(subscriber, name)) notify(subscriber);
+  }
+
+  // Whether a store's move may change a kept read: one it read, or any, before it first
+  // answered.
+  const stoodOn = (subscriber: Subscriber, name: string) =>
+    !subscriber.answered || name in subscriber.stoodOn;
+
+  // Waits for the changes under way that meet this one, and registers this one so later
+  // changes that meet it wait for it. Returns the function that releases them.
+  async function turnAmong(touches: Touches) {
+    const meeting = [...underway].filter((other) => meet(other.touches, touches));
+    const { promise, resolve } = Promise.withResolvers<void>();
+    const mine = { touches, done: promise };
+    underway.add(mine);
+
+    await Promise.all(meeting.map((other) => other.done));
+
+    return () => {
+      underway.delete(mine);
+      resolve();
+    };
+  }
+
+  // A worker for this work as soon as one is free and this work holds fewer than it may.
+  function take(work: Work) {
+    const { promise, resolve } = Promise.withResolvers<EngineWorker>();
+    waiting.push({ work, resolve });
+    handOut();
+    return promise;
+  }
+
+  function give(work: Work, worker: EngineWorker) {
+    busy[work]--;
+    idle.push(worker);
+    handOut();
+  }
+
+  // Free workers to whoever has waited longest, among the work that may take one.
+  function handOut() {
+    for (let i = 0; i < waiting.length && idle.length; ) {
+      const { work, resolve } = waiting[i]!;
+      if (busy[work] >= most) {
+        i++;
+        continue;
+      }
+
+      waiting.splice(i, 1);
+      busy[work]++;
+      resolve(idle.pop()!);
+    }
+  }
+
+  // Reruns a subscriber's read, records which heads it stood on, and calls its listener.
+  // While one rerun is under way another is only marked due, and run after it, so the
+  // listener hears every answer in order and the last one stands on the latest heads.
+  function notify(subscriber: Subscriber) {
+    if (subscriber.running) {
+      subscriber.again = true;
+      return;
+    }
+
+    subscriber.running = true;
+    void rerun(subscriber);
+  }
+
+  // A listener that throws fails on its own: its error is thrown apart, where whoever runs
+  // the engine hears of it, and the subscription keeps answering.
+  async function rerun(subscriber: Subscriber) {
+    try {
+      do {
+        subscriber.again = false;
+        const answer = await read(subscriber.read);
+        if (!subscribers.has(subscriber)) return;
+
+        subscriber.stoodOn = answer.at;
+        subscriber.answered = true;
+        try {
+          subscriber.listener(answer);
+        } catch (error) {
+          queueMicrotask(() => {
+            throw error;
+          });
         }
-      }),
+      } while (subscriber.again);
+    } finally {
+      subscriber.running = false;
+    }
+  }
 
-    onChange: (listener) => {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
-
-    field: () => field,
-
-    moved: (key, store) =>
-      inTurn(async () => {
-        const attachment = field.stores.find((one) => one.key === key);
-        if (!attachment) throw new Error(`nothing is attached as ${key}`);
-        if (attachment.write) throw new Error(`${key} is written here, and is never taken again`);
-
-        become(withStores(field, new Map([[key, store]])));
-      }),
-  };
-}
-
-// The plan of a change over the field as it stands: what the field knows of it read,
-// then planned purely, its ids minted from after the latest any written store has given,
-// or from now. The clock is read here, at the top, and nowhere beneath.
-async function planIn(field: Field, change: Change) {
-  const start = field.stores
-    .filter(isWritable)
-    .map(({ store }) => store.minter()())
-    .sort()
-    .at(-1);
-
-  return planOf(await knownOf(field, change), change, start ?? idAt(Date.now()));
-}
-
-// One task at a time, each after the one before has ended, however it ended.
-function turns() {
-  let last: Promise<unknown> = Promise.resolve();
-
-  return <T>(task: () => Promise<T>) => {
-    const taken = last.then(task);
-    last = taken.catch(() => undefined);
-    return taken;
-  };
+  return { mount, unmount, read, subscribe, commit };
 }

@@ -10,8 +10,8 @@
 //
 // Visits are the browser's own history: nothing of them is kept in the field.
 
-import type { Engine } from "../../engine/next/engine.ts";
-import { ref } from "../../engine/next/read/values.ts";
+import type { Engine } from "../../engine/engine.ts";
+import { ref } from "../../engine/read/values.ts";
 import { typed } from "../../stores/buffer/string.ts";
 import { applying, type Glass } from "./carried.ts";
 import { awaiting } from "./chassis.ts";

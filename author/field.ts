@@ -8,7 +8,7 @@
 
 import { engineHere, holonsHere, typesOf } from "../stores.ts";
 import type { Holon as Kept } from "../stores/store.ts";
-import type { Change } from "../engine/next/commit/change.ts";
+import type { Change } from "../engine/commit/change.ts";
 
 export const writes = ["wiki", "author"] as const;
 

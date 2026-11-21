@@ -24,12 +24,12 @@
 //   @Sessions.sessions | sort(s => s.on) | reverse | take(2) | map(text)
 //
 // A text is read in two steps: its syntax, then its names found. It is read into the
-// earlier form of an expression, for the earlier engine, or into a read of uses the new
+// earlier form of an expression, as expressions were once kept, or into a read of uses the
 // engine works out, and said again from either.
 
-import { isHandle } from "../engine/handles.ts";
-import type { Read } from "../engine/next/engine.ts";
-import { isId } from "../integrations/glass/store.ts";
+import { isHandle } from "../engine/commit/change.ts";
+import type { Read } from "../engine/engine.ts";
+import { isId } from "../stores/ids.ts";
 import type { Holon } from "../stores/store.ts";
 import { isRef, type Expression as Expr } from "./expression.ts";
 
@@ -433,7 +433,7 @@ function finding(text: string, names: Names) {
   return { fail, functionAt, holonAt, applying };
 }
 
-// A text read into the earlier form of an expression, as the earlier engine takes it.
+// A text read into the earlier form of an expression, as expressions were once kept.
 export function toExpression({ text, tree }: Syntax, names: Names): Expr {
   const { functionAt, holonAt, applying } = finding(text, names);
 

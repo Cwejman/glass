@@ -11,9 +11,9 @@
 //
 // The browser's own menu is still there with shift held.
 
-import { h, type Child } from "../../components/jsx.ts";
-import type { Engine, Read } from "../../engine/next/engine.ts";
-import { isRecord, isRef, ref, type Value } from "../../engine/next/read/values.ts";
+import { h, type Child } from "./jsx.ts";
+import type { Engine, Read } from "../../engine/engine.ts";
+import { isRecord, isRef, ref, type Value } from "../../engine/read/values.ts";
 import { applying, applyingEach, type Glass } from "./carried.ts";
 import { drawingsAt, isDrawing } from "./chassis.ts";
 

@@ -2,8 +2,8 @@
 // one under another, or side by side where it is given the direction row. Each item is
 // drawn at its index, so it may propose its own removal from the list.
 
-import { h } from "../../components/jsx.ts";
-import { isRef, type Value } from "../../engine/next/read/values.ts";
+import { h } from "./jsx.ts";
+import { isRef, type Value } from "../../engine/read/values.ts";
 import { arrange, type Realization } from "./chassis.ts";
 
 export const list: Realization = (given, space) => {

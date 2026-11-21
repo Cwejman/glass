@@ -5,7 +5,7 @@
 // holon with no name is called by its text where it keeps a short one, else by what it
 // is.
 
-import { isRef, type Value } from "../../engine/next/read/values.ts";
+import { isRef, type Value } from "../../engine/read/values.ts";
 
 // A holon as the native holon reads it, as far as a summary needs.
 export type Said = {

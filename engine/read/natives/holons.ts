@@ -1,98 +1,71 @@
-// The natives that read the field: everything it holds, a holon's own values, what it
-// refers to and what refers to it, a walk along such steps, and a holon or a whole as a
-// reader is given them. What refers to a holon is the one thing it cannot say of itself,
-// so the world keeps it.
+// The natives that read holons: a holon's own values, what it refers to and what refers
+// to it, a walk along such steps, and a holon or a whole as a reader is given them.
+// Whether a reference holds is said by the reference itself, as every store keeps it.
+// What refers to a holon is the one thing it cannot say of itself, so the stores are
+// asked for it, by the facts that refer to it.
 
-import { isRef, ref, type Value } from "../../../language/expression.ts";
-import { partsOf, references } from "../../moulds.ts";
-import { typeNames } from "../../field.ts";
+import { isRecord, isRef, list, type Rec, ref, truly, type Value } from "../values.ts";
+import type { Holon } from "../../../stores/store.ts";
+import type { Field } from "../field.ts";
+import { after } from "../maybe.ts";
 import type { Calling, Native } from "./natives.ts";
-import { isRecord, list, truly, type Rec } from "../values.ts";
 import { values } from "./values.ts";
 
-export function holons({ world, apply }: Calling): Record<string, Native> {
-  const holonOf = (value: unknown) => (isRef(value) ? world.known.get(value.$ref)?.holon : undefined);
+// A reference in a body, under its top key, and whether it holds.
+export type Reference = { id: string; key: string; holds: boolean };
 
-  // A holon's own values, and then its body's, which never shadow them.
-  const own = (value: unknown): Record<string, Value> | undefined => {
-    const holon = holonOf(value);
-    if (!holon) return undefined;
-
-    return {
-      id: holon.id,
-      name: holon.name ?? null,
-      store: world.known.get(holon.id)!.store,
-      instance: holon.instance.map(ref),
-      mould: (holon.mould as Value) ?? null,
-    };
-  };
-
-  // A holon as a reader is given it: its own values, its body, where it is read from,
-  // the block of its version, and the names of what it is.
-  const reading = (id: string): Value => {
-    const kept = world.known.get(id);
-    if (!kept) return null;
-
-    const { holon } = kept;
-    const types = typeNames(
-      holon,
-      holon.instance.map((type) => world.known.get(type)?.holon),
-    );
-
-    return {
-      ...(holon as unknown as Record<string, Value>),
-      store: kept.store,
-      version: kept.block ?? null,
-      types,
-    };
-  };
+export function holons({ field, apply }: Calling): Record<string, Native> {
+  const keptOf = (value: unknown) => (isRef(value) ? field.holon(value.$ref) : null);
 
   return {
-    everything: () => [...world.known.keys()].map(ref),
-    attachments: () => [...world.stores],
+    stores: () => [...field.stores],
 
-    get([value, key]) {
-      const values = own(value);
-      if (values)
-        return String(key) in values ? values[String(key)]! : asValue(holonOf(value)!.body[String(key)]);
-      if (Array.isArray(value)) return typeof key === "number" ? (value[key] ?? null) : null;
-      if (isRecord(value)) return (value as Rec)[String(key)] ?? null;
+    get: ([value, key]) =>
+      after(keptOf(value), (kept) => {
+        if (kept) {
+          const { holon, store } = kept;
+          const own: Record<string, Value> = {
+            id: holon.id,
+            name: holon.name ?? null,
+            store,
+            instance: holon.instance.map(ref),
+            mould: (holon.mould as Value) ?? null,
+          };
+          return String(key) in own ? own[String(key)]! : asValue(holon.body[String(key)]);
+        }
 
-      return null;
-    },
+        if (Array.isArray(value)) return typeof key === "number" ? (value[key] ?? null) : null;
+        if (isRecord(value)) return (value as Rec)[String(key)] ?? null;
+        return null;
+      }),
 
-    keys: ([value]) => {
-      const holon = holonOf(value);
-      return holon ? Object.keys(holon.body) : values.keys!([value]);
-    },
+    keys: ([value]) =>
+      after(keptOf(value), (kept) => (kept ? Object.keys(kept.holon.body) : values.keys!([value]))),
 
     // Edges out of a holon: what it is an instance of, then every reference in its body,
     // in the order the body holds them.
-    out([value]) {
-      const holon = holonOf(value);
-      if (!holon) return [];
-
-      return [
-        ...holon.instance.map((type) => ({ key: "instance", to: ref(type), holds: false })),
-        ...references(holon.body, world.mouldFor(holon)).map(({ id, key, holds }) => ({
-          key,
-          to: ref(id),
-          holds,
-        })),
-      ];
-    },
+    out: ([value]) =>
+      after(keptOf(value), (kept) =>
+        kept
+          ? [
+              ...kept.holon.instance.map((type) => ({ key: "instance", to: ref(type), holds: false })),
+              ...references(kept.holon.body).map(({ id, key, holds }) => ({ key, to: ref(id), holds })),
+            ]
+          : [],
+      ),
 
     // Edges into a holon.
-    in: ([value]) =>
+    in: async ([value]) =>
       isRef(value)
-        ? world.holders(value.$ref).map(({ from, key, holds }) => ({ key, from: ref(from), holds }))
+        ? (await holdersOf(field, value.$ref)).map(({ id, key, holds }) => ({ key, from: ref(id), holds }))
         : [],
 
-    holon: ([value]) => (isRef(value) ? reading(value.$ref) : null),
+    holon: async ([value]) =>
+      isRef(value) ? ((await reading(field, value.$ref)) as unknown as Value) : null,
 
     // A whole: a holon and what it holds, down to a depth, entering nothing whose type is
-    // named in stop, though reading it.
-    whole([value, depth, stop]) {
+    // named in stop, though reading it. Each layer is read at once.
+    async whole([value, depth, stop]) {
       if (!isRef(value)) return null;
 
       const most = typeof depth === "number" ? depth : Number.POSITIVE_INFINITY;
@@ -100,18 +73,18 @@ export function holons({ world, apply }: Calling): Record<string, Native> {
       const holons: Record<string, Value> = {};
 
       for (let layer = [value.$ref], down = 0; layer.length && down <= most; down++) {
+        const fresh = [...new Set(layer)].filter((id) => !(id in holons));
+        const read = await Promise.all(fresh.map((id) => reading(field, id)));
         const next: string[] = [];
 
-        for (const id of new Set(layer)) {
-          if (holons[id] || !world.known.has(id)) continue;
+        fresh.forEach((id, i) => {
+          const each = read[i];
+          if (!each) return;
 
-          const read = reading(id) as { types: string[] };
-          holons[id] = read as unknown as Value;
-
-          const holon = world.known.get(id)!.holon;
-          const stopped = id !== value.$ref && read.types.some((type) => stopAt.has(type));
-          if (!stopped) next.push(...partsOf(holon.body, world.mouldFor(holon)));
-        }
+          holons[id] = each as unknown as Value;
+          const stopped = id !== value.$ref && each.types.some((type) => stopAt.has(type));
+          if (!stopped) next.push(...partsOf(each.body));
+        });
 
         layer = next;
       }
@@ -121,8 +94,8 @@ export function holons({ world, apply }: Calling): Record<string, Native> {
 
     // A walk: a step taken from what was reached, until nothing new is reached, a depth,
     // or what the stop says; it gives the edges it walked, so a line, a branch and a join
-    // can all be drawn from it.
-    follow([seeds, step, given]) {
+    // can all be drawn from it. Each depth's steps are taken at once.
+    async follow([seeds, step, given]) {
       const stop = (isRecord(given) ? given : {}) as Rec;
       const most = typeof stop.depth === "number" ? stop.depth : undefined;
       const until = stop.until;
@@ -131,13 +104,16 @@ export function holons({ world, apply }: Calling): Record<string, Native> {
       let frontier = [...seen];
 
       for (let down = 1; frontier.length && (most === undefined || down <= most); down++) {
+        const stopped = await Promise.all(
+          frontier.map(async (from) => Boolean(until && down > 1 && truly(await apply(until, [ref(from)])))),
+        );
+        const going = frontier.filter((_, i) => !stopped[i]);
+        const reached = await Promise.all(going.map((from) => apply(step, [ref(from)])));
         const next: string[] = [];
 
-        for (const from of frontier) {
-          if (until && down > 1 && truly(apply(until, [ref(from)]))) continue;
-
-          for (const reached of list(apply(step, [ref(from)]))) {
-            const edge = isRef(reached) ? { to: reached, key: null } : isRecord(reached) ? reached : {};
+        going.forEach((from, i) => {
+          for (const each of list(reached[i]!)) {
+            const edge = isRef(each) ? { to: each, key: null } : isRecord(each) ? each : {};
             if (!isRef(edge.to)) continue;
 
             walked.push({ from: ref(from), to: edge.to, key: (edge.key as Value) ?? null, depth: down });
@@ -146,7 +122,7 @@ export function holons({ world, apply }: Calling): Record<string, Native> {
               next.push(edge.to.$ref);
             }
           }
-        }
+        });
 
         frontier = next;
       }
@@ -154,6 +130,55 @@ export function holons({ world, apply }: Calling): Record<string, Native> {
       return walked;
     },
   };
+}
+
+// A holon as a reader is given it: itself, the store it is read from, and the names of
+// what it is, "type" first where it is a type.
+export async function reading(field: Field, id: string) {
+  const kept = await field.holon(id);
+  if (!kept) return null;
+
+  const { holon, store } = kept;
+  const types = await Promise.all(holon.instance.map((type) => field.holon(type)));
+  const names = [
+    ...(holon.mould ? ["type"] : []),
+    ...types.flatMap((type) => (type?.holon.name ? [type.holon.name] : [])),
+  ];
+
+  return { ...holon, store, types: names };
+}
+
+// Every reference in a body, in the order the body holds them, under its top key.
+export function references(body: Holon["body"]): Reference[] {
+  const found: Reference[] = [];
+
+  function walk(value: unknown, key: string) {
+    if (Array.isArray(value)) for (const item of value) walk(item, key);
+    else if (isRef(value))
+      found.push({ id: value.$ref, key, holds: (value as { $holds?: boolean }).$holds === true });
+    else if (typeof value === "object" && value !== null)
+      for (const inner of Object.values(value)) walk(inner, key);
+  }
+
+  for (const [key, value] of Object.entries(body)) walk(value, key);
+  return found;
+}
+
+export const partsOf = (body: Holon["body"]) =>
+  references(body)
+    .filter(({ holds }) => holds)
+    .map(({ id }) => id);
+
+// What refers to a holon: from which holon, under which key, and whether it holds it, in
+// the order the referring holons were born.
+export async function holdersOf(field: Field, id: string): Promise<Reference[]> {
+  const facts = await field.facts({ v: { $ref: id } });
+  const holding = new Set(facts.filter(({ a }) => a === "$holds").map(({ e }) => e));
+
+  return facts
+    .filter(({ a }) => a !== "$holds" && a !== "instance")
+    .sort((x, y) => (x.e < y.e ? -1 : x.e > y.e ? 1 : 0))
+    .map(({ e, a }) => ({ id: e, key: a, holds: holding.has(e) }));
 }
 
 // A body's value as the language has it: references as holons, and what a body says of

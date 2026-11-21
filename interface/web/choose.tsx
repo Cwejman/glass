@@ -2,8 +2,8 @@
 // each a button saying its name, and what it says it draws. The pick is the chassis's to
 // keep: written into the use that named no component, where its store takes it.
 
-import { h } from "../../components/jsx.ts";
-import { isRef, ref, type Value } from "../../engine/next/read/values.ts";
+import { h } from "./jsx.ts";
+import { isRef, ref, type Value } from "../../engine/read/values.ts";
 import { applyingEach } from "./carried.ts";
 import type { Realization } from "./chassis.ts";
 

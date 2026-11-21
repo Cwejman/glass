@@ -24,7 +24,7 @@
 // every sentence whose text is unchanged.
 
 import { mouldOf, partsOf, references } from "../engine/moulds.ts";
-import { handles } from "../engine/next/uses/migrate.ts";
+import { handles } from "../engine/uses/migrate.ts";
 import { markedWriter, proseWriter } from "./prose.ts";
 import { authorsField, commitOf, type Holon } from "./field.ts";
 

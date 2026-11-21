@@ -13,7 +13,7 @@
 // What fitting needs of the field, each component's input and the holons a value refers
 // to with their types, is read through the engine, each holon once a page.
 
-import type { Engine } from "../../engine/next/engine.ts";
+import type { Engine } from "../../engine/engine.ts";
 import {
   fits,
   inputOf,
@@ -22,9 +22,9 @@ import {
   placeAs,
   type Kinds,
   type Known,
-} from "../../engine/next/read/input.ts";
-import { after, all, type Maybe } from "../../engine/next/read/maybe.ts";
-import { isRecord, ref, type Value } from "../../engine/next/read/values.ts";
+} from "../../engine/read/input.ts";
+import { after, all, type Maybe } from "../../engine/read/maybe.ts";
+import { isRecord, ref, type Value } from "../../engine/read/values.ts";
 import type { Holon } from "../../stores/store.ts";
 import { applying, type Glass } from "./carried.ts";
 

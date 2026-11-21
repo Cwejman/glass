@@ -1,1100 +1,929 @@
-// The engine over stores in memory, and, last, over the real stores in the repository.
+import { afterAll, describe, expect, test } from "bun:test";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { sameThread, workers } from "../runtime/runtime.ts";
+import { contentOf, hashOf, partOf } from "../stores/act.ts";
+import type { Act, Head, Holon, Store } from "../stores/store.ts";
+import { folderStorages } from "../stores/strata/storage/folder.ts";
+import { strata } from "../stores/strata/strata.ts";
+import { buffer } from "../stores/buffer/buffer.ts";
+import { begun as bufferBegun, typed } from "../stores/buffer/string.ts";
+import { engine, type Answer, type Committed, type Engine, type Read } from "./engine.ts";
+import type { Landed } from "./commit/land.ts";
 
-import { describe, expect, test } from "bun:test";
-import { memoryFiles, type Files } from "../integrations/glass/files.ts";
-import { act, commit, idAt, nextId, openStore, type Holon, type Store } from "../integrations/glass/store.ts";
-import { holonsOf, openStores } from "../integrations/glass/found.ts";
-import { startEngine, type Engine } from "./compat.ts";
-import type { Looking as Expression, Grouped } from "./compat.ts";
-import { bodyProblem, mouldProblem, type Mould } from "./moulds.ts";
+const made: string[] = [];
+afterAll(() => made.forEach((at) => rmSync(at, { recursive: true, force: true })));
 
-// A small pulled store: types, and a brief holding a paragraph that holds words,
-// the brief pointing at a note.
-let next = idAt(Date.parse("2026-01-01T00:00:00Z"));
-const mint = () => {
-  const made = next;
-  next = nextId(made);
-  return made;
-};
+const id = (n: number) => String(n).padStart(15, "0");
+const ref = (n: number) => ({ $ref: id(n) });
 
-const typeBrief = mint();
-const typeParagraph = mint();
-const typeWord = mint();
-const typeNote = mint();
-const typeFunction = mint();
-const brief = mint();
-const paragraph = mint();
-const wordA = mint();
-const wordB = mint();
-const lexeme = mint();
-const note = mint();
-const fn = Object.fromEntries(
-  [
-    "everything",
-    "type",
-    "children",
-    "parents",
-    "points",
-    "pointers",
-    "search",
-    "named",
-    "store",
-    "types",
-    "and",
-    "or",
-    "not",
-    "group",
-    "flat",
-    "since",
-  ].map((native) => [native, mint()]),
-);
-const ownFn = mint();
-
-const says = (shape: unknown, more = {}) => ({ says: "A field.", shape, ...more });
-const takes: Record<string, string[]> = {
-  type: ["set"],
-  children: ["set"],
-  parents: ["set"],
-  points: ["set"],
-  pointers: ["set"],
-  search: ["words"],
-  named: ["words"],
-  store: ["store"],
-  and: ["set", "sets"],
-  or: ["set", "sets"],
-  not: ["set"],
-  group: ["set", "axis"],
-  flat: ["set"],
-  since: ["store", "words"],
-};
-
-const pulledHolons: Holon[] = [
+// The language's store: the types function, store, use and the kinds of value, and the
+// natives these tests call.
+const natives = ["get", "map", "size", "log", "holon"];
+const fn = (name: string) => id(10 + natives.indexOf(name));
+const glass: Holon[] = [
   {
-    id: typeBrief,
-    instance: [],
-    name: "brief",
-    mould: { prose: says({ list: "ref" }, { holds: true }), about: says("ref", { optional: true }) },
-    body: {},
-  },
-  {
-    id: typeParagraph,
-    instance: [],
-    name: "paragraph",
-    mould: { words: says({ list: "ref" }, { holds: true }) },
-    body: {},
-  },
-  {
-    id: typeWord,
-    instance: [],
-    name: "word",
-    mould: { text: says("string"), lexeme: says("ref") },
-    body: {},
-  },
-  { id: typeNote, instance: [], name: "note", mould: { title: says("string") }, body: {} },
-  {
-    id: typeFunction,
+    id: id(1),
     instance: [],
     name: "function",
     mould: {
-      native: says("string", { optional: true }),
-      gives: says("expression", { optional: true }),
-      takes: says({ list: "string" }, { optional: true }),
+      native: { says: "its native", shape: "string", optional: true },
+      input: { says: "its placeholders", shape: { list: "ref" }, holds: true, optional: true },
+      reverse: { says: "the function it is the reverse of", shape: "ref", optional: true },
     },
     body: {},
   },
   {
-    id: brief,
-    instance: [typeBrief],
-    name: "A brief",
-    body: { prose: [{ $ref: paragraph }], about: { $ref: note } },
+    id: id(2),
+    instance: [],
+    name: "store",
+    mould: {
+      contents: { says: "what it holds", shape: { list: "ref" }, holds: true, optional: true },
+      shape: { says: "the shape its field keeps", shape: "ref", optional: true },
+    },
+    body: {},
   },
-  { id: paragraph, instance: [typeParagraph], body: { words: [{ $ref: wordA }, { $ref: wordB }] } },
-  { id: wordA, instance: [typeWord], body: { text: "Plain", lexeme: { $ref: lexeme } } },
-  { id: wordB, instance: [typeWord], body: { text: "words", lexeme: { $ref: lexeme } } },
-  { id: lexeme, instance: [typeWord], body: { text: "word", lexeme: { $ref: lexeme } } },
-  { id: note, instance: [typeNote], name: "A note", body: { title: "Standing apart" } },
-  ...Object.entries(fn).map(([native, id]) => ({
-    id,
-    instance: [typeFunction],
-    name: native,
-    body: { native, ...(takes[native] ? { takes: takes[native] } : {}) },
-  })),
+  { id: id(3), instance: [id(2)], name: "glass", body: {} },
   {
-    id: ownFn,
-    instance: [typeFunction],
-    name: "Briefs",
-    body: { gives: { call: { $ref: fn.type! }, with: [{ $ref: typeBrief }] } },
+    id: id(8),
+    instance: [],
+    name: "shape",
+    mould: { admits: { says: "the types it admits", shape: { set: "ref" }, optional: true } },
+    body: {},
   },
+  { id: id(4), instance: [], name: "value", mould: {}, body: {} },
+  {
+    id: id(5),
+    instance: [],
+    name: "use",
+    mould: {
+      fn: { says: "the function it applies", shape: "ref", optional: true },
+      args: { says: "what it gives the function", shape: "json" },
+    },
+    body: {},
+  },
+  { id: id(6), instance: [], name: "number", mould: {}, body: {} },
+  { id: id(7), instance: [], name: "string", mould: {}, body: {} },
+  ...natives.map((name) => ({ id: fn(name), instance: [id(1)], name, body: { native: name } })),
 ];
 
-const call = (native: string, ...given: (Expression | string)[]): Expression => ({
-  call: { $ref: fn[native]! },
-  ...(given.length ? { with: given } : {}),
-});
+// The notes store: its root, and the type note.
+const notes: Holon[] = [
+  {
+    id: id(100),
+    instance: [],
+    name: "note",
+    mould: { text: { says: "what it says", shape: "string" } },
+    body: {},
+  },
+  { id: id(101), instance: [id(2)], name: "notes", body: { contents: [{ $ref: id(100), $holds: true }] } },
+];
 
-async function pulledStore() {
-  const { store } = await commit(await openStore(memoryFiles()), { holons: pulledHolons, says: "pulled" });
-  return store;
-}
+// A read of uses of the natives, each carried under a handle after the holons given.
+type Using = (name: string, ...args: unknown[]) => { $ref: string; $holds: true };
 
-async function started() {
-  const pulled = await pulledStore();
-  const engine = startEngine([{ key: "home", store: await openStore(memoryFiles()), write: true }]);
-
-  await engine.attach("pulled", pulled);
-  return { engine, pulled };
-}
-
-const homeHolon = (engine: Engine, id: string) => engine.read({ holon: id });
-
-// A type of one's own committed, with the mould given, and what makes an instance of it:
-// the engine judges each, and reads back what it holds.
-async function typeOfMould(mould: unknown) {
-  const { engine } = await started();
-  const typed = (body: Holon["body"]) =>
-    engine.commit({ holons: [{ id: "~h", instance: [type], body }] as Holon[] });
-  const made = await engine.commit({
-    holons: [{ id: "~t", instance: [], name: "of one's own", mould, body: {} }] as Holon[],
-  });
-  const type = made.ids["~t"]!;
-
-  return { engine, typed };
-}
-
-const field = (says: string, shape: unknown, more = {}) => ({ says, shape, ...more });
-
-describe("references", () => {
-  test("a reference holds as it says, or as the mould says", async () => {
-    const { engine, typed } = await typeOfMould({
-      parts: field("Its parts.", { list: "ref" }, { holds: true }),
-      about: field("Of what.", "ref"),
-      held: field("One held.", "ref"),
-    });
-    const body = {
-      parts: [{ $ref: wordA }, { $ref: wordB, $holds: false }],
-      about: { $ref: note },
-      held: { $ref: lexeme, $holds: true },
-    };
-    const holder = (await typed(body)).ids["~h"]!;
-    const from = async (id: string) =>
-      (await engine.read({ holders: id }))
-        .filter(({ from }) => from === holder)
-        .map(({ key, holds }) => ({ id, key, holds }));
-
-    expect([
-      ...(await from(wordA)),
-      ...(await from(wordB)),
-      ...(await from(note)),
-      ...(await from(lexeme)),
-    ]).toEqual([
-      { id: wordA, key: "parts", holds: true },
-      { id: wordB, key: "parts", holds: false },
-      { id: note, key: "about", holds: false },
-      { id: lexeme, key: "held", holds: true },
-    ]);
-  });
-
-  test("a holon's parts are what it holds, in the order it holds them", async () => {
-    const { engine, typed } = await typeOfMould({
-      about: field("Of what.", "ref"),
-      prose: field("Its prose.", { list: "ref" }),
-    });
-    const body = {
-      about: { $ref: note },
-      prose: [
-        { $ref: wordA, $holds: true },
-        { $ref: wordB, $holds: true },
-      ],
-    };
-    const holder = (await typed(body)).ids["~h"]!;
-    const { holons } = await engine.read({ whole: holder });
-
-    expect(Object.keys(holons)).toEqual([holder, wordA, wordB]);
-  });
-});
-
-describe("moulds", () => {
-  const mould = {
-    title: { says: "Its title.", shape: "string" },
-    items: { says: "Its items.", shape: { list: "ref" }, optional: true },
-    span: { says: "From and to.", shape: { from: "ref", to: "ref" }, optional: true },
+function reading(build: (use: Using) => unknown, carried: Holon[] = []): Read {
+  const holons = [...carried];
+  const use: Using = (name, ...args) => {
+    holons.push({ id: `~${holons.length + 1}`, instance: [id(5)], body: { fn: { $ref: fn(name) }, args } });
+    return { $ref: `~${holons.length}`, $holds: true };
   };
+  return { gives: build(use), holons };
+}
 
-  test("a body is held against its types", async () => {
-    const { typed } = await typeOfMould(mould);
-    const sound = (body: Holon["body"]) => expect(typed(body)).resolves.toBeDefined();
+// A read of one use.
+const asking = (name: string, ...args: unknown[]) => reading((use) => use(name, ...args));
 
-    await sound({ title: "x" });
-    await sound({ title: "x", items: [{ $ref: note }] });
-    await sound({ title: "x", span: { from: { $ref: note }, to: { $ref: note } } });
+function folder() {
+  const at = mkdtempSync(join(tmpdir(), "glass-engine-"));
+  made.push(at);
+  return at;
+}
 
-    await expect(typed({})).rejects.toThrow("title is missing");
-    await expect(typed({ title: 1 })).rejects.toThrow("title is not string");
-    await expect(typed({ title: "x", extra: 1 })).rejects.toThrow("extra is not a field");
-    await expect(typed({ title: "x", items: "no" })).rejects.toThrow("items is not a list");
-    await expect(typed({ title: "x", items: ["no"] })).rejects.toThrow("items[0] is not ref");
+// A store begun with these holons, as one act, its root the one of the type store.
+async function begun(store: Store, holons: Holon[]) {
+  const root = holons.find(({ instance }) => instance.includes(id(2)))!.id;
+  const part = partOf(holons);
+  const said = {
+    when: "2026-11-16T00:00:00.000Z",
+    at: [] as Act["at"],
+    says: "begun",
+    gone: [],
+    parts: [[root, part && (await hashOf(part))]] as Act["parts"],
+  };
+  const reply = await store.offer({
+    ...said,
+    hash: await hashOf(contentOf(said)),
+    own: root,
+    holons,
+    born: holons.map(({ id }) => id),
+    over: null,
+    touches: { ids: holons.map(({ id }) => id), addresses: [] },
   });
+  if (!("accepted" in reply)) throw new Error(JSON.stringify(reply));
+}
 
-  test("a list may hold one item twice, a set may not", async () => {
-    const { typed } = await typeOfMould({
-      order: { says: "In order.", shape: { list: "ref" } },
-      among: { says: "Each once.", shape: { set: "ref" } },
-    });
-    const twice = [{ $ref: note }, { $ref: note }];
+// An engine on one thread over the two stores, glass only read and notes written.
+async function started(): Promise<Engine> {
+  const [language, written] = [strata(folderStorages(folder())), strata(folderStorages(folder()))];
+  await begun(language, glass);
+  await begun(written, notes);
 
-    await expect(typed({ order: twice, among: [{ $ref: note }] })).resolves.toBeDefined();
-    await expect(typed({ order: [], among: twice })).rejects.toThrow("among[1] is already in the set");
-    await expect(typed({ order: [], among: "no" })).rejects.toThrow("among is not a set");
-  });
+  const glassEngine = await engine({ workers: sameThread(), count: 2 });
+  await glassEngine.mount("glass", language);
+  await glassEngine.mount("notes", written, { write: true });
+  return glassEngine;
+}
 
-  test("a mould says each field in prose, with a shape there is", async () => {
-    const { engine } = await started();
-    const typeOf = (mould: unknown) =>
-      engine.commit({ holons: [{ id: "~t", instance: [], name: "judged", mould, body: {} }] as Holon[] });
+const landed = (committed: Committed) => {
+  if (!("landed" in committed)) throw new Error(JSON.stringify(committed));
+  return committed as Landed;
+};
 
-    await expect(typeOf(mould)).resolves.toBeDefined();
-    await expect(typeOf({ a: { shape: "string" } })).rejects.toThrow("says nothing");
-    await expect(typeOf({ a: { says: "x", shape: "nonsense" } })).rejects.toThrow("no shape");
-    await expect(typeOf("no")).rejects.toThrow("a set of fields");
-  });
-});
-
-describe("expressions", () => {
-  // An engine over the pulled store, and any others given, asked as the interface asks.
-  async function all(...others: [string, Store][]) {
-    const engine = startEngine([
-      { key: "pulled", store: await pulledStore() },
-      ...others.map(([key, store]) => ({ key, store })),
-    ]);
-    return engine;
-  }
-  const gather = (engine: Engine, expression: Expression) => engine.read({ gather: expression });
-  const level = (engine: Engine, expression: Expression) => engine.read({ level: expression });
-  const groups = (engine: Engine, expression: Expression) => engine.read({ groups: expression });
-
-  test("sets compose", async () => {
-    const a = await all();
-
-    expect(await gather(a, { $ref: note })).toEqual([note]);
-    expect(await gather(a, { $ref: "0".repeat(15) })).toEqual([]);
-    expect(await gather(a, call("type", { $ref: typeNote }))).toEqual([note]);
-    expect(await gather(a, call("children", { $ref: brief }))).toEqual([paragraph]);
-    expect(await gather(a, call("parents", { $ref: paragraph }))).toEqual([brief]);
-    expect(await gather(a, call("points", { $ref: brief }))).toEqual([note]);
-    expect(await gather(a, call("pointers", { $ref: note }))).toEqual([brief]);
-    expect(
-      await gather(
-        a,
-        call("and", call("type", { $ref: typeNote }), call("not", call("type", { $ref: typeBrief }))),
-      ),
-    ).toEqual([note]);
-    expect((await gather(a, call("or", { $ref: note }, { $ref: brief }))).sort()).toEqual(
-      [brief, note].sort(),
-    );
-    expect((await gather(a, call("store", "pulled"))).length).toBe(pulledHolons.length);
-    expect((await gather(a, call("types"))).length).toBe(5);
-  });
-
-  test("a search lands on what holds the words, never a word itself", async () => {
-    const a = await all();
-
-    expect(await gather(a, call("search", "plain words"))).toEqual([paragraph]);
-    expect(await gather(a, call("search", "standing"))).toEqual([note]);
-    expect(await gather(a, call("search", "nowhere to be found"))).toEqual([]);
-  });
-
-  test("what a holon is called is found by its name alone", async () => {
-    const a = await all();
-
-    expect(await gather(a, call("named", "note a"))).toEqual([note]);
-    expect(await gather(a, call("named", "standing"))).toEqual([]);
-  });
-
-  test("a function of one's own stands beside the natives", async () => {
-    expect(await gather(await all(), { call: { $ref: ownFn } })).toEqual([brief]);
-  });
-
-  test("what is wrongly called says so", async () => {
-    const a = await all();
-
-    await expect(gather(a, { arg: 0 })).rejects.toThrow("an argument");
-    await expect(gather(a, call("type"))).rejects.toThrow("takes set");
-    await expect(gather(a, call("store", { $ref: note }))).rejects.toThrow("takes a store");
-    await expect(gather(a, { call: { $ref: note } })).rejects.toThrow("not a function");
-    await expect(gather(a, call("group", { $ref: note }, "colour"))).rejects.toThrow("groups by");
-  });
-
-  test("a grouping gives collections that open as places of their own", async () => {
-    const a = await all();
-    const grouped = (await groups(a, call("group", call("not", call("types")), "type"))) as Grouped;
-
-    expect(grouped.by).toBe("type");
-    expect(grouped.groups.map(({ count }) => count)).toEqual(
-      grouped.groups.map(({ count }) => count).sort((x, y) => y - x),
-    );
-
-    const notes = grouped.groups.find(({ value }) => value === typeNote)!;
-
-    expect(notes.count).toBe(1);
-    expect(await gather(a, notes.gathers)).toEqual([note]);
-    expect(await groups(a, { $ref: note })).toBe(null);
-  });
-
-  test("a set looked at is seen at its level, what nothing in it holds", async () => {
-    const a = await all();
-    const set = call("or", ...[brief, paragraph, wordA, note].map(($ref) => ({ $ref })));
-
-    expect((await level(a, set)).sort()).toEqual([brief, note].sort());
-    expect(await gather(a, set)).toContain(wordA);
-  });
-
-  test("Flat is the deliberate way to see all of a set", async () => {
-    const a = await all();
-    const set = call("or", ...[brief, paragraph, wordA, note].map(($ref) => ({ $ref })));
-
-    expect((await level(a, call("flat", set))).sort()).toEqual([brief, paragraph, wordA, note].sort());
-  });
-
-  test("a set with nothing held within it is all its own level", async () => {
-    const a = await all();
-    const words = call("type", { $ref: typeWord });
-
-    expect((await level(a, words)).sort()).toEqual((await gather(a, words)).sort());
-  });
-
-  test("a store looked at is seen at its level", async () => {
-    const a = await all(["other", await openStore(memoryFiles())]);
-
-    expect(await groups(a, call("everything"))).toBe(null);
-
-    const pulled = call("store", "pulled");
-
-    expect(await gather(a, pulled)).toContain(wordA);
-    expect(await level(a, pulled)).toContain(brief);
-    expect(await level(a, pulled)).not.toContain(wordA);
-  });
-
-  test("a grouping takes an axis chosen; none is chosen for it", async () => {
-    const a = await all();
-
-    await expect(gather(a, call("group", call("types"), "auto"))).rejects.toThrow("groups by");
-    expect(
-      ((await groups(a, call("group", call("store", "pulled"), "parent"))) as Grouped).groups.some(
-        ({ value }) => value === paragraph,
-      ),
-    ).toBe(true);
-  });
+const note = (text: unknown, at = {}, more = {}) => ({
+  holons: [{ id: "~1", instance: [id(100)], body: { text } }] as Holon[],
+  says: "a note",
+  at,
+  ...more,
 });
 
 describe("the engine", () => {
-  test("since gives the holons a store's commits wrote after a moment, as its log says", async () => {
-    const was = pulledHolons.find(({ id }) => id === note)!;
-    const { store } = await commit(await pulledStore(), {
-      holons: [{ ...was, body: { title: "Moved" } }],
-      says: "the note said again",
-      at: "2999-01-01T00:00:00.000Z",
-    });
-    const engine = startEngine([{ key: "home", store: await openStore(memoryFiles()), write: true }]);
-    await engine.attach("pulled", store);
+  test("a change is judged, given its ids, landed, and read back", async () => {
+    const glassEngine = await started();
+    const committed = landed(await glassEngine.commit(note("Glass holds holons")));
+    const made = committed.ids["~1"]!;
 
-    const since = (moment: string) => engine.read({ value: call("since", "pulled", moment) });
-
-    expect(await since("2998-01-01T00:00:00.000Z")).toEqual([{ $ref: note }]);
-    expect(((await since("2000-01-01T00:00:00.000Z")) as unknown[]).length).toBe(pulledHolons.length);
-    expect(await since("3000-01-01T00:00:00.000Z")).toEqual([]);
-    expect(await engine.read({ gather: call("since", "pulled", "2998-01-01T00:00:00.000Z") })).toEqual([
-      note,
-    ]);
-    expect(await engine.read({ value: call("since", "nowhere", "2000-01-01T00:00:00.000Z") })).toEqual([]);
-  });
-
-  test("a holon is read with its store, block and types' names", async () => {
-    const { engine } = await started();
-    const read = await homeHolon(engine, brief);
-
-    expect(read?.store).toBe("pulled");
-    expect(read?.types).toEqual(["brief"]);
-    expect(read?.name).toBe("A brief");
-    expect(await homeHolon(engine, "0".repeat(15))).toBe(null);
-  });
-
-  test("a whole is one read, down its holdings and not its pointings", async () => {
-    const { engine } = await started();
-    const { root, holons } = await engine.read({ whole: brief });
-
-    expect(root).toBe(brief);
-    expect(Object.keys(holons).sort()).toEqual([brief, paragraph, wordA, wordB].sort());
-  });
-
-  test("a whole read to a depth is one level of the holarchy", async () => {
-    const { engine } = await started();
-    const { holons } = await engine.read({ whole: brief, depth: 1 });
-
-    expect(Object.keys(holons).sort()).toEqual([brief, paragraph].sort());
-  });
-
-  test("a whole can stop at what it is told, read but not gone into", async () => {
-    const { engine } = await started();
-    const { holons } = await engine.read({ whole: brief, stop: ["paragraph"] });
-
-    expect(Object.keys(holons).sort()).toEqual([brief, paragraph].sort());
-  });
-
-  test("reading one holon fetches one block, and nothing of what stands beside it", async () => {
-    const pulled = await pulledStore();
-    const files = pulled.files as ReturnType<typeof memoryFiles>;
-    const asked: string[] = [];
-    const counting = { ...files, read: (path: string) => (asked.push(path), files.read(path)) };
-    const engine = startEngine([{ key: "home", store: await openStore(memoryFiles()), write: true }]);
-
-    await engine.attach("pulled", await openStore(counting));
-    await engine.read({ holon: note });
-
-    expect(asked.filter((path) => path.startsWith("blocks/")).length).toBe(1);
-  });
-
-  test("a commit lands in the home, with handles given names as it lands", async () => {
-    const { engine } = await started();
-    const { ids } = await engine.commit({
-      holons: [
-        { id: "~a", instance: [typeNote], name: "Mine", body: { title: "First" } },
-        { id: "~b", instance: [typeBrief], body: { prose: [{ $ref: "~a" }], about: { $ref: note } } },
-      ] as Holon[],
+    expect(Object.keys(committed.landed)).toEqual(["notes"]);
+    expect(await glassEngine.read(asking("get", { $ref: made }, "text"))).toMatchObject({
+      value: "Glass holds holons",
     });
 
-    const mine = await homeHolon(engine, ids["~a"]!);
-    const holder = await homeHolon(engine, ids["~b"]!);
-
-    expect(mine?.store).toBe("home");
-    expect(mine?.name).toBe("Mine");
-    expect(holder?.body.prose).toEqual([{ $ref: ids["~a"]! }]);
-
-    expect(await engine.read({ named: "Mine", store: "home" })).toEqual([ids["~a"]!]);
-  });
-
-  test("a commit is judged, and nothing lands when it is wrong", async () => {
-    const { engine } = await started();
-
-    await expect(
-      engine.commit({ holons: [{ id: note, instance: [typeNote], body: { title: "Taken" } }] }),
-    ).rejects.toThrow("only read");
-    await expect(
-      engine.commit({ holons: [{ id: "~a", instance: [], body: {} }] as Holon[] }),
-    ).rejects.toThrow("instance of nothing");
-    await expect(
-      engine.commit({ holons: [{ id: "~a", instance: [note], body: {} }] as Holon[] }),
-    ).rejects.toThrow("not a type");
-    await expect(
-      engine.commit({ holons: [{ id: "~a", instance: [typeNote], body: { title: 1 } }] as Holon[] }),
-    ).rejects.toThrow("not string");
-    await expect(
-      engine.commit({
-        holons: [{ id: "~a", instance: [typeNote], body: { title: "x", more: 1 } }] as Holon[],
-      }),
-    ).rejects.toThrow("not a field");
-    await expect(
-      engine.commit({
-        holons: [{ id: "~a", instance: [typeBrief], body: { prose: [{ $ref: "0".repeat(15) }] } }] as Holon[],
-      }),
-    ).rejects.toThrow("not in the field");
-    await expect(
-      engine.commit({
-        holons: [{ id: "~a", instance: [typeBrief], body: { prose: [{ $ref: "~z" }] } }] as Holon[],
-      }),
-    ).rejects.toThrow("names nothing");
-    await expect(
-      engine.commit({
-        holons: [{ id: "~a", instance: [], mould: { a: { shape: "string" } }, body: {} }] as Holon[],
-      }),
-    ).rejects.toThrow("says nothing");
-
-    expect(await engine.read({ log: "home" })).toEqual([]);
-  });
-
-  test("nothing left may point at what a commit takes out", async () => {
-    const { engine } = await started();
-    const { ids } = await engine.commit({
-      holons: [
-        { id: "~a", instance: [typeNote], body: { title: "One" } },
-        { id: "~b", instance: [typeBrief], body: { prose: [{ $ref: "~a" }] } },
-      ] as Holon[],
-    });
-
-    await expect(engine.commit({ holons: [], gone: [ids["~a"]!] })).rejects.toThrow("still refers");
-
-    await engine.commit({ holons: [], gone: [ids["~a"]!, ids["~b"]!] });
-    expect(await homeHolon(engine, ids["~a"]!)).toBe(null);
-  });
-
-  test("text may begin as it likes, and only names are handles", async () => {
-    const { engine } = await started();
-    const { ids } = await engine.commit({
-      holons: [
-        { id: "~1", instance: [typeNote], name: "~odd", body: { title: "~1" } },
-        { id: "~2", instance: [typeNote], body: { title: "~5 km" } },
-      ] as Holon[],
-    });
-
-    expect(await homeHolon(engine, ids["~1"]!)).toMatchObject({ name: "~odd", body: { title: "~1" } });
-    expect(await homeHolon(engine, ids["~2"]!)).toMatchObject({ body: { title: "~5 km" } });
-  });
-
-  test("a reference must lead to a holon, not only to a moment some store holds", async () => {
-    const { engine } = await started();
-    const madeUp = nextId(nextId(ownFn));
-
-    await expect(
-      engine.commit({
-        holons: [{ id: "~a", instance: [typeBrief], body: { prose: [{ $ref: madeUp }] } }] as Holon[],
-      }),
-    ).rejects.toThrow("not in the field");
-  });
-
-  test("a type cannot be taken out from under its instances", async () => {
-    const { engine } = await started();
-    const says = { a: { says: "A field.", shape: "string", optional: true } };
-    const { ids } = await engine.commit({
-      holons: [
-        { id: "~t", instance: [], name: "kind of mine", mould: says, body: {} },
-        { id: "~i", instance: ["~t"], body: {} },
-      ] as Holon[],
-    });
-
-    await expect(engine.commit({ holons: [], gone: [ids["~t"]!] })).rejects.toThrow("still refers");
-  });
-
-  test("a failure to read is not kept", async () => {
-    const pulled = await pulledStore();
-    const files = pulled.files as ReturnType<typeof memoryFiles>;
-    let down = false;
-    const flaky = {
-      ...files,
-      read: (path: string) =>
-        down && path.startsWith("blocks/")
-          ? Promise.reject(new Error("the network is down"))
-          : files.read(path),
+    // Held by nothing in the change, it goes into the store's root.
+    const contents = (await glassEngine.read(asking("get", ref(101), "contents"))) as Answer & {
+      value: unknown[];
     };
-    const engine = startEngine([{ key: "home", store: await openStore(memoryFiles()), write: true }]);
-
-    await engine.attach("pulled", await openStore(flaky));
-
-    down = true;
-    await expect(engine.read({ named: "A note", store: "pulled" })).rejects.toThrow("network");
-
-    down = false;
-    expect(await engine.read({ named: "A note", store: "pulled" })).toEqual([note]);
+    expect(contents.value).toContainEqual({ $ref: made });
   });
 
-  test("a holon two stores keep is read from the first, and resides in both", async () => {
-    const pulled = await pulledStore();
-    const other = await pulledStore();
-    const engine = startEngine([{ key: "home", store: await openStore(memoryFiles()), write: true }]);
+  test("a read answers with the heads of the stores it read", async () => {
+    const glassEngine = await started();
+    const answer = await glassEngine.read(asking("get", ref(100), "name"));
 
-    await engine.attach("first", pulled);
-    await engine.attach("second", other);
-
-    expect((await engine.read({ holon: note }))?.store).toBe("first");
-    expect(await engine.read({ named: "A note", store: "second" })).toEqual([note]);
-    expect((await engine.read({ gather: call("store", "first") })).length).toBe(pulledHolons.length);
-    // It resides in both, none first: read from the first, found in each.
-    expect((await engine.read({ gather: call("store", "second") })).length).toBe(pulledHolons.length);
+    expect(Object.keys(answer.at).sort()).toEqual(["glass", "notes"]);
+    expect(answer.at.notes).toHaveProperty("commit");
   });
 
-  test("the field changes with a commit, and listeners hear of it", async () => {
-    const { engine } = await started();
-    let told = 0;
-    const stop = engine.onChange(() => told++);
+  test("a subscriber is answered again when a store it read moves", async () => {
+    const glassEngine = await started();
+    const heard: unknown[] = [];
+    const { promise, resolve } = Promise.withResolvers<void>();
 
-    await engine.read({ gather: call("everything") });
-    const before = (await engine.read({ gather: call("everything") })).length;
-
-    const { ids } = await engine.commit({
-      holons: [{ id: "~a", instance: [typeNote], body: { title: "New" } }] as Holon[],
+    const stop = await glassEngine.subscribe(asking("get", ref(101), "contents"), (answer) => {
+      heard.push("value" in answer ? (answer.value as unknown[]).length : answer.problem);
+      if (heard.length === 2) resolve();
     });
-
-    expect(told).toBe(1);
-    expect(await engine.read({ gather: call("everything") })).toContain(ids["~a"]!);
-    expect((await engine.read({ gather: call("everything") })).length).toBe(before + 1);
-
+    await glassEngine.commit(note("heard"));
+    await promise;
     stop();
-    await engine.commit({
-      holons: [{ id: "~b", instance: [typeNote], body: { title: "Unheard" } }] as Holon[],
+
+    expect(heard).toEqual([1, 2]);
+  });
+
+  test("a subscriber hears its answers one at a time, in order, the last at the latest heads", async () => {
+    const glassEngine = await started();
+    const heard: number[] = [];
+    let last: (() => void) | undefined;
+
+    const stop = await glassEngine.subscribe(asking("get", ref(101), "contents"), (answer) => {
+      heard.push("value" in answer ? (answer.value as unknown[]).length : -1);
+      if (heard.at(-1) === 5) last?.();
     });
-    expect(told).toBe(1);
+    const done = new Promise<void>((resolve) => (last = resolve));
+    await Promise.all([1, 2, 3, 4].map((n) => glassEngine.commit(note(`note ${n}`))));
+    await done;
+    stop();
+
+    expect(heard).toEqual([...heard].sort((a, b) => a - b));
+    expect(heard.at(-1)).toBe(5);
   });
 
-  test("an edit is a new version, its history readable", async () => {
-    const { engine } = await started();
-    const { ids } = await engine.commit({
-      holons: [{ id: "~a", instance: [typeNote], body: { title: "One" } }] as Holon[],
+  test("a change breaking a rule is refused with every problem, said by its handles", async () => {
+    const glassEngine = await started();
+    const committed = await glassEngine.commit(note(5));
+
+    expect(committed).toMatchObject({ refused: [{ rule: "bodyFits", id: "~1" }] });
+  });
+
+  test("untyped data is not wrong: a whole of no type lands, and is changed", async () => {
+    const glassEngine = await started();
+    const whole = (holds: unknown[], id = "~1") => ({
+      holons: [{ id, instance: [], name: "kept", body: { holds } }] as Holon[],
+      says: "a whole of no type",
+      at: {},
     });
-    const id = ids["~a"]!;
+    const { ids } = landed(await glassEngine.commit(whole([])));
 
-    await engine.commit({ holons: [{ id, instance: [typeNote], body: { title: "Two" } }] });
-
-    expect((await homeHolon(engine, id))?.body.title).toBe("Two");
-    expect((await engine.read({ versions: id })).map(({ body }) => body.title)).toEqual(["Two", "One"]);
-    expect((await engine.read({ log: "home" }))?.length).toBe(2);
+    expect("landed" in (await glassEngine.commit(whole([ref(100)], ids["~1"]!)))).toBe(true);
   });
 
-  test("the same store cannot be attached twice under one key", async () => {
-    const { engine, pulled } = await started();
-    await expect(engine.attach("pulled", pulled)).rejects.toThrow("already attached");
+  test("nothing goes into a store only read", async () => {
+    const glassEngine = await started();
+    const committed = await glassEngine.commit(note("not here", {}, { into: "glass" }));
+
+    expect(committed).toMatchObject({
+      refused: [
+        { rule: "readOnlyRefuses", id: "~1", says: "it cannot go into glass, which is only read" },
+        { rule: "readOnlyRefuses", id: id(3), says: "it belongs to glass, which is only read" },
+      ],
+    });
   });
+
+  test("a head at gives must be one its store has had", async () => {
+    const glassEngine = await started();
+    const committed = await glassEngine.commit(
+      note("seen", { notes: { act: "0".repeat(64), commit: "0".repeat(64) } }),
+    );
+
+    expect(committed).toMatchObject({ refused: [{ rule: "at" }] });
+  });
+
+  test("strict, a change is refused if what it touches moved since its at; else it is taken", async () => {
+    const glassEngine = await started();
+    const made = landed(await glassEngine.commit(note("first"))).ids["~1"]!;
+    const { at } = await glassEngine.read(asking("get", { $ref: made }, "text"));
+
+    const edit = (text: string, strict: boolean) => ({
+      holons: [{ id: made, instance: [id(100)], body: { text } }] as Holon[],
+      says: "an edit",
+      at,
+      strict,
+    });
+
+    landed(await glassEngine.commit(edit("second", false)));
+    expect(await glassEngine.commit(edit("third", true))).toMatchObject({
+      refused: [{ rule: "strict", id: made }],
+    });
+    landed(await glassEngine.commit(edit("third", false)));
+    expect(await glassEngine.read(asking("get", { $ref: made }, "text"))).toMatchObject({
+      value: "third",
+    });
+  });
+
+  test("a commit keeps the heads its change was made from, of the stores it touches alone", async () => {
+    const glassEngine = await started();
+    const { at } = await glassEngine.read(asking("get", ref(100), "name"));
+    landed(await glassEngine.commit(note("seen", at)));
+    landed(await glassEngine.commit(note("unseen")));
+
+    const log = (await glassEngine.read(asking("log", "notes"))) as Answer & {
+      value: { says: string; at: unknown[] }[];
+    };
+    expect(log.value[0]!.at).toEqual([]);
+    expect(log.value[1]!.at).toEqual([{ store: ref(101), head: at.notes }]);
+  });
+
+  test("changes that touch the same holon take turns, and both land", async () => {
+    const glassEngine = await started();
+    const made = landed(await glassEngine.commit(note("first"))).ids["~1"]!;
+    const edit = (text: string) => ({
+      holons: [{ id: made, instance: [id(100)], body: { text } }] as Holon[],
+      says: text,
+      at: {},
+    });
+
+    const both = await Promise.all([glassEngine.commit(edit("a")), glassEngine.commit(edit("b"))]);
+    both.forEach(landed);
+    expect(await glassEngine.read(asking("get", { $ref: made }, "text"))).toMatchObject({
+      value: "b",
+    });
+  });
+
+  test("on workers, with the stores reached over the wire, it reads and commits the same", async () => {
+    const [languageAt, writtenAt] = [folder(), folder()];
+    await begun(strata(folderStorages(languageAt)), glass);
+    await begun(strata(folderStorages(writtenAt)), notes);
+
+    const runtime = workers();
+    const storeCode = new URL("../stores/strata/machine.ts", import.meta.url);
+    const glassEngine = await engine({ workers: runtime, count: 2 });
+    await glassEngine.mount("glass", await runtime.run<Store>(storeCode, { folder: languageAt }));
+    await glassEngine.mount("notes", await runtime.run<Store>(storeCode, { folder: writtenAt }), {
+      write: true,
+    });
+
+    const made = landed(await glassEngine.commit(note("over the wire"))).ids["~1"]!;
+    expect(await glassEngine.read(asking("get", { $ref: made }, "text"))).toMatchObject({
+      value: "over the wire",
+    });
+
+    await glassEngine.unmount("glass");
+    await glassEngine.unmount("notes");
+  }, 20_000);
 });
 
-describe("attachments", () => {
-  const empty = () => openStore(memoryFiles());
-  const noteOf = (id: string, title: string): Holon => ({ id, instance: [typeNote], body: { title } });
+// A store as another, with some of its methods answering otherwise.
+const otherwise = (store: Store, methods: Partial<Store>): Store => ({ ...store, ...methods });
 
-  async function engineOf(...writable: string[]) {
-    const stores = await Promise.all(
-      writable.map(async (key) => ({ key, store: await empty(), write: true })),
-    );
-    return startEngine([...stores, { key: "pulled", store: await pulledStore() }]);
-  }
+// An engine on one thread over glass, read, and notes, written, with more stores mounted
+// beside them as given, and how many workers.
+async function startedWith(more: Record<string, Store> = {}, count = 2, write = false) {
+  const [language, written] = [strata(folderStorages(folder())), strata(folderStorages(folder()))];
+  await begun(language, glass);
+  await begun(written, notes);
 
-  const storeOf = async (engine: Engine, id: string) => (await engine.read({ holon: id }))?.store;
+  const glassEngine = await engine({ workers: sameThread(), count });
+  await glassEngine.mount("glass", language);
+  await glassEngine.mount("notes", written, { write: true });
+  for (const [name, store] of Object.entries(more)) await glassEngine.mount(name, store, { write });
+  return glassEngine;
+}
 
-  test("an engine keeps no store of its own, and writes only where it was let", async () => {
-    const engine = startEngine([{ key: "pulled", store: await pulledStore() }]);
+// The head a store stands at now.
+const strataHead = async (store: Store) => {
+  let head: Head | null = null;
+  (await store.subscribe((now) => (head = now)))();
+  return head as Head | null;
+};
 
-    expect((await engine.read({ holon: note }))?.store).toBe("pulled");
-    await expect(engine.commit({ holons: [noteOf("~1", "nowhere")] })).rejects.toThrow("into which store");
-    await expect(engine.commit({ holons: [noteOf(note, "edited")] })).rejects.toThrow("only read");
-  });
+// A second written store, its root the one of the type store, holding one note.
+const more: Holon[] = [
+  { id: id(301), instance: [id(2)], name: "more", body: { contents: [{ $ref: id(302), $holds: true }] } },
+  { id: id(302), instance: [id(100)], body: { text: "kept in more" } },
+];
 
-  test("a holon nothing holds goes where the commit says, or to the one store that may be written", async () => {
-    const one = await engineOf("a");
-    const { ids } = await one.commit({ holons: [noteOf("~1", "into a")] });
-    expect(await storeOf(one, ids["~1"]!)).toBe("a");
+async function moreStore() {
+  const store = strata(folderStorages(folder()));
+  await begun(store, more);
+  return store;
+}
 
-    const two = await engineOf("a", "b");
-    await expect(two.commit({ holons: [noteOf("~1", "where")] })).rejects.toThrow("into which store");
+// A change editing a note in notes and the note in more, as one commit.
+const across = (made: string, text: string) => ({
+  holons: [
+    { id: made, instance: [id(100)], body: { text } },
+    { id: id(302), instance: [id(100)], body: { text } },
+  ] as Holon[],
+  says: "across",
+  at: {},
+});
 
-    const into = await two.commit({ holons: [noteOf("~1", "into b")], into: "b" });
-    expect(await storeOf(two, into.ids["~1"]!)).toBe("b");
-  });
+const failing = () => Promise.reject(new Error("the storage is gone"));
 
-  test("the engine mints what is new, one run in the store, and nothing lands as moved", async () => {
-    const engine = await engineOf("a");
-    const { ids } = await engine.commit({ holons: [noteOf("~1", "one"), noteOf("~2", "two")] });
-    const [line] = (await engine.read({ log: "a" }))!;
+describe("when things go wrong", () => {
+  test("a store failing a read fails that read with its problem, and the engine reads on", async () => {
+    let broken = true;
+    const store = await moreStore();
+    const glassEngine = await startedWith({
+      more: otherwise(store, { read: (head, question) => (broken ? failing() : store.read(head, question)) }),
+    });
 
-    expect(line!.blocks.map(({ first, new: count, moved }) => ({ first, count, moved }))).toEqual([
-      { first: ids["~1"]!, count: 2, moved: [] },
+    const answer = await Promise.race([
+      glassEngine.read(asking("get", ref(100), "name")),
+      Bun.sleep(2_000).then(() => ({ problem: "no answer within 2 s" })),
     ]);
-    expect(ids["~2"]).toBe(nextId(ids["~1"]!));
+    expect(answer).toMatchObject({ problem: expect.stringContaining("the storage is gone") });
+
+    broken = false;
+    expect(await glassEngine.read(asking("get", ref(100), "name"))).toMatchObject({ value: "note" });
   });
 
-  test("an id no store keeps, and the engine did not give, is refused", async () => {
-    const engine = await engineOf("a");
-    const madeUp = idAt(Date.parse("2026-11-12T00:00:00Z"));
+  test("a commit across two stores, one taking it and one refusing, says where it landed and what the other answered", async () => {
+    const store = await moreStore();
+    const refusing = otherwise(store, {
+      offer: async () => ({ refused: [{ rule: "full", says: "this store takes nothing more" }] }),
+    });
+    const glassEngine = await startedWith({ more: refusing }, 2, true);
+    const made = landed(await glassEngine.commit(note("first", {}, { into: "notes" }))).ids["~1"]!;
 
-    await expect(engine.commit({ holons: [noteOf(madeUp, "minted elsewhere")] })).rejects.toThrow(
-      "the engine did not give it",
-    );
-    expect(await engine.read({ log: "a" })).toEqual([]);
+    const committed = landed(await glassEngine.commit(across(made, "both")));
+    expect(Object.keys(committed.landed)).toEqual(["notes"]);
+    expect(committed.missed).toEqual({
+      more: { refused: [{ rule: "full", says: "this store takes nothing more" }] },
+    });
+    expect(await glassEngine.read(asking("get", { $ref: made }, "text"))).toMatchObject({
+      value: "both",
+    });
   });
 
-  test("a reference that is no id is refused", async () => {
-    const engine = await engineOf("a");
+  test("a commit across two stores, one failing as it is offered, still says where it landed", async () => {
+    const store = await moreStore();
+    const glassEngine = await startedWith({ more: otherwise(store, { offer: failing }) }, 2, true);
+    const made = landed(await glassEngine.commit(note("first", {}, { into: "notes" }))).ids["~1"]!;
 
-    await expect(
-      engine.commit({
-        holons: [{ id: "~1", instance: [typeBrief], body: { prose: [{ $ref: "garbage" }] } }],
+    const committed = landed(await glassEngine.commit(across(made, "both")));
+    expect(Object.keys(committed.landed)).toEqual(["notes"]);
+    expect(committed.missed).toEqual({ more: { failed: "the storage is gone" } });
+  });
+
+  test("a store answering changed every time has the change refused after three judgings", async () => {
+    let offered = 0;
+    const store = await moreStore();
+    const glassEngine = await startedWith({}, 2);
+    const { at } = await glassEngine.read(asking("get", ref(302), "text"));
+
+    // more answers every offer as changed, at a head it has had.
+    const head = (await strataHead(store))!;
+    await glassEngine.mount(
+      "more",
+      otherwise(store, {
+        offer: async () => {
+          offered++;
+          return { changed: head };
+        },
       }),
-    ).rejects.toThrow("which is not an id");
-  });
-
-  test("what goes must be kept", async () => {
-    const engine = await engineOf("a");
-    const madeUp = idAt(Date.parse("2026-11-12T00:00:00Z"));
-
-    await expect(engine.commit({ holons: [], gone: [madeUp] })).rejects.toThrow("so it cannot go");
-  });
-
-  test("a change is judged without being written, every problem at once", async () => {
-    const engine = await engineOf("a");
-    const problems = await engine.judge({
-      holons: [
-        { id: "~1", instance: [], body: {} },
-        { id: "~2", instance: [typeNote], body: { title: 1 } },
-      ],
-    });
-
-    expect(problems.map(({ rule, id }) => [rule, id])).toEqual([
-      ["typedOrAType", "~1"],
-      ["bodyFits", "~2"],
-    ]);
-    expect(await engine.read({ log: "a" })).toEqual([]);
-  });
-
-  test("a new holon resides where the whole that holds it is", async () => {
-    const engine = await engineOf("a", "b");
-    const whole = (
-      await engine.commit({
-        holons: [{ id: "~whole", instance: [typeBrief], body: { prose: [] } }],
-        into: "b",
-      })
-    ).ids["~whole"]!;
-
-    const { ids } = await engine.commit({
-      holons: [
-        { id: whole, instance: [typeBrief], body: { prose: [{ $ref: "~part" }] } },
-        { id: "~part", instance: [typeParagraph], body: { words: [{ $ref: wordA }] } },
-      ],
-    });
-
-    expect(await storeOf(engine, ids["~part"]!)).toBe("b");
-  });
-
-  test("a commit that changes nothing, or writes where it may not, is refused, and the engine goes on", async () => {
-    const engine = await engineOf("a");
-    let heard = 0;
-    engine.onChange(() => heard++);
-
-    await expect(engine.commit({ holons: [] })).rejects.toThrow("changes nothing");
-    await expect(engine.commit({ holons: [noteOf(note, "edited")] })).rejects.toThrow(
-      "belongs to pulled, which is only read",
+      { write: true },
     );
-    await expect(engine.commit({ holons: [noteOf("~1", "x")], into: "pulled" })).rejects.toThrow(
-      "cannot go into pulled",
-    );
-    expect(heard).toBe(0);
 
-    const { ids } = await engine.commit({ holons: [noteOf("~1", "after")] });
-    expect(await storeOf(engine, ids["~1"]!)).toBe("a");
-  });
-
-  test("an edit is written where the holon is kept, as one act in every store it touches", async () => {
-    const engine = await engineOf("a", "b");
-    const inA = (await engine.commit({ holons: [noteOf("~1", "a")], into: "a" })).ids["~1"]!;
-    const inB = (await engine.commit({ holons: [noteOf("~1", "b")], into: "b" })).ids["~1"]!;
-
-    const { commit: done } = await engine.commit({
-      holons: [noteOf(inA, "a again"), noteOf(inB, "b again")],
+    expect(at).not.toHaveProperty("more");
+    expect(await glassEngine.commit(note("never", {}, { into: "more" }))).toMatchObject({
+      refused: [{ rule: "changed" }],
     });
-    const lastAct = async (key: string) =>
-      ((await engine.read({ log: key })) as { act: string }[]).at(-1)!.act;
-
-    expect(await lastAct("a")).toBe(done);
-    expect(await lastAct("b")).toBe(done);
-    expect((await engine.read({ holon: inA }))?.body.title).toBe("a again");
+    expect(offered).toBe(3);
   });
 
-  test("a holon kept in two stores is written in both", async () => {
-    const shared = noteOf(idAt(Date.parse("2026-11-11T00:00:00Z"), 0), "shared");
-    const { stores } = await act(
-      [
-        { store: await empty(), name: "a", holons: [shared] },
-        { store: await empty(), name: "b", holons: [shared] },
-      ],
-      { says: "kept in both", born: [shared.id] },
-    );
-    const engine = startEngine([
-      { key: "a", store: stores[0]!, write: true },
-      { key: "b", store: stores[1]!, write: true },
-      { key: "pulled", store: await pulledStore() },
-    ]);
+  test("a subscriber standing on a store unmounted is answered again without it", async () => {
+    const glassEngine = await startedWith({ more: await moreStore() });
+    const heard: string[][] = [];
+    const { promise, resolve } = Promise.withResolvers<void>();
 
-    await engine.commit({ holons: [noteOf(shared.id, "said again")] });
-
-    for (const store of [stores[0]!, stores[1]!]) {
-      const now = await openStore(store.files);
-      expect((await now.read(shared.id))?.version.body.title).toBe("said again");
-    }
-  });
-
-  test("a holon nothing holds, landing in a store with a root, joins what the root holds", async () => {
-    const at = Date.parse("2026-11-11T00:00:00Z");
-    const storeType: Holon = {
-      id: idAt(at, 0),
-      instance: [],
-      name: "store",
-      mould: { contents: { says: "What it holds.", shape: { set: "ref" }, holds: true } },
-      body: {},
-    };
-    const root: Holon = {
-      id: idAt(at, 1),
-      instance: [storeType.id],
-      name: "a",
-      body: { contents: [{ $ref: storeType.id }] },
-    };
-    const { store } = await commit(await empty(), { holons: [storeType, root], says: "rooted" });
-    const engine = startEngine([
-      { key: "a", store, write: true },
-      { key: "pulled", store: await pulledStore() },
-    ]);
-
-    const { ids } = await engine.commit({ holons: [noteOf("~1", "loose")] });
-    const contents = (await engine.read({ holon: root.id }))!.body.contents as { $ref: string }[];
-
-    expect(contents.map(({ $ref }) => $ref)).toEqual([storeType.id, ids["~1"]!]);
-  });
-
-  test("a holon nothing holds joins the root the change itself says", async () => {
-    const at = Date.parse("2026-11-11T00:00:00Z");
-    const storeType: Holon = {
-      id: idAt(at, 0),
-      instance: [],
-      name: "store",
-      mould: { contents: { says: "What it holds.", shape: { set: "ref" }, holds: true } },
-      body: {},
-    };
-    const root: Holon = { id: idAt(at, 1), instance: [storeType.id], name: "a", body: { contents: [] } };
-    const { store } = await commit(await empty(), { holons: [storeType, root], says: "rooted" });
-    const engine = startEngine([
-      { key: "a", store, write: true },
-      { key: "pulled", store: await pulledStore() },
-    ]);
-
-    const { ids } = await engine.commit({ holons: [{ ...root, name: "a, renamed" }, noteOf("~1", "loose")] });
-    const now = (await engine.read({ holon: root.id }))!;
-
-    expect(now.name).toBe("a, renamed");
-    expect(now.body.contents).toEqual([{ $ref: ids["~1"]! }]);
-  });
-
-  test("a store only read is taken again as it now stands, and one written never is", async () => {
-    const engine = await engineOf("a");
-    let heard = 0;
-    engine.onChange(() => heard++);
-
-    const { store: newer } = await commit(await pulledStore(), {
-      holons: [noteOf(note, "published since")],
-      says: "published since",
+    const stop = await glassEngine.subscribe(asking("get", ref(302), "text"), (answer) => {
+      heard.push(Object.keys(answer.at).sort());
+      if (heard.length === 2) resolve();
     });
-    await engine.renew("pulled", newer);
+    await Bun.sleep(50);
+    await glassEngine.unmount("more");
+    await promise;
+    stop();
 
-    expect((await engine.read({ holon: note }))?.body.title).toBe("published since");
-    expect(heard).toBe(1);
-    await expect(engine.renew("a", newer)).rejects.toThrow("is written here");
-  });
-
-  test("what goes leaves every store that keeps it, and nothing left may point at it", async () => {
-    const engine = await engineOf("a");
-    const kept = (await engine.commit({ holons: [noteOf("~1", "to go")] })).ids["~1"]!;
-    const pointing = await engine.commit({
-      holons: [{ id: "~1", instance: [typeBrief], body: { prose: [], about: { $ref: kept } } }],
-    });
-
-    await expect(engine.commit({ holons: [], gone: [kept] })).rejects.toThrow("would be gone");
-    await engine.commit({ holons: [], gone: [kept, pointing.ids["~1"]!] });
-    expect(await engine.read({ holon: kept })).toBe(null);
-  });
-
-  // Stores a and b in memory, b's ref or log refusing to be written while cut is set, as
-  // a crash there would leave it, with a note committed into each.
-  async function cutAt(path: string) {
-    const [a, b] = [memoryFiles(), memoryFiles()];
-    let cut = false;
-    const cuts = (at: string) => cut && at.startsWith(path);
-    const cutB: Files = {
-      ...b,
-      append: (at, text) => (cuts(at) ? Promise.reject(new Error("cut")) : b.append(at, text)),
-      replace: (at, text) => (cuts(at) ? Promise.reject(new Error("cut")) : b.replace(at, text)),
-    };
-    const engine = startEngine([
-      { key: "a", store: await openStore(a), write: true },
-      { key: "b", store: await openStore(cutB), write: true },
-      { key: "pulled", store: await pulledStore() },
+    expect(heard).toEqual([
+      ["glass", "more", "notes"],
+      ["glass", "notes"],
     ]);
-    const inA = (await engine.commit({ holons: [noteOf("~1", "a")], into: "a" })).ids["~1"]!;
-    const inB = (await engine.commit({ holons: [noteOf("~1", "b")], into: "b" })).ids["~1"]!;
-
-    cut = true;
-    await expect(
-      engine.commit({ holons: [noteOf(inA, "a again"), noteOf(inB, "b again")], says: "both" }),
-    ).rejects.toThrow("cut");
-    cut = false;
-
-    return { a, b, engine, inA, inB };
-  }
-
-  const lastAct = async (engine: Engine, key: string) =>
-    ((await engine.read({ log: key })) as { act: string; says: string }[]).at(-1);
-
-  test("an act cut short among its refs is finished at the next commit, where every store it names is attached", async () => {
-    const { engine, inB } = await cutAt("refs/");
-    expect((await lastAct(engine, "a"))?.says).toBe("both");
-    expect((await engine.read({ holon: inB }))?.body.title).toBe("b");
-
-    await engine.commit({ holons: [noteOf("~1", "after")], into: "a" });
-
-    const both = ((await engine.read({ log: "a" })) as { act: string }[]).at(-2)!.act;
-    expect((await lastAct(engine, "b"))?.act).toBe(both);
-    expect((await engine.read({ holon: inB }))?.body.title).toBe("b again");
-  });
-
-  test("an act cut short waits, and its stores refuse writes, while a store it names is not attached", async () => {
-    const { a, b, inB } = await cutAt("refs/");
-    const alone = startEngine([
-      { key: "b", store: await openStore(b), write: true },
-      { key: "pulled", store: await pulledStore() },
-    ]);
-
-    await expect(alone.commit({ holons: [noteOf(inB, "over it")] })).rejects.toThrow(
-      /b refuses writes: the act \w+ \("both"\) was cut short, and waits on a/,
-    );
-    expect(await (await openStore(b)).pending()).not.toBe(null);
-
-    const together = startEngine([
-      { key: "a", store: await openStore(a), write: true },
-      { key: "b", store: await openStore(b), write: true },
-      { key: "pulled", store: await pulledStore() },
-    ]);
-    await together.commit({ holons: [noteOf(inB, "after")] });
-    expect(((await together.read({ log: "b" })) as { says: string }[]).map(({ says }) => says)).toEqual([
-      "A change",
-      "both",
-      "A change",
-    ]);
-  });
-
-  test("an act cut short among its lines moved no ref, and is taken out", async () => {
-    const { engine, inA } = await cutAt("log/");
-
-    await engine.commit({ holons: [noteOf("~1", "after")], into: "a" });
-
-    expect(((await engine.read({ log: "a" })) as { says: string }[]).map(({ says }) => says)).toEqual([
-      "A change",
-      "A change",
-    ]);
-    expect((await engine.read({ holon: inA }))?.body.title).toBe("a");
   });
 });
 
-// Real usage: the stores this repository holds, through the same code.
-describe("the real stores", async () => {
-  const engine = startEngine([{ key: "home", store: await openStore(memoryFiles()), write: true }]);
-  const opened: Record<string, Store> = await openStores();
-
-  for (const [key, store] of Object.entries(opened)) await engine.attach(key, store);
-
-  const wikiRoot = "The primitives";
-
-  test("the site's start offers every other store and names an entry in the field", async () => {
-    const [startId] = await engine.read({ named: "start", store: "site" });
-    const start = await engine.read({ holon: startId! });
-    const offered = (start!.body.attachments as { key: string }[]).map(({ key }) => key).sort();
-
-    expect(offered).toEqual(
-      Object.keys(opened)
-        .filter((key) => key !== "site")
-        .sort(),
+describe("changes at once", () => {
+  test("many changes touching different holons all land, each once", async () => {
+    const glassEngine = await startedWith({}, 4);
+    const all = await Promise.all(
+      Array.from({ length: 40 }, (_, n) => glassEngine.commit(note(`note ${n}`))),
     );
-    expect((await engine.read({ holon: (start!.body.entry as { $ref: string }).$ref }))?.name).toBe("entry");
+    all.forEach(landed);
+
+    const log = (await glassEngine.read(reading((use) => use("size", use("log", "notes"))))) as Answer;
+    expect(log).toMatchObject({ value: 41 });
+    const contents = (await glassEngine.read(
+      reading((use) => use("size", use("get", ref(101), "contents"))),
+    )) as Answer;
+    expect(contents).toMatchObject({ value: 41 });
   });
 
-  test("every store has one root, and a store at its level is its root alone", async () => {
-    const named = await Promise.all(
-      (await engine.read({ named: "store", store: "glass" })).map((id) => engine.read({ holon: id })),
-    );
-    const storeType = named.find((holon) => holon?.mould)!.id;
-    const storeFn = named.find((holon) => holon?.types.includes("function"))!.id;
-    const roots = await Promise.all(
-      (await engine.read({ instances: storeType })).map((id) => engine.read({ holon: id })),
-    );
+  test("two holons given one name in one whole at once: one lands, the other is refused", async () => {
+    const glassEngine = await startedWith({}, 4);
+    const named = (text: string) => ({
+      holons: [{ id: "~1", instance: [id(100)], name: "Same", body: { text } }] as Holon[],
+      says: text,
+      at: {},
+    });
 
-    for (const key of Object.keys(opened)) {
-      const own = roots.filter((root) => root?.store === key);
-
-      expect(own.length).toBe(1);
-      expect(await engine.read({ level: { call: { $ref: storeFn }, with: [key] } })).toEqual([own[0]!.id]);
-    }
+    const both = await Promise.all([glassEngine.commit(named("a")), glassEngine.commit(named("b"))]);
+    expect(both.filter((one) => "landed" in one)).toHaveLength(1);
+    expect(both.filter((one) => "refused" in one)).toHaveLength(1);
   });
 
-  test("a function of one's own that holds a pattern gathers as the interface asks it", async () => {
-    const [awaiting] = await engine.read({ named: "awaiting", store: "main" });
-    const asked = { call: { $ref: awaiting! } };
+  test("two engines over one storage, editing one holon at once, both land, one after the other", async () => {
+    const [languageAt, writtenAt] = [folder(), folder()];
+    await begun(strata(folderStorages(languageAt)), glass);
+    await begun(strata(folderStorages(writtenAt)), notes);
 
-    const gathered = await engine.read({ gather: asked });
-    const level = await engine.read({ level: asked });
-
-    expect(gathered.length).toBeGreaterThan(0);
-    expect(level).toEqual(gathered);
-  });
-
-  test("a brief is read as one whole", async () => {
-    const [id] = await engine.read({ named: wikiRoot, store: "main" });
-    const { holons } = await engine.read({ whole: id! });
-
-    expect(Object.keys(holons).length).toBeGreaterThan(1000);
-    expect(new Set(Object.values(holons).flatMap(({ types }) => types)).has("word")).toBe(true);
-  });
-
-  test("no two stores claim one holon", async () => {
-    const named = await Promise.all(
-      (await engine.read({ named: "everything", store: "glass" })).map((id) => engine.read({ holon: id })),
+    const engines = await Promise.all(
+      [1, 2].map(async () => {
+        const one = await engine({ workers: sameThread(), count: 2 });
+        await one.mount("glass", strata(folderStorages(languageAt)));
+        await one.mount("notes", strata(folderStorages(writtenAt)), { write: true });
+        return one;
+      }),
     );
-    const everything = named.find((holon) => holon?.types.includes("function"))!.id;
-    const total = (
-      await Promise.all(Object.values(opened).map(async (store) => (await store.all()).size))
-    ).reduce((a, b) => a + b, 0);
+    const made = landed(await engines[0]!.commit(note("first"))).ids["~1"]!;
 
-    expect((await engine.read({ gather: { call: { $ref: everything } } })).length).toBe(total);
+    // The second engine hears of the first one's commit as the storage's head moves.
+    while (
+      !("value" in (await engines[1]!.read(asking("get", { $ref: made }, "text")))) ||
+      ((await engines[1]!.read(asking("get", { $ref: made }, "text"))) as { value: unknown }).value === null
+    )
+      await Bun.sleep(10);
+
+    const edit = (text: string, strict = false) => ({
+      holons: [{ id: made, instance: [id(100)], body: { text } }] as Holon[],
+      says: text,
+      at: {},
+      strict,
+    });
+
+    const both = await Promise.all([engines[0]!.commit(edit("a")), engines[1]!.commit(edit("b"))]);
+    both.forEach(landed);
+
+    // Each engine hears of the other's commit as the storage's head moves.
+    const newest = async (one: Engine) => {
+      const log = (await one.read(asking("log", "notes"))) as unknown as {
+        value: { says: string }[];
+      };
+      return log.value.slice(0, 2).map(({ says }) => says);
+    };
+    while (
+      (await newest(engines[0]!)).sort().join() !== "a,b" ||
+      (await newest(engines[1]!)).sort().join() !== "a,b"
+    )
+      await Bun.sleep(10);
+    const [last] = await newest(engines[1]!);
+    const text = await engines[0]!.read(asking("get", { $ref: made }, "text"));
+    expect(text).toMatchObject({ value: last });
   });
 });
 
-// What the engine cannot be asked: every holon the repository holds judged against its
-// types alone, as the moulds module judges a body. Said again through a commit, each
-// would be judged for its references too, which not all lead into the field today, and
-// the whole field committed again is far too slow for a test.
-describe("unit: moulds and references (rewritten with the module)", () => {
-  test("every holon judged sound against its types", async () => {
-    const holons = (await Promise.all(Object.values(await openStores()).map(holonsOf))).flat();
-    const known = new Map(holons.map((holon) => [holon.id, holon]));
-    const wrong: string[] = [];
+describe("reads carrying holons", () => {
+  const carried = { id: "~1", instance: [id(100)], body: { text: "kept nowhere" } } as Holon;
 
-    for (const holon of known.values()) {
-      const moulds = holon.instance.map((type) => known.get(type)?.mould as Mould | undefined);
+  test("a read gives a value as it is", async () => {
+    const glassEngine = await started();
+    expect(await glassEngine.read({ gives: 3 })).toMatchObject({ value: 3 });
+  });
 
-      if (moulds.some((mould) => !mould)) wrong.push(`${holon.id}: no type`);
-      else if (holon.mould && mouldProblem(holon.mould))
-        wrong.push(`${holon.name}: ${mouldProblem(holon.mould)}`);
-      else if (moulds.length) {
-        const problem = bodyProblem(holon.body, moulds as Mould[]);
-        if (problem) wrong.push(`${holon.name ?? holon.id}: ${problem}`);
-      }
-    }
+  test("a handle is found among the read's holons, never asked of the stores", async () => {
+    const glassEngine = await started();
+    const read = (key: string) => reading((use) => use("get", { $ref: "~1" }, key), [carried]);
 
-    expect(wrong.slice(0, 20)).toEqual([]);
+    expect(await glassEngine.read(read("text"))).toMatchObject({ value: "kept nowhere" });
+    expect(await glassEngine.read(read("store"))).toMatchObject({ value: "read" });
+  });
+
+  test("a handle the read carries no holon for is a problem", async () => {
+    const glassEngine = await started();
+    const answer = await glassEngine.read(reading((use) => use("get", { $ref: "~9" }, "text"), [carried]));
+
+    expect(answer).toMatchObject({ problem: "the handle ~9 names no holon the read carries" });
+  });
+
+  test("a subscriber to a read carrying holons is answered again when a store it read moves", async () => {
+    const glassEngine = await started();
+    const heard: unknown[] = [];
+    const { promise, resolve } = Promise.withResolvers<void>();
+    const read = reading(
+      (use) => [use("get", { $ref: "~1" }, "text"), use("size", use("get", ref(101), "contents"))],
+      [carried],
+    );
+
+    const stop = await glassEngine.subscribe(read, (answer) => {
+      heard.push("value" in answer ? answer.value : answer.problem);
+      if (heard.length === 2) resolve();
+    });
+    await glassEngine.commit(note("heard"));
+    await promise;
+    stop();
+
+    expect(heard).toEqual([
+      ["kept nowhere", 1],
+      ["kept nowhere", 2],
+    ]);
   });
 });
 
-describe("a store moved under a commit", () => {
-  test("is taken as it now stands, and the commit made once more", async () => {
-    const files = memoryFiles();
-    const empty = await openStore(files);
-    await commit(empty, {
+describe("placeholders", () => {
+  // A function taking two placeholders, the second optional, as one change.
+  const taking = (second: object) => ({
+    holons: [
+      { id: "~1", instance: [id(1)], name: "pair", body: { input: [{ $ref: "~2" }, second] } },
+      { id: "~2", instance: [id(4)], name: "first", body: {} },
+      { id: "~3", instance: [id(4)], name: "second", body: {} },
+    ] as Holon[],
+    says: "a function of two placeholders",
+    at: {},
+  });
+
+  test("a function holds its placeholders in a list, each marked optional or not, and they reside with it", async () => {
+    const glassEngine = await started();
+    const { ids } = landed(await glassEngine.commit(taking({ $ref: "~3", $optional: true })));
+
+    const pair = (await glassEngine.read(asking("holon", { $ref: ids["~1"]! }))) as Answer & {
+      value: Holon & { store: string };
+    };
+    expect(pair.value.store).toBe("notes");
+    expect(pair.value.body.input).toEqual([
+      { $ref: ids["~2"], $holds: true },
+      { $ref: ids["~3"], $holds: true, $optional: true },
+    ]);
+
+    // Held by the function, the placeholders are not loose in the store's root.
+    const contents = (await glassEngine.read(asking("get", ref(101), "contents"))) as Answer & {
+      value: unknown[];
+    };
+    expect(contents.value).toEqual([{ $ref: id(100) }, { $ref: ids["~1"] }]);
+  });
+
+  test("$optional anywhere but on an entry of the list at input is refused", async () => {
+    const glassEngine = await started();
+
+    const optional = { $ref: id(100), $holds: true, $optional: true };
+    const committed = await glassEngine.commit({
+      holons: [{ id: id(101), instance: [id(2)], name: "notes", body: { contents: [optional] } }],
+      says: "an optional part",
+      at: {},
+    });
+
+    expect(committed).toMatchObject({ refused: [{ rule: "optionalOnlyInInput", id: id(101) }] });
+  });
+});
+
+describe("names in a whole", () => {
+  const named = (name: string, text = name) => ({
+    holons: [{ id: "~1", instance: [id(100)], name, body: { text } }] as Holon[],
+    says: name,
+    at: {},
+  });
+
+  test("a name a whole already holds is refused, said of the handle", async () => {
+    const glassEngine = await started();
+    landed(await glassEngine.commit(named("Same")));
+
+    expect(await glassEngine.commit(named("Same", "again"))).toMatchObject({
+      refused: [{ rule: "namesAreOne", id: "~1", says: `${id(101)} already holds a holon named "Same"` }],
+    });
+  });
+
+  test("a part renamed to a name its whole holds is refused; to a free one it lands", async () => {
+    const glassEngine = await started();
+    landed(await glassEngine.commit(named("Taken")));
+    const other = landed(await glassEngine.commit(named("Other"))).ids["~1"]!;
+    const renamed = (name: string) => ({
+      holons: [{ id: other, instance: [id(100)], name, body: { text: "Other" } }] as Holon[],
+      says: "renamed",
+      at: {},
+    });
+
+    expect(await glassEngine.commit(renamed("Taken"))).toMatchObject({
+      refused: [{ rule: "namesAreOne", id: other }],
+    });
+    landed(await glassEngine.commit(renamed("Free")));
+  });
+
+  test("a whole letting go of a part and taking another of the same name lands", async () => {
+    const glassEngine = await started();
+    const first = landed(await glassEngine.commit(named("Same"))).ids["~1"]!;
+    const root = (await glassEngine.read(asking("get", ref(101), "contents"))) as Answer & {
+      value: unknown[];
+    };
+
+    const committed = await glassEngine.commit({
       holons: [
         {
-          id: idAt(1_000, 0),
-          instance: [],
-          name: "note",
-          mould: { text: { says: "What it says.", shape: "string" } },
-          body: {},
+          id: id(101),
+          instance: [id(2)],
+          name: "notes",
+          body: {
+            contents: [
+              ...root.value.filter((each) => (each as { $ref: string }).$ref !== first),
+              { $ref: "~1", $holds: true },
+            ],
+          },
+        },
+        { id: "~1", instance: [id(100)], name: "Same", body: { text: "the new one" } },
+      ] as Holon[],
+      gone: [first],
+      says: "replaced",
+      at: {},
+    });
+    landed(committed);
+  });
+
+  test("two parts of one name placed at once in one whole are refused", async () => {
+    const glassEngine = await started();
+    const committed = await glassEngine.commit({
+      holons: [
+        { id: "~1", instance: [id(100)], name: "Twin", body: { text: "one" } },
+        { id: "~2", instance: [id(100)], name: "Twin", body: { text: "two" } },
+      ] as Holon[],
+      says: "twins",
+      at: {},
+    });
+
+    expect(committed).toMatchObject({ refused: [{ rule: "namesAreOne", id: "~2" }] });
+  });
+});
+
+describe("uses", () => {
+  // A function of a number, an optional string and a note, each a placeholder of its
+  // type; the note's, of a type with a field required, held empty.
+  async function pairing() {
+    const glassEngine = await started();
+    const { ids } = landed(
+      await glassEngine.commit({
+        holons: [
+          {
+            id: "~1",
+            instance: [id(1)],
+            name: "pair",
+            body: {
+              input: [{ $ref: "~2" }, { $ref: "~3", $optional: true }, { $ref: "~4" }],
+            },
+          },
+          { id: "~2", instance: [id(6)], name: "first", body: {} },
+          { id: "~3", instance: [id(7)], name: "second", body: {} },
+          { id: "~4", instance: [id(100)], name: "third", body: {} },
+          { id: "~5", instance: [id(100)], name: "a note", body: { text: "kept" } },
+        ] as Holon[],
+        says: "a function of three placeholders, and a note",
+        at: {},
+      }),
+    );
+    const using = (...args: unknown[]) =>
+      glassEngine.commit({
+        holons: [{ id: "~1", instance: [id(5)], body: { fn: { $ref: ids["~1"]! }, args } }] as Holon[],
+        says: "a use of pair",
+        at: {},
+      });
+
+    return { glassEngine, ids, using };
+  }
+
+  test("a placeholder of a type with fields required is taken empty: it is a hole of its type", async () => {
+    const { glassEngine, ids } = await pairing();
+    const third = { id: ids["~4"]!, instance: [id(100)], name: "the third", body: {} };
+
+    expect("landed" in (await glassEngine.commit({ holons: [third], says: "renamed", at: {} }))).toBe(true);
+    expect(
+      await glassEngine.commit({ holons: [note(undefined).holons[0]!], says: "a note", at: {} }),
+    ).toMatchObject({ refused: [{ rule: "bodyFits" }] });
+    expect(
+      await glassEngine.commit({ holons: [{ ...third, body: { text: "filled" } }], says: "filled", at: {} }),
+    ).toMatchObject({ refused: [{ rule: "placeholdersAreHoles", id: ids["~4"] }] });
+  });
+
+  test("a use is taken where its args fit, an optional passed over where the next does not fit it", async () => {
+    const { ids, using } = await pairing();
+    const kept = { $ref: ids["~5"]! };
+
+    expect("landed" in (await using(1, kept))).toBe(true);
+    expect("landed" in (await using(1, "two", kept))).toBe(true);
+  });
+
+  test("a use is refused given too many args, or too few", async () => {
+    const { ids, using } = await pairing();
+
+    expect(await using(1, "two", { $ref: ids["~5"]! }, 4)).toMatchObject({
+      refused: [{ rule: "argsFitInput", id: "~1", says: "it gives pair 4 args, and pair takes at most 3" }],
+    });
+    expect(await using(1)).toMatchObject({
+      refused: [{ rule: "argsFitInput", says: "it gives pair 1 arg, and pair takes at least 2" }],
+    });
+  });
+
+  test("a use is refused an arg not of its placeholder's type, a literal or a holon", async () => {
+    const { ids, using } = await pairing();
+
+    expect(await using("one", { $ref: ids["~5"]! })).toMatchObject({
+      refused: [{ rule: "argsFitInput", says: 'it gives pair "one" for first, which takes a number' }],
+    });
+    expect(await using(1, { $ref: id(101) })).toMatchObject({
+      refused: [{ rule: "argsFitInput", says: "it gives pair @notes for third, which takes a note" }],
+    });
+  });
+
+  test("a use applies a function, or names none for what shows it to find", async () => {
+    const { glassEngine } = await pairing();
+    const use = (body: object) =>
+      glassEngine.commit({
+        holons: [{ id: "~1", instance: [id(5)], body }] as Holon[],
+        says: "a use",
+        at: {},
+      });
+
+    expect(await use({ fn: { $ref: id(101) }, args: [] })).toMatchObject({
+      refused: [{ rule: "argsFitInput", says: "it applies notes, which is not a function" }],
+    });
+    expect("landed" in (await use({ args: [] }))).toBe(true);
+    expect("landed" in (await use({ fn: { $ref: fn("size") }, args: [1, 2, 3] }))).toBe(true);
+  });
+});
+
+describe("pairs", () => {
+  // Functions as one change, each by its handle naming the reverse given, if any.
+  const functions = (...reverses: (string | undefined)[]) => ({
+    holons: reverses.map((reverse, i) => ({
+      id: `~${i + 1}`,
+      instance: [id(1)],
+      name: `f${i + 1}`,
+      body: { native: `f${i + 1}`, ...(reverse && { reverse: { $ref: reverse } }) },
+    })) as Holon[],
+    says: "functions",
+    at: {},
+  });
+
+  test("two functions naming each other are a pair", async () => {
+    const glassEngine = await started();
+    landed(await glassEngine.commit(functions("~2", "~1")));
+  });
+
+  test("a function naming a reverse that does not name it back, or is no function, is refused", async () => {
+    const glassEngine = await started();
+
+    expect(await glassEngine.commit(functions("~2", undefined))).toMatchObject({
+      refused: [
+        {
+          rule: "pairsNameEachOther",
+          id: "~1",
+          says: "its reverse f2 does not name it back: two functions are a pair only where each names the other",
+        },
+        {
+          rule: "pairsNameEachOther",
+          id: "~2",
+          says: "f1 names it as its reverse, and it does not name f1 back",
         },
       ],
-      says: "a type",
     });
-    const ours = await openStore(files);
-    const engine = startEngine([{ key: "home", store: ours, write: true }]);
+    expect(await glassEngine.commit(functions(id(100)))).toMatchObject({
+      refused: [{ rule: "pairsNameEachOther", id: "~1", says: "its reverse note is not a function" }],
+    });
+  });
 
-    // Another writer moves the store after this engine opened it.
-    const theirs = await openStore(files);
-    await commit(theirs, {
-      holons: [{ id: idAt(2_000, 0), instance: [idAt(1_000, 0)], body: { text: "theirs" } }],
-      says: "theirs",
+  test("one of a pair letting go of the other is refused while the other still names it", async () => {
+    const glassEngine = await started();
+    const { ids } = landed(await glassEngine.commit(functions("~2", "~1")));
+    const alone = { id: ids["~2"]!, instance: [id(1)], name: "f2", body: { native: "f2" } };
+
+    expect(await glassEngine.commit({ holons: [alone], says: "alone", at: {} })).toMatchObject({
+      refused: [
+        {
+          rule: "pairsNameEachOther",
+          id: ids["~2"],
+          says: "f1 names it as its reverse, and it does not name f1 back",
+        },
+      ],
+    });
+  });
+});
+
+describe("a buffer", () => {
+  // An engine on one thread over glass, read, and a string buffer named bar, written,
+  // begun through the engine: the id of the holon its string is kept in.
+  async function typing() {
+    const language = strata(folderStorages(folder()));
+    await begun(language, glass);
+
+    const glassEngine = await engine({ workers: sameThread(), count: 2 });
+    await glassEngine.mount("glass", language);
+    await glassEngine.mount("bar", buffer(), { write: true });
+    const query = landed(await glassEngine.commit(bufferBegun("bar", { store: id(2), shape: id(8) }))).ids["~2"]!;
+    return { glassEngine, query };
+  }
+
+  test("text committed into it is read back as a string", async () => {
+    const { glassEngine, query } = await typing();
+    landed(await glassEngine.commit(typed(query, "get(@1, ")));
+
+    expect(await glassEngine.read(asking("get", { $ref: query }, "text"))).toMatchObject({
+      value: "get(@1, ",
+    });
+  });
+
+  test("a subscribed read runs again on every change, and nothing of earlier text is kept", async () => {
+    const { glassEngine, query } = await typing();
+    const heard: unknown[] = [];
+    let done: () => void = () => {};
+    const all = new Promise<void>((resolve) => (done = resolve));
+
+    const stop = await glassEngine.subscribe(asking("get", { $ref: query }, "text"), (answer) => {
+      heard.push("value" in answer ? answer.value : answer.problem);
+      if (heard.at(-1) === "gla") done();
+    });
+    for (const text of ["g", "gl", "gla"]) landed(await glassEngine.commit(typed(query, text)));
+    await all;
+    stop();
+
+    // Each answer the text as it then stood, in the order it was typed.
+    const typedAt = (text: unknown) => ["", "g", "gl", "gla"].indexOf(text as string);
+    expect(heard[0]).toBe("");
+    expect(heard.map(typedAt)).toEqual(heard.map(typedAt).sort());
+    expect(heard.length).toBeGreaterThan(2);
+    expect(await glassEngine.read(asking("log", "bar"))).toMatchObject({ value: [expect.anything()] });
+  });
+
+  test("from an earlier head a change is taken, but strict it is refused as moved", async () => {
+    const { glassEngine, query } = await typing();
+    const { at } = await glassEngine.read(asking("get", { $ref: query }, "text"));
+    landed(await glassEngine.commit(typed(query, "g", at)));
+
+    // The buffer keeps nothing of how it stood at at, so cannot say nothing moved.
+    expect(await glassEngine.commit({ ...typed(query, "gl", at), strict: true })).toEqual({
+      refused: [
+        { rule: "strict", id: query, says: "bar keeps only the present, so cannot tell what moved since" },
+      ],
     });
 
-    const done = await engine.commit({
-      holons: [{ id: "~1", instance: [idAt(1_000, 0)], body: { text: "ours" } }],
-      says: "ours",
-    });
-    expect(Object.keys(done.ids)).toEqual(["~1"]);
-    expect((await engine.read({ named: "note" })).length).toBe(1);
-    expect(await engine.read({ holon: idAt(2_000, 0) })).not.toBeNull();
+    landed(await glassEngine.commit(typed(query, "gl", at)));
+    const now = (await glassEngine.read(asking("get", { $ref: query }, "text"))) as Answer;
+    landed(await glassEngine.commit({ ...typed(query, "gla", now.at), strict: true }));
+
+    expect(await glassEngine.read(asking("get", { $ref: query }, "text"))).toMatchObject({ value: "gla" });
   });
 });

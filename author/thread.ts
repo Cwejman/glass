@@ -11,7 +11,7 @@
 //   { "move": "its name", "stands": "leaning", "asks": "..." }   where one stands, said again
 //   { "says": "..." }                                     what the commit says of itself
 
-import { handles } from "../engine/next/uses/migrate.ts";
+import { handles } from "../engine/uses/migrate.ts";
 import { authorsField, commitOf, type Holon } from "./field.ts";
 import { typeNamed } from "../stores.ts";
 

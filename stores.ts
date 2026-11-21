@@ -12,7 +12,7 @@
 
 import { existsSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
-import { engine, type Engine } from "./engine/next/engine.ts";
+import { engine, type Engine } from "./engine/engine.ts";
 import { sameThread } from "./runtime/runtime.ts";
 import type { Holon, Store } from "./stores/store.ts";
 import { commitAt, headAt, latestCommit } from "./stores/strata/head.ts";

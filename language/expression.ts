@@ -11,8 +11,8 @@
 //   { list: [ … ] }, { record: { … } }  a list, or a record, each of its parts worked out
 //   { "?": "x" }                        a variable of a pattern, within find
 
-import { isHandle } from "../engine/handles.ts";
-import { isId } from "../integrations/glass/store.ts";
+import { isHandle } from "../engine/commit/change.ts";
+import { isId } from "../stores/ids.ts";
 
 export type Ref = { $ref: string };
 

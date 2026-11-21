@@ -1,4 +1,4 @@
-// The page's entry, on the new engine. It starts the engine and each store in a Worker of
+// The page's entry, on the engine. It starts the engine and each store in a Worker of
 // its own, mounts the stores, finds what glass ships for it, and draws its root read,
 // written in the language: Reader, given the text typed into the query. The query is a
 // buffer, holding only the present, kept as one with the address, ?q= (address.ts).
@@ -7,7 +7,7 @@
 // pages are fetched from the site and kept in OPFS. The home is the reader's own, kept
 // only in this browser; it and the query are the stores written to.
 
-import type { Engine, Read } from "../engine/next/engine.ts";
+import type { Engine, Read } from "../engine/engine.ts";
 import { addressed } from "../interface/web/address.ts";
 import { applying, found } from "../interface/web/carried.ts";
 import { draw, note } from "../interface/web/chassis.ts";
@@ -28,7 +28,7 @@ document.addEventListener("busy", (event) => {
 });
 
 // Each started from its own file; the build writes each beside the page.
-const engineCode = new URL("../engine/next/browser.ts", import.meta.url);
+const engineCode = new URL("../engine/browser.ts", import.meta.url);
 const strataCode = new URL("../stores/strata/browser.ts", import.meta.url);
 const bufferCode = new URL("../stores/buffer/browser.ts", import.meta.url);
 

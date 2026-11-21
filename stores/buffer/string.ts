@@ -7,8 +7,8 @@
 // read as a string itself: asked as one, its text is what it gives, and a reader need not
 // know the key the buffer keeps it under.
 
-import type { Change } from "../../engine/next/commit/change.ts";
-import type { Heads } from "../../engine/next/engine.ts";
+import type { Change } from "../../engine/commit/change.ts";
+import type { Heads } from "../../engine/engine.ts";
 
 // The change that begins a string buffer mounted under a name: its root, an instance of
 // the type store, named as the mount, holding the holon its string is kept in, empty, and

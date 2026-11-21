@@ -10,7 +10,7 @@
 // parts}: what happened, what its maker had read, every store's share of it by hash, and
 // nothing of where it stands in any store's history.
 
-import { canonical } from "../integrations/glass/canonical.ts";
+import { canonical } from "./canonical.ts";
 import type { Act, Holon } from "./store.ts";
 
 const encoder = new TextEncoder();

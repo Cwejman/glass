@@ -2,7 +2,7 @@ import { afterAll, describe, expect, test } from "bun:test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { evaluate } from "../engine/next/read/evaluate.ts";
+import { evaluate } from "../engine/read/evaluate.ts";
 import { contentOf, hashOf, partOf } from "../stores/act.ts";
 import type { Act, Holon } from "../stores/store.ts";
 import { folderStorages } from "../stores/strata/storage/folder.ts";

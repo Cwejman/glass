@@ -5,8 +5,8 @@
 // Finding them is the one read that carries what it applies: a use, a function, and the
 // native parse, under handles of their own, so none is taken for a holon of the field.
 
-import type { Engine, Read } from "../../engine/next/engine.ts";
-import { isRef, type Value } from "../../engine/next/read/values.ts";
+import type { Engine, Read } from "../../engine/engine.ts";
+import { isRef, type Value } from "../../engine/read/values.ts";
 import type { Holon } from "../../stores/store.ts";
 
 // What the interface asks of glass, by route from glass's level.

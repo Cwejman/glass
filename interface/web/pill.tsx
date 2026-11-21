@@ -4,8 +4,8 @@
 //
 // The × submits the form the pill is, so whoever keeps the address takes it as a step.
 
-import { h } from "../../components/jsx.ts";
-import type { Value } from "../../engine/next/read/values.ts";
+import { h } from "./jsx.ts";
+import type { Value } from "../../engine/read/values.ts";
 import { applying } from "./carried.ts";
 import { removed, type Realization } from "./chassis.ts";
 

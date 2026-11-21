@@ -22,8 +22,8 @@ rmSync(dist, { recursive: true, force: true });
 // built for it.
 const startedAs: Record<string, string> = {
   "site/page.ts": "page.js",
-  "engine/next/browser.ts": "engine.js",
-  "engine/next/worker.ts": "engine-worker.js",
+  "engine/browser.ts": "engine.js",
+  "engine/worker.ts": "engine-worker.js",
   "stores/strata/browser.ts": "strata.js",
   "stores/buffer/browser.ts": "buffer.js",
   "runtime/worker.ts": "worker.js",

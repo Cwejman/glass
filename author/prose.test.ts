@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
-import { idAt, nextId, type Holon } from "../integrations/glass/store.ts";
+import { idAt, nextId } from "../stores/ids.ts";
+import type { Holon } from "../stores/store.ts";
 import { markedWriter, proseWriter } from "./prose.ts";
 
 const type = (id: string, name: string): Holon => ({ id, instance: [], name, mould: {}, body: {} });

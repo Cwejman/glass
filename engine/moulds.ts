@@ -7,8 +7,8 @@
 // against the moulds of its types, and which holon is a store's root. These are pure
 // judgements: they answer in words, or with nothing.
 
-import { canonical } from "../integrations/glass/canonical.ts";
-import type { Holon } from "../integrations/glass/store.ts";
+import { canonical } from "../stores/canonical.ts";
+import type { Holon } from "../stores/store.ts";
 import { expressionProblem } from "../language/expression.ts";
 
 export type Shape =

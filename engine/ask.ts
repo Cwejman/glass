@@ -17,8 +17,8 @@
 import { readFileSync } from "node:fs";
 import { applying, found, type Glass } from "../interface/web/carried.ts";
 import { engineHere } from "../stores.ts";
-import type { Engine, Read } from "./next/engine.ts";
-import { isRef, type Value } from "./next/read/values.ts";
+import type { Engine, Read } from "./engine.ts";
+import { isRef, type Value } from "./read/values.ts";
 
 const args = process.argv.slice(2);
 const flag = (name: string) => args.includes(name);

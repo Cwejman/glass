@@ -7,9 +7,9 @@
 // An answer slow to come is said by the event busy, bubbling from it, true while it is
 // awaited and false once it lands, so the page may show it is working.
 
-import { h } from "../../components/jsx.ts";
-import type { Answer, Read } from "../../engine/next/engine.ts";
-import { isRecord, isRef, type Value } from "../../engine/next/read/values.ts";
+import { h } from "./jsx.ts";
+import type { Answer, Read } from "../../engine/engine.ts";
+import { isRecord, isRef, type Value } from "../../engine/read/values.ts";
 import { applying } from "./carried.ts";
 import { arrange, awaiting, note, type Realization } from "./chassis.ts";
 import { trailOf, wholesOf } from "./trail.tsx";

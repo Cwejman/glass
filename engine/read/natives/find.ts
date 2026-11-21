@@ -1,33 +1,34 @@
 // Patterns, the native fast core functions stand upon: find reads its clauses as they
 // are written, a fact [e, a, v], a word said, not(…), or(…), or a test, and asks them of
-// the index; explain says how. These are the natives that read what they are given as
+// the stores; explain says how. These are the natives that read what they are given as
 // written, and are called, never given to another.
 
-import type { Expression, Value } from "../../../language/expression.ts";
-import { bindable, isVar, orProblem, solve, usedBeside, type Clause, type Step } from "../patterns/solve.ts";
-import { wordsOf } from "../patterns/words.ts";
-import type { Scope } from "../evaluate.ts";
-import type { Calling, Structural } from "./natives.ts";
-import { keyOf, truly } from "../values.ts";
+import { keyOf, truly, type Value } from "../values.ts";
+import { bindable, isVar, orProblem, solve, usedBeside, type Clause, type Step } from "../patterns.ts";
+import { wordsOf } from "../words.ts";
+import type { Maybe } from "../maybe.ts";
+import type { Calling, Structural, Written } from "./natives.ts";
 
-export function patterns(calling: Calling): Record<string, Structural> {
-  const { world, nativeOf, evaluate, apply } = calling;
+// A test, held to the values of the variables it reads.
+type Holds = (values: Value[]) => Maybe<Value>;
 
-  function clauseOf(expression: Expression, scope: Scope): Clause {
-    const form = expression as Record<string, unknown>;
-    const given = (form?.with ?? []) as Expression[];
-    const term = (each: Expression) => (isVar(each) ? each : evaluate(each, scope));
-    const native = nativeOf(form);
+export function patterns({ field }: Calling): Record<string, Structural> {
+  async function clauseOf(given: unknown, written: Written): Promise<Clause> {
+    const term = async (each: unknown) => (isVar(each) ? each : written.value(each));
 
-    if (Array.isArray(form?.list) && form.list.length === 3)
-      return { fact: (form.list as Expression[]).map(term) as [unknown, unknown, unknown] };
+    const fact = written.fact(given);
+    if (fact) return { fact: (await Promise.all(fact.map(term))) as [unknown, unknown, unknown] };
 
-    if (native === "not") return { not: given.map((each) => clauseOf(each, scope)) };
+    const call = await written.called(given);
+    const within = call?.given ?? [];
 
-    if (native === "said") {
-      if (given.length !== 3) throw new Error("a word said is said(e, a, w): a holon, a key, and a word");
+    if (call?.native === "not")
+      return { not: await Promise.all(within.map((each) => clauseOf(each, written))) };
 
-      const terms = given.map(term) as [unknown, unknown, unknown];
+    if (call?.native === "said") {
+      if (within.length !== 3) throw new Error("a word said is said(e, a, w): a holon, a key, and a word");
+
+      const terms = (await Promise.all(within.map(term))) as [unknown, unknown, unknown];
       const several = isVar(terms[2]) ? 0 : wordsOf(terms[2]).length;
       if (several > 1)
         throw new Error(`a word said is one word, and ${JSON.stringify(terms[2])} is ${several}`);
@@ -35,41 +36,41 @@ export function patterns(calling: Calling): Record<string, Structural> {
       return { fact: terms, words: true };
     }
 
-    if (native === "or")
+    if (call?.native === "or")
       return {
-        or: given.map((branch) =>
-          nativeOf(branch) === "and"
-            ? (((branch as { with?: Expression[] }).with ?? []) as Expression[]).map((each) =>
-                clauseOf(each, scope),
-              )
-            : [clauseOf(branch, scope)],
+        or: await Promise.all(
+          within.map(async (branch) => {
+            const and = await written.called(branch);
+            return and?.native === "and"
+              ? Promise.all(and.given.map((each) => clauseOf(each, written)))
+              : [await clauseOf(branch, written)];
+          }),
         ),
       };
 
-    if (Array.isArray(form?.fn)) return { test: evaluate(expression, scope), names: form.fn as string[] };
+    const test = await written.test(given);
+    if (test) return { test: test.holds, names: test.names };
 
     throw new Error(
-      "a clause is a fact [e, a, v], not(…), or(…), or a test, a lambda of the variables it reads",
+      "a clause is a fact [e, a, v], not(…), or(…), or a test, a use reading the pattern's variables",
     );
   }
 
   // What a pattern finds: one variable's values, or a record of several, each distinct,
   // for every way its clauses hold.
-  function find(given: Expression[], scope: Scope, steps?: Step[]): Value {
+  async function find(given: unknown[], written: Written, steps?: Step[]): Promise<Value> {
     const [spec, ...clauses] = given;
     const shape = isVar(spec)
       ? spec["?"]
       : Object.fromEntries(
-          Object.entries(((spec as { record?: Record<string, unknown> })?.record ?? {}) as object).map(
-            ([key, each]) => {
-              if (!isVar(each)) throw new Error("what a pattern finds is ?x, or a record of them, {x: ?x}");
-              return [key, each["?"]];
-            },
-          ),
+          Object.entries(written.fields(spec) ?? {}).map(([key, each]) => {
+            if (!isVar(each)) throw new Error("what a pattern finds is ?x, or a record of them, {x: ?x}");
+            return [key, each["?"]];
+          }),
         );
     const found = typeof shape === "string" ? [shape] : Object.values(shape);
 
-    const where = clauses.map((each) => clauseOf(each, scope));
+    const where = await Promise.all(clauses.map((each) => clauseOf(each, written)));
     const bound = bindable(where);
     for (const name of found)
       if (!bound.has(name)) throw new Error(`the pattern finds ?${name}, which no fact of it binds`);
@@ -80,10 +81,10 @@ export function patterns(calling: Calling): Record<string, Structural> {
       if (problem) throw new Error(problem);
     }
 
-    const bindings = solve(
+    const bindings = await solve(
       where,
-      world.index(),
-      { test: (fn, values) => truly(apply(fn, values as Value[])) },
+      field,
+      { test: async (holds, values) => truly(await (holds as Holds)(values as Value[])) },
       steps,
     );
 
@@ -108,13 +109,14 @@ export function patterns(calling: Calling): Record<string, Structural> {
   }
 
   return {
-    find: (given, scope) => find(given, scope),
+    find: (given, written) => find(given, written),
 
-    explain([pattern], scope) {
-      if (nativeOf(pattern) !== "find") throw new Error("explain is given a pattern, find(…)");
+    async explain([pattern], written) {
+      const call = await written.called(pattern);
+      if (call?.native !== "find") throw new Error("explain is given a pattern, find(…)");
 
       const steps: Step[] = [];
-      const found = find(((pattern as { with?: Expression[] }).with ?? []) as Expression[], scope, steps);
+      const found = await find(call.given, written, steps);
 
       return { found: Array.isArray(found) ? found.length : 0, steps: steps as unknown as Value };
     },

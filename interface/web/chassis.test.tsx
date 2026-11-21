@@ -6,10 +6,10 @@
 
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { h } from "../../components/jsx.ts";
-import type { Answer, Engine, Read } from "../../engine/next/engine.ts";
-import { cleanUp, id, notes, shipped } from "../../engine/next/uses/fixture.ts";
-import type { Value } from "../../engine/next/read/values.ts";
+import { h } from "./jsx.ts";
+import type { Answer, Engine, Read } from "../../engine/engine.ts";
+import { cleanUp, id, notes, shipped } from "../../engine/uses/fixture.ts";
+import type { Value } from "../../engine/read/values.ts";
 import { buffer } from "../../stores/buffer/buffer.ts";
 import { begun, typed } from "../../stores/buffer/string.ts";
 import { addressed } from "./address.ts";

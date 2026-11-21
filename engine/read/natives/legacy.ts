@@ -1,40 +1,34 @@
-// Natives kept only while functions written in the field still call them. Each can be
-// written in the language upon the rest, most as patterns, which answer from the index
-// faster than these scan the field; and each goes when the functions that call it are
-// written so. The old search is among them: it found words within what a holon says by
-// substring, where a word said is now a clause of a pattern.
+// Natives kept only while functions written in the field still call them, each to go as
+// those are written again upon the rest. Those that scanned every holon of the field,
+// everything, types, store, search, named and since, are not carried here: no store is
+// asked for every holon, so each is refused, naming what to write instead.
 
-import { writtenBy } from "../../../integrations/glass/store.ts";
-import { isRef, ref, type Value } from "../../../language/expression.ts";
-import { references } from "../../moulds.ts";
+import { isRef, list, type Value } from "../values.ts";
 import type { Calling, Native } from "./natives.ts";
+import { holdersOf, references } from "./holons.ts";
 import { inOrder } from "./sets.ts";
-import { list } from "../values.ts";
+import { lists } from "./lists.ts";
 
-export function legacy({ world, apply }: Calling): Record<string, Native> {
-  const keep = (test: (id: string) => boolean): Value[] => [...world.known.keys()].filter(test).map(ref);
+const unread = (name: string, instead: string) => () => {
+  throw new Error(`${name} scanned every holon of the field, which is not read; ${instead}`);
+};
+
+export function legacy(calling: Calling): Record<string, Native> {
+  const { field, apply } = calling;
+  const { group } = lists(calling);
   const ids = (value: unknown) => list(value).flatMap((each) => (isRef(each) ? [each.$ref] : []));
-  const holonOf = (id: string) => world.known.get(id)?.holon;
 
   // What the holons given connect to, down what they refer to or up what refers to them.
   const along =
     (direction: "down" | "up", holding: boolean) =>
-    ([given]: Value[]) => {
-      const reached = new Set<string>();
+    async ([given]: Value[]) => {
+      const edges = await Promise.all(
+        ids(given).map(async (id) =>
+          direction === "down" ? references((await field.holon(id))?.holon.body ?? {}) : holdersOf(field, id),
+        ),
+      );
 
-      for (const id of ids(given)) {
-        const holon = holonOf(id);
-        const edges =
-          direction === "down"
-            ? holon
-              ? references(holon.body, world.mouldFor(holon))
-              : []
-            : world.holders(id).map(({ from, key, holds }) => ({ id: from, key, holds }));
-
-        for (const edge of edges) if (edge.holds === holding) reached.add(edge.id);
-      }
-
-      return inOrder(world.place, reached);
+      return inOrder(new Set(edges.flat().flatMap((edge) => (edge.holds === holding ? [edge.id] : []))));
     };
 
   // What a search asked, as it was asked: lower cased, parted at its spaces.
@@ -43,19 +37,21 @@ export function legacy({ world, apply }: Calling): Record<string, Native> {
       typeof each === "string" ? each.toLocaleLowerCase().split(/\s+/).filter(Boolean) : [],
     );
 
-  const isNamed = (names: string[]) => (instance: string[]) =>
-    instance.some((type) => names.includes(holonOf(type)?.name ?? ""));
-  const isWord = isNamed(["word"]);
-  const isWordLike = isNamed(["word", "lexeme"]);
-
   // What may be said of a holon as text: its name, its strings but its code, and the
   // words it holds.
-  const saying = new Map<string, string>();
-  function says(id: string) {
-    if (saying.has(id)) return saying.get(id)!;
+  async function says(id: string) {
+    const kept = await field.holon(id);
+    if (!kept) return null;
 
-    const holon = holonOf(id)!;
-    const mould = world.mouldFor(holon);
+    const { holon } = kept;
+    const types = await Promise.all(holon.instance.map((type) => field.holon(type)));
+    const code = new Set(
+      types.flatMap((type) =>
+        Object.entries((type?.holon.mould ?? {}) as Record<string, { shape?: unknown }>)
+          .filter(([, key]) => key.shape === "code")
+          .map(([key]) => key),
+      ),
+    );
     const said: string[] = holon.name ? [holon.name] : [];
 
     const walk = (value: unknown, key?: string): void => {
@@ -66,25 +62,34 @@ export function legacy({ world, apply }: Calling): Record<string, Native> {
         for (const [inner, held] of Object.entries(value)) walk(held, inner);
     };
 
-    for (const [key, value] of Object.entries(holon.body)) if (mould[key]?.shape !== "code") walk(value);
-    for (const { id: part, holds } of references(holon.body, mould)) {
-      const held = holds ? holonOf(part) : undefined;
-      if (held && isWord(held.instance)) said.push(held.body.text);
-    }
+    for (const [key, value] of Object.entries(holon.body)) if (!code.has(key)) walk(value);
 
-    const text = said.join(" ").toLocaleLowerCase();
-    saying.set(id, text);
-    return text;
+    const parts = references(holon.body).filter(({ holds }) => holds);
+    const held = await Promise.all(parts.map(({ id }) => field.holon(id)));
+    const heldTypes = await Promise.all(
+      held.map(async (each) =>
+        each ? await Promise.all(each.holon.instance.map((type) => field.holon(type))) : [],
+      ),
+    );
+    held.forEach((each, i) => {
+      if (each && heldTypes[i]!.some((type) => type?.holon.name === "word"))
+        said.push(String(each.holon.body.text));
+    });
+
+    return said.join(" ").toLocaleLowerCase();
   }
 
   return {
-    type: ([types]) => {
-      const wanted = new Set(ids(types));
-      return keep((id) => holonOf(id)!.instance.some((type) => wanted.has(type)));
+    says: ([holon]) => (isRef(holon) ? says(holon.$ref) : null),
+
+    // The holons of any of the types given, asked of every store by the facts that say so.
+    async type([types]) {
+      const found = await Promise.all(
+        ids(types).map((type) => field.facts({ a: "instance", v: { $ref: type } })),
+      );
+      return inOrder(new Set(found.flat().map(({ e }) => e)));
     },
-    types: () => keep((id) => holonOf(id)!.mould !== undefined),
-    store: ([key]) => keep((id) => world.storesOf(id).includes(String(key))),
-    stores: () => [...new Set([...world.known.keys()].flatMap((id) => world.storesOf(id)))],
+
     children: along("down", true),
     parents: along("up", true),
     points: along("down", false),
@@ -97,40 +102,23 @@ export function legacy({ world, apply }: Calling): Record<string, Native> {
     skip: ([items, n]) => list(items).slice(Number(n)),
     apply: ([fn, ...given]) => apply(fn, given),
 
-    search: ([text]) => {
-      const wanted = asked(text);
-      if (!wanted.length) return [];
-      return keep(
-        (id) => !isWordLike(holonOf(id)!.instance) && wanted.every((word) => says(id).includes(word)),
-      );
-    },
-    named: ([text]) => {
-      const wanted = asked(text);
-      if (!wanted.length) return [];
-      return keep((id) => {
-        const name = holonOf(id)!.name?.toLocaleLowerCase();
-        return name !== undefined && wanted.every((word) => name.includes(word));
-      });
-    },
     contains: ([text, wanted]) => {
       const said = typeof text === "string" ? text.toLocaleLowerCase() : "";
       return asked(wanted).every((word) => said.includes(word));
     },
-    says: ([holon]) => (isRef(holon) && holonOf(holon.$ref) ? says(holon.$ref) : null),
-
-    since: ([store, moment]) => {
-      const written = new Set(
-        world
-          .log(String(store))
-          .filter(({ at }) => at > String(moment))
-          .flatMap(writtenBy),
-      );
-      return keep((id) => written.has(id) && world.storesOf(id).includes(String(store)));
-    },
 
     // How a set is looked at, read by its shape by those who ask for a way of looking;
-    // worked out, each gives what it is given.
-    group: ([given]) => given ?? [],
+    // worked out, it gives what it is given.
     flat: ([given]) => given ?? [],
+    // Grouped along an axis, as the field's functions still ask, it is the set as it is;
+    // given a function, it is the pure group of lists.
+    group: ([given, by]) => (typeof by === "string" ? (given ?? []) : group!([given ?? null, by ?? null])),
+
+    everything: unread("everything", "ask a pattern of what is wanted"),
+    types: unread("types", "find the instances of the type type"),
+    store: unread("store", "ask a pattern of what is wanted in it"),
+    search: unread("search", "find what says a word with said(?h, key, word)"),
+    named: unread("named", 'find by name with [?h, "name", name]'),
+    since: unread("since", "read the store's log"),
   };
 }

@@ -4,8 +4,8 @@
 // holding it taken, until a holon held by none: the root. Each is called as a card calls
 // it (summary.ts).
 
-import { h } from "../../components/jsx.ts";
-import { isRecord, isRef, ref, type Value } from "../../engine/next/read/values.ts";
+import { h } from "./jsx.ts";
+import { isRecord, isRef, ref, type Value } from "../../engine/read/values.ts";
 import { applying, applyingEach, type Glass } from "./carried.ts";
 import type { Space } from "./chassis.ts";
 import { saidOf, titleOf } from "./summary.ts";

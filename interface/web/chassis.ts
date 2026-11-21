@@ -22,11 +22,11 @@
 // another may propose its own removal: the drawing around it is proposed what it was
 // given first without that item.
 
-import type { Change } from "../../engine/next/commit/change.ts";
-import type { Answer, Committed, Engine, Read } from "../../engine/next/engine.ts";
-import { after, waits } from "../../engine/next/read/maybe.ts";
-import { isHandle } from "../../engine/next/commit/change.ts";
-import { isRecord, ref, type Ref, type Value } from "../../engine/next/read/values.ts";
+import type { Change } from "../../engine/commit/change.ts";
+import type { Answer, Committed, Engine, Read } from "../../engine/engine.ts";
+import { after, waits } from "../../engine/read/maybe.ts";
+import { isHandle } from "../../engine/commit/change.ts";
+import { isRecord, ref, type Ref, type Value } from "../../engine/read/values.ts";
 import { applying, proposing, type Glass } from "./carried.ts";
 import { asHolon, type Find } from "./find.ts";
 

@@ -17,8 +17,8 @@
 // them away. Enter takes an option only once the arrows have chosen one, so a text typed
 // whole is asked as it is.
 
-import { h } from "../../components/jsx.ts";
-import type { Value } from "../../engine/next/read/values.ts";
+import { h } from "./jsx.ts";
+import type { Value } from "../../engine/read/values.ts";
 import { applying } from "./carried.ts";
 import type { Realization } from "./chassis.ts";
 import { completer, completing, taken, type Completing, type Option } from "./complete.ts";
