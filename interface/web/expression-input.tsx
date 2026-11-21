@@ -11,11 +11,17 @@
 //
 // Enter submits the form the input stands in, so whoever keeps the address may mark a
 // step there.
+//
+// As it is typed, what may finish the word at the caret is offered beneath it
+// (complete.ts): the arrows move among the options, Tab or Enter takes one, Escape puts
+// them away. Enter takes an option only once the arrows have chosen one, so a text typed
+// whole is asked as it is.
 
 import { h } from "../../components/jsx.ts";
 import type { Value } from "../../engine/next/read/values.ts";
 import { applying } from "./carried.ts";
 import type { Realization } from "./chassis.ts";
+import { completer, completing, taken, type Completing, type Option } from "./complete.ts";
 
 const continuing = "| add a step, or type to ask anew";
 const beginning = "An expression, as @Knowledge";
@@ -36,11 +42,17 @@ export const expressionInput: Realization = (given, space) => {
       spellcheck="false"
       aria-label="Expression"
       placeholder={beginning}
+      role="combobox"
+      aria-autocomplete="list"
+      aria-expanded="false"
+      aria-controls="completions"
     />
   ) as HTMLInputElement;
+  const offered = (<ul class="completions" id="completions" role="listbox" hidden />) as HTMLUListElement;
   const node = (
     <form class="expression-input" role="search" onSubmit={submit}>
       {input}
+      {offered}
     </form>
   ) as HTMLFormElement;
 
@@ -70,6 +82,8 @@ export const expressionInput: Realization = (given, space) => {
     event.preventDefault();
     const text = continued(asked, input.value);
     input.value = "";
+    offering++;
+    offer([]);
     void propose(text);
   }
 
@@ -106,8 +120,92 @@ export const expressionInput: Realization = (given, space) => {
     return "value" in answer ? printed(answer.value) : undefined;
   }
 
+  // What is offered now, for what is being typed, and the one the arrows chose.
+  const complete = completer(space);
+  let options: Option[] = [];
+  let completingNow: Completing | undefined;
+  let chosen = -1;
+  let offering = 0;
+
+  function offer(each: Option[], now?: Completing) {
+    options = each;
+    completingNow = now;
+    chosen = -1;
+    offered.replaceChildren(
+      ...each.map((option, i) => (
+        <li
+          role="option"
+          id={`completion-${i}`}
+          aria-selected="false"
+          onMousedown={(event: Event) => {
+            event.preventDefault();
+            take(option);
+          }}
+        >
+          <span class="name">{option.name}</span>
+          {option.takes && <span class="takes">{option.takes}</span>}
+          {option.says && <span class="says">{option.says}</span>}
+        </li>
+      )),
+    );
+    offered.hidden = each.length === 0;
+    input.setAttribute("aria-expanded", String(each.length > 0));
+    input.removeAttribute("aria-activedescendant");
+  }
+
+  async function offerFor() {
+    const mine = ++offering;
+    const now = completing(input.value, input.selectionStart ?? input.value.length);
+    if (!now) return offer([]);
+    const each = await complete(now).catch(() => []);
+    if (mine === offering) offer(each, now);
+  }
+
+  function choose(by: number) {
+    if (!options.length) return;
+    chosen = (chosen + by + options.length + (chosen < 0 && by < 0 ? 1 : 0)) % options.length;
+    [...offered.children].forEach((each, i) => each.setAttribute("aria-selected", String(i === chosen)));
+    input.setAttribute("aria-activedescendant", `completion-${chosen}`);
+    offered.children[chosen]?.scrollIntoView?.({ block: "nearest" });
+  }
+
+  function take(option: Option) {
+    if (!completingNow) return;
+    const { text, caret } = taken(
+      input.value,
+      input.selectionStart ?? input.value.length,
+      completingNow,
+      option,
+    );
+    input.value = text;
+    input.setSelectionRange(caret, caret);
+    offering++;
+    offer([]);
+  }
+
+  input.addEventListener("input", () => void offerFor());
+  input.addEventListener("blur", () => {
+    offering++;
+    offer([]);
+  });
+
   input.addEventListener("keydown", (event) => {
     if (input.readOnly) return;
+    if (options.length) {
+      const taking = event.key === "Tab" || (event.key === "Enter" && chosen >= 0);
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        return choose(event.key === "ArrowDown" ? 1 : -1);
+      }
+      if (taking) {
+        event.preventDefault();
+        return take(options[Math.max(chosen, 0)]!);
+      }
+      if (event.key === "Escape") {
+        offering++;
+        return offer([]);
+      }
+    }
     if (event.key === "Escape") input.value = "";
     if (event.key === "Backspace" && input.value === "" && asked) {
       event.preventDefault();

@@ -15,7 +15,8 @@
 //   each mount a use of its component, keeping its id, its offer a list of refs;
 //   each component's template a list of held uses; each board's widgets, each
 //     showing a held use; and
-//   the natives parse and print, a pair, each naming the other its reverse.
+//   the natives parse and print, a pair, each naming the other its reverse; and
+//   the natives that now take otherwise than the field said, declared as they take now.
 //
 // Expressions are found where the types that hold them say, never by searching text:
 // many words of the field say "call". A placeholder is optional where the field already
@@ -70,6 +71,21 @@ const taking: Record<string, Takes[]> = {
   axis: ["string"],
   moment: ["string"],
   function: ["function"],
+};
+
+// The natives that take otherwise than the field once said, each as it is now: group,
+// once a way of looking at a set, is a pure native of lists.
+// Its functions in the field still group along an axis, a string, so what it groups by
+// is a function or one.
+const redeclared: Record<string, { name: string; says: string; input: Place[] }> = {
+  group: {
+    name: "group",
+    says: "A list in groups: a record of lists, each item kept under what the function gives it, said as a key.",
+    input: [
+      { name: "list", takes: ["list", "holon"] },
+      { name: "by", takes: ["function", "string"] },
+    ],
+  },
 };
 
 // The words of a takes that stand for any number given.
@@ -442,7 +458,9 @@ export async function migrate(
     change.holons.push(...pair, await besideIn(field, native.holon.id, pair.slice(0, 2)));
   }
 
-  for (const { holon, store } of functions) {
+  for (const { holon: kept, store } of functions) {
+    const now = kept.body.takes !== undefined ? redeclared[kept.body.native as string] : undefined;
+    const holon = now ? { ...kept, name: now.name, body: { ...kept.body, says: now.says } } : kept;
     const { gives, takes, ...body } = holon.body;
     if (gives === undefined && takes === undefined) continue;
 
@@ -458,7 +476,7 @@ export async function migrate(
       continue;
     }
 
-    const places = takesToInput(takes);
+    const places = now?.input ?? takesToInput(takes);
     const made = places && placeholders(places, ctx);
     if (made) inputs.set(holon.id, made.input);
     change.holons.push(

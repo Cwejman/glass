@@ -12,6 +12,7 @@ import type { Holon } from "../../stores/store.ts";
 // What the interface asks of glass, by route from glass's level.
 const routes = {
   use: "types/use",
+  function: "types/function",
   store: "types/store",
   shape: "types/shape",
   row: "types/row",

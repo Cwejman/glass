@@ -1,12 +1,14 @@
 // Where a holon stands in the holarchy: the wholes that hold it, from its store's root
 // down to it, each a step back to it. What holds a holon is the one thing it cannot say
 // of itself, so each step up is asked of the engine (the native in), the first whole
-// holding it taken, until a holon held by none: the root.
+// holding it taken, until a holon held by none: the root. Each is called as a card calls
+// it (summary.ts).
 
 import { h } from "../../components/jsx.ts";
 import { isRecord, isRef, ref, type Value } from "../../engine/next/read/values.ts";
 import { applying, applyingEach, type Glass } from "./carried.ts";
 import type { Space } from "./chassis.ts";
+import { saidOf, titleOf } from "./summary.ts";
 
 // So many steps up are asked at most: a holarchy deeper than this is cut at its top.
 const deepest = 24;
@@ -31,12 +33,12 @@ export async function wholesOf(read: Space["read"], glass: Glass, id: string): P
   const answer = await read(
     applyingEach(
       glass,
-      "get",
-      ids.map((each) => [ref(each), "name"]),
+      "holon",
+      ids.map((each) => [ref(each)]),
     ),
   );
-  const names = "value" in answer && Array.isArray(answer.value) ? answer.value : [];
-  return ids.map((each, i) => ({ id: each, ...(typeof names[i] === "string" && { name: names[i] }) }));
+  const holons = "value" in answer && Array.isArray(answer.value) ? answer.value : [];
+  return ids.map((each, i) => ({ id: each, name: titleOf(saidOf(holons[i] ?? null), each) }));
 }
 
 // The steps as a breadcrumb: each whole a link, the holon itself where it ends.

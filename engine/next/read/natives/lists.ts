@@ -29,6 +29,17 @@ export function lists({ apply }: Calling): Record<string, Native> {
     slice: ([items, from, to]) =>
       list(items).slice(Number(from ?? 0), typeof to === "number" ? to : undefined),
     reverse: ([items]) => [...list(items)].reverse(),
+    // The items in groups, a record of lists, each item under what the function gives it,
+    // said as a key: a string as it is, any other value as JSON writes it.
+    group: ([items, fn]) =>
+      after(each(items!, fn!), (keys) => {
+        const groups: Record<string, Value[]> = {};
+        list(items).forEach((item, i) => {
+          const key = typeof keys[i] === "string" ? keys[i] : JSON.stringify(keys[i] ?? null);
+          (groups[key] ??= []).push(item);
+        });
+        return groups;
+      }),
 
     // Hashed, so a list is weighed once, not once for every item.
     has: ([items, item]) => list(items).some((each) => same(each, item)),

@@ -130,6 +130,8 @@ const otherwise: Record<string, string> = {
   "in(@awaiting)": "a holon referring twice under one key is one fact, so said once",
   'log("site") | first': "the log is newest first, each commit with when, by and at, as the store keeps it",
   'log("main") | take(3) | map(c => c.says)': "the log is newest first",
+  'group(type(@main:types/thread), "parent") | size':
+    "group is pure now, a record of lists keyed by what a function gives each item, where it gave the set as it was",
 };
 
 const args = process.argv.slice(2);

@@ -66,6 +66,7 @@ const natives = [
   "eq",
   "parse",
   "print",
+  "group",
 ];
 const fn = (name: string) => id(10 + natives.indexOf(name));
 const kinds = { value: id(3), number: id(4), string: id(5), list: id(6) };
@@ -203,6 +204,15 @@ describe("reading over stores", () => {
     const gives = use("map", [1, 2, 3], lambda([x], use("add", x, x)));
     expect((await read(gives, holons)).value).toEqual([2, 4, 6]);
     expect((await read([1, { two: 2 }, gives], holons)).value).toEqual([1, { two: 2 }, [2, 4, 6]]);
+  });
+
+  test("group gives a record of lists, each item under what the function gives it", async () => {
+    const read = await field();
+    const { holons, use, placeholder, function: lambda } = carried();
+    const x = placeholder(kinds.number, "x");
+
+    const gives = use("group", [1, 2, 3, 4, 5], lambda([x], use("lt", x, 3)));
+    expect((await read(gives, holons)).value).toEqual({ true: [1, 2], false: [3, 4, 5] });
   });
 
   test("a holon is read from the store that keeps it, and says so", async () => {

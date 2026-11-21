@@ -220,10 +220,15 @@ describe("the page's read over glass, the interface shipped", () => {
     expect(into.querySelector(".brief h1")!.textContent).toBe("Notes");
     expect([...into.querySelectorAll(".brief p")].map((p) => p.textContent)).toEqual([
       "Notes hold.",
-      "Inner",
       "Within",
     ]);
-    expect(into.querySelector(".brief .face a")!.getAttribute("href")).toBe(`?q=@${notes.inner}`);
+    // The brief read opens with its first paragraph, as its lede.
+    expect(into.querySelector(".brief p")!.classList.contains("lede")).toBe(true);
+    // A brief in its flow is a card leading to it, saying what it is.
+    const face = into.querySelector<HTMLAnchorElement>(".brief .face a.card")!;
+    expect(face.getAttribute("href")).toBe(`?q=@${notes.inner}`);
+    await settled(() => face.querySelector(".card-kind")!.textContent === "brief · in glass");
+    expect(face.querySelector(".card-name")!.textContent).toBe("Inner");
     expect(into.querySelector(".brief h2 a")!.getAttribute("href")).toBe(`?q=@${notes.part}`);
     stop();
   });
@@ -383,6 +388,90 @@ describe("the page's read over glass, the interface shipped", () => {
     await settled(() => into.querySelector(".card .card-name")?.textContent === "glass");
     expect(into.querySelector(".start h1")!.textContent).toBe("Glass");
     expect(into.querySelector(".card")!.getAttribute("href")).toBe(`?q=@${id(90)}`);
+    stop();
+  });
+
+  test("a card says what its holon is: a whole, how many it holds", async () => {
+    const { into, stop } = await reading("");
+    const glass = () => into.querySelector<HTMLAnchorElement>(`.card[href="?q=@${id(90)}"]`);
+    await settled(() => glass()?.querySelector(".card-says")?.textContent === "9 held");
+    expect(glass()!.querySelector(".card-kind")!.textContent).toBe("store");
+    stop();
+  });
+
+  test("a record's long list of holons is a section under its key, shown as cards, rows or a table, kept for the place", async () => {
+    localStorage.clear();
+    const { into, stop } = await reading(`@${id(90)}`);
+    const contents = () => into.querySelector<HTMLElement>(".holon .field .holons");
+    await settled(() => contents()?.querySelector(".card-name")?.textContent === "types");
+    // Short fields stand beside their keys; the list is a section of its own, under its key.
+    expect([...into.querySelectorAll(".holon .fields dt")].map((dt) => dt.textContent)).toEqual(["shape"]);
+    expect(contents()!.querySelector("h2.key")!.textContent).toBe("contents");
+    expect(contents()!.querySelector(".rows")!.getAttribute("data-mode")).toBe("cards");
+    // Nothing most of them keep, so no table.
+    expect(contents()!.querySelector<HTMLButtonElement>('button[data-mode="table"]')!.hidden).toBe(true);
+
+    contents()!.querySelector<HTMLButtonElement>('button[data-mode="rows"]')!.click();
+    expect(contents()!.querySelector(".rows")!.getAttribute("data-mode")).toBe("rows");
+    expect(localStorage.getItem(`glass:shown:${id(90)}/contents`)).toBe("rows");
+    stop();
+
+    // Drawn again, the list is shown as it was last.
+    const again = await reading(`@${id(90)}`);
+    await settled(() => again.into.querySelector(".holon .field .holons .card-name")?.textContent === "types");
+    expect(again.into.querySelector(".holon .field .rows")!.getAttribute("data-mode")).toBe("rows");
+    again.stop();
+  });
+
+  test("holons keeping the same fields may be shown as a table of them", async () => {
+    localStorage.clear();
+    const { into, stop } = await reading(`[@First, @${notes.query}]`);
+    const table = () => into.querySelector<HTMLButtonElement>('.holons button[data-mode="table"]');
+    await settled(() => table() && !table()!.hidden);
+    table()!.click();
+    await settled(() => into.querySelector(".table tbody"));
+    expect([...into.querySelectorAll(".table thead th")].map((th) => th.textContent)).toEqual(["name", "text"]);
+    expect([...into.querySelectorAll(".table tbody tr")].map((tr) => tr.textContent)).toEqual([
+      "FirstGlass holds holons",
+      "query1 | add(2) | add(3)",
+    ]);
+    expect(into.querySelector<HTMLElement>(".holons .rows")!.hidden).toBe(true);
+    stop();
+  });
+
+  test("typed into, the bar offers the functions that exist, and the holons by name, to be taken", async () => {
+    const { into, stop } = await reading("@First");
+    await settled(() => into.querySelector("h1")?.textContent === "First");
+    const input = into.querySelector<HTMLInputElement>(".expression-input input")!;
+    const offered = () => [...into.querySelectorAll(".completions li .name")].map((name) => name.textContent);
+    const typing = (text: string) => {
+      input.value = text;
+      input.setSelectionRange(text.length, text.length);
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    };
+    const pressing = (key: string) =>
+      input.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
+
+    typing("| ge");
+    await settled(() => offered()[0] === "get");
+    expect(input.getAttribute("aria-expanded")).toBe("true");
+    pressing("ArrowDown");
+    expect(into.querySelector('.completions li[aria-selected="true"] .name')!.textContent).toBe("get");
+    pressing("Enter");
+    expect(input.value).toBe("| get");
+    expect(offered()).toEqual([]);
+
+    typing("@Sec");
+    await settled(() => offered()[0] === "Second");
+    pressing("Tab");
+    expect(input.value).toBe("@Second");
+
+    // Escape puts the options away, and leaves what is typed.
+    typing("| ma");
+    await settled(() => offered().includes("map"));
+    pressing("Escape");
+    expect(offered()).toEqual([]);
+    expect(input.value).toBe("| ma");
     stop();
   });
 

@@ -7,12 +7,15 @@ import { isRef, list, type Value } from "../values.ts";
 import type { Calling, Native } from "./natives.ts";
 import { holdersOf, references } from "./holons.ts";
 import { inOrder } from "./sets.ts";
+import { lists } from "./lists.ts";
 
 const unread = (name: string, instead: string) => () => {
   throw new Error(`${name} scanned every holon of the field, which is not read; ${instead}`);
 };
 
-export function legacy({ field, apply }: Calling): Record<string, Native> {
+export function legacy(calling: Calling): Record<string, Native> {
+  const { field, apply } = calling;
+  const { group } = lists(calling);
   const ids = (value: unknown) => list(value).flatMap((each) => (isRef(each) ? [each.$ref] : []));
 
   // What the holons given connect to, down what they refer to or up what refers to them.
@@ -105,9 +108,11 @@ export function legacy({ field, apply }: Calling): Record<string, Native> {
     },
 
     // How a set is looked at, read by its shape by those who ask for a way of looking;
-    // worked out, each gives what it is given.
-    group: ([given]) => given ?? [],
+    // worked out, it gives what it is given.
     flat: ([given]) => given ?? [],
+    // Grouped along an axis, as the field's functions still ask, it is the set as it is;
+    // given a function, it is the pure group of lists.
+    group: ([given, by]) => (typeof by === "string" ? (given ?? []) : group!([given ?? null, by ?? null])),
 
     everything: unread("everything", "ask a pattern of what is wanted"),
     types: unread("types", "find the instances of the type type"),

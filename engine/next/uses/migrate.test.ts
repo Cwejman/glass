@@ -231,6 +231,7 @@ const takes: Record<string, string[]> = {
   type: ["set"],
   if: ["value", "value", "value"],
   lt: ["value", "value"],
+  group: ["set", "axis"],
 };
 const nativeNames = Object.keys(takes);
 const fn = (name: string) => id(10 + nativeNames.indexOf(name));
@@ -268,7 +269,7 @@ const glass: Holon[] = [
   ...nativeNames.map((name) => ({
     id: fn(name),
     instance: [id(1)],
-    name,
+    name: name === "group" ? "Group by" : name,
     body: { native: name, takes: takes[name] },
   })),
   {
@@ -361,6 +362,17 @@ describe("a field migrated", () => {
     // The mount is a use now, naming no component, so it is drawn for one to be found.
     expect(await next.read({ gives: { $ref: id(32) } })).toMatchObject({
       value: { $draw: null, given: [[{ $ref: id(40) }, { $ref: id(41) }]], at: [id(32)] },
+    });
+
+    // group, once a way of looking at a set, is declared as the pure native it is now.
+    expect(await asking(call(fn("get"), { $ref: fn("group") }, "name"))).toMatchObject({ value: "group" });
+    const byN = { fn: ["note"], gives: call(fn("get"), { var: "note" }, "n") };
+    expect(
+      await asking(call(fn("group"), { list: [{ $ref: id(40) }, { $ref: id(41) }, { $ref: id(40) }] }, byN)),
+    ).toMatchObject({ value: { 1: [{ $ref: id(40) }, { $ref: id(40) }], 5: [{ $ref: id(41) }] } });
+    // Along an axis, as the field's functions still ask, it gives the set as it is.
+    expect(await asking(call(fn("group"), { list: [{ $ref: id(40) }] }, "type"))).toMatchObject({
+      value: [{ $ref: id(40) }],
     });
 
     expect((await migrate(next, new Map([["glass", store]]))).commits).toEqual([]);

@@ -2,7 +2,8 @@
 // leading to it, then the flow and sections of its own. Each brief is read as a whole
 // that enters no brief within it, live, so its prose is drawn from one answer (prose.tsx).
 // What stands in a flow that is not prose is drawn by the component found for it, but a
-// brief standing there, a break, is a link to it: it is read where it leads.
+// brief standing there, a break, is a link to it: it is read where it leads. The brief
+// read opens with its first paragraph as its lede.
 //
 // Every brief read is drawn again whenever any of them changes, all at once, so each
 // drawing within keeps its place among the rest. Given another brief, what is shown is
@@ -17,6 +18,7 @@ import { isRecord, isRef, ref, type Value } from "../../engine/next/read/values.
 import { applying } from "./carried.ts";
 import { arrange, awaiting, note, type Realization, type Space } from "./chassis.ts";
 import { block, refsOf, type Holons, type Read } from "./prose.tsx";
+import { cardOf, named } from "./value.tsx";
 
 export const brief: Realization = (given, space) => {
   const node = (<article class="brief" />) as HTMLElement;
@@ -76,7 +78,9 @@ export const brief: Realization = (given, space) => {
     drawnRoot = root;
     done();
     const reached = new Set<string>();
-    space.redraw(() => arrange(node, [section(root!, 1, reached, drawer(space))]));
+    const drawn = section(root!, 1, reached, drawer(space));
+    void named(drawn, space, ".face a[data-row]");
+    space.redraw(() => arrange(node, [drawn]));
     reading(reached);
   }
 
@@ -93,6 +97,8 @@ export const brief: Realization = (given, space) => {
       return block(holons, inner) ?? (holon?.types.includes("brief") ? faceOf(holon) : drawn(inner));
     });
     const parts = refsOf(brief.body.parts).filter((part) => !reached.has(part));
+    const [first] = flow;
+    if (depth === 1 && first instanceof HTMLParagraphElement) first.classList.add("lede");
 
     return (
       <section>
@@ -146,13 +152,10 @@ export const brief: Realization = (given, space) => {
 // A brief as it is read: what its whole gives, or the problem it met, as last answered.
 type Reading = { holons?: Holons; problem?: string; said?: string; stop?: () => void };
 
-// A brief standing in another's flow: a link to it, by its name.
+// A brief standing in another's flow: a card leading to it, by its name, saying its
+// first paragraph once read.
 const faceOf = (brief: Read): Node => (
-  <p class="face">
-    <a class="ref" href={`?q=@${brief.id}`} data-ref={brief.id}>
-      {brief.name ?? `@${brief.id}`}
-    </a>
-  </p>
+  <div class="face">{cardOf(brief.id, brief.name ?? `@${brief.id}`)}</div>
 );
 
 // What a whole gives: its holons, or the problem it met.
