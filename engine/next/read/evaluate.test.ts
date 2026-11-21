@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { contentOf, hashOf, partOf } from "../../../stores/act.ts";
 import type { Act, Head, Holon, Store } from "../../../stores/store.ts";
-import { folderStorage } from "../../../stores/strata/storage/folder.ts";
+import { folderStorages } from "../../../stores/strata/storage/folder.ts";
 import { strata } from "../../../stores/strata/strata.ts";
 import { evaluate } from "./evaluate.ts";
 import type { Value } from "./values.ts";
@@ -19,7 +19,7 @@ const ref = (n: number, holds = false) => (holds ? { $ref: id(n), $holds: true }
 async function storeOf(root: string, holons: Holon[]): Promise<{ store: Store; head: Head | null }> {
   const folder = mkdtempSync(join(tmpdir(), "glass-read-"));
   made.push(folder);
-  const store = strata(folderStorage(folder));
+  const store = strata(folderStorages(folder));
   if (!holons.length) return { store, head: null };
 
   const part = partOf(holons);

@@ -15,7 +15,7 @@ import { storesHere } from "../stores.ts";
 import type { Store } from "../stores/store.ts";
 import { convert } from "../stores/strata/convert.ts";
 import { blobsOf } from "../stores/strata/head.ts";
-import { folderStorage } from "../stores/strata/storage/folder.ts";
+import { folderStorages } from "../stores/strata/storage/folder.ts";
 import { strata } from "../stores/strata/strata.ts";
 
 const repo = join(import.meta.dir, "..");
@@ -90,8 +90,9 @@ if (!builtNext.success) throw new AggregateError(builtNext.logs, "building the p
 cpSync(join(import.meta.dir, "next", "index.html"), join(next, "index.html"));
 
 // Each store in strata, as the new engine reads it: converted, its expressions written
-// again as uses, the interface shipped in glass, then its head and every blob the head reaches written gzipped to
-// next/strata/<name>/, which the browser unpacks.
+// again as uses, the interface shipped in glass, then its history and its index, each
+// head and every blob it reaches, written gzipped to next/strata/<name>/ and its index/
+// within, which the browser unpacks.
 const converted = mkdtempSync(join(tmpdir(), "glass-strata-"));
 try {
   const names = [...(await storesHere()).keys()];
@@ -100,7 +101,7 @@ try {
 
   for (const name of names) {
     await convert(name, join(converted, name));
-    stores.set(name, strata(folderStorage(join(converted, name))));
+    stores.set(name, strata(folderStorages(join(converted, name))));
     await migrating.mount(name, stores.get(name)!, { write: true });
   }
   await migrate(migrating, stores);
@@ -108,12 +109,16 @@ try {
   for (const name of names) await migrating.unmount(name);
 
   for (const name of names) {
-    const from = join(converted, name);
-    const out = join(next, "strata", name);
-    mkdirSync(join(out, "blobs"), { recursive: true });
-    writeFileSync(join(out, "head"), readFileSync(join(from, "head")));
-    for (const blob of await blobsOf(folderStorage(from)))
-      writeFileSync(join(out, "blobs", blob), Bun.gzipSync(readFileSync(join(from, "blobs", blob))));
+    const blobs = await blobsOf(folderStorages(join(converted, name)));
+    for (const [from, out, reached] of [
+      [join(converted, name), join(next, "strata", name), blobs.history],
+      [join(converted, name, "index"), join(next, "strata", name, "index"), blobs.index],
+    ] as const) {
+      mkdirSync(join(out, "blobs"), { recursive: true });
+      writeFileSync(join(out, "head"), readFileSync(join(from, "head")));
+      for (const blob of reached)
+        writeFileSync(join(out, "blobs", blob), Bun.gzipSync(readFileSync(join(from, "blobs", blob))));
+    }
   }
 } finally {
   rmSync(converted, { recursive: true, force: true });

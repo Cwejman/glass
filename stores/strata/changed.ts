@@ -7,21 +7,21 @@ import type { Act } from "../store.ts";
 import { keyOf } from "./entries.ts";
 import { commitAt, type State } from "./head.ts";
 import { stamps } from "./read.ts";
-import type { Storage } from "./storage/storage.ts";
+import type { Storages } from "./storage/storage.ts";
 
-export async function changedSince(storage: Storage, { over, touches }: Act, now: State | null) {
+export async function changedSince(storages: Storages, { over, touches }: Act, now: State | null) {
   if ((over?.commit ?? null) === (now?.commit ?? null)) return false;
   if (!now) return true;
 
-  const view = { runs: now.runs, upTo: (await commitAt(storage, now.commit)).number };
+  const view = { runs: now.runs, upTo: (await commitAt(storages.history, now.commit)).number };
   const after = over
-    ? await commitAt(storage, over.commit).then(
+    ? await commitAt(storages.history, over.commit).then(
         ({ number }) => number,
         () => null,
       )
     : 0;
   if (after === null) return true;
-  if (over && !(await stamps(storage, view, "acts", keyOf([over.act]))).some(({ act }) => act === after))
+  if (over && !(await stamps(storages, view, "acts", keyOf([over.act]))).some(({ act }) => act === after))
     return true;
 
   const keys = [
@@ -29,7 +29,7 @@ export async function changedSince(storage: Storage, { over, touches }: Act, now
     ...touches.addresses.map((address) => ["addresses", keyOf(address)] as const),
   ];
   for (const [tree, key] of keys)
-    if ((await stamps(storage, view, tree, key)).some(({ act }) => act > after)) return true;
+    if ((await stamps(storages, view, tree, key)).some(({ act }) => act > after)) return true;
 
   return false;
 }

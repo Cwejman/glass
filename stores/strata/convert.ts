@@ -21,7 +21,7 @@ import {
 import { holonsOf, storesHere } from "../../stores.ts";
 import { contentOf, hashOf, partOf } from "../act.ts";
 import type { Act, Head, Holon } from "../store.ts";
-import { folderStorage } from "./storage/folder.ts";
+import { folderStorages } from "./storage/folder.ts";
 import { strata } from "./strata.ts";
 
 // Time spent apart: reading the old format and making each act from it, and strata taking
@@ -37,7 +37,7 @@ export async function convert(name: string, into: string, converted: (spent: Spe
   const root = (await holonsOf(old)).find((holon) => isRoot(holon, (id) => types.get(id)))!.id;
   const entries = await old.fullLog();
   const placed = entries.find(({ line }) => line.conversion)?.line.conversion?.blocks ?? [];
-  const store = strata(folderStorage(into));
+  const store = strata(folderStorages(into));
   let head: Head | null = null;
   const spent: Spent = { acts: 0, reading: 0, offering: 0 };
 

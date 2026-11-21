@@ -1,40 +1,50 @@
-// Taking an act. Its part is written first: the holons this store keeps of it, as
-// partOf in ../act.ts writes them, so its name is the hash the act names for this store.
-// Then its run: its entries for every tree, only what changed, each fact the old
-// versions said that the new ones do not taken out, and each fact only the new ones say
-// put in, and the act itself, by its content hash. Last its commit, over the head it is
-// laid on.
+// Taking an act. Into the history go its part, the holons this store keeps of it, as
+// partOf in ../act.ts writes them, so its name is the hash the act names for this store;
+// and its commit, over the latest. Into the index goes its run: its entries for every
+// tree, only what changed, each fact the old versions said that the new ones do not taken
+// out, and each fact only the new ones say put in, and the act itself, by its content
+// hash. The run follows from the history alone, so the index can trail the commits and be
+// written by whoever catches it up.
 
-import { byId, lineOf } from "../act.ts";
+import { byId, lineOf, partOf } from "../act.ts";
 import type { Act, Holon } from "../store.ts";
 import { entriesOf, factChanges, heldBy, keyOf, type Change, type Changes, type Tree } from "./entries.ts";
-import { commitAt, commitBytes, type State, type View } from "./head.ts";
+import { commitAt, commitBytes, type View } from "./head.ts";
 import { holonAt, wholesOf } from "./read.ts";
 import { runOf, type Run } from "./run.ts";
-import type { Storage } from "./storage/storage.ts";
+import type { Storage, Storages } from "./storage/storage.ts";
 
 const encoder = new TextEncoder();
 
-// Writes the act's part and its run, against the store as of a view, and gives the run.
-export async function writeAct(storage: Storage, view: View | null, act: Act): Promise<Run> {
+// What an act's run is worked out from: what its commit and its part keep of it. born
+// only spares looking for versions before, so an act read back from history names none.
+export type Indexed = Pick<Act, "hash" | "own" | "parts" | "holons" | "gone" | "born">;
+
+// Writes the act's part into the history, and gives its name, or null where the store
+// keeps none of the act's holons.
+export async function writePart(history: Storage, act: Act) {
+  const part = partOf(act.holons);
+  return part && history.put(part);
+}
+
+// Writes the act's run into the index, against the store as of a view, and gives the run.
+export async function writeRun(storages: Storages, view: View | null, act: Indexed): Promise<Run> {
   // The versions before, of the holons the act writes and lets go, except those this
   // store has never kept.
   const before = new Map<string, Holon | null>();
   const born = new Set(act.born);
   for (const id of [...act.holons.map((holon) => holon.id), ...act.gone])
-    before.set(id, born.has(id) ? null : ((await holonAt(storage, view, id))?.version ?? null));
+    before.set(id, born.has(id) ? null : ((await holonAt(storages, view, id))?.version ?? null));
 
-  const lines: string[] = [];
+  // Where each holon lies in the part.
+  const part = act.parts.find(([store]) => store === act.own)?.[1] ?? null;
   const places = new Map<string, [number, number]>();
   let offset = 0;
   for (const holon of [...act.holons].sort(byId)) {
-    const line = lineOf(holon);
-    const length = encoder.encode(line).length;
-    lines.push(line);
+    const length = encoder.encode(lineOf(holon)).length;
     places.set(holon.id, [offset, length]);
     offset += length + 1;
   }
-  const part = lines.length ? await storage.put(encoder.encode(lines.join("\n"))) : null;
 
   const changes = changesMap();
   changes.add({ acts: [[keyOf([act.hash]), true]] });
@@ -51,29 +61,24 @@ export async function writeAct(storage: Storage, view: View | null, act: Act): P
     changes.add(factChanges(old, null));
   }
 
-  changes.add(await addressChanges(storage, view, act, before));
+  changes.add(await addressChanges(storages, view, act, before));
 
   const run = runOf(entriesOf(changes.gathered()));
-  return { blob: await storage.put(run.bytes), count: run.count, index: run.index };
+  return { blob: await storages.index.put(run.bytes), count: run.count, index: run.index };
 }
 
-// The commit of an act laid over a head: the act whole, this store's name for itself,
-// the head's commit before it, and the number after the head's.
-export async function commitOver(storage: Storage, at: State | null, act: Act) {
-  const before = at && (await commitAt(storage, at.commit));
-  const number = (before?.number ?? 0) + 1;
+// The bytes of an act's commit over the latest: the act whole, this store's name for
+// itself, the latest commit before it, and the number after the latest's.
+export async function commitOver(history: Storage, latest: string | null, act: Act) {
+  const before = latest === null ? null : await commitAt(history, latest);
   const { when, says, by, at: seen, gone, parts } = act;
 
-  return {
-    number,
-    bytes: commitBytes({
-      act:
-        by === undefined ? { when, says, at: seen, gone, parts } : { when, says, by, at: seen, gone, parts },
-      own: act.own,
-      predecessors: at ? [at.commit] : [],
-      number,
-    }),
-  };
+  return commitBytes({
+    act: by === undefined ? { when, says, at: seen, gone, parts } : { when, says, by, at: seen, gone, parts },
+    own: act.own,
+    predecessors: latest ? [latest] : [],
+    number: (before?.number ?? 0) + 1,
+  });
 }
 
 // The addresses an act places and takes away: only what changed. A whole it writes gives
@@ -81,9 +86,9 @@ export async function commitOver(storage: Storage, at: State | null, act: Act) {
 // it no longer holds; the parts it held before and still holds keep theirs. A holon it
 // renames or lets go moves within, or out of, every whole that held it and still does.
 async function addressChanges(
-  storage: Storage,
+  storages: Storages,
   view: View | null,
-  act: Act,
+  act: Indexed,
   before: Map<string, Holon | null>,
 ): Promise<Changes> {
   const written = new Map(act.holons.map((holon) => [holon.id, holon]));
@@ -94,7 +99,7 @@ async function addressChanges(
     if (now && written.has(id)) return written.get(id)!.name;
     if (now && gone.has(id)) return undefined;
     if (before.has(id)) return before.get(id)?.name;
-    return (await holonAt(storage, view, id))?.version.name;
+    return (await holonAt(storages, view, id))?.version.name;
   };
 
   const wholes = [...written.values(), ...[...gone].map((id) => before.get(id)).filter(Boolean)] as Holon[];
@@ -120,7 +125,7 @@ async function addressChanges(
     const [was, is] = [before.get(id)?.name, gone.has(id) ? undefined : written.get(id)?.name];
     if (was === is || !view) continue;
 
-    for (const whole of await wholesOf(storage, view, id)) {
+    for (const whole of await wholesOf(storages, view, id)) {
       if (gone.has(whole)) continue;
       if (written.has(whole) && !heldBy(written.get(whole)!).includes(id)) continue;
       if (was !== undefined) addresses.push([keyOf([whole, was]), null]);

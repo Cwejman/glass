@@ -6,7 +6,7 @@ import type { Expression } from "../../../language/expression.ts";
 import { sameThread } from "../../../runtime/runtime.ts";
 import { contentOf, hashOf, partOf } from "../../../stores/act.ts";
 import type { Act, Holon, Store } from "../../../stores/store.ts";
-import { folderStorage } from "../../../stores/strata/storage/folder.ts";
+import { folderStorages } from "../../../stores/strata/storage/folder.ts";
 import { strata } from "../../../stores/strata/strata.ts";
 import { engine } from "../engine.ts";
 import {
@@ -199,7 +199,7 @@ describe("expressions as uses", () => {
 async function begun(holons: Holon[], root: string): Promise<Store> {
   const folder = mkdtempSync(join(tmpdir(), "glass-migrate-"));
   made.push(folder);
-  const store = strata(folderStorage(folder));
+  const store = strata(folderStorages(folder));
   const part = partOf(holons);
   const said = {
     when: "2026-11-18T00:00:00.000Z",

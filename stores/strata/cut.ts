@@ -39,7 +39,7 @@ import { storesHere } from "../../stores.ts";
 import { contentOf, hashOf, partOf } from "../act.ts";
 import type { Act, Head, Holon } from "../store.ts";
 import { marked, typesEverywhere } from "./convert.ts";
-import { folderStorage } from "./storage/folder.ts";
+import { folderStorages } from "./storage/folder.ts";
 import { strata } from "./strata.ts";
 
 // A store cut into: its name; its root, the old root it takes its share of and the id it
@@ -539,7 +539,7 @@ export async function cut(
           })
       : [];
 
-  const stores = new Map(plan.stores.map(({ name }) => [name, strata(folderStorage(join(into, name)))]));
+  const stores = new Map(plan.stores.map(({ name }) => [name, strata(folderStorages(join(into, name)))]));
   const heads = new Map<string, Head | null>(plan.stores.map(({ name }) => [name, null]));
   const kept = new Map(plan.stores.map(({ name }) => [name, new Set<string>()]));
 

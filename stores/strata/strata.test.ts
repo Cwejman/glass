@@ -4,8 +4,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { contentOf, hashOf, partOf } from "../act.ts";
 import type { Act, Head, Holon, Question, Store } from "../store.ts";
-import { headAt, stateNow } from "./head.ts";
-import { folderStorage } from "./storage/folder.ts";
+import { headAt, indexNow } from "./head.ts";
+import { folderStorages } from "./storage/folder.ts";
+import type { Storage } from "./storage/storage.ts";
 import { strata } from "./strata.ts";
 
 const made: string[] = [];
@@ -14,8 +15,8 @@ afterAll(() => made.forEach((at) => rmSync(at, { recursive: true, force: true })
 function opened() {
   const folder = mkdtempSync(join(tmpdir(), "glass-strata-"));
   made.push(folder);
-  const storage = folderStorage(folder);
-  return { storage, store: strata(storage) };
+  const storages = folderStorages(folder);
+  return { storages, store: strata(storages) };
 }
 
 const id = (n: number) => String(n).padStart(15, "0");
@@ -312,24 +313,24 @@ describe("acts that race", () => {
 });
 
 test("one act offered twice at once, by two instances over one storage, is taken once", async () => {
-  const { storage, store } = opened();
-  const twin = strata(storage);
+  const { storages, store } = opened();
+  const twin = strata(storages);
   const offered = await act(null, [note]);
   const replies = await Promise.all([store.offer(offered), twin.offer(offered)]);
 
-  const now = (await stateNow(storage))!;
+  const now = (await indexNow(storages.index))!;
   expect(replies).toEqual([
-    { accepted: await headAt(storage, now.commit) },
-    { accepted: await headAt(storage, now.commit) },
+    { accepted: await headAt(storages.history, now.commit) },
+    { accepted: await headAt(storages.history, now.commit) },
   ]);
   expect(now.runs).toHaveLength(1);
-  expect(await read(store, await headAt(storage, now.commit), { holon: id(1) })).toEqual([note]);
+  expect(await read(store, await headAt(storages.history, now.commit), { holon: id(1) })).toEqual([note]);
 });
 
 test("a rename racing a hold, from two instances over one storage, leaves the index as the commits make it", async () => {
   for (let trial = 0; trial < 10; trial++) {
-    const { storage, store } = opened();
-    const other = strata(storage);
+    const { storages, store } = opened();
+    const other = strata(storages);
     const first = await accepted(store, act(null, [note, { ...whole, body: { parts: [] } }]));
 
     const hold = await act(first, [whole], [], { ids: [id(2)], addresses: [[id(2), "Notes"]] });
@@ -337,7 +338,7 @@ test("a rename racing a hold, from two instances over one storage, leaves the in
     const replies = await Promise.all([store.offer(hold), other.offer(rename)]);
     expect(replies.every((reply) => "accepted" in reply)).toBe(true);
 
-    const latest = await headAt(storage, (await stateNow(storage))!.commit);
+    const latest = await headAt(storages.history, (await indexNow(storages.index))!.commit);
     expect(await read(store, latest, { address: [id(2), "Notes"] })).toEqual([]);
     expect((await read(store, latest, { address: [id(2), "Renamed"] }))[0].id).toBe(id(1));
   }
@@ -380,7 +381,7 @@ test("runs of many pages answer every key and every range, before and after they
 describe("compaction", () => {
   test("runs are merged as acts come, and every head still reads as it did", async () => {
     const waiting = 16;
-    const { storage, store } = opened();
+    const { storages, store } = opened();
     let head: Head | null = null;
     const heads: Head[] = [];
 
@@ -393,11 +394,11 @@ describe("compaction", () => {
     }
     await new Promise((resolve) => setTimeout(resolve, 200));
 
-    const now = (await stateNow(storage))!;
+    const now = (await indexNow(storages.index))!;
     // Runs grow by doubling: twenty acts of one holon each leave a few runs, not twenty.
     expect(now.runs.length).toBeLessThanOrEqual(5);
 
-    const latest = await headAt(storage, now.commit);
+    const latest = await headAt(storages.history, now.commit);
     expect(latest).toEqual(head!);
     for (let n = 0; n < waiting + 4; n++)
       expect(await read(store, latest, { said: { a: "text", word: `word${n}` } })).toHaveLength(1);
@@ -433,7 +434,7 @@ test("a subscriber is told the head, and every move of it", async () => {
   await new Promise((resolve) => setTimeout(resolve, 150));
   stop();
 
-  // Compaction moves the head too, to the same commit, and no subscriber is told.
+  // Compaction moves only the index's head, and no subscriber is told of it.
   expect(told).toEqual([null, head]);
 });
 
@@ -448,30 +449,29 @@ test("on a worker, strata compacts what its acts lay", async () => {
     head = await accepted(store, act(head, [{ ...note, id: id(n), name: `n${n}` }]));
   await new Promise((resolve) => setTimeout(resolve, 300));
 
-  const storage = folderStorage(folder);
-  expect((await stateNow(storage))!.runs.length).toBeLessThan(5);
+  expect((await indexNow(folderStorages(folder).index))!.runs.length).toBeLessThan(5);
   expect(await read(store, head!, { holon: id(4) })).toHaveLength(1);
 });
 
 test("compaction waits while a read is under way", async () => {
-  const { storage } = opened();
+  const { storages } = opened();
   let release!: () => void;
   const held = new Promise<void>((resolve) => (release = resolve));
   let holding = false;
 
-  // A storage that holds the first read asked of it once holding, so that read stays
+  // Storages that hold the first read asked of either once holding, so that read stays
   // under way until released.
-  const slow = {
+  const slow = (storage: Storage): Storage => ({
     ...storage,
-    read: async (...args: Parameters<typeof storage.read>) => {
+    read: async (...args) => {
       if (holding) {
         holding = false;
         await held;
       }
       return storage.read(...args);
     },
-  };
-  const store = strata(slow);
+  });
+  const store = strata({ history: slow(storages.history), index: slow(storages.index) });
   // Holons no other test writes, so no part of theirs is read from what is kept in memory.
   const first = await accepted(
     store,
@@ -492,12 +492,12 @@ test("compaction waits while a read is under way", async () => {
   const more = [7, 8, 9].map((n) => ({ ...note, id: id(n), name: `n${n}` }));
   await accepted(store, act(first, [{ ...note, body: { text: "again" } }, ...more]));
   await new Promise((resolve) => setTimeout(resolve, 100));
-  const whileReading = (await stateNow(storage))!.runs.length;
+  const whileReading = (await indexNow(storages.index))!.runs.length;
 
   release();
   await reading;
   await new Promise((resolve) => setTimeout(resolve, 200));
-  const afterwards = (await stateNow(storage))!.runs.length;
+  const afterwards = (await indexNow(storages.index))!.runs.length;
 
   expect([whileReading, afterwards]).toEqual([2, 1]);
 });

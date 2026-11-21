@@ -6,20 +6,20 @@
 // any blob a read waits on, so it comes to read as a store on a machine does. Reads go
 // through a pool of pages in memory, the browser keeping no page cache for OPFS.
 
-import { blobsOf, stateNow } from "./head.ts";
-import { browserStorage, type BrowserStorage, type Kept } from "./storage/browser.ts";
+import { blobsOf, indexNow } from "./head.ts";
+import { browserStorages, type BrowserStorage, type Kept } from "./storage/browser.ts";
 import { pooled } from "./storage/pool.ts";
 import { strata } from "./strata.ts";
 
 export default async ({ whole = false, ...kept }: Kept & { whole?: boolean }) => {
-  const storage = await browserStorage(kept);
-  if (whole) void keepAll(storage);
-  return strata(pooled(storage));
+  const storages = await browserStorages(kept);
+  if (whole) void keepAll(storages);
+  return strata({ history: pooled(storages.history), index: pooled(storages.index) });
 };
 
-// The index kept first, since every read needs it; then every other blob the head
-// reaches, which walking the commits names.
-async function keepAll(storage: BrowserStorage) {
-  await storage.keep((await stateNow(storage))?.runs.map(({ blob }) => blob) ?? []);
-  await storage.keep(await blobsOf(storage));
+// The index kept first, since every read needs it; then every commit and part, which
+// walking the commits names.
+async function keepAll({ history, index }: { history: BrowserStorage; index: BrowserStorage }) {
+  await index.keep((await indexNow(index))?.runs.map(({ blob }) => blob) ?? []);
+  await history.keep((await blobsOf({ history, index })).history);
 }

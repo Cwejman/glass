@@ -21,7 +21,7 @@ import { sameThread, workers } from "../../runtime/runtime.ts";
 import { storesHere } from "../../stores.ts";
 import type { Store } from "../../stores/store.ts";
 import { convert } from "../../stores/strata/convert.ts";
-import { folderStorage } from "../../stores/strata/storage/folder.ts";
+import { folderStorages } from "../../stores/strata/storage/folder.ts";
 import { strata } from "../../stores/strata/strata.ts";
 import { localEngine } from "../serve/local.ts";
 import { engine } from "./engine.ts";
@@ -156,7 +156,7 @@ const mounted = new Map<string, Store>();
 for (const name of names) {
   const store = inWorkers
     ? await runtime.run<Store>(storeCode, { folder: join(folder, name) })
-    : strata(folderStorage(join(folder, name)));
+    : strata(folderStorages(join(folder, name)));
   await next.mount(name, store, { write: true });
   mounted.set(name, store);
 }

@@ -1,5 +1,6 @@
 // A storage in a browser. Blobs and the head are kept in OPFS, in a folder of the store's
-// own, laid out as a folder on a machine is: blobs/ and head. A blob read is kept open, as
+// own, laid out as a folder on a machine is: blobs/ and head, and a strata store's index in
+// index/ within its history's folder. A blob read is kept open, as
 // a file is on a machine: in a worker, through a synchronous handle opened read-only, so
 // any number of tabs and workers may hold one on the same blob; elsewhere, as the File
 // read once. Blobs never change, so what is kept open always reads right. The browser
@@ -24,10 +25,23 @@ export type Kept = { folder: string; from?: string };
 // A browser's storage, which can also be asked to keep blobs before any read needs them.
 export type BrowserStorage = Storage & { keep(names: string[]): Promise<void> };
 
+// A strata store's storages in a browser: its history in its folder, its index in index/
+// within it, as a site publishes them too.
+export async function browserStorages({
+  folder,
+  from,
+}: Kept): Promise<{ history: BrowserStorage; index: BrowserStorage }> {
+  return {
+    history: await browserStorage({ folder, from }),
+    index: await browserStorage({ folder: `${folder}/index`, from: from && `${from}index/` }),
+  };
+}
+
+// The storage in a folder, which may lie within another, as a/b.
 export async function browserStorage({ folder, from }: Kept): Promise<BrowserStorage> {
-  const opfs = await navigator.storage.getDirectory();
-  const glass = await opfs.getDirectoryHandle("glass", { create: true });
-  const kept = await glass.getDirectoryHandle(folder, { create: true });
+  let kept = await navigator.storage.getDirectory();
+  for (const name of ["glass", ...folder.split("/")])
+    kept = await kept.getDirectoryHandle(name, { create: true });
   const blobs = await kept.getDirectoryHandle("blobs", { create: true });
   const opened = new Map<string, Promise<Opened>>();
 

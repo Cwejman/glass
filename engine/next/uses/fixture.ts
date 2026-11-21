@@ -10,7 +10,7 @@ import { join } from "node:path";
 import { sameThread } from "../../../runtime/runtime.ts";
 import { contentOf, hashOf, partOf } from "../../../stores/act.ts";
 import type { Act, Holon, Store } from "../../../stores/store.ts";
-import { folderStorage } from "../../../stores/strata/storage/folder.ts";
+import { folderStorages } from "../../../stores/strata/storage/folder.ts";
 import { strata } from "../../../stores/strata/strata.ts";
 import { engine, type Engine } from "../engine.ts";
 import { shipInterface } from "./interface.ts";
@@ -150,7 +150,7 @@ export const cleanUp = () => made.splice(0).forEach((at) => rmSync(at, { recursi
 export async function storeOf(holons: Holon[]): Promise<Store> {
   const folder = mkdtempSync(join(tmpdir(), "glass-fixture-"));
   made.push(folder);
-  const store = strata(folderStorage(folder));
+  const store = strata(folderStorages(folder));
 
   const part = partOf(holons);
   const said = {

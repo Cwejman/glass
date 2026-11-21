@@ -17,8 +17,8 @@ import { sameThread } from "../../runtime/runtime.ts";
 import type { Holon, Store } from "../store.ts";
 import { marked, typesEverywhere } from "./convert.ts";
 import { cleaner, glassCut, oldStores, placement, placing, type Plan } from "./cut.ts";
-import { commitAt, headAt, stateNow } from "./head.ts";
-import { folderStorage } from "./storage/folder.ts";
+import { commitAt, headAt, latestCommit } from "./head.ts";
+import { folderStorages } from "./storage/folder.ts";
 import { strata } from "./strata.ts";
 
 // What differs, each said in a line, and how many holons each store holds.
@@ -42,11 +42,11 @@ export async function parity(old: ReadonlyMap<string, OldStore>, plan: Plan, int
   // its root holds, all the way down.
   const cut = new Map<string, { root: string; store: Store; holons: Map<string, Holon> }>();
   for (const { name } of plan.stores) {
-    const storage = folderStorage(join(into, name));
-    const store = strata(storage);
-    const now = (await stateNow(storage))!;
-    const root = (await commitAt(storage, now.commit)).own;
-    const lines = await store.read(await headAt(storage, now.commit), { whole: { id: root } });
+    const storages = folderStorages(join(into, name));
+    const store = strata(storages);
+    const latest = (await latestCommit(storages.history))!;
+    const root = (await commitAt(storages.history, latest)).own;
+    const lines = await store.read(await headAt(storages.history, latest), { whole: { id: root } });
     const holons = new Map(
       new TextDecoder()
         .decode(lines)

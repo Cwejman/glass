@@ -1,5 +1,6 @@
 // A storage in a folder on a machine: each blob a file in blobs/, named by its hash, and
-// the head a file holding a short text. Any number of processes may share the folder.
+// the head a file holding a short text. Any number of processes may share the folder. A
+// strata store's two storages are one folder: its history in it, its index in index/.
 //
 // A blob is written beside its place and renamed into it, so no reader sees half of one.
 // A rename is not a compare-and-swap, so moving the head takes a lock file for the swap
@@ -18,7 +19,13 @@
 import { closeSync, fstatSync, mkdirSync, openSync, readSync, watch } from "node:fs";
 import { readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { Missing, nameOf, type Storage } from "./storage.ts";
+import { Missing, nameOf, type Storage, type Storages } from "./storage.ts";
+
+// A strata store's storages in a folder: its history in the folder, its index in index/.
+export const folderStorages = (folder: string): Storages => ({
+  history: folderStorage(folder),
+  index: folderStorage(join(folder, "index")),
+});
 
 // The storage's methods, over the folder given.
 export function folderStorage(folder: string): Storage {

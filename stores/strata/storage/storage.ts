@@ -7,7 +7,15 @@
 // one wins and the others read the new head and try again. Blobs can be read in part,
 // at an offset, so strata reads the page it needs, not the whole blob.
 //
+// A strata store keeps two storages. Its history holds the commits and the shares, and
+// its head names the latest commit: the record, which nothing derives. Its index holds the
+// runs, and its head names the commit the index is up to and the runs that make it: all
+// of it worked out from the history, so it can be lost and built again. Kept in git, a
+// store keeps its history and leaves its index to be rebuilt.
+//
 // folder.ts keeps a storage in a folder on a machine.
+
+export type Storages = { history: Storage; index: Storage };
 
 export type Storage = {
   // Writes a blob and returns its name. Writing a blob that exists already does nothing.

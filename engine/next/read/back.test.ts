@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { contentOf, hashOf, partOf } from "../../../stores/act.ts";
 import type { Act, Holon } from "../../../stores/store.ts";
-import { folderStorage } from "../../../stores/strata/storage/folder.ts";
+import { folderStorages } from "../../../stores/strata/storage/folder.ts";
 import { strata } from "../../../stores/strata/strata.ts";
 import { evaluate } from "./evaluate.ts";
 import type { Value } from "./values.ts";
@@ -39,7 +39,7 @@ language.find(({ name }) => name === "chain")!.body.reverse = fn("steps");
 async function field() {
   const folder = mkdtempSync(join(tmpdir(), "glass-back-"));
   made.push(folder);
-  const store = strata(folderStorage(folder));
+  const store = strata(folderStorages(folder));
 
   const part = partOf(language);
   const said = {

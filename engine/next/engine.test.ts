@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { sameThread, workers } from "../../runtime/runtime.ts";
 import { contentOf, hashOf, partOf } from "../../stores/act.ts";
 import type { Act, Head, Holon, Store } from "../../stores/store.ts";
-import { folderStorage } from "../../stores/strata/storage/folder.ts";
+import { folderStorages } from "../../stores/strata/storage/folder.ts";
 import { strata } from "../../stores/strata/strata.ts";
 import { buffer } from "../../stores/buffer/buffer.ts";
 import { begun as bufferBegun, typed } from "../../stores/buffer/string.ts";
@@ -126,7 +126,7 @@ async function begun(store: Store, holons: Holon[]) {
 
 // An engine on one thread over the two stores, glass only read and notes written.
 async function started(): Promise<Engine> {
-  const [language, written] = [strata(folderStorage(folder())), strata(folderStorage(folder()))];
+  const [language, written] = [strata(folderStorages(folder())), strata(folderStorages(folder()))];
   await begun(language, glass);
   await begun(written, notes);
 
@@ -301,8 +301,8 @@ describe("the engine", () => {
 
   test("on workers, with the stores reached over the wire, it reads and commits the same", async () => {
     const [languageAt, writtenAt] = [folder(), folder()];
-    await begun(strata(folderStorage(languageAt)), glass);
-    await begun(strata(folderStorage(writtenAt)), notes);
+    await begun(strata(folderStorages(languageAt)), glass);
+    await begun(strata(folderStorages(writtenAt)), notes);
 
     const runtime = workers();
     const storeCode = new URL("../../stores/strata/machine.ts", import.meta.url);
@@ -328,7 +328,7 @@ const otherwise = (store: Store, methods: Partial<Store>): Store => ({ ...store,
 // An engine on one thread over glass, read, and notes, written, with more stores mounted
 // beside them as given, and how many workers.
 async function startedWith(more: Record<string, Store> = {}, count = 2, write = false) {
-  const [language, written] = [strata(folderStorage(folder())), strata(folderStorage(folder()))];
+  const [language, written] = [strata(folderStorages(folder())), strata(folderStorages(folder()))];
   await begun(language, glass);
   await begun(written, notes);
 
@@ -353,7 +353,7 @@ const more: Holon[] = [
 ];
 
 async function moreStore() {
-  const store = strata(folderStorage(folder()));
+  const store = strata(folderStorages(folder()));
   await begun(store, more);
   return store;
 }
@@ -494,14 +494,14 @@ describe("changes at once", () => {
 
   test("two engines over one storage, editing one holon at once, both land, one after the other", async () => {
     const [languageAt, writtenAt] = [folder(), folder()];
-    await begun(strata(folderStorage(languageAt)), glass);
-    await begun(strata(folderStorage(writtenAt)), notes);
+    await begun(strata(folderStorages(languageAt)), glass);
+    await begun(strata(folderStorages(writtenAt)), notes);
 
     const engines = await Promise.all(
       [1, 2].map(async () => {
         const one = await engine({ workers: sameThread(), count: 2 });
-        await one.mount("glass", strata(folderStorage(languageAt)));
-        await one.mount("notes", strata(folderStorage(writtenAt)), { write: true });
+        await one.mount("glass", strata(folderStorages(languageAt)));
+        await one.mount("notes", strata(folderStorages(writtenAt)), { write: true });
         return one;
       }),
     );
@@ -867,7 +867,7 @@ describe("a buffer", () => {
   // An engine on one thread over glass, read, and a string buffer named bar, written,
   // begun through the engine: the id of the holon its string is kept in.
   async function typing() {
-    const language = strata(folderStorage(folder()));
+    const language = strata(folderStorages(folder()));
     await begun(language, glass);
 
     const glassEngine = await engine({ workers: sameThread(), count: 2 });

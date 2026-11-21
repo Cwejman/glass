@@ -10,9 +10,9 @@ import { memoryFiles } from "../../integrations/glass/files.ts";
 import { act, commit, idAt, openStore, type Store as OldStore } from "../../integrations/glass/store.ts";
 import type { Holon } from "../store.ts";
 import { cut, type Plan } from "./cut.ts";
-import { commitAt, headAt, stateNow } from "./head.ts";
+import { commitAt, headAt, latestCommit } from "./head.ts";
 import { parity } from "./parity.ts";
-import { folderStorage } from "./storage/folder.ts";
+import { folderStorages } from "./storage/folder.ts";
 import { strata } from "./strata.ts";
 
 const made: string[] = [];
@@ -258,11 +258,11 @@ const plan: Plan = {
 
 // Every holon a cut store keeps at head, by id, and the acts it took, newest first.
 async function kept(into: string, name: string) {
-  const storage = folderStorage(join(into, name));
-  const store = strata(storage);
-  const now = (await stateNow(storage))!;
-  const head = await headAt(storage, now.commit);
-  const own = (await commitAt(storage, now.commit)).own;
+  const { history, index } = folderStorages(join(into, name));
+  const store = strata({ history, index });
+  const latest = (await latestCommit(history))!;
+  const head = await headAt(history, latest);
+  const own = (await commitAt(history, latest)).own;
   const lines = async (question: Parameters<typeof store.read>[1]) =>
     new TextDecoder()
       .decode(await store.read(head, question))
