@@ -4,7 +4,7 @@
 // buffer, holding only the present, kept as one with the address, ?q= (address.ts).
 //
 // The site's stores are listed here, in its code. Published stores are read-only: their
-// pages are fetched from the site and kept in OPFS. The home is the reader's own, kept
+// blobs are fetched from the site, each store's whole once it opens, and kept in OPFS. The home is the reader's own, kept
 // only in this browser; it and the query are the stores written to.
 
 import type { Engine, Read } from "../engine/engine.ts";
@@ -36,9 +36,13 @@ const bufferCode = new URL("../stores/buffer/browser.ts", import.meta.url);
 // What the page draws: Reader, given the text the query holds.
 const root = 'Reader(get(@query:text, "text"))';
 
+// Each kept whole: once opened, what it holds is fetched in the background, its index first
+// and then its commits from the newest back, behind any read waiting, so moving within the
+// field soon waits on nothing fetched.
 const published = (name: string) => ({
   folder: name,
   from: new URL(`./strata/${name}/`, location.href).href,
+  whole: true,
 });
 
 try {

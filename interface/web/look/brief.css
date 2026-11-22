@@ -1,8 +1,9 @@
-/* Brief: prose to a measure. */
+/* Brief: prose to a measure, centred on the page. */
 
 /* A brief: prose to a measure, its sections spaced by the scale. */
 .brief {
   max-width: var(--measure);
+  margin-inline: auto;
 }
 .brief p,
 .brief ul,
