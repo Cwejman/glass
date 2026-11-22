@@ -75,6 +75,8 @@ export const brief: Realization = (given, space) => {
       if (!ready) return reading(reached);
     }
     drawnRoot = root;
+    // Drawn, it waits no longer: what was late is over.
+    clearTimeout(lateness);
     done();
     const reached = new Set<string>();
     const drawn = section(root!, 1, reached, drawer(space));
