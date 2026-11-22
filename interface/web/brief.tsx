@@ -43,7 +43,7 @@ export const brief: Realization = (given, space) => {
       read.set(id, each);
 
       void space
-        .subscribe(applying(space.glass, "whole", ref(id), null, ["brief"]), (answer) => {
+        .subscribe(applying(space.glass, "whole", ref(id), ["brief"]), (answer) => {
           // A store changing answers every read again; one answered as it was is not
           // drawn again.
           const said = JSON.stringify("value" in answer ? answer.value : answer.problem);
