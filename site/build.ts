@@ -8,7 +8,7 @@
 // converted. What it writes, site/dist/, is output only.
 
 import type { BunPlugin } from "bun";
-import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { storesHere } from "../stores.ts";
 import { blobsOf } from "../stores/strata/head.ts";
@@ -75,17 +75,44 @@ cpSync(join(import.meta.dir, "index.html"), join(dist, "index.html"));
 // Each store as it stands in its folder. A store whose index is missing or behind, as one
 // cloned from git, has it caught up from its history as it is found (stores.ts reads its
 // root through strata).
+// A store may still be compacting its index as it is copied, moving its head to runs the
+// blobs listed before do not reach; so a store is copied whole only when its heads read the
+// same before and after, and copied again otherwise.
+const headsOf = (folder: string) =>
+  [folder, join(folder, "index")].map((at) => readFileSync(join(at, "head"), "utf8")).join("\n");
+
 for (const [name, { folder }] of await storesHere()) {
-  const blobs = await blobsOf(folderStorages(folder));
-  for (const [from, out, reached] of [
-    [folder, join(dist, "strata", name), blobs.history],
-    [join(folder, "index"), join(dist, "strata", name, "index"), blobs.index],
-  ] as const) {
-    mkdirSync(join(out, "blobs"), { recursive: true });
-    writeFileSync(join(out, "head"), readFileSync(join(from, "head")));
-    for (const blob of reached)
-      writeFileSync(join(out, "blobs", blob), Bun.gzipSync(readFileSync(join(from, "blobs", blob))));
+  for (let tries = 1; ; tries++) {
+    const before = headsOf(folder);
+    try {
+      const blobs = await blobsOf(folderStorages(folder));
+      for (const [from, out, reached] of [
+        [folder, join(dist, "strata", name), blobs.history],
+        [join(folder, "index"), join(dist, "strata", name, "index"), blobs.index],
+      ] as const) {
+        rmSync(out, { recursive: true, force: true });
+        mkdirSync(join(out, "blobs"), { recursive: true });
+        writeFileSync(join(out, "head"), readFileSync(join(from, "head")));
+        for (const blob of reached)
+          writeFileSync(join(out, "blobs", blob), Bun.gzipSync(readFileSync(join(from, "blobs", blob))));
+      }
+      if (headsOf(folder) === before) break;
+    } catch (problem) {
+      if (tries >= 10) throw problem;
+    }
+    if (tries >= 10) throw new Error(`the store ${name} kept moving as it was copied`);
+    await Bun.sleep(500);
   }
+
+  // What is published must read: the history's head names a commit copied, and the index's
+  // head names its commit and then its runs, one a line, each copied.
+  const out = join(dist, "strata", name);
+  const [latest] = readFileSync(join(out, "head"), "utf8").trim().split("\n");
+  const [, ...runs] = readFileSync(join(out, "index", "head"), "utf8")
+    .trim()
+    .split("\n");
+  for (const [at, blob] of [[out, latest!], ...runs.map((run) => [join(out, "index"), run.split(" ")[0]!])])
+    if (!existsSync(join(at, "blobs", blob))) throw new Error(`the store ${name} was copied without ${blob}`);
 }
 
 for (const output of built.outputs) console.log(output.path.slice(repo.length + 1));
