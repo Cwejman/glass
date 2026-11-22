@@ -9,6 +9,7 @@
 
 import type { Engine, Read } from "../engine/engine.ts";
 import { addressed } from "../interface/web/address.ts";
+import { askingByKey } from "../interface/web/asking.ts";
 import { applying, found } from "../interface/web/carried.ts";
 import { draw, note } from "../interface/web/chassis.ts";
 import { finder } from "../interface/web/find.ts";
@@ -69,6 +70,7 @@ try {
     find: finder((read) => engine.read(read), glass, [...realized.keys()]),
   });
   inspecting(page, { engine, glass, root: read.value as unknown as Read });
+  askingByKey(document);
 } catch (problem) {
   page.replaceChildren(note(problem instanceof Error ? problem.message : String(problem)));
 } finally {

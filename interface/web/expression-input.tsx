@@ -16,9 +16,13 @@
 // (complete.ts): the arrows move among the options, Tab or Enter takes one, Escape puts
 // them away. Enter takes an option only once the arrows have chosen one, so a text typed
 // whole is asked as it is.
+//
+// It is shown only while the reader is asking (asking.ts): Enter, or Escape in an empty
+// input, returns the page to where it stands, as a press anywhere outside the bar does.
 
 import { h } from "./jsx.ts";
 import type { Value } from "../../engine/read/values.ts";
+import { asking } from "./asking.ts";
 import { applying } from "./carried.ts";
 import type { Realization } from "./chassis.ts";
 import { completer, completing, taken, type Completing, type Option } from "./complete.ts";
@@ -84,6 +88,10 @@ export const expressionInput: Realization = (given, space) => {
     input.value = "";
     offering++;
     offer([]);
+    if (text) {
+      input.blur();
+      asking(false, false);
+    }
     void propose(text);
   }
 
@@ -206,7 +214,13 @@ export const expressionInput: Realization = (given, space) => {
         return offer([]);
       }
     }
-    if (event.key === "Escape") input.value = "";
+    if (event.key === "Escape") {
+      if (!input.value) {
+        input.blur();
+        return asking(false, false);
+      }
+      input.value = "";
+    }
     if (event.key === "Backspace" && input.value === "" && asked) {
       event.preventDefault();
       void takeLast();

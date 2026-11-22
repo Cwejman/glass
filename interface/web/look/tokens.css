@@ -1,0 +1,107 @@
+/* The web chassis's tokens: the values the components' look is made of, each opened as a
+   variable to be tuned, and one day to be taken from the field. A palette in light and
+   dark. One spacing scale, 4 8 12 16 24 32 48; one gutter at the page's edges, and
+   nothing inset again within it; prose kept to a measure. One type scale: body text for
+   everything read, card and field and bar alike, a lede too; small for what is said about
+   it; a card's title a step up; and headings, clearly bigger, for a page's title and a
+   brief's prose, h5 kept to a notch. No line cuts the page: what scrolls fades itself out
+   beneath the bar and at the bottom edge. */
+
+:root {
+  --ground: #fbfaf7;
+  --raised: #ffffff;
+  --ink: #23211d;
+  --quiet: #6f6a61;
+  --line: #e4e0d7;
+  --link: #3d5a80;
+  --wash: rgb(0 0 0 / 0.035);
+  --raised-hover: #fcfaf6;
+  --serif: "Source Serif 4", Charter, Georgia, serif;
+  --sans: "Source Sans 3", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --mono: "Source Code Pro", ui-monospace, "SF Mono", Menlo, monospace;
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+  --s7: 48px;
+  --gutter: var(--s6);
+  --measure: 42rem;
+  --radius: 10px;
+  /* Where what scrolls meets an edge it fades itself out, eased, so no edge is felt. */
+  --fade-in: linear-gradient(
+    transparent,
+    rgb(0 0 0 / 0.024) 10%,
+    rgb(0 0 0 / 0.095) 20%,
+    rgb(0 0 0 / 0.206) 30%,
+    rgb(0 0 0 / 0.345) 40%,
+    rgb(0 0 0 / 0.5) 50%,
+    rgb(0 0 0 / 0.655) 60%,
+    rgb(0 0 0 / 0.794) 70%,
+    rgb(0 0 0 / 0.905) 80%,
+    rgb(0 0 0 / 0.976) 90%,
+    #000
+  );
+  --fade-out: linear-gradient(
+    #000,
+    rgb(0 0 0 / 0.976) 10%,
+    rgb(0 0 0 / 0.905) 20%,
+    rgb(0 0 0 / 0.794) 30%,
+    rgb(0 0 0 / 0.655) 40%,
+    rgb(0 0 0 / 0.5) 50%,
+    rgb(0 0 0 / 0.345) 60%,
+    rgb(0 0 0 / 0.206) 70%,
+    rgb(0 0 0 / 0.095) 80%,
+    rgb(0 0 0 / 0.024) 90%,
+    transparent
+  );
+  /* The bar: its controls' height, its place from the top, and how much of the page it
+     covers; the title stands a gap below it. */
+  --control: 28px;
+  --bar-top: var(--s4);
+  --bar-height: calc(var(--bar-top) + var(--control) + var(--s2));
+  --title-gap: 64px;
+  /* What scrolls is gone behind the bar, fades in over fade-top below it, the title at
+     rest standing just clear of it, and fades out over fade-bottom at the foot. */
+  --fade-from: var(--bar-height);
+  --fade-top: 64px;
+  --fade-bottom: 64px;
+  /* How long a surface takes to change: pointed at, and let go. */
+  --quick: 0.25s;
+  --slow: 0.6s;
+  /* Three registers, and prose headings above them. Small for what frames the page (the
+     bar, keys, the breadcrumb, quiet lines), body for what is read, a notch up for what
+     names a card or opens a brief. Headings climb from body by one ratio, h5 kept to the
+     notch, and the page title takes the next step on top. */
+  --size-small: 0.8125rem;
+  --size-body: 1rem;
+  --size-up: 1.125rem;
+  --size-title: 1.25rem;
+  --ratio: 1.35;
+  --size-h5: var(--size-up);
+  --size-h4: calc(var(--size-body) * var(--ratio) * 1.1);
+  --size-h3: calc(var(--size-h4) * var(--ratio));
+  --size-h2: calc(var(--size-h3) * var(--ratio));
+  --size-h1: calc(var(--size-h2) * var(--ratio));
+  color-scheme: light dark;
+  font: 16.5px / 1.55 var(--sans);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground: #171614;
+    --raised: #1e1d1a;
+    --ink: #e8e4dc;
+    --quiet: #9b958a;
+    --line: #2f2c28;
+    --link: #9db4d6;
+    --wash: rgb(255 255 255 / 0.05);
+    --raised-hover: #22211d;
+  }
+}
+@media (max-width: 640px) {
+  :root {
+    --gutter: var(--s4);
+    --ratio: 1.25;
+  }
+}

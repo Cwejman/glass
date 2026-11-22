@@ -1,0 +1,35 @@
+/* The faces glass is read in, shipped beside the components: Source Serif 4, Source Sans 3
+   and Source Code Pro, Latin only, under the OFL (fonts/LICENSE-OFL.txt). */
+
+@font-face {
+  font-family: "Source Serif 4";
+  font-weight: 200 900;
+  font-display: swap;
+  src: url("./fonts/source-serif-4-latin-opsz-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Source Serif 4";
+  font-style: italic;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url("./fonts/source-serif-4-latin-opsz-italic.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Source Sans 3";
+  font-weight: 200 900;
+  font-display: swap;
+  src: url("./fonts/source-sans-3-latin-wght-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Source Sans 3";
+  font-style: italic;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url("./fonts/source-sans-3-latin-wght-italic.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Source Code Pro";
+  font-weight: 200 900;
+  font-display: swap;
+  src: url("./fonts/source-code-pro-latin-wght-normal.woff2") format("woff2");
+}

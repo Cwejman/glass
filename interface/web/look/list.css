@@ -1,0 +1,18 @@
+/* List: items in a column, or in a row. */
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s5);
+}
+.list.row {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+}
+.list.row > .drawn:has(.expression-input) > .expression-input {
+  flex: 1 1 12em;
+  min-width: 0;
+  max-width: 36rem;
+}

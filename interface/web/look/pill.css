@@ -1,0 +1,43 @@
+/* Pill: a step of a query, which may be taken out. */
+
+.pill {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--s1);
+  margin: 0;
+  padding: 0 3px 0 var(--s3);
+  height: var(--control);
+  box-sizing: border-box;
+  border-radius: var(--radius);
+  background: var(--wash);
+  white-space: nowrap;
+}
+.pill .said {
+  font: inherit;
+  line-height: 1;
+}
+.pill button {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 7px;
+  padding: 0;
+  background: transparent;
+  color: var(--quiet);
+  font: inherit;
+  cursor: pointer;
+}
+.pill button:hover,
+.pill button:focus-visible {
+  color: var(--ink);
+  background: var(--line);
+}
+.pill.fixed {
+  padding-right: var(--s3);
+}
+.pill.fixed button {
+  display: none;
+}

@@ -2,8 +2,7 @@
 // leading to it, then the flow and sections of its own. Each brief is read as a whole
 // that enters no brief within it, live, so its prose is drawn from one answer (prose.tsx).
 // What stands in a flow that is not prose is drawn by the component found for it, but a
-// brief standing there, a break, is a link to it: it is read where it leads. The brief
-// read opens with its first paragraph as its lede.
+// brief standing there, a break, is a link to it: it is read where it leads.
 //
 // Every brief read is drawn again whenever any of them changes, all at once, so each
 // drawing within keeps its place among the rest. Given another brief, what is shown is
@@ -97,8 +96,6 @@ export const brief: Realization = (given, space) => {
       return block(holons, inner) ?? (holon?.types.includes("brief") ? faceOf(holon) : drawn(inner));
     });
     const parts = refsOf(brief.body.parts).filter((part) => !reached.has(part));
-    const [first] = flow;
-    if (depth === 1 && first instanceof HTMLParagraphElement) first.classList.add("lede");
 
     return (
       <section>

@@ -50,8 +50,13 @@ export const value: Realization = (given, space) => {
     space.redraw(() => {
       const made = drawn();
       const naming = named(made, space);
-      if (!naming) return arrange(node, [made]);
-      void naming.then(() => mine === turn && arrange(node, [made]));
+      const shown = () => {
+        arrange(node, [made]);
+        delete node.dataset.waiting;
+      };
+      if (!naming) return shown();
+      node.dataset.waiting = "";
+      void naming.then(() => mine === turn && shown());
     });
 
   function update([shown = null]: Value[]) {
@@ -62,6 +67,8 @@ export const value: Realization = (given, space) => {
 
       const mine = turn;
       let was: string | undefined;
+      // Until the holon is read and shown, whatever is shown is still what was.
+      node.dataset.waiting = "";
       void space
         .subscribe(applying(space.glass, "holon", ref(holon)), (answer) => {
           // A store changing answers every read again; one answered as it was is kept.
@@ -82,9 +89,12 @@ export const value: Realization = (given, space) => {
   return { node, update, dispose: unsubscribe };
 };
 
-// A value given to be drawn on its own: a list of holons as such, nothing said as such.
+// A value given to be drawn on its own: a list of holons as such, nothing said as such,
+// and a number or a truth, as a count is, a figure to be read at a glance.
 function topDrawn(shown: Value, space: Space): Node {
   if (shown === null) return note("Nothing.");
+  if (typeof shown === "number" || typeof shown === "boolean")
+    return <p class="figure">{typeof shown === "number" ? shown.toLocaleString("en") : String(shown)}</p>;
   if (Array.isArray(shown) && shown.length === 0) return note("An empty list.");
   if (Array.isArray(shown) && shown.every(isRef))
     return holonsOf(
@@ -95,13 +105,13 @@ function topDrawn(shown: Value, space: Space): Node {
 }
 
 // Whether a value is said beside its key: nothing, a number, a short line of words, a
-// holon, a few holons, a short list of words or numbers, or an empty record.
+// holon, a short list of words or numbers, or an empty record. A list of holons, however
+// short, is a section of its own.
 function isShort(value: Value): boolean {
   if (typeof value === "string") return value.length <= short && !value.includes("\n");
   if (value === null || typeof value !== "object") return true;
   if (isRef(value)) return true;
-  if (Array.isArray(value))
-    return value.length === 0 || (value.every(isRef) ? value.length <= inline : saidInline(value));
+  if (Array.isArray(value)) return value.length === 0 || (!value.every(isRef) && saidInline(value));
   return !isDrawing(value) && Object.keys(value).length === 0;
 }
 
@@ -112,7 +122,7 @@ const saidInline = (list: Value[]) =>
   list.join(", ").length < 80;
 
 const holonList = (value: Value): value is { $ref: string }[] =>
-  Array.isArray(value) && value.length > inline && value.every(isRef);
+  Array.isArray(value) && value.length > 0 && value.every(isRef);
 
 // A holon as the native holon reads it: its name, its types and store, what it says,
 // its short fields, then its long ones, and the fields it takes where it is a type.

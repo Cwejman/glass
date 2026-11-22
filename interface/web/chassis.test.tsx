@@ -222,8 +222,8 @@ describe("the page's read over glass, the interface shipped", () => {
       "Notes hold.",
       "Within",
     ]);
-    // The brief read opens with its first paragraph, as its lede.
-    expect(into.querySelector(".brief p")!.classList.contains("lede")).toBe(true);
+    // Its first paragraph reads as the rest do.
+    expect(into.querySelector(".brief p")!.classList.contains("lede")).toBe(false);
     // A brief in its flow is a card leading to it, saying what it is.
     const face = into.querySelector<HTMLAnchorElement>(".brief .face a.card")!;
     expect(face.getAttribute("href")).toBe(`?q=@${notes.inner}`);
@@ -264,14 +264,16 @@ describe("the page's read over glass, the interface shipped", () => {
     stop();
   });
 
-  test("a holon answered says where it stands: each whole holding it, from its store's root, a link back", async () => {
+  test("a holon answered says where it stands: home, then each whole holding it from its store's root, a link back", async () => {
     const { into, drawing } = await page();
     const stop = await drawing('Answer(parse("@First"))');
 
     await settled(() => into.querySelector(".trail [aria-current]")?.textContent === "First");
+    // Home first, then each whole holding it.
     const wholes = [...into.querySelectorAll<HTMLAnchorElement>(".trail a")];
-    expect(wholes.map((a) => a.textContent)).toEqual(["glass"]);
-    expect(wholes[0]!.getAttribute("href")).toBe(`?q=@${id(90)}`);
+    expect(wholes.map((a) => a.textContent)).toEqual(["Glass", "glass"]);
+    expect(wholes[0]!.getAttribute("href")).toBe("?q=");
+    expect(wholes[1]!.getAttribute("href")).toBe(`?q=@${id(90)}`);
     stop();
   });
 
@@ -552,7 +554,7 @@ describe("the page's read over glass, the interface shipped", () => {
     input.focus();
 
     typing(input, '| get("text")');
-    await settled(() => into.querySelector(".answer")!.textContent === "Glass holds holons");
+    await settled(() => into.querySelector(".answered")!.textContent === "Glass holds holons");
     expect(await held()).toBe('@First | get("text")');
     await settled(() => pills().length === 2);
     expect(input.value).toBe("");
@@ -561,7 +563,9 @@ describe("the page's read over glass, the interface shipped", () => {
     await settled(() => into.querySelector("h1")?.textContent === "Second");
     expect(await held()).toBe("@Second");
     expect(into.querySelector(".expression-input input")).toBe(input);
-    expect(document.activeElement).toBe(input);
+    // Asked, the page returns to where it stands: the input let go, the trail shown.
+    expect(document.activeElement).not.toBe(input);
+    expect(document.body.classList.contains("asking")).toBe(false);
     expect(input.value).toBe("");
     expect(input.readOnly).toBe(false);
     stop();
@@ -590,11 +594,11 @@ describe("the page's read over glass, the interface shipped", () => {
 
     await settled(() => pills().length === 3 && pills().every(Boolean));
     expect(pills()).toEqual(["1", "add(2)", "add(3)"]);
-    await settled(() => into.querySelector(".answer")!.textContent === "6");
+    await settled(() => into.querySelector(".answered")!.textContent === "6");
     const steps = history.length;
 
     into.querySelectorAll<HTMLButtonElement>(".pill button")[1]!.click();
-    await settled(() => pills().length === 2 && into.querySelector(".answer")!.textContent === "4");
+    await settled(() => pills().length === 2 && into.querySelector(".answered")!.textContent === "4");
     expect(await held()).toBe("add(1, 3)");
     expect(pills()).toEqual(["1", "add(3)"]);
     // The input holds none of what is asked: the pills say it.

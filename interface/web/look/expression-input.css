@@ -1,0 +1,86 @@
+/* ExpressionInput: what is typed next, and what may finish it. */
+
+.expression-input {
+  margin: 0;
+}
+.expression-input input {
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--control);
+  padding: 0 var(--s3);
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--wash);
+  color: inherit;
+  font: inherit;
+  transition: background 0.4s;
+}
+.expression-input input:hover,
+.expression-input input:focus {
+  outline: none;
+  background: color-mix(in srgb, var(--wash), var(--ink) 4%);
+}
+/* What may finish what is typed, offered beneath it. */
+.expression-input {
+  position: relative;
+}
+.completions {
+  position: absolute;
+  top: calc(100% + var(--s1));
+  left: 0;
+  z-index: 5;
+  box-sizing: border-box;
+  width: min(34rem, calc(100vw - 2 * var(--gutter)));
+  max-height: min(60vh, 28rem);
+  overflow-y: auto;
+  margin: 0;
+  padding: var(--s1);
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--raised);
+  box-shadow:
+    0 12px 32px rgb(0 0 0 / 0.12),
+    0 2px 6px rgb(0 0 0 / 0.06);
+}
+.completions[hidden] {
+  display: none;
+}
+.completions li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--s2);
+  padding: 3px var(--s3);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.completions li[aria-selected="true"],
+.completions li:hover {
+  background: var(--wash);
+}
+.completions .name {
+  font-weight: 600;
+}
+.completions .takes {
+  color: var(--quiet);
+}
+.completions .takes::before {
+  content: "(";
+}
+.completions .takes::after {
+  content: ")";
+}
+.completions .says {
+  flex: 1 0 100%;
+  overflow: hidden;
+  color: var(--quiet);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.expression-input input::placeholder {
+  color: var(--quiet);
+}
+.expression-input.fixed input {
+  color: var(--quiet);
+}

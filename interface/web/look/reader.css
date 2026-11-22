@@ -1,0 +1,76 @@
+/* The Reader: the bar over the answer. The bar, and the trail standing in its place at
+   rest, float over the top of the page with no surface of their own, so opening one,
+   pills wrapping, or a narrow page never moves what is read. The answer alone scrolls,
+   passing beneath them: under the bar it is gone, and below it fades in, eased, and so
+   too at the bottom edge, so nothing is laid over what passes and no edge is felt. */
+#glass > .drawn > .list:not(.row) {
+  position: relative;
+  gap: 0;
+  height: 100dvh;
+}
+#glass > .drawn > .list:not(.row) > .drawn > .answer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  margin-inline: calc(-1 * var(--gutter));
+}
+
+/* The bar and the trail: over the page, only what they hold to be pressed. */
+#glass > .drawn > .list > .drawn:first-child > .list.row,
+.answer > .trail-at {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  box-sizing: border-box;
+  padding: var(--bar-top) var(--gutter) var(--s2);
+  pointer-events: none;
+}
+#glass > .drawn > .list > .drawn:first-child > .list.row > *,
+.answer > .trail-at > * {
+  pointer-events: auto;
+}
+#glass > .drawn > .list > .drawn:first-child > .list.row {
+  left: calc(-1 * var(--gutter));
+  right: calc(-1 * var(--gutter));
+  flex-wrap: wrap;
+  gap: var(--s2);
+  font-size: var(--size-small);
+}
+.answer > .trail-at {
+  left: 0;
+  right: 0;
+}
+/* The pills stand beside the input as one run, wrapping onto more lines where long. */
+#glass > .drawn > .list > .drawn:first-child > .list.row > .drawn:first-child > .list.row {
+  display: contents;
+}
+
+/* At rest the page shows where it stands, the trail; asking, the bar in its place. */
+body:not(.asking) #glass > .drawn > .list > .drawn:first-child > .list.row,
+body.asking .answer > .trail-at {
+  display: none;
+}
+/* What the search could not read is said once, in the answer. */
+#glass > .drawn > .list > .drawn:first-child .note {
+  display: none;
+}
+
+.answer > .answered {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: calc(var(--bar-height) + var(--title-gap)) var(--gutter) calc(var(--s7) + var(--fade-bottom));
+  --fade-reach: calc(var(--fade-from) + var(--fade-top));
+  mask:
+    var(--fade-in) 0 var(--fade-from) / 100% var(--fade-top) no-repeat,
+    linear-gradient(#000, #000) 0 var(--fade-reach) / 100% calc(100% - var(--fade-reach) - var(--fade-bottom))
+      no-repeat,
+    var(--fade-out) bottom / 100% var(--fade-bottom) no-repeat;
+  -webkit-mask:
+    var(--fade-in) 0 var(--fade-from) / 100% var(--fade-top) no-repeat,
+    linear-gradient(#000, #000) 0 var(--fade-reach) / 100% calc(100% - var(--fade-reach) - var(--fade-bottom))
+      no-repeat,
+    var(--fade-out) bottom / 100% var(--fade-bottom) no-repeat;
+}

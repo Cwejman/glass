@@ -3,9 +3,15 @@
 // of itself, so each step up is asked of the engine (the native in), the first whole
 // holding it taken, until a holon held by none: the root. Each is called as a card calls
 // it (summary.ts).
+//
+// The trail is the top of the page at rest, the bar's input shown only while asking
+// (asking.ts): a press on its line, away from its links, or on its expression button at
+// its end, opens the input in its place. It begins at home, the start of the page, and
+// at home it is the expression button alone.
 
-import { h } from "./jsx.ts";
+import { h, type Child } from "./jsx.ts";
 import { isRecord, isRef, ref, type Value } from "../../engine/read/values.ts";
+import { asking } from "./asking.ts";
 import { applying, applyingEach, type Glass } from "./carried.ts";
 import type { Space } from "./chassis.ts";
 import { saidOf, titleOf } from "./summary.ts";
@@ -41,26 +47,60 @@ export async function wholesOf(read: Space["read"], glass: Glass, id: string): P
   return ids.map((each, i) => ({ id: each, name: titleOf(saidOf(holons[i] ?? null), each) }));
 }
 
-// The steps as a breadcrumb: each whole a link, the holon itself where it ends.
+// The steps as a breadcrumb, from home: each whole a link, the holon itself where it ends.
 export function trailOf(steps: Step[]): Node {
   const [...wholes] = steps.slice(0, -1);
   const here = steps.at(-1);
+  return line([
+    home(),
+    ...wholes.map(({ id, name }) => (
+      <li>
+        <a href={`?q=@${id}`} data-ref={id}>
+          {name ?? `@${id}`}
+        </a>
+      </li>
+    )),
+    here && (
+      <li aria-current="page" data-ref={here.id}>
+        {here.name ?? "this"}
+      </li>
+    ),
+  ]);
+}
+
+// What was asked, where it is no holon to stand at: its text, as one step.
+export const saidTrail = (text: string): Node =>
+  line([
+    home(),
+    <li aria-current="page" class="said">
+      <code>{text}</code>
+    </li>,
+  ]);
+
+// At home, the start of the page: nothing to stand at, only the expression button.
+export const homeTrail = (): Node => line([]);
+
+// The way home, the first step of every trail.
+const home = () => (
+  <li>
+    <a href="?q=" class="home">
+      Glass
+    </a>
+  </li>
+);
+
+function line(items: Child[]): Node {
+  const open = (event: Event) => {
+    if ((event.target as Element).closest("a")) return;
+    event.preventDefault();
+    asking(true);
+  };
   return (
-    <nav class="trail" aria-label="Where this stands">
-      <ol>
-        {wholes.map(({ id, name }) => (
-          <li>
-            <a href={`?q=@${id}`} data-ref={id}>
-              {name ?? `@${id}`}
-            </a>
-          </li>
-        ))}
-        {here && (
-          <li aria-current="page" data-ref={here.id}>
-            {here.name ?? "this"}
-          </li>
-        )}
-      </ol>
+    <nav class="trail" aria-label="Where this stands" onClick={open}>
+      <ol>{items}</ol>
+      <button type="button" class="ask" aria-label="Type an expression" title="Type an expression  /">
+        λ
+      </button>
     </nav>
   );
 }

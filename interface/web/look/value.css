@@ -1,0 +1,339 @@
+/* Value: a holon as a record, its fields, and holons in a list as cards, rows or a table. */
+
+/* A holon as a record: its title, a quiet line of what it is, what it says, then its
+   fields, each key beside its value. */
+/* What it is opens what is read of it, in the body's size, beside what it says. */
+.holon > header {
+  margin-bottom: var(--s5);
+}
+.holon .kind {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  margin: var(--s5) 0 0;
+  color: var(--quiet);
+}
+.holon .kind + .lede {
+  margin-top: var(--s1);
+}
+.holon .kind a {
+  color: var(--quiet);
+}
+.holon .kind a:hover {
+  color: var(--link);
+}
+.holon .kind > * + *::before {
+  content: "·";
+  margin-right: var(--s2);
+  color: var(--quiet);
+  display: inline-block;
+  text-decoration: none;
+}
+.lede {
+  margin: var(--s3) 0 0;
+  max-width: var(--measure);
+}
+/* Short fields, each key beside its value, the keys in one column. */
+.fields {
+  display: grid;
+  grid-template-columns: fit-content(12rem) minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--s2) var(--s5);
+  margin: 0;
+}
+.fields > div {
+  display: contents;
+}
+.fields .fields {
+  gap: var(--s1) var(--s4);
+}
+.fields dt {
+  color: var(--quiet);
+  font-size: var(--size-small);
+  overflow-wrap: anywhere;
+}
+.fields dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.fields dd > .words {
+  max-width: var(--measure);
+  display: inline-block;
+}
+.fields .shape {
+  display: block;
+  font: var(--size-small) / 1.4 var(--mono);
+  color: var(--quiet);
+}
+/* A long field, a section of its own under its key, the page's full width. */
+.field {
+  margin-top: var(--s6);
+}
+.holon > .fields + .field {
+  margin-top: var(--s6);
+}
+.holon > header + .field {
+  margin-top: 0;
+}
+.record > .field:first-child {
+  margin-top: 0;
+}
+h2.key {
+  margin: 0 0 var(--s3);
+  font: 600 var(--size-small) / 1.4 var(--sans);
+  color: var(--quiet);
+  letter-spacing: 0.02em;
+}
+.asks {
+  margin: var(--s6) 0 0;
+  font-size: var(--size-small);
+}
+.inline > * + *::before {
+  content: ", ";
+  color: var(--ink);
+}
+.inline > a + a::before {
+  display: inline-block;
+  white-space: pre;
+}
+a.unnamed {
+  color: var(--quiet);
+}
+a.expression {
+  text-decoration: none;
+}
+a.expression code {
+  display: inline-block;
+  padding: 2px var(--s2);
+  border-radius: 6px;
+  background: var(--wash);
+  color: var(--ink);
+  white-space: pre-wrap;
+}
+a.expression:hover code {
+  color: var(--link);
+}
+.items {
+  margin: 0;
+  padding-left: 1.4em;
+}
+.items > li + li {
+  margin-top: var(--s1);
+}
+pre.text {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+/* Holons in a list: their key and count, and the ways they may be shown, then the
+   cards on one grid, one gap between them, or rows, or a table. */
+.holons > header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s2);
+  margin-bottom: var(--s3);
+}
+.holons > header h2.key {
+  margin: 0;
+}
+.holons .count {
+  color: var(--quiet);
+  font-size: var(--size-small);
+  font-variant-numeric: tabular-nums;
+}
+.holons .modes {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+}
+.holons .modes button {
+  padding: 2px var(--s2);
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--quiet);
+  font: var(--size-small) / 1.4 var(--sans);
+  cursor: pointer;
+}
+.holons .modes button:hover {
+  color: var(--ink);
+}
+.holons .modes button[aria-pressed="true"] {
+  background: var(--wash);
+  color: var(--ink);
+}
+.rows {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+  gap: var(--s3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rows > .more {
+  grid-column: 1 / -1;
+  padding-top: var(--s2);
+  font-size: var(--size-small);
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  height: 100%;
+  box-sizing: border-box;
+  padding: var(--s4) var(--s4) var(--s3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--raised);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    background var(--slow),
+    border-color var(--slow);
+}
+/* Pointed at, a card's edge takes the link's colour and its face a slightly other tone, as
+   glass tilted a little. */
+.card:hover,
+.card:focus-visible {
+  border-color: color-mix(in srgb, var(--link) 50%, var(--line));
+  background: var(--raised-hover);
+  transition-duration: var(--quick);
+}
+.card .card-name {
+  font-size: var(--size-title);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--link);
+  overflow-wrap: anywhere;
+}
+.card .card-says {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.card .card-kind {
+  margin-top: auto;
+  padding-top: var(--s1);
+  font-size: var(--size-small);
+  line-height: 1.4;
+  color: var(--quiet);
+}
+.card .card-kind:empty,
+.card .card-says:empty {
+  display: none;
+}
+/* As rows: one line each, its title, what it says, what it is. */
+/* The columns are shared by every row, the name's as wide as the longest name. */
+.rows[data-mode="rows"] {
+  grid-template-columns: fit-content(22rem) minmax(0, 1fr) auto;
+  gap: 0;
+  margin-inline: calc(-1 * var(--s3));
+}
+.rows[data-mode="rows"] > li:not(.more) {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+}
+.rows[data-mode="rows"] > .more {
+  padding-inline: var(--s3);
+}
+.rows[data-mode="rows"] .card {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: baseline;
+  gap: var(--s5);
+  padding: var(--s1) var(--s3);
+  border-color: transparent;
+  border-radius: 6px;
+  background: transparent;
+  transition: background 0.15s;
+}
+.rows[data-mode="rows"] .card:hover,
+.rows[data-mode="rows"] .card:focus-visible {
+  border-color: transparent;
+  background: var(--wash);
+}
+.rows[data-mode="rows"] .card-name {
+  font-size: var(--size-body);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rows[data-mode="rows"] .card-says {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--quiet);
+}
+.rows[data-mode="rows"] .card-says:empty {
+  display: block;
+}
+.rows[data-mode="rows"] .card-kind {
+  margin: 0;
+  padding: 0;
+  text-align: right;
+  white-space: nowrap;
+}
+/* As a table: what each keeps, by key. */
+.table {
+  overflow-x: auto;
+  margin-inline: calc(-1 * var(--s3));
+}
+.table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table th,
+.table td {
+  padding: var(--s1) var(--s3);
+  text-align: left;
+  vertical-align: baseline;
+}
+.table thead th {
+  font-size: var(--size-small);
+  font-weight: 600;
+  color: var(--quiet);
+  white-space: nowrap;
+}
+.table tbody th {
+  font-weight: 600;
+  white-space: nowrap;
+}
+.table tbody th a {
+  text-decoration: none;
+}
+.table tbody tr:hover > * {
+  background: var(--wash);
+}
+.table tbody tr > :first-child {
+  border-radius: 6px 0 0 6px;
+}
+.table tbody tr > :last-child {
+  border-radius: 0 6px 6px 0;
+}
+
+@media (max-width: 640px) {
+  .fields,
+  .fields .fields {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .fields > div + div > dt {
+    margin-top: var(--s2);
+  }
+  /* As rows, what each says goes beneath its name. */
+  .rows[data-mode="rows"] {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .rows[data-mode="rows"] .card {
+    row-gap: 0;
+  }
+  .rows[data-mode="rows"] .card-says {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}

@@ -1,6 +1,7 @@
 // Builds the site: the page, and each module it starts on a thread of its own, from
 // site/ into one folder, sharing what they share as chunks beside them, so a thread
-// running two of them runs each module they share once; the faces the page names; and
+// running two of them runs each module they share once; the components' look and the
+// faces it names, from interface/web/look/; and
 // each store this repository holds, as the page reads it in strata: its history and its
 // index, each head and every blob it reaches, gzipped, at strata/<name>/ and its index/
 // within, which the browser unpacks. The stores are read as they stand, with nothing
@@ -58,8 +59,18 @@ const built = await Bun.build({
 });
 if (!built.success) throw new AggregateError(built.logs, "building the page");
 
+// The components' look, shipped with them: one stylesheet, and the faces it names.
+const look = join(repo, "interface/web/look");
+const styled = await Bun.build({
+  entrypoints: [join(look, "glass.css")],
+  outdir: dist,
+  naming: "[name].[ext]",
+  external: ["*.woff2"],
+});
+if (!styled.success) throw new AggregateError(styled.logs, "building the look");
+cpSync(join(look, "fonts"), join(dist, "fonts"), { recursive: true });
+
 cpSync(join(import.meta.dir, "index.html"), join(dist, "index.html"));
-cpSync(join(import.meta.dir, "fonts"), join(dist, "fonts"), { recursive: true });
 
 // Each store as it stands in its folder. A store whose index is missing or behind, as one
 // cloned from git, has it caught up from its history as it is found (stores.ts reads its

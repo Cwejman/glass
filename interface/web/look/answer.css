@@ -1,0 +1,103 @@
+/* Answer: where it stands, the trail, then what it gives. */
+
+/* The answer: where it stands, then what it gives. */
+
+/* The trail: where the page stands, as wide as it says, its line washed when pointed at,
+   its expression button at its end. Its text keeps to the page's edge; the wash reaches
+   out around it. */
+.trail {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  max-width: 100%;
+  box-sizing: border-box;
+  height: var(--control);
+  margin-left: calc(-1 * var(--s3));
+  padding: 0 3px 0 var(--s3);
+  border-radius: var(--radius);
+  font-size: var(--size-small);
+  color: var(--quiet);
+  cursor: text;
+  transition: background 0.3s;
+}
+.trail:hover {
+  background: var(--wash);
+}
+.trail ol {
+  display: flex;
+  align-items: baseline;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.trail ol:empty {
+  display: none;
+}
+/* At home the button alone, its sign on the page's edge. */
+.trail:has(> ol:empty) {
+  justify-content: center;
+  width: var(--control);
+  margin-left: -9px;
+  padding: 0;
+}
+.trail .said {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.trail .ask {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--quiet);
+  font: italic 15px / 1 var(--serif);
+  cursor: pointer;
+}
+/* The line's wash is the button's: pointed at, only its sign brightens. */
+.trail .ask:hover,
+.trail .ask:focus-visible {
+  outline: none;
+  color: var(--ink);
+}
+.trail:has(.ask:focus-visible) {
+  background: var(--wash);
+}
+.trail li + li::before {
+  content: "/";
+  margin: 0 var(--s2);
+  color: var(--line);
+}
+.trail a {
+  color: var(--quiet);
+  text-decoration: none;
+}
+.trail a:hover {
+  color: var(--link);
+}
+.trail [aria-current] {
+  color: var(--ink);
+}
+.answered > .note {
+  max-width: var(--measure);
+}
+/* A number or a truth answered alone, read at a glance. */
+.figure {
+  margin: 0;
+  font: 600 var(--size-h1) / 1 var(--serif);
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: -0.01em;
+}
+.start {
+  margin-bottom: var(--s6);
+}
+.start .lede {
+  color: var(--quiet);
+}

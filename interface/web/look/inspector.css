@@ -1,0 +1,127 @@
+/* The inspector: what a place is, by the place pressed. */
+.inspected {
+  outline: 2px solid var(--link);
+  outline-offset: -2px;
+}
+a.ref.inspected,
+.trail .inspected {
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.inspector h2 a {
+  text-decoration: none;
+}
+.inspector {
+  position: fixed;
+  z-index: 10;
+  box-sizing: border-box;
+  width: min(22rem, calc(100vw - 2 * var(--s4)));
+  max-height: calc(100vh - 2 * var(--s4));
+  overflow: auto;
+  padding: var(--s4);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--raised);
+  box-shadow:
+    0 12px 32px rgb(0 0 0 / 0.14),
+    0 2px 6px rgb(0 0 0 / 0.08);
+  font-size: var(--size-small);
+}
+.inspector.sheet {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: auto;
+  max-height: 70vh;
+  border-radius: 16px 16px 0 0;
+}
+.inspector header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.inspector .label,
+.inspector h3 {
+  margin: 0;
+  color: var(--quiet);
+  font: 600 var(--size-small) / 1.4 var(--sans);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.inspector h2 {
+  margin: var(--s1) 0 0;
+  font-size: var(--size-up);
+}
+.inspector section {
+  margin-top: var(--s5);
+}
+.inspector section h3 {
+  margin-bottom: var(--s2);
+}
+.inspector ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.inspector .given li + li {
+  margin-top: var(--s1);
+}
+.inspector .path {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s1) 0;
+}
+.inspector .path li + li::before {
+  content: "›";
+  margin: 0 var(--s2);
+  color: var(--quiet);
+}
+.inspector code {
+  overflow-wrap: anywhere;
+}
+.inspector .shows p {
+  margin: 0;
+}
+.inspector .shows .name {
+  font-weight: 600;
+  font-size: var(--size-body);
+}
+.inspector .shows .kind {
+  color: var(--quiet);
+}
+.inspector dl {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--s1) var(--s3);
+  margin: var(--s2) 0 0;
+}
+.inspector dt {
+  color: var(--quiet);
+}
+.inspector dd {
+  margin: 0;
+}
+.inspector button {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 var(--s2);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.inspector button.close {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  font-size: var(--size-body);
+  color: var(--quiet);
+}
+.inspector button:hover {
+  background: var(--wash);
+}
+.inspector footer {
+  margin-top: var(--s5);
+}
