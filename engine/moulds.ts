@@ -117,6 +117,9 @@ const fits: Record<string, (value: unknown) => boolean> = {
   date: (value) => typeof value === "string" && !Number.isNaN(Date.parse(value)),
   ref: isRef,
   expression: (value) => expressionProblem(value) === undefined,
+  // Prose as it is held: a run of its text, or a holon lifted out of it where something
+  // points there alone, a sentence, a link, a term.
+  inline: (value) => typeof value === "string" || isRef(value),
   json: () => true,
 };
 

@@ -21,11 +21,11 @@
 // said again with its words changed; { "code": "...", "language": "..." }; { "list": [...] };
 // { "mount": "a brief's id" }, a brief placed in the flow as a break, and so no longer among
 // the parts of the brief whose flow it stands in. A paragraph said again keeps the holon of
-// every sentence whose text is unchanged.
+// every sentence lifted out of it, as something points there, whose text still stands.
 
 import { mouldOf, partsOf, references } from "../engine/moulds.ts";
 import { handles } from "../engine/uses/migrate.ts";
-import { markedWriter, proseWriter } from "./prose.ts";
+import { markedOf, markedWriter, proseWriter } from "./prose.ts";
 import { authorsField, commitOf, type Holon } from "./field.ts";
 
 type FlowItem =
@@ -58,24 +58,15 @@ const replaced = new Set<string>();
 // Sentences a paragraph said again keeps, which stay though their old paragraph goes.
 const stillHeld = new Set<string>();
 
-const refsOf = (list: unknown) => ((list ?? []) as { $ref: string }[]).map(({ $ref }) => $ref);
+const refsOf = (list: unknown) =>
+  (Array.isArray(list) ? list : []).flatMap((each) =>
+    typeof each?.$ref === "string" ? [each.$ref as string] : [],
+  );
 
-// A paragraph said again as marked prose: the same marks it holds, in words.
-function said(id: string): string {
-  const { body, instance } = byId.get(id)!;
-  const type = byId.get(instance[0]!)?.name;
-
-  if (type === "word") return `${body.before ?? ""}${body.text}${body.after ?? ""}`;
-  if (type === "codespan") return `\`${body.text}\``;
-
-  const inside = [...refsOf(body.sentences), ...refsOf(body.words)].map(said).join(" ");
-
-  if (type === "link") return `[${inside}](${body.leads?.$ref ?? body.to})`;
-  if (type === "emphasis") return `*${inside}*`;
-  if (type === "strong") return `**${inside}**`;
-
-  return inside;
-}
+// A paragraph said again as marked prose: its text, and each holon held in it as the
+// text it holds, a link written as one.
+const typeOf = (id: string) => byId.get(byId.get(id)?.instance[0] ?? "")?.name;
+const said = (id: string): string => markedOf(byId.get(id)!.body.text, (each) => byId.get(each), typeOf);
 
 function flowOf(before: { $ref: string }[], flow: FlowItem[], name: string) {
   return flow.map((item) => {
@@ -102,13 +93,11 @@ function flowOf(before: { $ref: string }[], flow: FlowItem[], name: string) {
       text = text.replace(from, () => to);
     }
 
-    // Each sentence said as before keeps its holon, so only what is new is born; a
-    // sentence said differently goes with the old paragraph.
-    const sentences = refsOf(byId.get(kept.$ref)!.body.sentences);
-    const paragraph = marked.paragraphKeeping(text, new Map(sentences.map((id) => [said(id), id])));
-    const old = new Set(sentences);
-    for (const id of refsOf(writer.born.find((holon) => holon.id === paragraph)!.body.sentences))
-      if (old.has(id)) stillHeld.add(id);
+    // Each sentence lifted out of it, as something points there, is lifted again where its
+    // text still stands, keeping its holon; one said differently goes with the old paragraph.
+    const lifted = refsOf(byId.get(kept.$ref)!.body.text).filter((id) => typeOf(id) === "sentence");
+    const paragraph = marked.paragraphKeeping(text, new Map(lifted.map((id) => [said(id), id])));
+    for (const id of marked.still) stillHeld.add(id);
     return held(paragraph);
   });
 }

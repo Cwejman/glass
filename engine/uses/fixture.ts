@@ -41,7 +41,7 @@ const proseType = (n: number, name: string) => ({
   mould: { ...prose },
   body: {},
 });
-const prose = { prose: declared, parts: declared, sentences: declared, words: declared, text: declared };
+const prose = { prose: declared, parts: declared, text: declared };
 const thing = (n: number, type: number, body: Holon["body"], name?: string): Holon => ({
   id: id(n),
   instance: [id(type)],
@@ -85,7 +85,6 @@ export const glass: Holon[] = [
   proseType(6, "brief"),
   proseType(7, "paragraph"),
   proseType(8, "sentence"),
-  proseType(9, "word"),
   ...kinds.map((name, i) => ({ id: id(10 + i), instance: [], name, mould: {}, body: {} })),
   ...natives.map((name, i) => ({
     id: id(20 + i),
@@ -109,7 +108,7 @@ export const glass: Holon[] = [
   // glass's types, in the wholes glass groups them in.
   { id: id(40), instance: [], name: "language", body: { holds: [1, 2, 10, 11, 12, 13, 14, 15].map(held) } },
   { id: id(43), instance: [], name: "store", body: { holds: [4, 5].map(held) } },
-  { id: id(44), instance: [], name: "prose", body: { holds: [6, 7, 8, 9].map(held) } },
+  { id: id(44), instance: [], name: "prose", body: { holds: [6, 7, 8].map(held) } },
   { id: id(45), instance: [], name: "interface", body: { holds: [held(3)] } },
   { id: id(41), instance: [], name: "functions", body: { holds: natives.map((_, i) => held(20 + i)) } },
   { id: id(42), instance: [], name: "components", body: { holds: [held(30), held(31)] } },
@@ -122,15 +121,10 @@ export const glass: Holon[] = [
   { id: notes.second, instance: [], name: "Second", body: {} },
   { id: notes.query, instance: [], name: "query", body: { text: "1 | add(2) | add(3)" } },
   thing(100, 6, { prose: [held(101), held(104)], parts: [held(105)] }, "Notes"),
-  thing(101, 7, { sentences: [held(102)] }),
-  thing(102, 8, { words: [held(103), held(106)] }),
-  thing(103, 9, { text: "Notes" }),
-  thing(106, 9, { text: "hold", after: "." }),
+  thing(101, 7, { text: ["Notes hold."] }),
   thing(104, 6, { prose: [], parts: [] }, "Inner"),
   thing(105, 6, { prose: [held(107)], parts: [] }, "Part"),
-  thing(107, 7, { sentences: [held(108)] }),
-  thing(108, 8, { words: [held(109)] }),
-  thing(109, 9, { text: "Within" }),
+  thing(107, 7, { text: ["Within"] }),
   {
     id: id(90),
     instance: [id(4)],
