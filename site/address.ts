@@ -15,15 +15,13 @@ import { ref } from "../engine/read/values.ts";
 import { typed } from "../stores/buffer/string.ts";
 import { applying, type Glass } from "../language/shipped.ts";
 import { awaiting } from "../chassis/web/chassis.ts";
+import { href } from "../chassis/web/href.ts";
 
 // What the address asks.
 export const asked = (at: string = location.href) => new URL(at).searchParams.get("q") ?? "";
 
-// The address asking a text, its holons' @ and the language's punctuation left readable.
-export const addressOf = (text: string) =>
-  text
-    ? `?q=${encodeURIComponent(text).replace(/%(40|3A|2C|28|29|7C|2F)/gi, (code) => decodeURIComponent(code))}`
-    : location.pathname;
+// The address asking a text, as a link leads there; asking nothing, the page alone.
+export const addressOf = (text: string) => (text ? href(text) : location.pathname);
 
 // Keeps the address and the text held in a buffer as one, within the element the page
 // draws in, until the function returned is called.
@@ -84,11 +82,10 @@ export async function addressed(
     return ids.reduce((now, id, i) => now.replaceAll(id, said[i]!), text);
   }
 
+  // A holon, @ and its id, as the language says it: by its route where it has one.
   async function holonSaid(id: string): Promise<string> {
     try {
-      const parsed = await engine.read(applying(glass, "parse", id));
-      if (!("value" in parsed)) return id;
-      const printed = await engine.read(applying(glass, "print", parsed.value));
+      const printed = await engine.read(applying(glass, "print", { gives: { $ref: id.slice(1) } }));
       return "value" in printed && typeof printed.value === "string" && printed.value ? printed.value : id;
     } catch {
       return id;

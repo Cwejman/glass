@@ -96,7 +96,7 @@ export const glass: Holon[] = [
       ...(name === "print" && { reverse: { $ref: id(21) } }),
     },
   })),
-  ...["follow", "concat"].map((name, i) => ({
+  ...["follow", "concat", "filter", "take", "reverse"].map((name, i) => ({
     id: id(46 + i),
     instance: [id(1)],
     name,
@@ -120,7 +120,9 @@ export const glass: Holon[] = [
     id: id(41),
     instance: [],
     name: "functions",
-    body: { holds: [...natives.map((_, i) => held(20 + i)), held(46), held(47)] },
+    body: {
+      holds: [...natives.map((_, i) => held(20 + i)), held(46), held(47), held(48), held(49), held(50)],
+    },
   },
   { id: id(42), instance: [], name: "components", body: { holds: [held(30), held(31)] } },
   {

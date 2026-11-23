@@ -31,7 +31,7 @@ import { after, waits } from "../../engine/read/maybe.ts";
 import { isHandle } from "../../engine/commit/change.ts";
 import { isRecord, ref, type Ref, type Value } from "../../engine/read/values.ts";
 import { applying, proposing, type Glass } from "../../language/shipped.ts";
-import { asHolon, type Find } from "./find.ts";
+import { asHolon, finder, type Find } from "./find.ts";
 
 // What a realization makes: its node, how it takes what it is given next, and how it
 // lets go of what it holds, a subscription for one.
@@ -71,7 +71,9 @@ export type Drawer = {
   names: ReadonlyMap<string, string>;
   // The component drawn where several could draw a value: given them and the value.
   choose: string;
-  find: Find;
+  // How a component is found for a value that names none; by type among those realized
+  // here (find.ts), unless another way is given.
+  find?: Find;
 };
 
 // A drawing as it leaves the engine: the component it names, or none, what it was given,
@@ -111,7 +113,9 @@ const keptFor = 400;
 // Draws what the root read gives into the element, again whenever it changes, until the
 // function returned is called.
 export async function draw(into: Element, root: Read, given: Drawer): Promise<() => void> {
-  const drawer: Rooted = { ...given, root, picked: new Map(), tried: new Set() };
+  const find =
+    given.find ?? finder((read) => given.engine.read(read), given.glass, [...given.realized.keys()]);
+  const drawer: Rooted = { ...given, find, root, picked: new Map(), tried: new Set() };
   const top = spaceAt({ at: [] }, drawer);
   const unsubscribe = await drawer.engine.subscribe(root, (answer) =>
     top.redraw(() => arrange(into, ["value" in answer ? top.draw(answer.value) : note(answer.problem)])),
@@ -131,6 +135,7 @@ type Kept = Space & { given: Value[]; dispose(): void };
 // components picked for uses that could not be written, by the use, and the uses a pick
 // was already offered to.
 type Rooted = Drawer & {
+  find: Find;
   root: Read;
   picked: Map<string, string>;
   tried: Set<string>;
@@ -193,7 +198,17 @@ function spaceAt(
     draw,
     redraw,
     read: (read) => drawer.engine.read(read),
-    subscribe: (read, listener) => drawer.engine.subscribe(read, listener),
+    subscribe: (read, listener) => {
+      // A store moving answers every read again; an answer the same as the last is not
+      // given again.
+      let last: string | undefined;
+      return drawer.engine.subscribe(read, (answer) => {
+        const said = "value" in answer ? `v${JSON.stringify(answer.value)}` : `p${answer.problem}`;
+        if (said === last) return;
+        last = said;
+        listener(answer);
+      });
+    },
     propose,
     commit: (change) => drawer.engine.commit(change),
     pick,
@@ -355,10 +370,12 @@ async function written(use: string, component: string, { engine, glass, tried }:
   const answer = await engine.read(applying(glass, "holon", ref(use)));
   if (!("value" in answer) || !isRecord(answer.value)) return;
   const holon = asHolon(answer.value);
+  // Made from what was read: refused, not laid over, where the use moved since.
   await engine.commit({
     holons: [{ ...holon, body: { ...holon.body, fn: ref(component) } }],
     says: `${holon.name ?? "a use"} drawn by the component found for it`,
-    at: {},
+    at: answer.at,
+    strict: true,
   });
 }
 

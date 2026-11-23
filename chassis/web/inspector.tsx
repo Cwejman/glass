@@ -11,6 +11,7 @@
 //
 // The browser's own menu is still there with shift held.
 
+import { hrefTo } from "./href.ts";
 import { h, type Child } from "./jsx.ts";
 import type { Engine, Read } from "../../engine/engine.ts";
 import { isRecord, isRef, ref, type Value } from "../../engine/read/values.ts";
@@ -82,7 +83,7 @@ export function inspecting(within: Element, { engine, glass, root, names }: Insp
           </button>
         </header>
         <h2>
-          <a href={`?q=@${here.component}`}>{component}</a>
+          <a href={hrefTo(here.component)}>{component}</a>
         </h2>
         {given.length > 0 && (
           <section>
@@ -99,7 +100,7 @@ export function inspecting(within: Element, { engine, glass, root, names }: Insp
           <ol class="path">
             {way.map(({ id, name }) => (
               <li>
-                <a href={`?q=@${id}`}>{name}</a>
+                <a href={hrefTo(id)}>{name}</a>
               </li>
             ))}
           </ol>
@@ -108,7 +109,7 @@ export function inspecting(within: Element, { engine, glass, root, names }: Insp
           <section class="shows">
             <h3>Shows</h3>
             <p class="name">
-              <a href={`?q=@${shown.id}`}>{shown.name}</a>
+              <a href={hrefTo(shown.id)}>{shown.name}</a>
             </p>
             {shown.kind && <p class="kind">{shown.kind}</p>}
             <dl>
@@ -129,7 +130,7 @@ export function inspecting(within: Element, { engine, glass, root, names }: Insp
           </section>
         )}
         <footer>
-          {layout && <a href={`?q=@${layout}`}>This page is laid out by {names.get(layout) ?? "its root"}</a>}
+          {layout && <a href={hrefTo(layout)}>This page is laid out by {names.get(layout) ?? "its root"}</a>}
         </footer>
       </aside>
     ) as HTMLElement;
@@ -267,7 +268,7 @@ async function givenSaid(given: Value, glass: Glass, read: Asking): Promise<Chil
   if (typeof given === "number" || typeof given === "boolean") return <code>{String(given)}</code>;
   if (isRef(given)) {
     const holon = await holonSaid(given.$ref, glass, read);
-    return <a href={`?q=@${given.$ref}`}>{holon?.name ?? "a holon"}</a>;
+    return <a href={hrefTo(given.$ref)}>{holon?.name ?? "a holon"}</a>;
   }
   if (Array.isArray(given)) return <span class="meta">{`a list of ${given.length}`}</span>;
   if (isDrawing(given)) {
@@ -292,9 +293,8 @@ async function holonSaid(id: string, glass: Glass, read: Asking) {
   if (!("value" in answer) || !isRecord(answer.value)) return undefined;
   const { name, types, store } = answer.value as Record<string, Value>;
   const kinds = Array.isArray(types) ? types.filter((type) => typeof type === "string") : [];
-  const parsed = await read(applying(glass, "parse", `@${id}`));
-  const printed = "value" in parsed ? await read(applying(glass, "print", parsed.value)) : undefined;
-  const said = printed && "value" in printed && typeof printed.value === "string" ? printed.value : undefined;
+  const printed = await read(applying(glass, "print", { gives: ref(id) }));
+  const said = "value" in printed && typeof printed.value === "string" ? printed.value : undefined;
   return {
     id,
     name: typeof name === "string" ? name : kinds[0] ? `a ${kinds[0]}` : "Unnamed",

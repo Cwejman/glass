@@ -1,0 +1,15 @@
+/* How the web chassis looks: its tokens, which every component drawn on it draws with and
+   a site tunes; what the chassis itself makes, a drawing's host and a line said in place of
+   what could not be drawn; and its inspector. A site links this one file, built, first. */
+
+@import "./tokens.css";
+@import "./inspector.css";
+
+.drawn {
+  display: contents;
+}
+.note {
+  margin: 0;
+  color: var(--quiet);
+  font-style: italic;
+}

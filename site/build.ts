@@ -59,11 +59,11 @@ const built = await Bun.build({
 });
 if (!built.success) throw new AggregateError(built.logs, "building the page");
 
-// The components' look, shipped with them: one stylesheet, and the faces it names; and the
-// chassis's own, its inspector, beside it.
+// The chassis's look, its tokens and what it makes itself, and the components' look,
+// shipped with them: a stylesheet each, and the faces the components' names.
 const look = join(repo, "components/web/look");
 const styled = await Bun.build({
-  entrypoints: [join(look, "glass.css"), join(repo, "chassis/web/look/inspector.css")],
+  entrypoints: [join(repo, "chassis/web/look/chassis.css"), join(look, "glass.css")],
   outdir: dist,
   naming: "[name].[ext]",
   external: ["*.woff2"],

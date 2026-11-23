@@ -1,9 +1,8 @@
-/* How glass's components look on the web: their tokens first, then the page beneath
-   them, then each component's own look, in a file beside the others. A site links this one
-   file, built, and tunes the tokens. */
+/* How glass's components look on the web: the page beneath them, then each component's
+   own look, in a file beside the others, all drawn with the chassis's tokens
+   (chassis/web/look/). A site links this one file, built, after the chassis's. */
 
 @import "./faces.css";
-@import "./tokens.css";
 @import "./base.css";
 @import "./reader.css";
 @import "./list.css";

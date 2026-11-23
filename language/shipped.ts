@@ -20,6 +20,8 @@ export const language = {
   holon: "functions/holon",
   whole: "functions/whole",
   sections: "functions/sections",
+  wholes: "functions/wholes",
+  roots: "functions/roots",
   get: "functions/get",
   in: "functions/in",
   parse: "functions/parse",
@@ -36,18 +38,8 @@ export type Found<Routes> = Record<keyof Routes, string>;
 // The language glass ships, each by its id.
 export type Glass = Found<typeof language>;
 
-// The functions applied by name: natives, and sections, written in the language.
-export type Applied =
-  | "holon"
-  | "whole"
-  | "sections"
-  | "get"
-  | "in"
-  | "parse"
-  | "print"
-  | "steps"
-  | "chain"
-  | "back";
+// The functions applied by name: natives, and those written in the language, as sections.
+export type Applied = Exclude<keyof Glass, "use" | "function" | "store" | "shape">;
 
 // What glass ships at routes, found in the store glass is mounted as: the language by
 // default, or any table of routes, as the components their own.

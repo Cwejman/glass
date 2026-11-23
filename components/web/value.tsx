@@ -15,6 +15,7 @@
 // holon it leads to, or what it is where it has none: what is drawn is put in place only
 // once those are read, so no id shows on the way. An id is the inspector's to show.
 
+import { href, hrefTo } from "../../chassis/web/href.ts";
 import { h, type Child } from "../../chassis/web/jsx.ts";
 import type { Answer } from "../../engine/engine.ts";
 import { isRecord, isRef, ref, type Value } from "../../engine/read/values.ts";
@@ -66,15 +67,11 @@ export const value: Realization = (given, space) => {
       holon = shown.$ref;
 
       const mine = turn;
-      let was: string | undefined;
       // Until the holon is read and shown, whatever is shown is still what was.
       node.dataset.waiting = "";
       void space
         .subscribe(applying(space.glass, "holon", ref(holon)), (answer) => {
-          // A store changing answers every read again; one answered as it was is kept.
-          const said = JSON.stringify("value" in answer ? answer.value : answer.problem);
-          if (mine !== turn || said === was) return;
-          was = said;
+          if (mine !== turn) return;
           showing(mine, () => holonDrawn(answer, space));
         })
         .then((stopping) => (mine === turn ? (stop = stopping) : stopping()));
@@ -99,7 +96,7 @@ function topDrawn(shown: Value, space: Space): Node {
   if (Array.isArray(shown) && shown.every(isRef))
     return holonsOf(
       shown.map(({ $ref }) => $ref),
-      { place: `asked ${new URLSearchParams(location.search).get("q") ?? ""}` },
+      { place: given(shown) },
     );
   return <div class="shown">{drawer(space)(shown)}</div>;
 }
@@ -167,7 +164,7 @@ function holonDrawn(answer: Answer, space: Space): Node {
         </section>
       )}
       <p class="asks">
-        <a href={`?q=${encodeURIComponent(`@${id} | in | map(e => e.from)`)}`}>What refers to it</a>
+        <a href={href(`@${id} | in | map(e => e.from)`)}>What refers to it</a>
       </p>
     </article>
   );
@@ -194,7 +191,7 @@ function fieldsOf(fields: [string, Value][], drawnOf: (value: Value, key?: strin
         {holonList(inner)
           ? holonsOf(
               inner.map(({ $ref }) => $ref),
-              { title: key, ...(place && { place: `${place}/${key}` }) },
+              { title: key, place: `${place ?? given(inner)}/${key}` },
             )
           : [<h2 class="key">{key}</h2>, drawnOf(inner, key)]}
       </section>
@@ -226,10 +223,19 @@ function shapeSaid(shape: Value): string {
   return JSON.stringify(shape);
 }
 
+// The place a value given on its own is remembered by: what it is, so the same answer is
+// shown as it was last shown, wherever it is asked.
+// The text is hashed, FNV-1a, so a long list is a short key.
+const given = (value: Value) => {
+  let hash = 0x811c9dc5;
+  for (const char of JSON.stringify(value)) hash = Math.imul(hash ^ char.charCodeAt(0), 0x01000193) >>> 0;
+  return `given ${hash.toString(36)}`;
+};
+
 // A value as what it is, each drawing in it drawn by the space, at the next index. A
 // list of holons within it is remembered by the place given, and the key it stands at;
-// a value given on its own, by what is asked.
-function drawer(space?: Space, place = `asked ${new URLSearchParams(location.search).get("q") ?? ""}`) {
+// a value given on its own, by what it is.
+function drawer(space?: Space, place?: string) {
   let drawn = 0;
 
   return function drawnOf(value: Value, key?: string): Child {
@@ -246,7 +252,7 @@ function drawer(space?: Space, place = `asked ${new URLSearchParams(location.sea
       if (value.every(isRef)) {
         const ids = value.map(({ $ref }) => $ref);
         if (ids.length <= inline) return <span class="inline">{ids.map((id) => link(id))}</span>;
-        return holonsOf(ids, { place: `${place}/${key ?? ""}` });
+        return holonsOf(ids, { place: `${place ?? given(value)}/${key ?? ""}` });
       }
       if (saidInline(value)) return <span class="inline">{value.map((item) => drawnOf(item))}</span>;
       return (
@@ -273,7 +279,7 @@ function drawer(space?: Space, place = `asked ${new URLSearchParams(location.sea
 // A link to a holon, named once it is read; one held, where it is a use, said as the
 // language says it.
 const link = (id: string, held = false) => (
-  <a class="ref" href={`?q=@${id}`} data-ref={id} data-held={held}>
+  <a class="ref" href={hrefTo(id)} data-ref={id} data-held={held}>
     {"…"}
   </a>
 );
@@ -287,7 +293,7 @@ const modes: Mode[] = ["cards", "rows", "table"];
 
 // A holon as a card, a link wholly, said once it is read (named, below).
 export const cardOf = (id: string, name = "…") => (
-  <a class="card" href={`?q=@${id}`} data-ref={id} data-row="">
+  <a class="card" href={hrefTo(id)} data-ref={id} data-row="">
     <span class="card-name">{name}</span>
     <span class="card-says" />
     <span class="card-kind" />
@@ -409,7 +415,7 @@ function tableOf(ids: string[], keys: string[], read: ReadonlyMap<string, Read>)
             return (
               <tr>
                 <th scope="row">
-                  <a href={`?q=@${id}`} data-ref={id}>
+                  <a href={hrefTo(id)} data-ref={id}>
                     {each?.summary.title ?? `@${id}`}
                   </a>
                 </th>

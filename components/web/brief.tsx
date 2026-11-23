@@ -12,6 +12,7 @@
 //
 // The reader says where a brief stands, so a brief says nothing of what holds it.
 
+import { hrefTo } from "../../chassis/web/href.ts";
 import { h, type Child } from "../../chassis/web/jsx.ts";
 import type { Answer } from "../../engine/engine.ts";
 import { isRecord, isRef, ref, type Value } from "../../engine/read/values.ts";
@@ -39,11 +40,8 @@ export const brief: Realization = (given, space) => {
 
     void space
       .subscribe(applying(space.glass, "sections", ref(id)), (answer) => {
-        // A store changing answers every read again; one answered as it was is not drawn
-        // again.
-        const said = JSON.stringify("value" in answer ? answer.value : answer.problem);
-        if (reading !== each || said === each.said) return;
-        Object.assign(each, wholeOf(answer), { said });
+        if (reading !== each) return;
+        Object.assign(each, wholeOf(answer));
         draw(each);
       })
       .then((stop) => (reading === each ? (each.stop = stop) : stop()));
@@ -83,7 +81,7 @@ export const brief: Realization = (given, space) => {
 
     return (
       <section>
-        <Heading>{depth === 1 ? brief.name : <a href={`?q=@${id}`}>{brief.name}</a>}</Heading>
+        <Heading>{depth === 1 ? brief.name : <a href={hrefTo(id)}>{brief.name}</a>}</Heading>
         {flow}
         {parts.map((part) => section(from, part, depth + 1, reached, drawn))}
       </section>
@@ -141,7 +139,7 @@ function entered({ holons }: Reading, id: string, seen = new Set<string>()): boo
 }
 
 // A brief as it is read: what its whole gives, or the problem it met, as last answered.
-type Reading = { holons?: Holons; problem?: string; said?: string; stop?: () => void };
+type Reading = { holons?: Holons; problem?: string; stop?: () => void };
 
 // A brief standing in another's flow: a card leading to it, by its name, saying its
 // first paragraph once read.

@@ -10,7 +10,7 @@
 import { h } from "../../chassis/web/jsx.ts";
 import type { Answer, Read } from "../../engine/engine.ts";
 import { isRecord, isRef, type Value } from "../../engine/read/values.ts";
-import { applying } from "../../language/shipped.ts";
+import { applying, applyingEach } from "../../language/shipped.ts";
 import { arrange, awaiting, note, type Realization } from "../../chassis/web/chassis.ts";
 import { homeTrail, saidTrail, trailOf, wholesOf } from "./trail.tsx";
 
@@ -34,20 +34,22 @@ export const answer: Realization = (given, space) => {
     stop = undefined;
   };
 
-  // Where the answer stands: the trail to the holon given, or else what was asked, as the
-  // address says it, or home at the start. Drawn once it is known and what it leads to
+  // Where the answer stands: the trail to the holon given, or else what was asked, the
+  // read said as text, or home at the start. Drawn once it is known and what it leads to
   // is shown, what was there kept until then.
-  function trace(value: Value, mine: number, start: boolean): Promise<void> | undefined {
+  async function trace(value: Value, mine: number, read: Read | null): Promise<void> {
     const id = isRef(value) ? value.$ref : undefined;
-    const text = start ? "" : (new URLSearchParams(location.search).get("q") ?? "");
-    const key = id ?? `said ${text}`;
+    const key = id ?? `said ${JSON.stringify(read)}`;
     if (key === traced) return;
     traced = key;
     const showing = whenShown;
-    if (!id)
+    if (!id) {
+      const text = read ? await saidOf(read) : "";
       return void showing(
-        () => mine === turn && traced === key && arrange(trail, [text ? saidTrail(text) : homeTrail()]),
+        () =>
+          mine === turn && traced === key && arrange(trail, [read ? saidTrail(text || "…") : homeTrail()]),
       );
+    }
     return wholesOf(space.read, space.glass, id)
       .catch(() => [])
       .then((steps) => {
@@ -55,6 +57,22 @@ export const answer: Realization = (given, space) => {
         const made = steps.length > 0 ? [trailOf(steps)] : [];
         showing(() => mine === turn && traced === key && arrange(trail, made));
       });
+  }
+
+  // A read as it is typed: each of its steps as the language says it, as the pills say
+  // them, joined by pipes.
+  async function saidOf(read: Read): Promise<string> {
+    const steps = await space.read(applying(space.glass, "steps", read as unknown as Value));
+    if (!("value" in steps) || !Array.isArray(steps.value)) return "";
+    const printed = await space.read(
+      applyingEach(
+        space.glass,
+        "print",
+        steps.value.map((step) => [step]),
+      ),
+    );
+    const said = "value" in printed && Array.isArray(printed.value) ? printed.value : [];
+    return said.every((each) => typeof each === "string") ? said.join(" | ") : "";
   }
 
   function subscribing(read: Read, start = false) {
@@ -91,7 +109,7 @@ export const answer: Realization = (given, space) => {
       .subscribe(read, (answer: Answer) => {
         if (mine !== turn) return;
         settle();
-        void trace(start || !("value" in answer) ? null : answer.value, mine, start);
+        void trace(start || !("value" in answer) ? null : answer.value, mine, start ? null : read);
         // The start's header, leaving, stays until what follows it shows, as the trail waits.
         const leaving = header ? null : answered.querySelector(":scope > header.start");
         space.redraw(() =>
@@ -121,16 +139,7 @@ export const answer: Realization = (given, space) => {
     asked = key;
     unsubscribe();
 
-    if (read === null) {
-      const mine = turn;
-      const roots = `find(?root, [?root, "instance", @${space.glass.store}])`;
-      void space.read(applying(space.glass, "parse", roots)).then((parsed) => {
-        if (mine !== turn) return;
-        if ("value" in parsed) subscribing(parsed.value as unknown as Read, true);
-        else space.redraw(() => arrange(answered, [startOf()]));
-      });
-      return;
-    }
+    if (read === null) return subscribing(applying(space.glass, "roots"), true);
     if (!isRecord(read) || !("gives" in read)) {
       settle();
       return space.redraw(() => arrange(answered, [note("What answer is given is no read to draw.")]));

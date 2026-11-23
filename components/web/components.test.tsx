@@ -15,7 +15,7 @@ import { applying, found, type Glass } from "../../language/shipped.ts";
 import { draw, drawingsAt, type Drawer, type Realization } from "../../chassis/web/chassis.ts";
 import { inspecting } from "../../chassis/web/inspector.tsx";
 import { finder } from "../../chassis/web/find.ts";
-import { components, namesOf, realizedIn } from "./realized.ts";
+import { components, namesOf, realizedIn, webComponents } from "./realized.ts";
 
 beforeAll(() => {
   if (!globalThis.document) GlobalRegistrator.register({ url: "https://glass.test/next/" });
@@ -52,9 +52,8 @@ describe("the page's read over glass, the interface shipped", () => {
     const { engine } = await shipped();
     const glass = await found((read) => engine.read(read));
     const own = await found((read) => engine.read(read), components);
-    const realized = realizedIn(own);
-    const told = { names: namesOf(own), choose: own.Choose };
-    const find = finder((read: Read) => engine.read(read), glass, [...realized.keys()]);
+    const told = await webComponents((read) => engine.read(read));
+    const find = finder((read: Read) => engine.read(read), glass, [...told.realized.keys()]);
     const parsed = async (text: string) => {
       const answer = await engine.read(applying(glass, "parse", text));
       if (!("value" in answer)) throw new Error(answer.problem);
@@ -62,8 +61,7 @@ describe("the page's read over glass, the interface shipped", () => {
     };
     const into = document.createElement("main");
     document.body.replaceChildren(into);
-    const drawing = async (text: string) =>
-      draw(into, await parsed(text), { engine, glass, realized, find, ...told });
+    const drawing = async (text: string) => draw(into, await parsed(text), { engine, glass, ...told });
     return { engine, glass, own, told, find, into, drawing };
   }
 
@@ -135,11 +133,9 @@ describe("the page's read over glass, the interface shipped", () => {
     if (!("ids" in begin)) throw new Error(JSON.stringify(begin));
     const holon = begin.ids["~2"]!;
     await engine.commit(typed(holon, `@${notes.part}`));
-    const realized = realizedIn(own);
-    const find = finder((read: Read) => engine.read(read), glass, [...realized.keys()]);
     const read = await engine.read(applying(glass, "parse", 'Reader(get(@query:text, "text"))'));
     if (!("value" in read)) throw new Error(read.problem);
-    const stop = await draw(into, read.value as unknown as Read, { engine, glass, realized, find, ...told });
+    const stop = await draw(into, read.value as unknown as Read, { engine, glass, ...told });
     await settled(() => into.querySelector(".brief h1")?.textContent === "Part");
 
     const seen: string[] = [];
@@ -180,12 +176,10 @@ describe("the page's read over glass, the interface shipped", () => {
 
   test("the component found by type for a use that names none is written into it", async () => {
     const { engine, glass, into, own, told } = await page();
-    const realized = realizedIn(own);
-    const find = finder((read: Read) => engine.read(read), glass, [...realized.keys()]);
     const stop = await draw(
       into,
       { gives: { $ref: notes.unnamed, $holds: true } },
-      { engine, glass, realized, find, ...told },
+      { engine, glass, ...told },
     );
 
     await settled(() => into.querySelector(".brief h1")?.textContent === "Notes");
@@ -211,12 +205,12 @@ describe("the page's read over glass, the interface shipped", () => {
     });
     if (!("ids" in made)) throw new Error(JSON.stringify(made));
     const outline = made.ids["~1"]!;
-    const realized = new Map([...realizedIn(own), [outline, counting().count]]);
-    const find = finder((read: Read) => engine.read(read), glass, [...realized.keys()]);
+    // A second component that draws a brief, realized here beside the web's own.
+    const realized = new Map([...told.realized, [outline, counting().count]]);
     const stop = await draw(
       into,
       { gives: { $ref: notes.unnamed, $holds: true } },
-      { engine, glass, realized, find, ...told },
+      { engine, glass, ...told, realized },
     );
 
     await settled(() => into.querySelectorAll(".choose button").length === 2);
@@ -245,9 +239,7 @@ describe("the page's read over glass, the interface shipped", () => {
       ...engine,
       commit: (change: Parameters<Engine["commit"]>[0]) => (commits++, engine.commit(change)),
     };
-    const realized = realizedIn(own);
-    const find = finder((read: Read) => engine.read(read), glass, [...realized.keys()]);
-    const stop = await draw(into, read, { engine: counted, glass, realized, find, ...told });
+    const stop = await draw(into, read, { engine: counted, glass, ...told });
 
     await settled(() => into.querySelector(".brief h1")?.textContent === "Notes");
     expect(commits).toBe(0);

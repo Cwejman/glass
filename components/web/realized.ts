@@ -6,7 +6,8 @@
 // map of its own.
 
 import type { Realization } from "../../chassis/web/chassis.ts";
-import type { Found } from "../../language/shipped.ts";
+import { found, type Found } from "../../language/shipped.ts";
+import type { Engine } from "../../engine/engine.ts";
 import { answer } from "./answer.tsx";
 import { brief } from "./brief.tsx";
 import { choose } from "./choose.tsx";
@@ -54,3 +55,10 @@ export const realizedIn = (own: Components): ReadonlyMap<string, Realization> =>
 // Each component by its id, the name glass ships it under, as the chassis and inspector say it.
 export const namesOf = (own: Components): ReadonlyMap<string, string> =>
   new Map(Object.entries(own).map(([name, id]) => [id, name]));
+
+// The components on the web as the chassis is given them, found in glass: their code by
+// id, what each is called, and the one that chooses where several could draw a value.
+export async function webComponents(read: Engine["read"]) {
+  const own = await found(read, components);
+  return { realized: realizedIn(own), names: namesOf(own), choose: own.Choose };
+}

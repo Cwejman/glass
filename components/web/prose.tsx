@@ -6,6 +6,7 @@
 // drawn by a component of its own, so a long brief is one drawing. What is not prose,
 // standing in a flow, is left to whoever draws the flow.
 
+import { hrefTo } from "../../chassis/web/href.ts";
 import { h, type Child } from "../../chassis/web/jsx.ts";
 
 // A holon as the native whole gives it: its body as it is kept, and its types' names.
@@ -27,7 +28,7 @@ const standing = (i: number) => String.fromCharCode(first + i);
 function linked(to: { leads?: string; to?: string; image?: boolean }, words: Child[], id?: string): Node {
   if (to.leads)
     return (
-      <a class="ref" href={`?q=@${to.leads}`} data-ref={to.leads} {...(id ? { "data-holon": id } : {})}>
+      <a class="ref" href={hrefTo(to.leads)} data-ref={to.leads} {...(id ? { "data-holon": id } : {})}>
         {words}
       </a>
     );

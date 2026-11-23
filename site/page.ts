@@ -13,9 +13,8 @@ import { addressed } from "./address.ts";
 import { askingByKey } from "../components/web/asking.ts";
 import { applying, found } from "../language/shipped.ts";
 import { draw, note } from "../chassis/web/chassis.ts";
-import { finder } from "../chassis/web/find.ts";
 import { inspecting } from "../chassis/web/inspector.tsx";
-import { components, namesOf, realizedIn } from "../components/web/realized.ts";
+import { webComponents } from "../components/web/realized.ts";
 import { workers } from "../runtime/runtime.ts";
 import { begun } from "../stores/buffer/string.ts";
 import type { Store } from "../stores/store.ts";
@@ -67,20 +66,10 @@ try {
   const read = await engine.read(applying(glass, "parse", root));
   if (!("value" in read)) throw new Error(`the page's read does not read: ${read.problem}`);
 
-  // The components, given the chassis: their code by id, what each is called, and the one
-  // that chooses.
-  const own = await found((read) => engine.read(read), components);
-  const realized = realizedIn(own);
-  const names = namesOf(own);
-  await draw(page, read.value as unknown as Read, {
-    engine,
-    glass,
-    realized,
-    names,
-    choose: own.Choose,
-    find: finder((read) => engine.read(read), glass, [...realized.keys()]),
-  });
-  inspecting(page, { engine, glass, root: read.value as unknown as Read, names });
+  // The chassis, given the components on the web.
+  const components = await webComponents((read) => engine.read(read));
+  await draw(page, read.value as unknown as Read, { engine, glass, ...components });
+  inspecting(page, { engine, glass, root: read.value as unknown as Read, names: components.names });
   askingByKey(document);
 } catch (problem) {
   page.replaceChildren(note(problem instanceof Error ? problem.message : String(problem)));

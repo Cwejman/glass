@@ -33,9 +33,18 @@ const written = {
   Reader: "text => List([Search(text), Answer(parse(text))])",
 };
 
-// The functions the interface reads by, written in the language upon the natives.
+// The functions the interface reads by, written in the language upon the natives, each
+// with the type its placeholder takes, where it takes one.
 const functions = {
-  sections: `b => [b] | follow(x => x.parts) | map(e => e.to) | concat([b]) | map(s => whole(s, ["brief"]))`,
+  sections: {
+    takes: "brief",
+    text: `b => [b] | follow(x => x.parts) | map(e => e.to) | concat([b]) | map(s => whole(s, ["brief"]))`,
+  },
+  wholes: {
+    takes: "holon",
+    text: `h => [h] | follow(x => in(x) | filter(e => e.holds) | map(e => e.from) | take(1), {depth: 24}) | map(e => e.to) | reverse | concat([h])`,
+  },
+  roots: { takes: undefined, text: `() => find(?s, [?s, "instance", ?t], [?t, "name", "store"])` },
 };
 
 const says = {
@@ -50,6 +59,9 @@ const says = {
   Choose: "The components that could draw a value, for the one drawing it to be chosen: none is guessed.",
   Brief:
     "A brief: its name, its flow, and its sections read through after it, each with the flow of its own.",
+  wholes:
+    "Where a holon stands: the wholes holding it, from the top of its store down, at each step the first whole that holds it, and the holon itself last; at most 24 steps up.",
+  roots: "The stores by their roots: each store's one holon of the type store, which holds its top.",
   sections:
     "A brief and each brief it holds as a section, beneath it at any depth, each read as a whole entering no brief, so a brief standing in a flow is read but not entered: the wholes.",
   direction: "Which way a list runs: in a row, or in a column.",
@@ -330,25 +342,23 @@ export async function shipInterface(
 
   // ---- The functions written in the language
 
-  if (!(await named("sections", isFunction))) {
+  for (const [name, { takes, text }] of Object.entries(functions)) {
+    if (await named(name, isFunction)) continue;
     const mint = handles();
-    const brief = await typeNamed("brief");
-    const { input, body, carried } = await lambdaOf(field, functions.sections, mint, brief.id);
-    const sections: Holon = {
+    const type = takes === "holon" ? kinds.holon! : takes ? (await typeNamed(takes)).id : kinds.value!;
+    const { input, body, carried } = await lambdaOf(field, text, mint, type);
+    const made: Holon = {
       id: mint(),
       instance: [functionType!.id],
-      name: "sections",
-      body: { says: says.sections, input, body },
+      name,
+      body: { says: says[name as keyof typeof functions], input, body },
     };
 
     await commit({
-      holons: [
-        sections,
-        ...carried,
-        await besideIn(field, (await required("whole", isFunction)).id, [sections]),
-      ],
-      says: "sections, written in the language: a brief and the briefs it holds as sections, each a whole entering no brief",
+      holons: [made, ...carried, await besideIn(field, (await required("whole", isFunction)).id, [made])],
+      says: `${name}, written in the language upon the natives`,
     });
+    field = await fieldAt(stores);
   }
 
   return { commits };

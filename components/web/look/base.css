@@ -43,16 +43,8 @@ h3 {
 [hidden] {
   display: none !important;
 }
-.drawn {
-  display: contents;
-}
-.meta,
-.note {
+.meta {
   color: var(--quiet);
-}
-.note {
-  margin: 0;
-  font-style: italic;
 }
 .words {
   white-space: pre-wrap;

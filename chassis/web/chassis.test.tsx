@@ -1,16 +1,14 @@
 // The chassis in a page of its own: drawings found by their component's id and kept in
 // place as answers come, over an engine whose answers the test gives, drawn by components
-// realized for the test and two of the web's own, Value and List.
+// realized for the test alone.
 
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
 import { beforeAll, describe, expect, test } from "bun:test";
 import { h } from "./jsx.ts";
-import type { Answer, Engine, Read } from "../../engine/engine.ts";
+import type { Answer } from "../../engine/engine.ts";
 import type { Value } from "../../engine/read/values.ts";
 import type { Glass } from "../../language/shipped.ts";
-import { draw, drawingsAt, type Drawer, type Realization } from "./chassis.ts";
-import { list as listOf } from "../../components/web/list.tsx";
-import { value } from "../../components/web/value.tsx";
+import { arrange, draw, drawingsAt, type Drawer, type Realization } from "./chassis.ts";
 
 beforeAll(() => {
   if (!globalThis.document) GlobalRegistrator.register({ url: "https://glass.test/next/" });
@@ -42,7 +40,24 @@ describe("drawing what an engine gives", () => {
   // Nothing here asks glass for what it ships, and nothing here chooses.
   const glass = {} as Glass;
   const told = { names: new Map<string, string>(), choose: "" };
-  const list = listOf("row");
+
+  // A value as its text; and a list, each item drawn in turn through the space.
+  const value: Realization = (given) => {
+    const node = (<span class="value">{String(given[0])}</span>) as HTMLElement;
+    return { node, update: ([shown]) => void (node.textContent = String(shown)) };
+  };
+  const list: Realization = (given, space) => {
+    const node = (<div class="list" />) as HTMLElement;
+    const update = ([items]: Value[]) =>
+      space.redraw(() =>
+        arrange(
+          node,
+          (Array.isArray(items) ? items : []).map((item, i) => space.draw(item, i)),
+        ),
+      );
+    update(given);
+    return { node, update };
+  };
 
   // An engine whose one subscription answers what the test gives it.
   function given() {
