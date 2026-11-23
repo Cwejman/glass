@@ -14,15 +14,7 @@
 // to with their types, is read through the engine, each holon once a page.
 
 import type { Engine } from "../../engine/engine.ts";
-import {
-  fits,
-  inputOf,
-  kindsAmong,
-  knownAs,
-  placeAs,
-  type Kinds,
-  type Known,
-} from "../../engine/read/input.ts";
+import { fits, inputOf, kindOf, knownAs, placeAs, type Known } from "../../engine/read/input.ts";
 import { after, all, type Maybe } from "../../engine/read/maybe.ts";
 import { isRecord, ref, type Value } from "../../engine/read/values.ts";
 import type { Holon } from "../../stores/store.ts";
@@ -67,22 +59,21 @@ export function finder(read: Engine["read"], glass: Glass, components: readonly 
     });
 
   // The candidates found by type, and the fallback, each component once a page.
-  let candidates: Maybe<{ typed: Candidate[]; fallback?: string; kinds: Kinds }> | undefined;
+  let candidates: Maybe<{ typed: Candidate[]; fallback?: string }> | undefined;
   const candidatesNow = () =>
     (candidates ??= after(all(components.map(candidateOf)), (found) => {
       const each = found.filter((candidate): candidate is Candidate => candidate !== null);
-      const kinds = kindsAmong(each.flatMap(({ types }) => types));
-      const typed = each.filter(({ types }) => types.some((type) => !kinds.has(type.id)));
+      const typed = each.filter(({ types }) => types.some((type) => !kindOf(type)));
       const fallback = each.find(
-        ({ types }) => types.length > 0 && types.every((type) => kinds.get(type.id) === "value"),
+        ({ types }) => types.length > 0 && types.every((type) => kindOf(type) === "value"),
       )?.id;
-      return (candidates = { typed, fallback, kinds });
+      return (candidates = { typed, fallback });
     }));
 
   return (value) =>
-    after(candidatesNow(), ({ typed, fallback, kinds }) => {
+    after(candidatesNow(), ({ typed, fallback }) => {
       const given = { written: value, value: () => value };
-      const fitting = all(typed.map(({ types }) => fits(types, given, known, kinds)));
+      const fitting = all(typed.map(({ types }) => fits(types, given, known)));
 
       return after(fitting, (fit): Found => {
         const among = typed.filter((_, i) => fit[i]).map(({ id }) => id);

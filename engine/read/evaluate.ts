@@ -1,5 +1,6 @@
 // How a read is worked out: what it gives, over the field as the stores stood when the
-// read began, and the holons the read carries. The field is not held here. Every holon is
+// read began, and the holons the read carries. What it applies is learned first, a layer
+// at a time (learn), then it is worked out. The field is not held here. Every holon is
 // asked of the stores as it is needed (field.ts), so working a read out waits on them,
 // and is asynchronous throughout.
 //
@@ -32,15 +33,14 @@ import type { Holon } from "../../stores/store.ts";
 import type { Heads, Read } from "../engine.ts";
 import { fieldOf, type Field, type Stores } from "./field.ts";
 import {
+  applying,
   fits,
   inputOf,
   isComponentType,
-  kindsIn,
   knownAs,
   matched,
   placeAs,
   type Given,
-  type Kinds,
   type Known,
   type Link,
   type Place,
@@ -93,10 +93,40 @@ export async function evaluate(
   });
 
   try {
+    await learn(field, gives);
     return { value: outward(await evaluator(field).give(gives)), ...seen() };
   } catch (error) {
     return { problem: error instanceof Error ? error.message : String(error), ...seen() };
   }
+}
+
+// What a read applies, learned before it is worked out, so working it out waits only on
+// what it reads: a prefetch, from what it gives, of what each holon applies or takes
+// (applying) and the type of each, a layer at a time, every holon of a layer asked at
+// once. A holon is followed so before its types say whether it is a use or a function;
+// one followed in vain changes no answer. The read keeps what it learned for itself
+// alone, and a holon that cannot be learned is left for working out to meet, and say why.
+async function learn(field: Field, gives: unknown) {
+  const seen = new Set<string>();
+
+  for (let layer = idsIn(gives); layer.length; ) {
+    const fresh = [...new Set(layer)].filter((id) => !seen.has(id));
+    fresh.forEach((id) => seen.add(id));
+    const kept = await Promise.allSettled(fresh.map(async (id) => field.holon(id)));
+
+    layer = kept.flatMap((each) => {
+      if (each.status === "rejected" || !each.value) return [];
+      const { instance, body } = each.value.holon;
+      return [...instance, ...idsIn(applying(body))];
+    });
+  }
+}
+
+// The ids referred to anywhere within a value.
+function idsIn(value: unknown): string[] {
+  if (isRef(value)) return [value.$ref];
+  if (value === null || typeof value !== "object") return [];
+  return Object.values(value).flatMap(idsIn);
 }
 
 type Function = { name: string; native?: string; input?: Place[]; body?: unknown; component: boolean };
@@ -169,13 +199,6 @@ export function evaluator(field: Field) {
         };
       }),
   );
-
-  // The kinds of value a placeholder may take, asked of the field once a read, and only
-  // when a placeholder is first held to what it is given.
-  let kindsFound: Maybe<Kinds> | undefined;
-  const kinds = () => (kindsFound ??= kindsIn(field).then((found) => (kindsFound = found)));
-  const fitting = (types: Holon[], given: Given) =>
-    after(kinds(), (kinds) => fits(types, given, known, kinds));
 
   const calling: Calling = {
     field,
@@ -322,7 +345,7 @@ export function evaluator(field: Field) {
   // given the nearest offer of its type, else null. Where none is optional, each takes
   // the next, and nothing need be held to a type.
   function placed(input: Place[], given: Given[], offers: readonly Ref[]): Maybe<Value[]> {
-    const fit = (place: Place, arg: Given) => fitting(place.types, arg);
+    const fit = (place: Place, arg: Given) => fits(place.types, arg, known);
     const taking = input.some(({ optional }) => optional)
       ? after(matched(input, given, fit), ({ taking }) => taking)
       : input.map((_, i) => i);
@@ -343,7 +366,7 @@ export function evaluator(field: Field) {
       offers,
       null as Value,
       (found, offer) =>
-        found ?? after(fitting(place.types, valueGiven(offer)), (fit) => (fit ? offer : null)),
+        found ?? after(fits(place.types, valueGiven(offer), known), (fit) => (fit ? offer : null)),
     );
   }
 

@@ -8,7 +8,7 @@
 import { isId } from "../../stores/ids.ts";
 import type { Holon } from "../../stores/store.ts";
 import type { Field } from "../read/field.ts";
-import { inputOf, isFunctionType, isUseType, kindsIn, type Kinds } from "../read/input.ts";
+import { inputOf, isFunctionType, isUseType } from "../read/input.ts";
 import { references } from "../read/natives/holons.ts";
 import { isRef } from "../read/values.ts";
 import type { Change } from "./change.ts";
@@ -26,8 +26,6 @@ export type Known = {
   referred: ReadonlyMap<string, Holon>;
   // The functions of the field naming one the change writes as their reverse.
   reversing: readonly Holon[];
-  // The kinds of value a placeholder may take, as the field has them.
-  kinds: Kinds;
   // The holons of the field holding a holon the change writes.
   holding: readonly Holon[];
   // The holons of the field that refer to what goes.
@@ -65,7 +63,6 @@ export async function knownOf(field: Field, stores: Known["stores"], change: Cha
     kept,
     referred: root ? new Map([...referred, ...(await referredBy(field, [root]))]) : referred,
     reversing: await reversing(field, change.holons, referred),
-    kinds: await kindsIn(field),
     holding: await holdingOf(
       field,
       [...kept.keys()].filter((id) => !gone.includes(id)),

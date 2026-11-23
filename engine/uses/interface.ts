@@ -33,6 +33,11 @@ const written = {
   Reader: "text => List([Search(text), Answer(parse(text))])",
 };
 
+// The functions the interface reads by, written in the language upon the natives.
+const functions = {
+  sections: `b => [b] | follow(x => x.parts) | map(e => e.to) | concat([b]) | map(s => whole(s, ["brief"]))`,
+};
+
 const says = {
   component:
     "A function drawn rather than worked out: what it draws in a sentence, the placeholders it takes, and, made of data, the body it draws; the code that draws one is each surface's own.",
@@ -45,6 +50,8 @@ const says = {
   Choose: "The components that could draw a value, for the one drawing it to be chosen: none is guessed.",
   Brief:
     "A brief: its name, its flow, and its sections read through after it, each with the flow of its own.",
+  sections:
+    "A brief and each brief it holds as a section, beneath it at any depth, each read as a whole entering no brief, so a brief standing in a flow is read but not entered: the wholes.",
   direction: "Which way a list runs: in a row, or in a column.",
   row: "Side by side, wrapping where there is no room.",
   column: "One under another.",
@@ -317,6 +324,30 @@ export async function shipInterface(
     await commit({
       holons,
       says: "Reader and Search made of data: the search bar a list of a text's steps, as pills, beside the text typed into",
+    });
+    field = await fieldAt(stores);
+  }
+
+  // ---- The functions written in the language
+
+  if (!(await named("sections", isFunction))) {
+    const mint = handles();
+    const brief = await typeNamed("brief");
+    const { input, body, carried } = await lambdaOf(field, functions.sections, mint, brief.id);
+    const sections: Holon = {
+      id: mint(),
+      instance: [functionType!.id],
+      name: "sections",
+      body: { says: says.sections, input, body },
+    };
+
+    await commit({
+      holons: [
+        sections,
+        ...carried,
+        await besideIn(field, (await required("whole", isFunction)).id, [sections]),
+      ],
+      says: "sections, written in the language: a brief and the briefs it holds as sections, each a whole entering no brief",
     });
   }
 

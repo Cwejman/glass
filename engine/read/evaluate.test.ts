@@ -232,9 +232,10 @@ describe("reading over stores", () => {
 
     expect(Object.keys((answer.value as { holons: object }).holons).sort()).toEqual([id(101), id(200)]);
     expect(read.asked.holon).toBeUndefined();
-    // Each turn's holons asked of all three stores together: the use's type, the function
-    // and its type, then the whole, its parts and their types, six turns in all.
-    expect(read.asked.holons).toBe(6 * 3);
+    // Each turn's holons asked of all three stores together. Learned before it is worked
+    // out: the use's type with the function, then the function's type with the whole;
+    // then the whole's part, then its type: four turns in all.
+    expect(read.asked.holons).toBe(4 * 3);
   });
 
   test("an answer names the stores it asked: every store, for every holon", async () => {

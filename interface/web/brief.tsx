@@ -1,13 +1,14 @@
 // A brief: its name, its flow, and its sections read through after it, each a heading
-// leading to it, then the flow and sections of its own. Each brief is read as a whole
-// that enters no brief within it, live, so its prose is drawn from one answer (prose.tsx).
+// leading to it, then the flow and sections of its own. The brief is read in one read,
+// live, by sections: the wholes of it and of each section, entering no brief standing in
+// a flow, so it is drawn from one answer (prose.tsx).
 // What stands in a flow that is not prose is drawn by the component found for it, but a
 // brief standing there, a break, is a link to it: it is read where it leads.
 //
-// Every brief read is drawn again whenever any of them changes, all at once, so each
-// drawing within keeps its place among the rest. Given another brief, what is shown is
-// kept until the new one and its sections are read, or until waiting has been long
-// enough, so moving between briefs never blanks the page nor grows it piece by piece.
+// The brief is drawn again whenever its answer changes, all at once, so each drawing
+// within keeps its place among the rest. Given another brief, what is shown is kept until
+// the new one is read, or until waiting has been long enough, so moving between briefs
+// never blanks the page nor grows it piece by piece.
 //
 // The reader says where a brief stands, so a brief says nothing of what holds it.
 
@@ -21,81 +22,62 @@ import { cardOf, named } from "./value.tsx";
 
 export const brief: Realization = (given, space) => {
   const node = (<article class="brief" />) as HTMLElement;
-  const read = new Map<string, Reading>();
   let root: string | undefined;
-  // The brief drawn last, and whether waiting for the one given since has been enough.
-  let drawnRoot: string | undefined;
-  let late = false;
+  // The read of the brief given, and the one drawn last, kept until the next is drawn.
+  let reading: Reading | undefined;
+  let shown: Reading | undefined;
   let lateness: ReturnType<typeof setTimeout> | undefined;
   let done = () => {};
 
-  // Each brief reached kept read, those no longer reached let go.
-  function reading(ids: Set<string>) {
-    for (const [id, each] of read)
-      if (!ids.has(id)) {
-        each.stop?.();
-        read.delete(id);
-      }
+  // The brief and all it holds in one read, sections: the brief and each brief it holds
+  // as a section, each a whole entering no brief, so a brief standing in a flow is read
+  // but not entered, and draws as a link.
+  function read(id: string) {
+    reading?.stop?.();
+    const each: Reading = {};
+    reading = each;
 
-    for (const id of ids) {
-      if (read.has(id)) continue;
-      const each: Reading = {};
-      read.set(id, each);
-
-      void space
-        .subscribe(applying(space.glass, "whole", ref(id), ["brief"]), (answer) => {
-          // A store changing answers every read again; one answered as it was is not
-          // drawn again.
-          const said = JSON.stringify("value" in answer ? answer.value : answer.problem);
-          if (read.get(id) !== each || said === each.said) return;
-          Object.assign(each, wholeOf(answer), { said });
-          draw();
-        })
-        .then((stop) => (read.get(id) === each ? (each.stop = stop) : stop()));
-    }
+    void space
+      .subscribe(applying(space.glass, "sections", ref(id)), (answer) => {
+        // A store changing answers every read again; one answered as it was is not drawn
+        // again.
+        const said = JSON.stringify("value" in answer ? answer.value : answer.problem);
+        if (reading !== each || said === each.said) return;
+        Object.assign(each, wholeOf(answer), { said });
+        draw(each);
+      })
+      .then((stop) => (reading === each ? (each.stop = stop) : stop()));
   }
 
-  // The briefs reached from the root so far, and whether each of them is read.
-  function reachable(id: string, reached = new Set<string>()): { reached: Set<string>; read: boolean } {
-    reached.add(id);
-    const { holons, problem } = read.get(id) ?? {};
-    if (problem !== undefined) return { reached, read: true };
-    const brief = holons?.[id];
-    if (!brief) return { reached, read: false };
-    let all = true;
-    for (const part of refsOf(brief.body.parts))
-      if (!reached.has(part)) all = reachable(part, reached).read && all;
-    return { reached, read: all };
-  }
-
-  function draw() {
+  function draw(from: Reading) {
     if (!root) return;
-    if (root !== drawnRoot && !late) {
-      const { reached, read: ready } = reachable(root);
-      if (!ready) return reading(reached);
-    }
-    drawnRoot = root;
+    shown = from;
     // Drawn, it waits no longer: what was late is over.
     clearTimeout(lateness);
     done();
-    const reached = new Set<string>();
-    const drawn = section(root!, 1, reached, drawer(space));
+    const drawn = section(from, root, 1, new Set(), drawer(space));
     void named(drawn, space, ".face a[data-row]");
     space.redraw(() => arrange(node, [drawn]));
-    reading(reached);
   }
 
   // A brief at a depth: its heading, its flow, then its sections, each brief once.
-  function section(id: string, depth: number, reached: Set<string>, drawn: (id: string) => Child): Node {
+  function section(
+    from: Reading,
+    id: string,
+    depth: number,
+    reached: Set<string>,
+    drawn: (id: string) => Child,
+  ): Node {
     reached.add(id);
-    const { holons, problem } = read.get(id) ?? {};
+    const { holons, problem } = from;
     const brief = holons?.[id];
-    if (!brief) return problem ? note(problem) : <section class="waiting" />;
+    if (problem) return note(problem);
+    if (!brief) return holons ? note("No store keeps this brief.") : <section class="waiting" />;
 
     const Heading = `h${Math.min(depth, 6)}`;
     const flow = refsOf(brief.body.prose).map((inner) => {
-      const holon = holons[inner];
-      return block(holons, inner) ?? (holon?.types.includes("brief") ? faceOf(holon) : drawn(inner));
+      const holon = holons![inner];
+      return block(holons!, inner) ?? (holon?.types.includes("brief") ? faceOf(holon) : drawn(inner));
     });
     const parts = refsOf(brief.body.parts).filter((part) => !reached.has(part));
 
@@ -103,7 +85,7 @@ export const brief: Realization = (given, space) => {
       <section>
         <Heading>{depth === 1 ? brief.name : <a href={`?q=@${id}`}>{brief.name}</a>}</Heading>
         {flow}
-        {parts.map((part) => section(part, depth + 1, reached, drawn))}
+        {parts.map((part) => section(from, part, depth + 1, reached, drawn))}
       </section>
     );
   }
@@ -118,22 +100,20 @@ export const brief: Realization = (given, space) => {
   function update([given = null]: Value[]) {
     if (!isRef(given)) {
       root = undefined;
-      reading(new Set());
+      reading?.stop?.();
+      reading = undefined;
       return space.redraw(() => arrange(node, [note("What is given is no brief.")]));
     }
     if (given.$ref === root) return;
     root = given.$ref;
-    late = false;
     clearTimeout(lateness);
     done();
+    read(root);
+    // A section of the brief shown is read already, all it holds with it: drawn at once.
+    if (shown && entered(shown, root)) return draw(shown);
+    // Else what is shown stays until the new brief is read, or waiting has been enough.
     done = awaiting(node);
-    lateness = setTimeout(() => {
-      late = true;
-      draw();
-    }, 2000);
-    reading(new Set([root]));
-    // A brief already read, as a section of the one shown, is drawn without waiting on it.
-    if (read.get(root)?.holons) draw();
+    lateness = setTimeout(() => reading && draw(reading), 2000);
   }
 
   update(given);
@@ -143,10 +123,22 @@ export const brief: Realization = (given, space) => {
     dispose: () => {
       clearTimeout(lateness);
       done();
-      reading(new Set());
+      reading?.stop?.();
     },
   };
 };
+
+// Whether a read holds a brief entered, its flow and its sections with it.
+function entered({ holons }: Reading, id: string, seen = new Set<string>()): boolean {
+  const brief = holons?.[id];
+  if (seen.has(id)) return true;
+  seen.add(id);
+  return Boolean(
+    brief &&
+      [...refsOf(brief.body.prose), ...refsOf(brief.body.parts)].every((inner) => holons![inner]) &&
+      refsOf(brief.body.parts).every((part) => entered({ holons }, part, seen)),
+  );
+}
 
 // A brief as it is read: what its whole gives, or the problem it met, as last answered.
 type Reading = { holons?: Holons; problem?: string; said?: string; stop?: () => void };
@@ -157,11 +149,14 @@ const faceOf = (brief: Read): Node => (
   <div class="face">{cardOf(brief.id, brief.name ?? `@${brief.id}`)}</div>
 );
 
-// What a whole gives: its holons, or the problem it met.
+// What sections gives: the holons of every whole, or the problem it met. A brief no
+// store keeps is said where it would stand (section).
 function wholeOf(answer: Answer): { holons?: Holons; problem?: string } {
   if (!("value" in answer)) return { problem: answer.problem };
-  const holons = isRecord(answer.value) ? (answer.value as Record<string, Value>).holons : undefined;
-  return isRecord(holons)
-    ? { holons: holons as unknown as Holons, problem: undefined }
-    : { problem: "No store keeps this brief." };
+  const wholes = Array.isArray(answer.value) ? answer.value : [];
+  const held = wholes.flatMap((whole) => {
+    const holons = isRecord(whole) ? (whole as Record<string, Value>).holons : undefined;
+    return isRecord(holons) ? [holons] : [];
+  });
+  return { holons: Object.assign({}, ...held) as unknown as Holons, problem: undefined };
 }

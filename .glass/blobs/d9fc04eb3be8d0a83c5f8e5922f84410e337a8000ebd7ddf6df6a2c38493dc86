@@ -1,0 +1,14 @@
+{"body":{"body":{"$holds":true,"$ref":"1M83R02522TV000"},"input":[{"$holds":true,"$ref":"1M83QMPXE1VQ001"}],"says":"A brief and each brief it holds as a section, beneath it at any depth, each read as a whole entering no brief, so a brief standing in a flow is read but not entered: the wholes."},"id":"1M83QMPXE1VQ000","instance":["1M6YD90YH1TJ000"],"name":"sections"}
+{"body":{"args":[{"$holds":true,"$ref":"1M83R02522TV001"},{"$holds":true,"$ref":"1M83R02522TV00A"}],"fn":{"$ref":"1M734SKYDXQ2008"}},"id":"1M83R02522TV000","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M83R02522TV002"},[{"$ref":"1M83QMPXE1VQ001"}]],"fn":{"$ref":"1M734SKYDXQ200M"}},"id":"1M83R02522TV001","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M83R02522TV003"},{"$holds":true,"$ref":"1M83R02522TV007"}],"fn":{"$ref":"1M734SKYDXQ2008"}},"id":"1M83R02522TV002","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[[{"$ref":"1M83QMPXE1VQ001"}],{"$holds":true,"$ref":"1M83R02522TV004"}],"fn":{"$ref":"1M734SKYDXQ2007"}},"id":"1M83R02522TV003","instance":["1M7Z0CEYH385000"]}
+{"body":{"body":{"$holds":true,"$ref":"1M83R02522TV006"},"input":[{"$holds":true,"$ref":"1M83R02522TV005"}]},"id":"1M83R02522TV004","instance":["1M6YD90YH1TJ000"]}
+{"body":{},"id":"1M83R02522TV005","instance":["1M7Z0CEYH385001"],"name":"x"}
+{"body":{"args":[{"$ref":"1M83R02522TV005"},"parts"],"fn":{"$ref":"1M734SKYDXQ2004"}},"id":"1M83R02522TV006","instance":["1M7Z0CEYH385000"]}
+{"body":{"body":{"$holds":true,"$ref":"1M83R02522TV009"},"input":[{"$holds":true,"$ref":"1M83R02522TV008"}]},"id":"1M83R02522TV007","instance":["1M6YD90YH1TJ000"]}
+{"body":{},"id":"1M83R02522TV008","instance":["1M7Z0CEYH385001"],"name":"e"}
+{"body":{"args":[{"$ref":"1M83R02522TV008"},"to"],"fn":{"$ref":"1M734SKYDXQ2004"}},"id":"1M83R02522TV009","instance":["1M7Z0CEYH385000"]}
+{"body":{"body":{"$holds":true,"$ref":"1M83R02522TV00C"},"input":[{"$holds":true,"$ref":"1M83R02522TV00B"}]},"id":"1M83R02522TV00A","instance":["1M6YD90YH1TJ000"]}
+{"body":{},"id":"1M83R02522TV00B","instance":["1M7Z0CEYH385001"],"name":"s"}
+{"body":{"args":[{"$ref":"1M83R02522TV00B"},["brief"]],"fn":{"$ref":"1M7Z0CF9HHJN004"}},"id":"1M83R02522TV00C","instance":["1M7Z0CEYH385000"]}

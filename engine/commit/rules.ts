@@ -9,11 +9,10 @@ import { bodyProblem, isRef, mouldProblem, references, type Mould } from "../mou
 import {
   fits,
   inputOf,
-  kindsAmong,
+  kindOf,
   knownAs,
   matched,
   placeAs,
-  type Kinds,
   type Known,
   type Matched,
   type Place,
@@ -33,8 +32,6 @@ export type Judged = {
   // judging its uses reads; those of the field holding what it writes; and those that
   // refer to what goes.
   referred: ReadonlyMap<string, Holon>;
-  // The kinds of value a placeholder may take, as the field has them.
-  kinds: Kinds;
   holding: readonly Holon[];
   referring: readonly Holon[];
   // The functions of the field naming one the change writes as their reverse.
@@ -78,9 +75,7 @@ export function judge(judged: Judged): Problem[] {
         )
       : null;
   };
-  // The kinds of the field, and those the change ships.
-  const kinds = new Map([...judged.kinds, ...kindsAmong(byId.values())]);
-  const seen: Seen = { ...judged, kinds, holonIn, known, holes: new Set(holes) };
+  const seen: Seen = { ...judged, holonIn, known, holes: new Set(holes) };
 
   return Object.entries(rules).flatMap(([rule, find]) => find(seen).map((found) => ({ rule, ...found })));
 }
@@ -205,10 +200,9 @@ function optionalOnlyInInput(seen: Seen) {
 // a use naming no fn is found one by what shows it. What a use gives, and a placeholder
 // of the kind value or holon, is known only as it is read, so fits anything.
 function argsFitInput(seen: Seen) {
-  const { known, kinds } = seen;
-  const kindOf = (type: Holon) => kinds.get(type.id);
+  const { known } = seen;
   const unread = (found: Known) =>
-    found.use || found.types.some((type) => ["value", "holon"].includes(kindOf(type)!));
+    found.use || found.types.some((type) => ["value", "holon"].includes(kindOf(type) ?? ""));
 
   const fit = (place: Place, arg: unknown) => {
     const found = isRef(arg) ? known(arg.$ref) : null;
@@ -220,7 +214,7 @@ function argsFitInput(seen: Seen) {
         place.types.some((type) => kindOf(type) === "value" || found.types.some(({ id }) => id === type.id))
       );
 
-    return fits(place.types, { written: arg, value: () => arg as never }, known, kinds) as boolean;
+    return fits(place.types, { written: arg, value: () => arg as never }, known) as boolean;
   };
 
   return eachHolon(seen, ({ holon }) => {

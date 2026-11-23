@@ -18,6 +18,7 @@ const routes = {
   row: "interface/row",
   holon: "functions/holon",
   whole: "functions/whole",
+  sections: "functions/sections",
   get: "functions/get",
   in: "functions/in",
   parse: "functions/parse",
@@ -40,8 +41,18 @@ const routes = {
 // What glass ships that the interface asks for, each by its id.
 export type Glass = Record<keyof typeof routes, string>;
 
-// The natives the interface applies.
-export type Native = "holon" | "whole" | "get" | "in" | "parse" | "print" | "steps" | "chain" | "back";
+// The functions the interface applies: natives, and sections, written in the language.
+export type Applied =
+  | "holon"
+  | "whole"
+  | "sections"
+  | "get"
+  | "in"
+  | "parse"
+  | "print"
+  | "steps"
+  | "chain"
+  | "back";
 
 // What glass ships, found by its routes in the store glass is mounted as.
 export async function found(read: Engine["read"], store = "glass"): Promise<Glass> {
@@ -76,7 +87,7 @@ export async function found(read: Engine["read"], store = "glass"): Promise<Glas
 
 const held = (id: string) => ({ $ref: id, $holds: true });
 
-// Applying a native in a read of its own: what it is given is quoted, as it is, so the
+// Applying a function in a read of its own: what it is given is quoted, as it is, so the
 // references within a value, a read's handles among them, stay its own. Its handles are
 // named, so none is taken for a handle of a read it is given.
 function uses(glass: Glass, id: string, fn: string, args: Value[]): Holon[] {
@@ -96,16 +107,16 @@ function uses(glass: Glass, id: string, fn: string, args: Value[]): Holon[] {
   ];
 }
 
-// A native applied to values.
-export function applying(glass: Glass, native: Native, ...args: Value[]): Read {
-  return { gives: held("~asked"), holons: uses(glass, "~asked", glass[native], args) };
+// A function applied to values.
+export function applying(glass: Glass, applied: Applied, ...args: Value[]): Read {
+  return { gives: held("~asked"), holons: uses(glass, "~asked", glass[applied], args) };
 }
 
-// A native applied to each list of values in turn, giving a list.
-export function applyingEach(glass: Glass, native: Native, each: Value[][]): Read {
+// A function applied to each list of values in turn, giving a list.
+export function applyingEach(glass: Glass, applied: Applied, each: Value[][]): Read {
   return {
     gives: each.map((_, i) => held(`~asked-${i}`)),
-    holons: each.flatMap((args, i) => uses(glass, `~asked-${i}`, glass[native], args)),
+    holons: each.flatMap((args, i) => uses(glass, `~asked-${i}`, glass[applied], args)),
   };
 }
 

@@ -6,7 +6,6 @@
 
 import { isClosure, isRef, kind, type Ref, type Value } from "./values.ts";
 import type { Holon } from "../../stores/store.ts";
-import type { Field } from "./field.ts";
 import { after, each, type Maybe } from "./maybe.ts";
 
 // A reference as written in a holon's body, holding or not, optional or not.
@@ -32,31 +31,18 @@ export const isFunctionType = (type: Holon) => declares(type, "input");
 // its name, as glass ships it.
 export const isComponentType = (type: Holon) => isFunctionType(type) && type.name === "component";
 
-// The kinds of value a placeholder may take: types glass ships, each of an empty mould.
-// They are found once, a read or a commit, by their names, and known after by their ids,
-// so a type of another store that shares a kind's name, as prose's list does, is never
-// taken for it. A field without them has no kinds: a placeholder's type is then held to
-// what is given as any type is, by what it is an instance of.
+// The kinds of value a placeholder may take: types glass ships, each a kind's name and
+// an empty mould, so known by what they are alone, never searched for. A type of
+// another store sharing a kind's name, as prose's list does, declares a mould, and is
+// held to what is given as any type is, by what it is an instance of.
 export const kindNames = ["value", "number", "string", "boolean", "list", "record", "holon"] as const;
 export type Kind = (typeof kindNames)[number];
-export type Kinds = ReadonlyMap<string, Kind>;
 
-const isKindName = (name: string | undefined): name is Kind => kindNames.includes(name as Kind);
-const shipped = (type: Holon) =>
-  isKindName(type.name) && Boolean(type.mould) && !Object.keys(type.mould!).length;
-
-// The kinds among the holons given.
-export const kindsAmong = (holons: Iterable<Holon>): Kinds =>
-  new Map([...holons].flatMap((type) => (shipped(type) ? [[type.id, type.name as Kind] as const] : [])));
-
-// The kinds of a field, asked once of its facts by name.
-export async function kindsIn(field: Pick<Field, "facts" | "holon">): Promise<Kinds> {
-  const named = await Promise.all(kindNames.map((name) => field.facts({ a: "name", v: name })));
-  const found = await Promise.all(named.flat().map(async ({ e }) => (await field.holon(e))?.holon));
-  return kindsAmong(found.filter((type): type is Holon => Boolean(type)));
-}
-
-export const isKind = (type: Holon, kinds: Kinds) => kinds.has(type.id);
+// The kind a type is, if it is one.
+export const kindOf = (type: Holon): Kind | undefined =>
+  kindNames.includes(type.name as Kind) && type.mould && !Object.keys(type.mould).length
+    ? (type.name as Kind)
+    : undefined;
 
 export const knownAs = (holon: Holon, types: Holon[]): Known => ({
   holon,
@@ -71,6 +57,10 @@ export const placeAs = ({ $ref: id, $optional }: Link, { types }: Known): Place 
   types,
   itself: types.some(isUseType),
 });
+
+// What a holon applies or takes, where it is a use or a function: a use's function, args
+// and offers, a function's input and body, as their moulds declare them.
+export const applying = ({ fn, args, offer, input, body }: Holon["body"]) => [fn, args, offer, input, body];
 
 // The placeholders of a function, as its input lists them; none where it declares no
 // input, so what it is given is not matched.
@@ -105,17 +95,15 @@ export function fits(
   types: readonly Holon[],
   given: Given,
   known: (id: string) => Maybe<Known | null>,
-  kinds: Kinds,
 ): Maybe<boolean> {
   if (!types.length) return true;
-  return each(types, false as boolean, (fit, type) => fit || fitsType(type, given, known, kinds));
+  return each(types, false as boolean, (fit, type) => fit || fitsType(type, given, known));
 }
 
 function fitsType(
   type: Holon,
   { written, value }: Given,
   known: (id: string) => Maybe<Known | null>,
-  kinds: Kinds,
 ): Maybe<boolean> {
   const holonIs = (ref: unknown, is: (found: Known) => boolean) =>
     isRef(ref) && after(known(ref.$ref), (found) => Boolean(found && is(found)));
@@ -123,7 +111,7 @@ function fitsType(
   if (isUseType(type)) return holonIs(written, (found) => found.use);
   return after(value(), (value) => {
     if (isFunctionType(type)) return isClosure(value) || holonIs(value, (found) => found.applicable);
-    const of = kinds.get(type.id);
+    const of = kindOf(type);
     if (of) return of === "value" || kind(value) === of;
     return holonIs(value, (found) => found.holon.instance.includes(type.id));
   });
