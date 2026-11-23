@@ -14,7 +14,8 @@ import { values } from "./values.ts";
 // A reference in a body, under its top key, and whether it holds.
 export type Reference = { id: string; key: string; holds: boolean };
 
-export function holons({ field, apply }: Calling): Record<string, Native> {
+export function holons(calling: Calling): Record<string, Native> {
+  const { field, apply } = calling;
   const keptOf = (value: unknown) => (isRef(value) ? field.holon(value.$ref) : null);
 
   return {
@@ -59,6 +60,11 @@ export function holons({ field, apply }: Calling): Record<string, Native> {
       isRef(value)
         ? (await holdersOf(field, value.$ref)).map(({ id, key, holds }) => ({ key, from: ref(id), holds }))
         : [],
+
+    // What a function or a component takes of what is given, as a use giving it would be
+    // judged: each placeholder taking something, as {place, given}, or null. Native because
+    // how a use's args meet an input is the evaluator's own, the rule a component is found by.
+    takes: ([fn, given]) => (isRef(fn) && Array.isArray(given) ? calling.takes(fn.$ref, given) : null),
 
     holon: async ([value]) =>
       isRef(value) ? ((await reading(field, value.$ref)) as unknown as Value) : null,

@@ -30,8 +30,8 @@ import type { Answer, Committed, Engine, Read } from "../../engine/engine.ts";
 import { after, waits } from "../../engine/read/maybe.ts";
 import { isHandle } from "../../engine/commit/change.ts";
 import { isRecord, ref, type Ref, type Value } from "../../engine/read/values.ts";
-import { applying, proposing, type Glass } from "../../language/shipped.ts";
-import { asHolon, finder, type Find } from "./find.ts";
+import { applying, asHolon, proposing, type Glass } from "../../language/shipped.ts";
+import { finder, type Find } from "./find.ts";
 
 // What a realization makes: its node, how it takes what it is given next, and how it
 // lets go of what it holds, a subscription for one.
@@ -69,8 +69,10 @@ export type Drawer = {
   // The components realized here, and what each is called, by id.
   realized: ReadonlyMap<string, Realization>;
   names: ReadonlyMap<string, string>;
-  // The component drawn where several could draw a value: given them and the value.
+  // The component drawn where several could draw a value, given them and the value; and
+  // the one drawing what no component takes by a type of the field.
   choose: string;
+  fallback: string;
   // How a component is found for a value that names none; by type among those realized
   // here (find.ts), unless another way is given.
   find?: Find;
@@ -114,7 +116,8 @@ const keptFor = 400;
 // function returned is called.
 export async function draw(into: Element, root: Read, given: Drawer): Promise<() => void> {
   const find =
-    given.find ?? finder((read) => given.engine.read(read), given.glass, [...given.realized.keys()]);
+    given.find ??
+    finder((read) => given.engine.read(read), given.glass, [...given.realized.keys()], given.fallback);
   const drawer: Rooted = { ...given, find, root, picked: new Map(), tried: new Set() };
   const top = spaceAt({ at: [] }, drawer);
   const unsubscribe = await drawer.engine.subscribe(root, (answer) =>
@@ -347,7 +350,7 @@ function componentOf(value: Value, place: Place, drawer: Rooted, chosen?: string
   const picked = chosen ?? (use && drawer.picked.get(use));
   if (picked) return { component: picked, given, at };
 
-  return after(drawer.find(given[0] ?? null), (found) => {
+  return after(drawer.find(given), (found) => {
     if ("among" in found)
       return { component: drawer.choose, given: [found.among.map(ref), given[0] ?? null], at };
     if (found.by === "type" && use) void written(use, found.component, drawer);

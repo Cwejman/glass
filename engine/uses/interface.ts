@@ -45,6 +45,11 @@ const functions = {
     text: `h => [h] | follow(x => in(x) | filter(e => e.holds) | map(e => e.from) | take(1), {depth: 24}) | map(e => e.to) | reverse | concat([h])`,
   },
   roots: { takes: undefined, text: `() => find(?s, [?s, "instance", ?t], [?t, "name", "store"])` },
+  is: { takes: undefined, text: `(h, type) => and(eq(kind(h), "holon"), has(h.instance, type))` },
+  fitting: {
+    takes: "list",
+    text: `(given, among) => among | filter(c => takes(c, given) | map(b => get(b.place, "instance") | map(t => is(b.given, t)) | has(true)) | has(true))`,
+  },
 };
 
 const says = {
@@ -62,6 +67,9 @@ const says = {
   wholes:
     "Where a holon stands: the wholes holding it, from the top of its store down, at each step the first whole that holds it, and the holon itself last; at most 24 steps up.",
   roots: "The stores by their roots: each store's one holon of the type store, which holds its top.",
+  is: "Whether a holon is an instance of the type given; anything else is not.",
+  fitting:
+    "Of the components among those given, those that take what is given, as a use giving it would be judged, and by a type of the field: some placeholder takes something given of a type it takes. A component taking only kinds of value is never found so.",
   sections:
     "A brief and each brief it holds as a section, beneath it at any depth, each read as a whole entering no brief, so a brief standing in a flow is read but not entered: the wholes.",
   direction: "Which way a list runs: in a row, or in a column.",
@@ -345,7 +353,12 @@ export async function shipInterface(
   for (const [name, { takes, text }] of Object.entries(functions)) {
     if (await named(name, isFunction)) continue;
     const mint = handles();
-    const type = takes === "holon" ? kinds.holon! : takes ? (await typeNamed(takes)).id : kinds.value!;
+    const type =
+      takes === "holon" || takes === "list"
+        ? kinds[takes]!
+        : takes
+          ? (await typeNamed(takes)).id
+          : kinds.value!;
     const { input, body, carried } = await lambdaOf(field, text, mint, type);
     const made: Holon = {
       id: mint(),

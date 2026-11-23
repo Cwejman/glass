@@ -7,7 +7,7 @@
 // native parse, under handles of their own, so none is taken for a holon of the field.
 
 import type { Engine, Read } from "../engine/engine.ts";
-import { isRef, type Value } from "../engine/read/values.ts";
+import { isRecord, isRef, type Value } from "../engine/read/values.ts";
 import type { Holon } from "../stores/store.ts";
 
 // The language as glass ships it, by route from glass's level: what a use and a function
@@ -20,6 +20,8 @@ export const language = {
   holon: "functions/holon",
   whole: "functions/whole",
   sections: "functions/sections",
+  fitting: "functions/fitting",
+  takes: "functions/takes",
   wholes: "functions/wholes",
   roots: "functions/roots",
   get: "functions/get",
@@ -124,5 +126,16 @@ export function proposing(
   return {
     gives: held("~proposed"),
     holons: [...(within.holons ?? []), ...uses(glass, "~proposed", glass.back, [[...at], place, value])],
+  };
+}
+
+// A holon as the function holon gives it, its store and its types' names set aside.
+export function asHolon({ id, instance, name, mould, body }: Record<string, unknown>): Holon {
+  return {
+    id: String(id),
+    instance: Array.isArray(instance) ? instance.map(String) : [],
+    ...(typeof name === "string" && { name }),
+    ...(isRecord(mould) && { mould: mould as Holon["mould"] }),
+    body: (isRecord(body) ? body : {}) as Holon["body"],
   };
 }

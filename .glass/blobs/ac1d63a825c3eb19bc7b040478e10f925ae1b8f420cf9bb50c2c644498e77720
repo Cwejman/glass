@@ -1,0 +1,24 @@
+{"body":{"body":{"$holds":true,"$ref":"1M84DH8EJJ9A000"},"input":[{"$holds":true,"$ref":"1M7Z0CF1M37E0AB"},{"$holds":true,"$ref":"1M7Z0CF1M37E0AC"}],"says":"Whether a holon is an instance of the type given; anything else is not."},"id":"1M735G0RNVQR003","instance":["1M6YD90YH1TJ000"],"name":"is"}
+{"body":{"input":[{"$holds":true,"$ref":"1M84D1T2AE0B001"},{"$holds":true,"$ref":"1M84D1T2AE0B002"}],"native":"takes","says":"What a function or a component takes of what is given, a list of what a use would give it, as the use would be judged: each placeholder that takes something, as {place, given}, in order; or null where what is given is not taken, a required placeholder given nothing or what does not fit its type, or something left over."},"id":"1M84D1T2AE0B000","instance":["1M6YD90YH1TJ000"],"name":"takes"}
+{"body":{"body":{"$holds":true,"$ref":"1M84DH8EJJ9A005"},"input":[{"$holds":true,"$ref":"1M84D3T07B0B001"},{"$holds":true,"$ref":"1M84D3T07B0B002"}],"says":"Of the components among those given, those that take what is given, as a use giving it would be judged, and by a type of the field: some placeholder takes something given of a type it takes. A component taking only kinds of value is never found so."},"id":"1M84D3T07B0B000","instance":["1M6YD90YH1TJ000"],"name":"fitting"}
+{"body":{"args":[{"$holds":true,"$ref":"1M84DH8EJJ9A001"},{"$holds":true,"$ref":"1M84DH8EJJ9A003"}],"fn":{"$ref":"1M6YD90YH1TJ00G"}},"id":"1M84DH8EJJ9A000","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M84DH8EJJ9A002"},"holon"],"fn":{"$ref":"1M734SKYDXQ200R"}},"id":"1M84DH8EJJ9A001","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$ref":"1M7Z0CF1M37E0AB"}],"fn":{"$ref":"1M734SKYDXQ2006"}},"id":"1M84DH8EJJ9A002","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M84DH8EJJ9A004"},{"$ref":"1M7Z0CF1M37E0AC"}],"fn":{"$ref":"1M734SKYDXQ200J"}},"id":"1M84DH8EJJ9A003","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$ref":"1M7Z0CF1M37E0AB"},"instance"],"fn":{"$ref":"1M734SKYDXQ2004"}},"id":"1M84DH8EJJ9A004","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$ref":"1M84D3T07B0B002"},{"$holds":true,"$ref":"1M84DH8EJJ9A006"}],"fn":{"$ref":"1M734SKYDXQ2009"}},"id":"1M84DH8EJJ9A005","instance":["1M7Z0CEYH385000"]}
+{"body":{"body":{"$holds":true,"$ref":"1M84DH8EJJ9A008"},"input":[{"$holds":true,"$ref":"1M84DH8EJJ9A007"}]},"id":"1M84DH8EJJ9A006","instance":["1M6YD90YH1TJ000"]}
+{"body":{},"id":"1M84DH8EJJ9A007","instance":["1M7Z0CEYH385001"],"name":"c"}
+{"body":{"args":[{"$holds":true,"$ref":"1M84DH8EJJ9A009"},true],"fn":{"$ref":"1M734SKYDXQ200J"}},"id":"1M84DH8EJJ9A008","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M84DH8EJJ9A00A"},{"$holds":true,"$ref":"1M84DH8EJJ9A00B"}],"fn":{"$ref":"1M734SKYDXQ2008"}},"id":"1M84DH8EJJ9A009","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$ref":"1M84DH8EJJ9A007"},{"$ref":"1M84D3T07B0B001"}],"fn":{"$ref":"1M84D1T2AE0B000"}},"id":"1M84DH8EJJ9A00A","instance":["1M7Z0CEYH385000"]}
+{"body":{"body":{"$holds":true,"$ref":"1M84DH8EJJ9A00D"},"input":[{"$holds":true,"$ref":"1M84DH8EJJ9A00C"}]},"id":"1M84DH8EJJ9A00B","instance":["1M6YD90YH1TJ000"]}
+{"body":{},"id":"1M84DH8EJJ9A00C","instance":["1M7Z0CEYH385001"],"name":"b"}
+{"body":{"args":[{"$holds":true,"$ref":"1M84DH8EJJ9A00E"},true],"fn":{"$ref":"1M734SKYDXQ200J"}},"id":"1M84DH8EJJ9A00D","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M84DH8EJJ9A00F"},{"$holds":true,"$ref":"1M84DH8EJJ9A00H"}],"fn":{"$ref":"1M734SKYDXQ2008"}},"id":"1M84DH8EJJ9A00E","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$holds":true,"$ref":"1M84DH8EJJ9A00G"},"instance"],"fn":{"$ref":"1M734SKYDXQ2004"}},"id":"1M84DH8EJJ9A00F","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$ref":"1M84DH8EJJ9A00C"},"place"],"fn":{"$ref":"1M734SKYDXQ2004"}},"id":"1M84DH8EJJ9A00G","instance":["1M7Z0CEYH385000"]}
+{"body":{"body":{"$holds":true,"$ref":"1M84DH8EJJ9A00K"},"input":[{"$holds":true,"$ref":"1M84DH8EJJ9A00J"}]},"id":"1M84DH8EJJ9A00H","instance":["1M6YD90YH1TJ000"]}
+{"body":{},"id":"1M84DH8EJJ9A00J","instance":["1M7Z0CEYH385001"],"name":"t"}
+{"body":{"args":[{"$holds":true,"$ref":"1M84DH8EJJ9A00M"},{"$ref":"1M84DH8EJJ9A00J"}],"fn":{"$ref":"1M735G0RNVQR003"}},"id":"1M84DH8EJJ9A00K","instance":["1M7Z0CEYH385000"]}
+{"body":{"args":[{"$ref":"1M84DH8EJJ9A00C"},"given"],"fn":{"$ref":"1M734SKYDXQ2004"}},"id":"1M84DH8EJJ9A00M","instance":["1M7Z0CEYH385000"]}

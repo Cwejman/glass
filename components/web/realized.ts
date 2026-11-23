@@ -57,8 +57,9 @@ export const namesOf = (own: Components): ReadonlyMap<string, string> =>
   new Map(Object.entries(own).map(([name, id]) => [id, name]));
 
 // The components on the web as the chassis is given them, found in glass: their code by
-// id, what each is called, and the one that chooses where several could draw a value.
+// id, what each is called, the one that chooses where several could draw a value, and the
+// one drawing what none takes by a type of the field.
 export async function webComponents(read: Engine["read"]) {
   const own = await found(read, components);
-  return { realized: realizedIn(own), names: namesOf(own), choose: own.Choose };
+  return { realized: realizedIn(own), names: namesOf(own), choose: own.Choose, fallback: own.Value };
 }

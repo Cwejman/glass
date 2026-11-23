@@ -40,10 +40,12 @@ export type Written = {
   test(given: unknown): Maybe<{ names: string[]; holds: (values: Value[]) => Maybe<Value> } | undefined>;
 };
 
-// What a native may ask of the evaluator calling it.
+// What a native may ask of the evaluator calling it: the field; to apply a function; and
+// what a function takes of what is given, as a use giving it is judged.
 export type Calling = {
   field: Field;
   apply(fn: unknown, given: Value[]): Maybe<Value>;
+  takes(fn: string, given: Value[]): Maybe<Value>;
 };
 
 export function natives(calling: Calling) {

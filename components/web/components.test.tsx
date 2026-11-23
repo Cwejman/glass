@@ -53,7 +53,7 @@ describe("the page's read over glass, the interface shipped", () => {
     const glass = await found((read) => engine.read(read));
     const own = await found((read) => engine.read(read), components);
     const told = await webComponents((read) => engine.read(read));
-    const find = finder((read: Read) => engine.read(read), glass, [...told.realized.keys()]);
+    const find = finder((read: Read) => engine.read(read), glass, [...told.realized.keys()], told.fallback);
     const parsed = async (text: string) => {
       const answer = await engine.read(applying(glass, "parse", text));
       if (!("value" in answer)) throw new Error(answer.problem);
@@ -77,11 +77,18 @@ describe("the page's read over glass, the interface shipped", () => {
     stop();
   });
 
-  test("a value is found the component whose first placeholder takes its type; a kind alone finds none", async () => {
+  test("what a use gives is found the component that takes it by a type of the field; a kind alone finds none", async () => {
     const { glass, find, own, told } = await page();
     for (const given of [3, "three", [1, 2], { gives: 1 }, { $ref: notes.first }])
-      expect(await find(given as Value)).toEqual({ component: own.Value, by: "fallback" });
-    expect(await find({ $ref: notes.brief })).toEqual({ component: own.Brief, by: "type" });
+      expect(await find([given as Value])).toEqual({ component: own.Value, by: "fallback" });
+    expect(await find([{ $ref: notes.brief }])).toEqual({ component: own.Brief, by: "type" });
+    // All that is given is matched, as a use giving it would be bound: a list with the way
+    // it runs finds List by the direction's type; one thing more than Brief takes, none.
+    expect(await find([[{ $ref: notes.first }], { $ref: own.row }])).toEqual({
+      component: own.List,
+      by: "type",
+    });
+    expect(await find([{ $ref: notes.brief }, 3])).toEqual({ component: own.Value, by: "fallback" });
   });
 
   test("each realization names a component without a body, and each such component has a realization", async () => {

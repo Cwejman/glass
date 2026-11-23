@@ -39,7 +39,7 @@ function counting() {
 describe("drawing what an engine gives", () => {
   // Nothing here asks glass for what it ships, and nothing here chooses.
   const glass = {} as Glass;
-  const told = { names: new Map<string, string>(), choose: "" };
+  const told = { names: new Map<string, string>(), choose: "", fallback: "" };
 
   // A value as its text; and a list, each item drawn in turn through the space.
   const value: Realization = (given) => {
@@ -81,7 +81,7 @@ describe("drawing what an engine gives", () => {
       [countId, count],
     ]);
     const page = document.createElement("main");
-    const find = (found: Value) => ({
+    const find = ([found]: Value[]) => ({
       component: Array.isArray(found) ? listId : valueId,
       by: "fallback" as const,
     });

@@ -203,7 +203,43 @@ export function evaluator(field: Field) {
   const calling: Calling = {
     field,
     apply: (fn, values) => applied(fn, values.map(valueGiven), [], { around: [] }),
+    takes,
   };
+
+  // What a function or a component takes of what is given, as a use giving it would be
+  // judged: each placeholder that takes something, with what it takes, in order; or null
+  // where what is given is not taken: a required placeholder given nothing or what does
+  // not fit its type, or something left over (matched). What declares no input takes
+  // anything and binds nothing; what is not applicable takes nothing.
+  function takes(id: string, values: Value[]): Maybe<Value> {
+    return after(known(id), (found) => {
+      if (!found?.applicable) return null;
+      return after(functionOf(id), ({ input }) => {
+        if (!input) return [];
+        const given = values.map(valueGiven);
+        return after(
+          matched(input, given, (place, arg) => fits(place.types, arg, known)),
+          ({ taking, taken }) => {
+            if (taken !== given.length) return null;
+            const each = input.map((place, i) => {
+              const at = taking[i];
+              if (at === undefined) return place.optional;
+              return place.optional || fits(place.types, given[at]!, known);
+            });
+            return after(all(each), (fit) =>
+              fit.every(Boolean)
+                ? input.flatMap((place, i) => {
+                    const at = taking[i];
+                    return at === undefined ? [] : [{ place: ref(place.id), given: values[at]! }];
+                  })
+                : null,
+            );
+          },
+        );
+      });
+    });
+  }
+
   const { given: byValue, lazy, structural } = natives(calling);
 
   // ---- Uses
