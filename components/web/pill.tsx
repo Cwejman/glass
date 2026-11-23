@@ -4,10 +4,10 @@
 //
 // The × submits the form the pill is, so whoever keeps the address takes it as a step.
 
-import { h } from "./jsx.ts";
+import { h } from "../../chassis/web/jsx.ts";
 import type { Value } from "../../engine/read/values.ts";
-import { applying } from "./carried.ts";
-import { removed, type Realization } from "./chassis.ts";
+import { applying } from "../../language/shipped.ts";
+import { removed, type Realization } from "../../chassis/web/chassis.ts";
 
 export const pill: Realization = (given, space) => {
   const said = (<code class="said" />) as HTMLElement;

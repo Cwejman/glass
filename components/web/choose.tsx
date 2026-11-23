@@ -2,10 +2,10 @@
 // each a button saying its name, and what it says it draws. The pick is the chassis's to
 // keep: written into the use that named no component, where its store takes it.
 
-import { h } from "./jsx.ts";
+import { h } from "../../chassis/web/jsx.ts";
 import { isRef, ref, type Value } from "../../engine/read/values.ts";
-import { applyingEach } from "./carried.ts";
-import type { Realization } from "./chassis.ts";
+import { applyingEach } from "../../language/shipped.ts";
+import type { Realization } from "../../chassis/web/chassis.ts";
 
 export const choose: Realization = (given, space) => {
   const node = (<div class="choose" />) as HTMLElement;

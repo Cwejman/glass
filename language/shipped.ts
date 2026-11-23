@@ -1,21 +1,22 @@
-// The reads the interface writes itself, over what glass ships: the types, the natives
-// it reads by and the components it realizes, each found once by its route when the page
-// opens, and known after by its id, never by its name.
+// The language as glass ships it, and the reads written over it: its types and the
+// functions everything drawing or asking the field applies, each found once by its route
+// when glass is mounted, and known after by its id, never by its name; and any other
+// table of routes, as the components their own, found the same way.
 //
 // Finding them is the one read that carries what it applies: a use, a function, and the
 // native parse, under handles of their own, so none is taken for a holon of the field.
 
-import type { Engine, Read } from "../../engine/engine.ts";
-import { isRef, type Value } from "../../engine/read/values.ts";
-import type { Holon } from "../../stores/store.ts";
+import type { Engine, Read } from "../engine/engine.ts";
+import { isRef, type Value } from "../engine/read/values.ts";
+import type { Holon } from "../stores/store.ts";
 
-// What the interface asks of glass, by route from glass's level.
-const routes = {
+// The language as glass ships it, by route from glass's level: what a use and a function
+// are, the store's types, and the functions read by everything drawing or asking the field.
+export const language = {
   use: "language/use",
   function: "language/function",
   store: "store/store",
   shape: "store/shape",
-  row: "interface/row",
   holon: "functions/holon",
   whole: "functions/whole",
   sections: "functions/sections",
@@ -27,21 +28,15 @@ const routes = {
   chain: "functions/chain",
   back: "functions/back",
   quote: "functions/quote",
-  Value: "components/Value",
-  List: "components/List",
-  Answer: "components/Answer",
-  ExpressionInput: "components/ExpressionInput",
-  Pill: "components/Pill",
-  Choose: "components/Choose",
-  Brief: "components/Brief",
-  Search: "components/Search",
-  Reader: "components/Reader",
 };
 
-// What glass ships that the interface asks for, each by its id.
-export type Glass = Record<keyof typeof routes, string>;
+// What routes name, each by its id.
+export type Found<Routes> = Record<keyof Routes, string>;
 
-// The functions the interface applies: natives, and sections, written in the language.
+// The language glass ships, each by its id.
+export type Glass = Found<typeof language>;
+
+// The functions applied by name: natives, and sections, written in the language.
 export type Applied =
   | "holon"
   | "whole"
@@ -54,8 +49,13 @@ export type Applied =
   | "chain"
   | "back";
 
-// What glass ships, found by its routes in the store glass is mounted as.
-export async function found(read: Engine["read"], store = "glass"): Promise<Glass> {
+// What glass ships at routes, found in the store glass is mounted as: the language by
+// default, or any table of routes, as the components their own.
+export async function found<Routes extends Record<string, string> = typeof language>(
+  read: Engine["read"],
+  routes: Routes = language as unknown as Routes,
+  store = "glass",
+): Promise<Found<Routes>> {
   const declared = { says: "", shape: "json", optional: true };
   const text = `{${Object.entries(routes)
     .map(([key, route]) => `${key}: @${store}:${route}`)
@@ -82,7 +82,7 @@ export async function found(read: Engine["read"], store = "glass"): Promise<Glas
       if (!isRef(id)) throw new Error(`glass ships nothing at ${route}`);
       return [key, id.$ref];
     }),
-  ) as Glass;
+  ) as Found<Routes>;
 }
 
 const held = (id: string) => ({ $ref: id, $holds: true });

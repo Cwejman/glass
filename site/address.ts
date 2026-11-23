@@ -10,11 +10,11 @@
 //
 // Visits are the browser's own history: nothing of them is kept in the field.
 
-import type { Engine } from "../../engine/engine.ts";
-import { ref } from "../../engine/read/values.ts";
-import { typed } from "../../stores/buffer/string.ts";
-import { applying, type Glass } from "./carried.ts";
-import { awaiting } from "./chassis.ts";
+import type { Engine } from "../engine/engine.ts";
+import { ref } from "../engine/read/values.ts";
+import { typed } from "../stores/buffer/string.ts";
+import { applying, type Glass } from "../language/shipped.ts";
+import { awaiting } from "../chassis/web/chassis.ts";
 
 // What the address asks.
 export const asked = (at: string = location.href) => new URL(at).searchParams.get("q") ?? "";

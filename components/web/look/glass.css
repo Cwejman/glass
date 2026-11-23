@@ -1,4 +1,4 @@
-/* How the web chassis draws glass's components: its tokens first, then the page beneath
+/* How glass's components look on the web: their tokens first, then the page beneath
    them, then each component's own look, in a file beside the others. A site links this one
    file, built, and tunes the tokens. */
 
@@ -13,4 +13,3 @@
 @import "./value.css";
 @import "./brief.css";
 @import "./choose.css";
-@import "./inspector.css";

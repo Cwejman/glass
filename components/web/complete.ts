@@ -10,8 +10,8 @@
 
 import type { Read } from "../../engine/engine.ts";
 import { isRecord, isRef, ref, type Value } from "../../engine/read/values.ts";
-import { applying, applyingEach } from "./carried.ts";
-import type { Space } from "./chassis.ts";
+import { applying, applyingEach } from "../../language/shipped.ts";
+import type { Space } from "../../chassis/web/chassis.ts";
 
 // What is being typed: its kind, where it begins, and what of it is typed so far.
 export type Completing = { kind: "function" | "holon"; from: number; typed: string };

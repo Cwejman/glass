@@ -7,11 +7,11 @@
 // An answer slow to come is said by the event busy, bubbling from it, true while it is
 // awaited and false once it lands, so the page may show it is working.
 
-import { h } from "./jsx.ts";
+import { h } from "../../chassis/web/jsx.ts";
 import type { Answer, Read } from "../../engine/engine.ts";
 import { isRecord, isRef, type Value } from "../../engine/read/values.ts";
-import { applying } from "./carried.ts";
-import { arrange, awaiting, note, type Realization } from "./chassis.ts";
+import { applying } from "../../language/shipped.ts";
+import { arrange, awaiting, note, type Realization } from "../../chassis/web/chassis.ts";
 import { homeTrail, saidTrail, trailOf, wholesOf } from "./trail.tsx";
 
 export const answer: Realization = (given, space) => {

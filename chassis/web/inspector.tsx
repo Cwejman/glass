@@ -2,7 +2,7 @@
 // component drawing it, a link to its holon; what it was given; the components it was
 // reached through from the root, by the uses the chassis walked to it; the holon it
 // shows, by name, with its types, store, how the language says it, and its id to copy;
-// and, from anywhere, the Reader, the holon the whole page is laid out by. All of it is
+// and, from anywhere, what the whole page is laid out by, the component its root applies. All of it is
 // what the chassis knows of the drawing there (drawingsAt), read again only for names.
 //
 // The place is the innermost there is: a holon a drawing draws as one of its items, a row
@@ -14,14 +14,20 @@
 import { h, type Child } from "./jsx.ts";
 import type { Engine, Read } from "../../engine/engine.ts";
 import { isRecord, isRef, ref, type Value } from "../../engine/read/values.ts";
-import { applying, applyingEach, type Glass } from "./carried.ts";
+import { applying, applyingEach, type Glass } from "../../language/shipped.ts";
 import { drawingsAt, isDrawing } from "./chassis.ts";
 
-type Inspecting = { engine: Pick<Engine, "read">; glass: Glass; root: Read };
+type Inspecting = {
+  engine: Pick<Engine, "read">;
+  glass: Glass;
+  root: Read;
+  names: ReadonlyMap<string, string>;
+};
 
 // Shows the inspector for any place pressed with the other button within the element,
 // until the function returned is called.
-export function inspecting(within: Element, { engine, glass, root }: Inspecting): () => void {
+export function inspecting(within: Element, { engine, glass, root, names }: Inspecting): () => void {
+  const layout = layoutOf(root);
   let open: { panel: HTMLElement; marked: Element[] } | undefined;
   const read = (asked: Read) => engine.read(asked);
 
@@ -123,7 +129,7 @@ export function inspecting(within: Element, { engine, glass, root }: Inspecting)
           </section>
         )}
         <footer>
-          <a href={`?q=@${glass.Reader}`}>This page is laid out by Reader</a>
+          {layout && <a href={`?q=@${layout}`}>This page is laid out by {names.get(layout) ?? "its root"}</a>}
         </footer>
       </aside>
     ) as HTMLElement;
@@ -295,4 +301,12 @@ async function holonSaid(id: string, glass: Glass, read: Asking) {
     kind: [kinds.join(", "), typeof store === "string" && `in ${store}`].filter(Boolean).join(" · "),
     ...(said && said !== `@${id}` && { said }),
   };
+}
+
+// What lays the page out: the function or component the root read's own use applies.
+function layoutOf(root: Read): string | undefined {
+  const gives = root.gives as { $ref?: string } | null;
+  const use = root.holons?.find(({ id }) => id === gives?.$ref);
+  const fn = use?.body.fn as { $ref?: string } | undefined;
+  return fn?.$ref;
 }

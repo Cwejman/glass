@@ -15,7 +15,7 @@
 // it holds; --all shows every one, and --json gives the value as the engine does.
 
 import { readFileSync } from "node:fs";
-import { applying, found, type Glass } from "../interface/web/carried.ts";
+import { applying, found, type Glass } from "../language/shipped.ts";
 import { engineHere } from "../stores.ts";
 import type { Engine, Read } from "./engine.ts";
 import { isRef, type Value } from "./read/values.ts";

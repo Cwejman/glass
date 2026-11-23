@@ -1,10 +1,12 @@
-// Where each component is realized on the web: its code, by the name of the component
-// glass ships. This is the one place that says so; the page finds each component's id
-// once, by its route (carried.ts), and a component drawn is found here by that id, never
-// by its name. A chassis on another surface keeps a map of its own.
+// The components realized on the web: each one's code, by the id glass ships the
+// component under, found once by its route; and what else the components name of glass,
+// the direction a list runs in. This is the one place that says which code realizes which
+// component; the chassis is given the map and finds a drawing's realization by its
+// component's id, never by its name. A package of components for another surface keeps a
+// map of its own.
 
-import type { Glass } from "./carried.ts";
-import type { Realization } from "./chassis.ts";
+import type { Realization } from "../../chassis/web/chassis.ts";
+import type { Found } from "../../language/shipped.ts";
 import { answer } from "./answer.tsx";
 import { brief } from "./brief.tsx";
 import { choose } from "./choose.tsx";
@@ -13,21 +15,42 @@ import { list } from "./list.tsx";
 import { pill } from "./pill.tsx";
 import { value } from "./value.tsx";
 
-export const realizations = {
+// What the components name of glass, by route from glass's level.
+export const components = {
+  Value: "components/Value",
+  List: "components/List",
+  Answer: "components/Answer",
+  ExpressionInput: "components/ExpressionInput",
+  Pill: "components/Pill",
+  Choose: "components/Choose",
+  Brief: "components/Brief",
+  Search: "components/Search",
+  Reader: "components/Reader",
+  row: "interface/row",
+};
+
+export type Components = Found<typeof components>;
+
+// The code of each component realized here, given what the components found.
+const realizations = (own: Components) => ({
   Value: value,
-  List: list,
+  List: list(own.row),
   Answer: answer,
   ExpressionInput: expressionInput,
   Pill: pill,
   Choose: choose,
   Brief: brief,
-} satisfies Partial<Record<keyof Glass, Realization>>;
+});
 
-// The components realized here, by the ids glass ships them under.
-export const realizedIn = (glass: Glass): ReadonlyMap<string, Realization> =>
+// The components realized here, by their ids.
+export const realizedIn = (own: Components): ReadonlyMap<string, Realization> =>
   new Map(
-    Object.entries(realizations).map(([name, realization]) => [
-      glass[name as keyof typeof realizations],
+    Object.entries(realizations(own)).map(([name, realization]) => [
+      own[name as keyof Components],
       realization,
     ]),
   );
+
+// Each component by its id, the name glass ships it under, as the chassis and inspector say it.
+export const namesOf = (own: Components): ReadonlyMap<string, string> =>
+  new Map(Object.entries(own).map(([name, id]) => [id, name]));

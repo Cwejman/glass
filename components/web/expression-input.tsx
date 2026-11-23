@@ -20,11 +20,11 @@
 // It is shown only while the reader is asking (asking.ts): Enter, or Escape in an empty
 // input, returns the page to where it stands, as a press anywhere outside the bar does.
 
-import { h } from "./jsx.ts";
+import { h } from "../../chassis/web/jsx.ts";
 import type { Value } from "../../engine/read/values.ts";
 import { asking } from "./asking.ts";
-import { applying } from "./carried.ts";
-import type { Realization } from "./chassis.ts";
+import { applying } from "../../language/shipped.ts";
+import type { Realization } from "../../chassis/web/chassis.ts";
 import { completer, completing, taken, type Completing, type Option } from "./complete.ts";
 
 const continuing = "| add a step, or type to ask anew";

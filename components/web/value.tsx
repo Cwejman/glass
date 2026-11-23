@@ -15,11 +15,11 @@
 // holon it leads to, or what it is where it has none: what is drawn is put in place only
 // once those are read, so no id shows on the way. An id is the inspector's to show.
 
-import { h, type Child } from "./jsx.ts";
+import { h, type Child } from "../../chassis/web/jsx.ts";
 import type { Answer } from "../../engine/engine.ts";
 import { isRecord, isRef, ref, type Value } from "../../engine/read/values.ts";
-import { applying, applyingEach } from "./carried.ts";
-import { arrange, isDrawing, note, type Realization, type Space } from "./chassis.ts";
+import { applying, applyingEach } from "../../language/shipped.ts";
+import { arrange, isDrawing, note, type Realization, type Space } from "../../chassis/web/chassis.ts";
 import { inline as inlineProse, type Holons } from "./prose.tsx";
 import { ledeOf, modeFor, saidOf, sharedKeys, summaryOf, titleOf, type Mode, type Said } from "./summary.ts";
 

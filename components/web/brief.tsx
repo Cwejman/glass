@@ -12,11 +12,11 @@
 //
 // The reader says where a brief stands, so a brief says nothing of what holds it.
 
-import { h, type Child } from "./jsx.ts";
+import { h, type Child } from "../../chassis/web/jsx.ts";
 import type { Answer } from "../../engine/engine.ts";
 import { isRecord, isRef, ref, type Value } from "../../engine/read/values.ts";
-import { applying } from "./carried.ts";
-import { arrange, awaiting, note, type Realization, type Space } from "./chassis.ts";
+import { applying } from "../../language/shipped.ts";
+import { arrange, awaiting, note, type Realization, type Space } from "../../chassis/web/chassis.ts";
 import { block, refsOf, type Holons, type Read } from "./prose.tsx";
 import { cardOf, named } from "./value.tsx";
 

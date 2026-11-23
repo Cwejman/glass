@@ -12,7 +12,7 @@
 //     by type, and Reader's template with them; and
 //   Reader and Search, components of data, their bodies written below in the language.
 //
-// Which code realizes a component is the chassis's own (interface/web/realized.ts); a
+// Which code realizes a component is the web components' own (components/web/realized.ts); a
 // component holon only declares. What exists is found by name in the store, and kept.
 
 import type { Holon, Store } from "../../stores/store.ts";

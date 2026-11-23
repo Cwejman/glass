@@ -9,11 +9,11 @@
 // its end, opens the input in its place. It begins at home, the start of the page, and
 // at home it is the expression button alone.
 
-import { h, type Child } from "./jsx.ts";
+import { h, type Child } from "../../chassis/web/jsx.ts";
 import { isRecord, isRef, ref, type Value } from "../../engine/read/values.ts";
 import { asking } from "./asking.ts";
-import { applying, applyingEach, type Glass } from "./carried.ts";
-import type { Space } from "./chassis.ts";
+import { applying, applyingEach, type Glass } from "../../language/shipped.ts";
+import type { Space } from "../../chassis/web/chassis.ts";
 import { saidOf, titleOf } from "./summary.ts";
 
 // So many steps up are asked at most: a holarchy deeper than this is cut at its top.

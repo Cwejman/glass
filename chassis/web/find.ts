@@ -18,7 +18,7 @@ import { fits, inputOf, kindOf, knownAs, placeAs, type Known } from "../../engin
 import { after, all, type Maybe } from "../../engine/read/maybe.ts";
 import { isRecord, ref, type Value } from "../../engine/read/values.ts";
 import type { Holon } from "../../stores/store.ts";
-import { applying, type Glass } from "./carried.ts";
+import { applying, type Glass } from "../../language/shipped.ts";
 
 // What finding gives: the one component found by its type, or the fallback where no type
 // finds one, or the components among which the value's is to be chosen.

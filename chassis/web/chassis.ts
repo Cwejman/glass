@@ -6,8 +6,11 @@
 // What finding picks for a use that names no component is written into the use, as its
 // fn, where the use's store takes the change; where it does not, as in a store mounted
 // read-only, or a use the read carries, it is found again each time. Where several could
-// draw it, Choose is drawn in its place, and the person's pick is written the same way,
-// or held for the page where it cannot be.
+// draw it, the component it is given for choosing is drawn in its place, and the person's
+// pick is written the same way, or held for the page where it cannot be.
+//
+// The chassis names no component of its own: whoever starts it gives it the components
+// realized here, what each is called, and the one that chooses.
 //
 // A realization makes a node from what its component was given, and updates it when a
 // new answer gives it something else, so what is drawn stays in place as answers come:
@@ -27,7 +30,7 @@ import type { Answer, Committed, Engine, Read } from "../../engine/engine.ts";
 import { after, waits } from "../../engine/read/maybe.ts";
 import { isHandle } from "../../engine/commit/change.ts";
 import { isRecord, ref, type Ref, type Value } from "../../engine/read/values.ts";
-import { applying, proposing, type Glass } from "./carried.ts";
+import { applying, proposing, type Glass } from "../../language/shipped.ts";
 import { asHolon, type Find } from "./find.ts";
 
 // What a realization makes: its node, how it takes what it is given next, and how it
@@ -63,7 +66,11 @@ export type Space = {
 export type Drawer = {
   engine: Pick<Engine, "read" | "subscribe" | "commit">;
   glass: Glass;
+  // The components realized here, and what each is called, by id.
   realized: ReadonlyMap<string, Realization>;
+  names: ReadonlyMap<string, string>;
+  // The component drawn where several could draw a value: given them and the value.
+  choose: string;
   find: Find;
 };
 
@@ -104,8 +111,7 @@ const keptFor = 400;
 // Draws what the root read gives into the element, again whenever it changes, until the
 // function returned is called.
 export async function draw(into: Element, root: Read, given: Drawer): Promise<() => void> {
-  const names = new Map(Object.entries(given.glass).map(([name, id]) => [id, name]));
-  const drawer: Rooted = { ...given, root, names, picked: new Map(), tried: new Set() };
+  const drawer: Rooted = { ...given, root, picked: new Map(), tried: new Set() };
   const top = spaceAt({ at: [] }, drawer);
   const unsubscribe = await drawer.engine.subscribe(root, (answer) =>
     top.redraw(() => arrange(into, ["value" in answer ? top.draw(answer.value) : note(answer.problem)])),
@@ -126,7 +132,6 @@ type Kept = Space & { given: Value[]; dispose(): void };
 // was already offered to.
 type Rooted = Drawer & {
   root: Read;
-  names: ReadonlyMap<string, string>;
   picked: Map<string, string>;
   tried: Set<string>;
 };
@@ -314,7 +319,7 @@ function hostAt(place: Place, drawer: Rooted, around: Kept): Host {
 // The component that draws a value, what it is given, and where it stands: the one a
 // drawing names, where it is realized here; else the one picked for it; else the one
 // found for what it was given, its pick offered to the use that named none; or, where
-// several are found, Choose, given them and the value.
+// several are found, the one that chooses, given them and the value.
 function componentOf(value: Value, place: Place, drawer: Rooted, chosen?: string) {
   const drawing = isDrawing(value) ? value : undefined;
   if (drawing?.problem !== undefined) throw new Error(drawing.problem);
@@ -329,7 +334,7 @@ function componentOf(value: Value, place: Place, drawer: Rooted, chosen?: string
 
   return after(drawer.find(given[0] ?? null), (found) => {
     if ("among" in found)
-      return { component: drawer.glass.Choose, given: [found.among.map(ref), given[0] ?? null], at };
+      return { component: drawer.choose, given: [found.among.map(ref), given[0] ?? null], at };
     if (found.by === "type" && use) void written(use, found.component, drawer);
     return { component: found.component, given, at };
   });

@@ -6,7 +6,7 @@
 // drawn by a component of its own, so a long brief is one drawing. What is not prose,
 // standing in a flow, is left to whoever draws the flow.
 
-import { h, type Child } from "./jsx.ts";
+import { h, type Child } from "../../chassis/web/jsx.ts";
 
 // A holon as the native whole gives it: its body as it is kept, and its types' names.
 export type Read = { id: string; name?: string; types: string[]; body: Record<string, any> };
