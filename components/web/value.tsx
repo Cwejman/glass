@@ -96,7 +96,7 @@ function topDrawn(shown: Value, space: Space): Node {
   if (Array.isArray(shown) && shown.every(isRef))
     return holonsOf(
       shown.map(({ $ref }) => $ref),
-      { place: given(shown) },
+      { place: placeOf(shown) },
     );
   return <div class="shown">{drawer(space)(shown)}</div>;
 }
@@ -191,7 +191,7 @@ function fieldsOf(fields: [string, Value][], drawnOf: (value: Value, key?: strin
         {holonList(inner)
           ? holonsOf(
               inner.map(({ $ref }) => $ref),
-              { title: key, place: `${place ?? given(inner)}/${key}` },
+              { title: key, place: `${place ?? placeOf(inner)}/${key}` },
             )
           : [<h2 class="key">{key}</h2>, drawnOf(inner, key)]}
       </section>
@@ -226,7 +226,7 @@ function shapeSaid(shape: Value): string {
 // The place a value given on its own is remembered by: what it is, so the same answer is
 // shown as it was last shown, wherever it is asked.
 // The text is hashed, FNV-1a, so a long list is a short key.
-const given = (value: Value) => {
+const placeOf = (value: Value) => {
   let hash = 0x811c9dc5;
   for (const char of JSON.stringify(value)) hash = Math.imul(hash ^ char.charCodeAt(0), 0x01000193) >>> 0;
   return `given ${hash.toString(36)}`;
@@ -252,7 +252,7 @@ function drawer(space?: Space, place?: string) {
       if (value.every(isRef)) {
         const ids = value.map(({ $ref }) => $ref);
         if (ids.length <= inline) return <span class="inline">{ids.map((id) => link(id))}</span>;
-        return holonsOf(ids, { place: `${place ?? given(value)}/${key ?? ""}` });
+        return holonsOf(ids, { place: `${place ?? placeOf(value)}/${key ?? ""}` });
       }
       if (saidInline(value)) return <span class="inline">{value.map((item) => drawnOf(item))}</span>;
       return (

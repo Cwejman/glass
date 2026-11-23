@@ -44,7 +44,7 @@ export const answer: Realization = (given, space) => {
     traced = key;
     const showing = whenShown;
     if (!id) {
-      const text = read ? await saidOf(read) : "";
+      const text = read ? await typedOf(read) : "";
       return void showing(
         () =>
           mine === turn && traced === key && arrange(trail, [read ? saidTrail(text || "…") : homeTrail()]),
@@ -61,7 +61,7 @@ export const answer: Realization = (given, space) => {
 
   // A read as it is typed: each of its steps as the language says it, as the pills say
   // them, joined by pipes.
-  async function saidOf(read: Read): Promise<string> {
+  async function typedOf(read: Read): Promise<string> {
     const steps = await space.read(applying(space.glass, "steps", read as unknown as Value));
     if (!("value" in steps) || !Array.isArray(steps.value)) return "";
     const printed = await space.read(

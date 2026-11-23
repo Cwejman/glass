@@ -21,7 +21,7 @@ import { href } from "../chassis/web/href.ts";
 export const asked = (at: string = location.href) => new URL(at).searchParams.get("q") ?? "";
 
 // The address asking a text, as a link leads there; asking nothing, the page alone.
-export const addressOf = (text: string) => (text ? href(text) : location.pathname);
+const addressOf = (text: string) => (text ? href(text) : location.pathname);
 
 // Keeps the address and the text held in a buffer as one, within the element the page
 // draws in, until the function returned is called.

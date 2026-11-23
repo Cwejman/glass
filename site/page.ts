@@ -5,8 +5,9 @@
 // buffer, holding only the present, kept as one with the address, ?q= (address.ts).
 //
 // The site's stores are listed here, in its code. Published stores are read-only: their
-// blobs are fetched from the site, each store's whole once it opens, and kept in OPFS. The home is the reader's own, kept
-// only in this browser; it and the query are the stores written to.
+// blobs are fetched from the site, each store's whole once it opens, and kept in OPFS.
+// The home is the reader's own, kept only in this browser; it and the query are the
+// stores written to.
 
 import type { Engine, Read } from "../engine/engine.ts";
 import { addressed } from "./address.ts";

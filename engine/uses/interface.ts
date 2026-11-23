@@ -1,7 +1,7 @@
 // What the interface draws with, shipped in glass: the components, each declaring what
-// it takes; the natives the interface reads by; and the search bar as data. It runs in
-// the build after migrate.ts, as two commits through the engine, into the store the
-// language ships in. What it writes:
+// it takes; the natives the interface reads by; the search bar as data; and the functions
+// written in the language it reads by. It runs in the build after migrate.ts, as commits
+// through the engine, into the store the language ships in. What it writes:
 //
 //   the component type reshaped to declare only: what it says, its input, and, for a
 //     component made of data, its body; the type direction, and its two, row and column;
@@ -10,10 +10,12 @@
 //     Value, List, Answer, ExpressionInput, Pill, Choose, and Brief, given a brief;
 //   the components realized nowhere taken out, the uses applying them left to find one
 //     by type, and Reader's template with them; and
-//   Reader and Search, components of data, their bodies written below in the language.
+//   Reader and Search, components of data, their bodies written below in the language;
+//   and sections, wholes, roots, is and taking, functions written in the language, one
+//     commit each.
 //
-// Which code realizes a component is the web components' own (components/web/realized.ts); a
-// component holon only declares. What exists is found by name in the store, and kept.
+// Which code realizes a component is the web components' own (components/web/realized.ts);
+// a component holon only declares. What exists is found by name in the store, and kept.
 
 import type { Holon, Store } from "../../stores/store.ts";
 import { namesUsed, syntax, toRead } from "../../language/text.ts";

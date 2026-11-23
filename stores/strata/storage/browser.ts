@@ -60,8 +60,23 @@ type Folder = FileSystemDirectoryHandle;
 
 async function put(blobs: Folder, bytes: Uint8Array) {
   const name = await nameOf(bytes);
-  if (!(await fileIn(blobs, name))) await write(blobs, name, bytes);
+  if (!(await keptWhole(blobs, name))) await write(blobs, name, bytes);
   return name;
+}
+
+// The name of no bytes: the one blob that is rightly empty.
+const nothing = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+
+// Whether a blob is kept, and whole. An earlier write, which made its file under its name
+// before the bytes landed, left an empty file there when cut short. An empty file under
+// the name of bytes that are not empty is no blob kept: it is removed, to be written or
+// fetched again.
+async function keptWhole(blobs: Folder, name: string) {
+  const file = await fileIn(blobs, name);
+  if (!file) return false;
+  if (file.size > 0 || name === nothing) return true;
+  await blobs.removeEntry(name).catch(() => {});
+  return false;
 }
 
 // From the blob kept open, else from OPFS, else, for a published store, fetched from the
@@ -162,11 +177,17 @@ const most = 4096;
 // A blob opened to be read: kept, or fetched first. In a worker, a synchronous handle read
 // at an offset; where none can be had read-only, the File, sliced.
 async function openBlob(blobs: Folder, from: string | undefined, name: string): Promise<Opened> {
-  const handle = await blobs.getFileHandle(name).catch(async () => {
+  if (!held.has(name) && !(await keptWhole(blobs, name))) {
     if (!from) throw new Missing(name);
     await asked(() => fetched(blobs, from, name));
-    return blobs.getFileHandle(name);
-  });
+  }
+  const unkept = held.get(name);
+  if (unkept)
+    return {
+      read: (offset, length) => unkept.subarray(offset, length === undefined ? undefined : offset + length),
+      close: () => {},
+    };
+  const handle = await blobs.getFileHandle(name);
 
   const access = await (
     handle as unknown as { createSyncAccessHandle(options: { mode: string }): Promise<SyncAccess> }
@@ -209,26 +230,39 @@ async function fileIn(folder: Folder, name: string) {
   }
 }
 
-// A file written whole before anyone can read it under its name: createWritable writes
-// beside it and swaps it in on close; where only a synchronous handle is offered, as in
-// some browsers' workers, the bytes are written under another name and moved into place.
+// A file written whole before anyone can read it under its name. A file already there,
+// as a head is, is written by createWritable, which keeps what it held until the new bytes
+// are all there and swaps them in. A new one is written under another name beside it and
+// moved into place once whole, so a write cut short leaves nothing under the name; so too
+// where only a synchronous handle is offered, as in some browsers' workers.
 async function write(folder: Folder, name: string, bytes: Uint8Array) {
-  if ("createWritable" in FileSystemFileHandle.prototype) {
-    const writable = await (await folder.getFileHandle(name, { create: true })).createWritable();
-    await writable.write(bytes as BufferSource);
-    await writable.close();
-    return;
-  }
+  const writable = "createWritable" in FileSystemFileHandle.prototype;
+  const there = await folder.getFileHandle(name).catch(() => null);
+  if (there && writable) return written(await there.createWritable(), bytes);
 
-  const beside = await folder.getFileHandle(`${name}.${crypto.randomUUID()}`, { create: true });
-  const access = await beside.createSyncAccessHandle();
+  const besideName = `${name}.${crypto.randomUUID()}`;
+  const beside = await folder.getFileHandle(besideName, { create: true });
   try {
-    access.write(bytes as BufferSource, { at: 0 });
-    access.flush();
-  } finally {
-    access.close();
+    if (writable) await written(await beside.createWritable(), bytes);
+    else {
+      const access = await beside.createSyncAccessHandle();
+      try {
+        access.write(bytes as BufferSource, { at: 0 });
+        access.flush();
+      } finally {
+        access.close();
+      }
+    }
+    await (beside as unknown as { move(name: string): Promise<void> }).move(name);
+  } catch (failed) {
+    await folder.removeEntry(besideName).catch(() => {});
+    throw failed;
   }
-  await (beside as unknown as { move(name: string): Promise<void> }).move(name);
+}
+
+async function written(writable: FileSystemWritableFileStream, bytes: Uint8Array) {
+  await writable.write(bytes as BufferSource);
+  await writable.close();
 }
 
 // The blobs not kept yet fetched and kept, a few at a time, each waiting while a read
@@ -242,13 +276,7 @@ async function keep(blobs: Folder, from: string | undefined, names: string[]) {
     Array.from({ length: together }, async () => {
       while (next < names.length) {
         const name = names[next++]!;
-        if (
-          await blobs.getFileHandle(name).then(
-            () => true,
-            () => false,
-          )
-        )
-          continue;
+        if (await keptWhole(blobs, name)) continue;
         await quiet();
         await fetched(blobs, from, name);
       }
@@ -272,8 +300,10 @@ async function asked<T>(work: () => Promise<T>) {
 
 const quiet = () => (waiting === 0 ? Promise.resolve() : new Promise<void>((go) => idle.push(go)));
 
-// A blob fetched from the site, unpacked, checked against its name, and kept.
+// A blob fetched from the site, unpacked, checked against its name, and kept; and those
+// fetched that could not be kept.
 const fetching = new Map<string, Promise<void>>();
+const held = new Map<string, Uint8Array>();
 
 function fetched(blobs: Folder, from: string, name: string) {
   const known = fetching.get(name);
@@ -289,7 +319,15 @@ function fetched(blobs: Folder, from: string, name: string) {
     if ((await nameOf(bytes)) !== name)
       throw new Error(`the blob ${name} the site served does not match its name`);
 
-    await write(blobs, name, bytes);
+    // A blob whose name is held by a file another worker keeps open cannot be kept; it is
+    // read from the bytes fetched while the page lives. Any other failure is the read's.
+    await write(blobs, name, bytes).catch((failed: unknown) => {
+      const locked =
+        failed instanceof DOMException &&
+        ["NoModificationAllowedError", "InvalidModificationError"].includes(failed.name);
+      if (!locked) throw failed;
+      held.set(name, bytes);
+    });
   })();
 
   fetching.set(name, loading);

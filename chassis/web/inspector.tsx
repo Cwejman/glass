@@ -2,8 +2,9 @@
 // component drawing it, a link to its holon; what it was given; the components it was
 // reached through from the root, by the uses the chassis walked to it; the holon it
 // shows, by name, with its types, store, how the language says it, and its id to copy;
-// and, from anywhere, what the whole page is laid out by, the component its root applies. All of it is
-// what the chassis knows of the drawing there (drawingsAt), read again only for names.
+// and, from anywhere, what the whole page is laid out by, the component its root
+// applies. All of it is what the chassis knows of the drawing there (drawingsAt), read
+// again only for names.
 //
 // The place is the innermost there is: a holon a drawing draws as one of its items, a row
 // or a link, is a place of its own, drawn by the component drawing around it and given

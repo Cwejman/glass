@@ -11,7 +11,8 @@ import { isRecord, isRef, type Value } from "../engine/read/values.ts";
 import type { Holon } from "../stores/store.ts";
 
 // The language as glass ships it, by route from glass's level: what a use and a function
-// are, the store's types, and the functions read by everything drawing or asking the field.
+// are, the store's types a store is begun with, and the functions applied by name by
+// everything drawing or asking the field.
 export const language = {
   use: "language/use",
   function: "language/function",
@@ -21,11 +22,9 @@ export const language = {
   whole: "functions/whole",
   sections: "functions/sections",
   taking: "functions/taking",
-  takes: "functions/takes",
   wholes: "functions/wholes",
   roots: "functions/roots",
   get: "functions/get",
-  in: "functions/in",
   parse: "functions/parse",
   print: "functions/print",
   steps: "functions/steps",

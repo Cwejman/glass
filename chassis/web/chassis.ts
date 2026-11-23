@@ -73,8 +73,8 @@ export type Drawer = {
   // the one drawing what no component takes by a type of the field.
   choose: string;
   fallback: string;
-  // How a component is found for a value that names none; by type among those realized
-  // here (find.ts), unless another way is given.
+  // How a component is found for what a use naming none gives: by type among those
+  // realized here (find.ts); given otherwise only by tests.
   find?: Find;
 };
 

@@ -4,9 +4,7 @@
 // keeps its address the same way (site/address.ts).
 
 export const href = (text: string) =>
-  text
-    ? `?q=${encodeURIComponent(text).replace(/%(40|3A|2C|28|29|7C|2F)/gi, (code) => decodeURIComponent(code))}`
-    : "?q=";
+  `?q=${encodeURIComponent(text).replace(/%(40|3A|2C|28|29|7C|2F)/gi, (code) => decodeURIComponent(code))}`;
 
 // The link to a holon.
 export const hrefTo = (id: string) => href(`@${id}`);
