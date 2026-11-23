@@ -30,6 +30,7 @@
 // text that does not read fails its answer alone, never the drawings beside it.
 
 import type { Holon } from "../../stores/store.ts";
+import { isHandle } from "../commit/change.ts";
 import type { Heads, Read } from "../engine.ts";
 import { fieldOf, type Field, type Stores } from "./field.ts";
 import {
@@ -103,23 +104,39 @@ export async function evaluate(
 // What a read applies, learned before it is worked out, so working it out waits only on
 // what it reads: a prefetch, from what it gives, of what each holon applies or takes
 // (applying) and the type of each, a layer at a time, every holon of a layer asked at
-// once. A holon is followed so before its types say whether it is a use or a function;
-// one followed in vain changes no answer. The read keeps what it learned for itself
-// alone, and a holon that cannot be learned is left for working out to meet, and say why.
+// once. A function a use names is asked whole, the function and all it holds, its input
+// and its body however deep, in one question of each store; so a read learns in a round
+// for each function it names, never one for each use within one. A holon is followed so
+// before its types say whether it is a use or a function; one followed in vain changes
+// no answer. The read keeps what it learned for itself alone, and a holon that cannot be
+// learned is left for working out to meet, and say why.
 async function learn(field: Field, gives: unknown) {
   const seen = new Set<string>();
+  const asked: Promise<unknown>[] = [];
+  type Learning = { id: string; whole: boolean };
+  const alone = (ids: string[]): Learning[] => ids.map((id) => ({ id, whole: false }));
+  const next = ({ instance, body }: Holon): Learning[] => {
+    const [fn, ...rest] = applying(body);
+    return [...alone(instance), ...idsIn(fn).map((id) => ({ id, whole: true })), ...alone(idsIn(rest))];
+  };
+  // Every holon learned is asked of every store, as reading it would, alongside the rest.
+  const asking = (id: string) => asked.push(Promise.resolve().then(() => field.holon(id)));
 
-  for (let layer = idsIn(gives); layer.length; ) {
-    const fresh = [...new Set(layer)].filter((id) => !seen.has(id));
-    fresh.forEach((id) => seen.add(id));
-    const kept = await Promise.allSettled(fresh.map(async (id) => field.holon(id)));
-
-    layer = kept.flatMap((each) => {
-      if (each.status === "rejected" || !each.value) return [];
-      const { instance, body } = each.value.holon;
-      return [...instance, ...idsIn(applying(body))];
-    });
+  for (let layer = alone(idsIn(gives)); layer.length; ) {
+    const fresh = [...new Map(layer.filter(({ id }) => !seen.has(id)).map((each) => [each.id, each])).values()];
+    fresh.forEach(({ id }) => seen.add(id));
+    const [held, kept] = await Promise.all([
+      Promise.allSettled(fresh.filter(({ id, whole }) => whole && !isHandle(id)).map(({ id }) => field.whole(id))),
+      Promise.allSettled(fresh.filter(({ whole }) => !whole).map(async ({ id }) => field.holon(id))),
+    ]);
+    // What a whole gave is learned as given, its next layer read off it at once.
+    const within = held.flatMap((each) => (each.status === "fulfilled" ? each.value : []));
+    within.forEach(({ id }) => (seen.add(id), asking(id)));
+    const alsoKept = kept.flatMap((each) => (each.status === "fulfilled" && each.value ? [each.value.holon] : []));
+    layer = [...within, ...alsoKept].flatMap(next);
   }
+
+  await Promise.allSettled(asked);
 }
 
 // The ids referred to anywhere within a value.

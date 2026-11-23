@@ -20,7 +20,7 @@ export const language = {
   holon: "functions/holon",
   whole: "functions/whole",
   sections: "functions/sections",
-  fitting: "functions/fitting",
+  taking: "functions/taking",
   takes: "functions/takes",
   wholes: "functions/wholes",
   roots: "functions/roots",

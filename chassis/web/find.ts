@@ -1,5 +1,5 @@
 // Finding a component for what a use naming none gives: the components realized here
-// that fitting, a function written in the language, says take it, as a use giving it
+// that taking, a function written in the language, says take it, as a use giving it
 // would be bound and by a type of the field. One found is the component found; several
 // are a choice, shown, and nothing is guessed; none, and the fallback draws it.
 
@@ -26,7 +26,7 @@ export function finder(
   // at once, nothing read.
   return (given) => {
     if (!given.some(isRef)) return byFallback;
-    return read(applying(glass, "fitting", given, components.map(ref))).then((answer): Found => {
+    return read(applying(glass, "taking", given, components.map(ref))).then((answer): Found => {
       if (!("value" in answer)) throw new Error(answer.problem);
       const among = (Array.isArray(answer.value) ? answer.value : []).filter(isRef).map(({ $ref }) => $ref);
       if (among.length === 1) return { component: among[0]!, by: "type" };

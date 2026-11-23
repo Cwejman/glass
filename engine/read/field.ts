@@ -45,6 +45,8 @@ export type Field = {
   facts(clause: Clause): Promise<Fact[]>;
   // The holons saying a word under a key, as facts, from every store.
   said(a: string, word: string): Promise<Fact[]>;
+  // A holon and all it holds, asked of every store as one question each: the holons given.
+  whole(id: string): Promise<Holon[]>;
   // The holon a whole holds under a name, in the store the whole is read from.
   address(whole: string, name: string): Promise<string | null>;
   // A store's commits, newest first.
@@ -85,36 +87,64 @@ export function fieldOf(stores: Stores, heads: Heads, carried: readonly Holon[] 
     });
   }
 
-  // Each holon asked for, as every store keeps it, by mount order; asked in batches.
+  // Each holon as each store keeps it, asked of a store in batches: the holons asked for
+  // within one turn are asked of it as one question. What a store gave in answer to a
+  // whole is known already, and not asked of it again.
+  const keptBy = new Map(names.map((name) => [name, new Map<string, Promise<Holon | undefined>>()]));
+  type Waiting = PromiseWithResolvers<Holon | undefined> & { id: string };
+  const waiting = new Map<string, Waiting[]>();
+
+  function keptIn(name: string, id: string) {
+    const kept = keptBy.get(name)!;
+    if (!kept.has(id)) {
+      const asking = { ...Promise.withResolvers<Holon | undefined>(), id };
+      kept.set(id, asking.promise);
+      if (!waiting.size) nextTurn(askWaiting);
+      waiting.set(name, [...(waiting.get(name) ?? []), asking]);
+    }
+    return kept.get(id)!;
+  }
+
+  // Every holon asked for this turn, of each store as one question. A store that fails
+  // fails every holon of its batch, each read waiting on one told why.
+  function askWaiting() {
+    const batches = [...waiting];
+    waiting.clear();
+
+    for (const [name, batch] of batches)
+      (ask(name, { holons: batch.map(({ id }) => id) }) as Promise<Holon[]>).then(
+        (holons) => {
+          const byId = new Map(holons.map((holon) => [holon.id, holon]));
+          for (const { id, resolve } of batch) resolve(byId.get(id));
+        },
+        (error) => {
+          for (const { reject } of batch) reject(error);
+        },
+      );
+  }
+
+  // Each holon asked for, as every store keeps it, by mount order.
   const versions = new Map<string, Promise<(Holon | undefined)[]>>();
   const diverged = new Set<string>();
-  type Waiting = PromiseWithResolvers<(Holon | undefined)[]> & { id: string };
-  let waiting: Waiting[] = [];
 
   function versionsOf(id: string) {
-    if (!versions.has(id)) {
-      const asking = { ...Promise.withResolvers<(Holon | undefined)[]>(), id };
-      versions.set(id, asking.promise);
-      if (!waiting.length) nextTurn(askWaiting);
-      waiting.push(asking);
-    }
+    if (!versions.has(id)) versions.set(id, Promise.all(names.map((name) => keptIn(name, id))));
     return versions.get(id)!;
   }
 
-  // Every holon asked for this turn, asked of every store as one question. A store that
-  // fails fails every holon of the batch, each read waiting on one told why.
-  async function askWaiting() {
-    const batch = waiting;
-    waiting = [];
-    const ids = batch.map(({ id }) => id);
-
-    try {
-      const answers = await Promise.all(names.map((name) => ask(name, { holons: ids }) as Promise<Holon[]>));
-      const byStore = answers.map((holons) => new Map(holons.map((holon) => [holon.id, holon])));
-      for (const { id, resolve } of batch) resolve(byStore.map((kept) => kept.get(id)));
-    } catch (error) {
-      for (const { reject } of batch) reject(error);
-    }
+  // A holon and all it holds, asked of every store as one question each, each store's
+  // versions known as it gave them: each holon any gave, as the first to give it keeps it.
+  async function whole(id: string): Promise<Holon[]> {
+    const answers = (await Promise.all(names.map((name) => ask(name, { whole: { id } })))) as Holon[][];
+    const given = new Map<string, Holon>();
+    answers.forEach((holons, i) => {
+      const kept = keptBy.get(names[i]!)!;
+      for (const holon of holons) {
+        if (!given.has(holon.id)) given.set(holon.id, holon);
+        if (!kept.has(holon.id)) kept.set(holon.id, Promise.resolve(holon));
+      }
+    });
+    return [...given.values()];
   }
 
   // Each holon as the read holds it, once its stores have answered.
@@ -158,6 +188,7 @@ export function fieldOf(stores: Stores, heads: Heads, carried: readonly Holon[] 
     facts: (clause) => everywhere({ facts: clause }),
     said: (a, word) => everywhere({ said: { a, word } }),
     address,
+    whole,
     log: async (store) => (names.includes(store) ? ((await ask(store, { acts: {} })) as Logged[]) : []),
     asked,
     diverged,
