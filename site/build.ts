@@ -1,7 +1,8 @@
 // Builds the site: the page, and each module it starts on a thread of its own, from
 // site/ into one folder, sharing what they share as chunks beside them, so a thread
 // running two of them runs each module they share once; the components' look and the
-// faces it names, from components/web/look/, and the chassis's own from chassis/web/look/; and
+// faces it names, from components/web/look/, the chassis's own from chassis/web/look/, and
+// the page's inspector's from site/; and
 // each store this repository holds, as the page reads it in strata: its history and its
 // index, each head and every blob it reaches, gzipped, at strata/<name>/ and its index/
 // within, which the browser unpacks. The stores are read as they stand, with nothing
@@ -59,11 +60,15 @@ const built = await Bun.build({
 });
 if (!built.success) throw new AggregateError(built.logs, "building the page");
 
-// The chassis's look, its tokens and what it makes itself, and the components' look,
-// shipped with them: a stylesheet each, and the faces the components name.
+// The chassis's look, its tokens and what it makes itself, the components' look, shipped
+// with them, and the inspector's: a stylesheet each, and the faces the components name.
 const look = join(repo, "components/web/look");
 const styled = await Bun.build({
-  entrypoints: [join(repo, "chassis/web/look/chassis.css"), join(look, "glass.css")],
+  entrypoints: [
+    join(repo, "chassis/web/look/chassis.css"),
+    join(look, "glass.css"),
+    join(import.meta.dir, "inspector.css"),
+  ],
   outdir: dist,
   naming: "[name].[ext]",
   external: ["*.woff2"],

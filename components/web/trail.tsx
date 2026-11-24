@@ -8,56 +8,46 @@
 // at home it is the expression button alone.
 
 import { href, hrefTo } from "../../chassis/web/href.ts";
-import { h, type Child } from "../../chassis/web/jsx.ts";
+import { h, type Child } from "./jsx.ts";
 import { isRef, ref } from "../../engine/read/values.ts";
+import { q } from "../../language/shipped.ts";
 import { asking } from "./asking.ts";
-import { applying, applyingEach, type Glass } from "../../language/shipped.ts";
-import type { Space } from "../../chassis/web/chassis.ts";
+import type { IO } from "../../chassis/web/chassis.ts";
 import { saidOf, titleOf } from "./summary.ts";
 
-export type Step = { id: string; name?: string };
-
-// The wholes holding a holon, its root first, and the holon itself last (wholes, written
-// in the language), each called as a card calls it.
-export async function wholesOf(read: Space["read"], glass: Glass, id: string): Promise<Step[]> {
-  const answer = await read(applying(glass, "wholes", ref(id)));
+// The trail to a holon: the wholes holding it, its root first and the holon itself last
+// (wholes, written in the language), each called as a card calls it; nothing until they
+// are read.
+export function trailTo(io: IO, id: string): Node | null {
+  const wholes = io.read(q`wholes(${ref(id)})`);
+  if (!Array.isArray(wholes)) return null;
   // Each whole once, should holding come round on itself.
-  const ids = [
-    ...new Set(
-      "value" in answer && Array.isArray(answer.value)
-        ? answer.value.filter(isRef).map(({ $ref }) => $ref)
-        : [],
-    ),
-  ];
-  const holons = await read(
-    applyingEach(
-      glass,
-      "holon",
-      ids.map((each) => [ref(each)]),
-    ),
-  );
-  const found = "value" in holons && Array.isArray(holons.value) ? holons.value : [];
-  return ids.map((each, i) => ({ id: each, name: titleOf(saidOf(found[i] ?? null), each) }));
+  const ids = [...new Set(wholes.filter(isRef).map(({ $ref }) => $ref))];
+  const named = ids.map((each) => ({
+    id: each,
+    name: titleOf(saidOf(io.read(q`holon(${ref(each)})`) ?? null), each),
+  }));
+  return named.length ? trailOf(named) : null;
 }
 
+type Step = { id: string; name: string };
+
 // The steps as a breadcrumb, from home: each whole a link, the holon itself where it ends.
-export function trailOf(steps: Step[]): Node {
-  const [...wholes] = steps.slice(0, -1);
-  const here = steps.at(-1);
+function trailOf(steps: Step[]): Node {
+  const wholes = steps.slice(0, -1);
+  const here = steps.at(-1)!;
   return line([
     home(),
     ...wholes.map(({ id, name }) => (
       <li>
         <a href={hrefTo(id)} data-ref={id}>
-          {name ?? `@${id}`}
+          {name}
         </a>
       </li>
     )),
-    here && (
-      <li aria-current="page" data-ref={here.id}>
-        {here.name ?? "this"}
-      </li>
-    ),
+    <li aria-current="page" data-ref={here.id}>
+      {here.name}
+    </li>,
   ]);
 }
 

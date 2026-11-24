@@ -12,12 +12,12 @@
 //
 // The browser's own menu is still there with shift held.
 
-import { hrefTo } from "./href.ts";
-import { h, type Child } from "./jsx.ts";
-import type { Engine, Read } from "../../engine/engine.ts";
-import { isRecord, isRef, ref, type Value } from "../../engine/read/values.ts";
-import { applying, applyingEach, type Glass } from "../../language/shipped.ts";
-import { drawingsAt, isDrawing } from "./chassis.ts";
+import { hrefTo } from "../chassis/web/href.ts";
+import { h, type Child } from "../components/web/jsx.ts";
+import type { Engine, Read } from "../engine/engine.ts";
+import { isRecord, isRef, ref, type Value } from "../engine/read/values.ts";
+import { applying, applyingEach, type Glass } from "../language/shipped.ts";
+import { drawingsAt, isDrawing } from "../chassis/web/chassis.ts";
 
 type Inspecting = {
   engine: Pick<Engine, "read">;

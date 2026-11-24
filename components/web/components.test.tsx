@@ -4,7 +4,7 @@
 
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { h } from "../../chassis/web/jsx.ts";
+import { h } from "./jsx.ts";
 import type { Answer, Engine, Read } from "../../engine/engine.ts";
 import { cleanUp, id, notes, shipped } from "../../engine/uses/fixture.ts";
 import type { Value } from "../../engine/read/values.ts";
@@ -13,7 +13,7 @@ import { begun, typed } from "../../stores/buffer/string.ts";
 import { addressed } from "../../site/address.ts";
 import { applying, found, type Glass } from "../../language/shipped.ts";
 import { draw, drawingsAt, type Drawer, type Realization } from "../../chassis/web/chassis.ts";
-import { inspecting } from "../../chassis/web/inspector.tsx";
+import { inspecting } from "../../site/inspector.tsx";
 import { finder } from "../../chassis/web/find.ts";
 import { components, namesOf, realizedIn, webComponents } from "./realized.ts";
 
@@ -181,20 +181,26 @@ describe("the page's read over glass, the interface shipped", () => {
     return "value" in answer ? ((answer.value as any).body.fn?.$ref as string | undefined) : answer.problem;
   }
 
-  test("the component found by type for a use that names none is written into it", async () => {
-    const { engine, glass, into, own, told } = await page();
+  test("a use that names no component is drawn by the one found for it by type, and nothing is written", async () => {
+    const { engine, glass, into, told } = await page();
+    let commits = 0;
+    const counted = {
+      ...engine,
+      commit: (change: Parameters<Engine["commit"]>[0]) => (commits++, engine.commit(change)),
+    };
     const stop = await draw(
       into,
       { gives: { $ref: notes.unnamed, $holds: true } },
-      { engine, glass, ...told },
+      { engine: counted, glass, ...told },
     );
 
     await settled(() => into.querySelector(".brief h1")?.textContent === "Notes");
-    await settled(async () => (await fnOf(engine, glass, notes.unnamed)) === own.Brief);
+    expect(commits).toBe(0);
+    expect(await fnOf(engine, glass, notes.unnamed)).toBeUndefined();
     stop();
   });
 
-  test("where several components could draw it, the person chooses, and the pick is written", async () => {
+  test("where several components could draw it, the person chooses, and the pick is held for the page", async () => {
     const { engine, glass, into, own, told } = await page();
     const made = await engine.commit({
       holons: [
@@ -231,7 +237,7 @@ describe("the page's read over glass, the interface shipped", () => {
       .find((b) => b.textContent === "Outline")!
       .click();
     await settled(() => into.querySelector(".count") && !into.querySelector(".choose"));
-    await settled(async () => (await fnOf(engine, glass, notes.unnamed)) === outline);
+    expect(await fnOf(engine, glass, notes.unnamed)).toBeUndefined();
     stop();
   });
 
@@ -308,7 +314,7 @@ describe("the page's read over glass, the interface shipped", () => {
     expect(contents()!.querySelector<HTMLButtonElement>('button[data-mode="table"]')!.hidden).toBe(true);
 
     contents()!.querySelector<HTMLButtonElement>('button[data-mode="rows"]')!.click();
-    expect(contents()!.querySelector(".rows")!.getAttribute("data-mode")).toBe("rows");
+    await settled(() => contents()!.querySelector(".rows")!.getAttribute("data-mode") === "rows");
     expect(localStorage.getItem(`glass:shown:${id(90)}/contents`)).toBe("rows");
     stop();
 
@@ -525,6 +531,8 @@ describe("the page's read over glass, the interface shipped", () => {
     into.querySelector<HTMLButtonElement>(".pill button")!.click();
     await settled(() => pills().length === 0);
     expect(await held()).toBe("");
+    // The answer before stays until the start is read, then the start alone is shown.
+    await settled(() => into.querySelector(".answered header.start"));
     expect(into.querySelector(".note")).toBeNull();
     await settled(() => location.search === "");
 

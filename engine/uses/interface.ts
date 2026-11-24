@@ -7,7 +7,8 @@
 //     component made of data, its body; the type direction, and its two, row and column;
 //   the natives holon, whole, quote, back, each, and steps and chain, a pair;
 //   the components realized in code, each declaring what it takes and nothing more:
-//     Value, List, Answer, ExpressionInput, Pill, Choose, and Brief, given a brief;
+//     Value, List, Answer, ExpressionInput, Pill, Choose, Problem, and Brief, given a
+//     brief;
 //   the components realized nowhere taken out, the uses applying them left to find one
 //     by type, and Reader's template with them; and
 //   Reader and Search, components of data, their bodies written below in the language;
@@ -64,6 +65,8 @@ const says = {
   Pill: "A step of a read, said as text, which may be taken out of the read.",
   List: "A list, each item drawn in turn by what draws it: in a column, or in a row where it is given one.",
   Choose: "The components that could draw a value, for the one drawing it to be chosen: none is guessed.",
+  Problem:
+    "What failed, said in place of the drawing that failed: drawn by the chassis wherever what a drawing is given, a read it asked, or its making fails.",
   Brief:
     "A brief: its name, its flow, and its sections read through after it, each with the flow of its own.",
   wholes:
@@ -270,6 +273,7 @@ export async function shipInterface(
         says: says.Choose,
         input: [placeholder("components", kinds.list!), placeholder("value", kinds.value!)],
       }),
+      await declared("Problem", { says: says.Problem, input: [placeholder("problem", kinds.string!)] }),
       await declared("Brief", {
         says: says.Brief,
         input: [placeholder("brief", (await typeNamed("brief")).id)],

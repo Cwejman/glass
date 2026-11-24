@@ -14,6 +14,7 @@ import { choose } from "./choose.tsx";
 import { expressionInput } from "./expression-input.tsx";
 import { list } from "./list.tsx";
 import { pill } from "./pill.tsx";
+import { problem } from "./problem.tsx";
 import { value } from "./value.tsx";
 
 // What the components name of glass, by route from glass's level.
@@ -24,6 +25,7 @@ export const components = {
   ExpressionInput: "components/ExpressionInput",
   Pill: "components/Pill",
   Choose: "components/Choose",
+  Problem: "components/Problem",
   Brief: "components/Brief",
   Search: "components/Search",
   Reader: "components/Reader",
@@ -40,6 +42,7 @@ const realizations = (own: Components) => ({
   ExpressionInput: expressionInput,
   Pill: pill,
   Choose: choose,
+  Problem: problem,
   Brief: brief,
 });
 
@@ -57,9 +60,16 @@ export const namesOf = (own: Components): ReadonlyMap<string, string> =>
   new Map(Object.entries(own).map(([name, id]) => [id, name]));
 
 // The components on the web as the chassis is given them, found in glass: their code by
-// id, what each is called, the one that chooses where several could draw a value, and the
-// one drawing what none takes by a type of the field.
+// id, what each is called, and those it draws for its own cases: the one that chooses
+// where several could draw a value, the one drawing what none takes by a type of the
+// field, and the one saying a problem in place of a drawing that failed.
 export async function webComponents(read: Engine["read"]) {
   const own = await found(read, components);
-  return { realized: realizedIn(own), names: namesOf(own), choose: own.Choose, fallback: own.Value };
+  return {
+    realized: realizedIn(own),
+    names: namesOf(own),
+    choose: own.Choose,
+    fallback: own.Value,
+    problem: own.Problem,
+  };
 }

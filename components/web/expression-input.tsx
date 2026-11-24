@@ -20,11 +20,11 @@
 // It is shown only while the reader is asking (asking.ts): Enter, or Escape in an empty
 // input, returns the page to where it stands, as a press anywhere outside the bar does.
 
-import { h } from "../../chassis/web/jsx.ts";
+import { h } from "./jsx.ts";
 import type { Value } from "../../engine/read/values.ts";
 import { asking } from "./asking.ts";
-import { applying } from "../../language/shipped.ts";
-import type { Realization } from "../../chassis/web/chassis.ts";
+import { q } from "../../language/shipped.ts";
+import { valueOf, type Drawn, type Realization } from "../../chassis/web/chassis.ts";
 import { completer, completing, taken, type Completing, type Option } from "./complete.ts";
 
 const continuing = "| add a step, or type to ask anew";
@@ -38,7 +38,8 @@ export function continued(asked: string, typed: string): string {
   return next;
 }
 
-export const expressionInput: Realization = (given, space) => {
+// It keeps its node, for the focus and the caret the browser keeps in it.
+export const expressionInput: Realization = (given, io): Drawn => {
   const input = (
     <input
       type="text"
@@ -60,7 +61,6 @@ export const expressionInput: Realization = (given, space) => {
     </form>
   ) as HTMLFormElement;
 
-  const place = { ...space.place, arg: 0 };
   // What is asked so far, and the text proposed last, until it comes back.
   let asked = "";
   let echo: string | undefined;
@@ -72,27 +72,30 @@ export const expressionInput: Realization = (given, space) => {
 
   const said = () => (input.placeholder = asked ? continuing : beginning);
 
-  async function propose(text: string) {
-    if (text === asked) return;
-    asked = text;
-    echo = text;
-    said();
-    const change = await space.propose(place, text);
-    if (!change) return readOnly();
-    await space.commit(change);
+  // A text proposed in place of what is asked: what is asked only once it lands; where
+  // there is no way back, the input is read-only, what was typed kept.
+  async function propose(text: string): Promise<boolean> {
+    if (text === asked) return true;
+    const before = asked;
+    asked = echo = text;
+    if (await io.propose(text)) return (void said(), true);
+    asked = before;
+    echo = undefined;
+    readOnly();
+    return false;
   }
 
-  function submit(event: Event) {
+  async function submit(event: Event) {
     event.preventDefault();
     const text = continued(asked, input.value);
-    input.value = "";
     offering++;
     offer([]);
+    if (!(await propose(text))) return;
+    input.value = "";
     if (text) {
       input.blur();
       asking(false, false);
     }
-    void propose(text);
   }
 
   // The last step of what is asked, taken back into the input.
@@ -112,24 +115,24 @@ export const expressionInput: Realization = (given, space) => {
   }
 
   async function stepsOf(text: string): Promise<Value[] | undefined> {
-    const parsed = await space.read(applying(space.glass, "parse", text));
-    if (!("value" in parsed)) return;
-    const steps = await space.read(applying(space.glass, "steps", parsed.value));
-    return "value" in steps && Array.isArray(steps.value) ? steps.value : undefined;
+    const parsed = valueOf(await io.ask(q`parse(${text})`));
+    if (parsed === undefined) return;
+    const steps = valueOf(await io.ask(q`steps(${parsed})`));
+    return Array.isArray(steps) ? steps : undefined;
   }
 
   async function printed(read: Value): Promise<string | undefined> {
-    const answer = await space.read(applying(space.glass, "print", read));
-    return "value" in answer && typeof answer.value === "string" ? answer.value : undefined;
+    const text = valueOf(await io.ask(q`print(${read})`));
+    return typeof text === "string" ? text : undefined;
   }
 
   async function chained(steps: Value[]): Promise<string | undefined> {
-    const answer = await space.read(applying(space.glass, "chain", steps));
-    return "value" in answer ? printed(answer.value) : undefined;
+    const read = valueOf(await io.ask(q`chain(${steps})`));
+    return read === undefined ? undefined : printed(read);
   }
 
   // What is offered now, for what is being typed, and the one the arrows chose.
-  const complete = completer(space);
+  const complete = completer(io);
   let options: Option[] = [];
   let completingNow: Completing | undefined;
   let chosen = -1;
@@ -240,6 +243,5 @@ export const expressionInput: Realization = (given, space) => {
   }
 
   update(given);
-  void space.propose(place, asked).then((change) => change || readOnly(), readOnly);
   return { node, update };
 };

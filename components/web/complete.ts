@@ -10,8 +10,8 @@
 
 import type { Read } from "../../engine/engine.ts";
 import { isRecord, isRef, ref, type Value } from "../../engine/read/values.ts";
-import { applying, applyingEach } from "../../language/shipped.ts";
-import type { Space } from "../../chassis/web/chassis.ts";
+import { valueOf, type IO } from "../../chassis/web/chassis.ts";
+import { q, type Expression } from "../../language/shipped.ts";
 
 // What is being typed: its kind, where it begins, and what of it is typed so far.
 export type Completing = { kind: "function" | "holon"; from: number; typed: string };
@@ -56,23 +56,23 @@ const callable = /^[A-Za-z_]\w*$/;
 
 type Named = { id: string; name: string };
 
-// What completes what is typed, read through the space: the functions and the named
+// What completes what is typed, read through the chassis: the functions and the named
 // holons, each list read once.
-export function completer(space: Pick<Space, "read" | "glass">) {
+export function completer(io: Pick<IO, "ask">) {
   let functions: Promise<Option[]> | undefined;
   let named: Promise<Named[]> | undefined;
 
   const found = async (text: string): Promise<Value> => {
-    const parsed = await space.read(applying(space.glass, "parse", text));
+    const parsed = await io.ask(q`parse(${text})`);
     if (!("value" in parsed)) throw new Error(parsed.problem);
-    const answer = await space.read(parsed.value as unknown as Read);
+    const answer = await io.ask(parsed.value as unknown as Read);
     if (!("value" in answer)) throw new Error(answer.problem);
     return answer.value;
   };
 
   const functionsNow = () =>
     (functions ??= found(
-      `find(?f, [?f, "instance", @${space.glass.function}]) | map(f => {name: f.name, says: f.says, takes: f.input | map(p => p.name)})`,
+      `find(?f, [?f, "instance", @glass:language/function]) | map(f => {name: f.name, says: f.says, takes: f.input | map(p => p.name)})`,
     ).then((read) => {
       const seen = new Set<string>();
       return (Array.isArray(read) ? read : []).flatMap((each): Option[] => {
@@ -106,24 +106,12 @@ export function completer(space: Pick<Space, "read" | "glass">) {
   async function holons(typed: string): Promise<Option[]> {
     const chosen = matching(await namedNow(), typed);
     if (!chosen.length) return [];
-    const [read, printed] = await Promise.all([
-      space.read(
-        applyingEach(
-          space.glass,
-          "holon",
-          chosen.map(({ id }) => [ref(id)]),
-        ),
-      ),
-      space.read(
-        applyingEach(
-          space.glass,
-          "print",
-          chosen.map(({ id }) => [{ gives: ref(id) } as unknown as Value]),
-        ),
-      ),
+    const asked = (each: (id: string) => Expression) =>
+      Promise.all(chosen.map(({ id }) => io.ask(each(id)).then(valueOf)));
+    const [reads, texts] = await Promise.all([
+      asked((id) => q`holon(${ref(id)})`),
+      asked((id) => q`print(${{ gives: ref(id) }})`),
     ]);
-    const reads = "value" in read && Array.isArray(read.value) ? read.value : [];
-    const texts = "value" in printed && Array.isArray(printed.value) ? printed.value : [];
     return chosen.map(({ id, name }, i) => {
       const { types, store } = (isRecord(reads[i]) ? reads[i] : {}) as Record<string, Value>;
       const kind = [

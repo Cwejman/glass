@@ -35,9 +35,10 @@
   color: var(--ink);
   background: var(--line);
 }
-.pill.fixed {
+/* Where the way back finds no change, the chassis marks the place fixed. */
+[data-fixed] > .pill {
   padding-right: var(--s3);
 }
-.pill.fixed button {
+[data-fixed] > .pill button {
   display: none;
 }

@@ -14,7 +14,7 @@ import type { Engine } from "../engine/engine.ts";
 import { ref } from "../engine/read/values.ts";
 import { typed } from "../stores/buffer/string.ts";
 import { applying, type Glass } from "../language/shipped.ts";
-import { awaiting } from "../chassis/web/chassis.ts";
+import { working } from "./busy.ts";
 import { href } from "../chassis/web/href.ts";
 
 // What the address asks.
@@ -70,7 +70,7 @@ export async function addressed(
 
     event.preventDefault();
     steppedFrom = asked();
-    const done = awaiting(within);
+    const done = working();
     void saying(asked(to.href)).then(type).finally(done);
   };
 

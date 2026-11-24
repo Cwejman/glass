@@ -73,7 +73,18 @@ describe("the interface shipped", () => {
     for (const [, keys] of declared)
       expect(keys.filter((key) => !["says", "input", "body"].includes(key))).toEqual([]);
     expect(declared.map(([name]) => name).sort()).toEqual(
-      ["Answer", "Brief", "Choose", "ExpressionInput", "List", "Pill", "Reader", "Search", "Value"].sort(),
+      [
+        "Answer",
+        "Brief",
+        "Choose",
+        "ExpressionInput",
+        "List",
+        "Pill",
+        "Problem",
+        "Reader",
+        "Search",
+        "Value",
+      ].sort(),
     );
 
     // Brief takes a brief; the component realized nowhere is gone, its use naming none.

@@ -1,7 +1,8 @@
 // The language as glass ships it, and the reads written over it: its types and the
 // functions everything drawing or asking the field applies, each found once by its route
-// when glass is mounted, and known after by its id, never by its name; and any other
-// table of routes, as the components their own, found the same way.
+// when glass is mounted, and known after by its id; and any other table of routes, as
+// the components their own, found the same way. An expression written in code, q`…`, is
+// read as any text is, its functions found by their names.
 //
 // Finding them is the one read that carries what it applies: a use, a function, and the
 // native parse, under handles of their own, so none is taken for a holon of the field.
@@ -110,6 +111,73 @@ export function applyingEach(glass: Glass, applied: Applied, each: Value[][]): R
   return {
     gives: each.map((_, i) => held(`~asked-${i}`)),
     holons: each.flatMap((args, i) => uses(glass, `~asked-${i}`, glass[applied], args)),
+  };
+}
+
+// The language written in code, as a template: q`print(${step})`. What is put into it
+// is a value, held as it is and never read as words of the language, so a string stays
+// a string, a holon given as { $ref } is that holon, and a read is a read. A value is
+// put where a value is written, never within quotes nor against a word or another value.
+export type Expression = { written: TemplateStringsArray; values: Value[] };
+
+export const q = (written: TemplateStringsArray, ...values: Value[]): Expression => ({ written, values });
+
+export const isExpression = (value: unknown): value is Expression =>
+  isRecord(value) && Array.isArray(value.written) && Array.isArray(value.values);
+
+// What a template says as text: where it holds values, a lambda taking one word for
+// each, _0 and on, so the language reads it as it is and the values are given apart.
+export function textOf({ written }: Expression): string {
+  const body = written.reduce((text, part, i) => `${text}_${i - 1}${part}`);
+  if (written.length === 1) return body;
+  return `(${written
+    .slice(1)
+    .map((_, i) => `_${i}`)
+    .join(", ")}) => ${body}`;
+}
+
+// A template read as the language read its text, given its values: the lambda it reads
+// as applied to each value, quoted.
+export function filled(glass: Glass, read: Read, values: readonly Value[]): Read {
+  if (!values.length) return read;
+  const lambda = read.gives as { $ref: string };
+  return {
+    gives: held("~filled"),
+    holons: [...(read.holons ?? []), ...uses(glass, "~filled", lambda.$ref, [...values])],
+  };
+}
+
+// Reads asked as one, giving a list, each in its place: each read's handles named apart,
+// what a quote holds left as it is, since a value's references are its own.
+export function together(glass: Glass, reads: readonly Read[]): Read {
+  const each = reads.map((read, i) => apart(glass, read, `~${i}`));
+  return { gives: each.map(({ gives }) => gives), holons: each.flatMap(({ holons }) => holons ?? []) };
+}
+
+function apart(glass: Glass, { gives, holons = [] }: Read, prefix: string): Read {
+  const named = (id: string) => (id.startsWith("~") ? `${prefix}${id}` : id);
+  const within = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(within);
+    if (value === null || typeof value !== "object") return value;
+    return Object.fromEntries(
+      Object.entries(value).map(([key, inner]) => [
+        key,
+        key === "$ref" && typeof inner === "string" ? named(inner) : within(inner),
+      ]),
+    );
+  };
+  return {
+    gives: within(gives),
+    holons: holons.map((holon) => {
+      const quoting =
+        isRef(holon.body.fn ?? null) && (holon.body.fn as { $ref: string }).$ref === glass.quote;
+      return {
+        ...holon,
+        id: named(holon.id),
+        instance: holon.instance.map(named),
+        body: quoting ? holon.body : (within(holon.body) as Holon["body"]),
+      };
+    }),
   };
 }
 

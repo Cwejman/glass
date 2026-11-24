@@ -13,21 +13,15 @@ import type { Engine, Read } from "../engine/engine.ts";
 import { addressed } from "./address.ts";
 import { askingByKey } from "../components/web/asking.ts";
 import { applying, found } from "../language/shipped.ts";
-import { draw, note } from "../chassis/web/chassis.ts";
-import { inspecting } from "../chassis/web/inspector.tsx";
+import { draw } from "../chassis/web/chassis.ts";
+import { working } from "./busy.ts";
+import { inspecting } from "./inspector.tsx";
 import { webComponents } from "../components/web/realized.ts";
 import { workers } from "../runtime/runtime.ts";
 import { begun } from "../stores/buffer/string.ts";
 import type { Store } from "../stores/store.ts";
 
 const page = document.getElementById("glass")!;
-
-// An answer slow to come shows the page working, as does the page while it opens.
-let awaited = 0;
-document.addEventListener("busy", (event) => {
-  awaited = Math.max(0, awaited + ((event as CustomEvent<boolean>).detail ? 1 : -1));
-  document.body.classList.toggle("busy", awaited > 0);
-});
 
 // Each started from its own file; the build writes each beside the page.
 const engineCode = new URL("../engine/browser.ts", import.meta.url);
@@ -69,11 +63,18 @@ try {
 
   // The chassis, given the components on the web.
   const components = await webComponents((read) => engine.read(read));
-  await draw(page, read.value as unknown as Read, { engine, glass, ...components });
+  // What the page shows waiting on reads shows the page working.
+  let done = () => {};
+  const reading = (busy: boolean) => (busy ? (done = working()) : done());
+  await draw(page, read.value as unknown as Read, { engine, glass, ...components, reading });
   inspecting(page, { engine, glass, root: read.value as unknown as Read, names: components.names });
   askingByKey(document);
 } catch (problem) {
-  page.replaceChildren(note(problem instanceof Error ? problem.message : String(problem)));
+  // The page could not be opened: said as a line, there being no chassis to draw it.
+  const said = document.createElement("p");
+  said.className = "note";
+  said.textContent = problem instanceof Error ? problem.message : String(problem);
+  page.replaceChildren(said);
 } finally {
   document.body.classList.remove("opening");
 }
