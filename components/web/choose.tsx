@@ -26,3 +26,5 @@ export const choose: Realization = ([components = null], io) => (
     })}
   </div>
 );
+
+export default choose;

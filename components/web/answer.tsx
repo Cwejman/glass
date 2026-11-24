@@ -63,3 +63,5 @@ const startOf = () => (
     </p>
   </header>
 );
+
+export default answer;

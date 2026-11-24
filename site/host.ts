@@ -1,4 +1,5 @@
-// The host on this machine: it serves the built site, as a static host would, and each
+// The host on this machine: it serves the built site, as a static host would, its
+// 404.html at any path holding nothing, and each
 // store live from its folder at strata/<name>/, as the build lays it out, so a page
 // opened after a commit reads the store as it stands, whoever wrote it. Its history's
 // head and blobs, and its index's within at index/; a blob, named by its hash and never
@@ -54,8 +55,12 @@ export function host({ port, stores, site }: Hosting) {
         return (await storeFile(stores[name]!, rest)) ?? new Response("not here", { status: 404 });
 
       const file = Bun.file(join(site, path.endsWith("/") ? `${path}index.html` : path));
-      if (!(await file.exists())) return new Response("not here", { status: 404 });
-      return new Response(file, { headers });
+      if (await file.exists()) return new Response(file, { headers });
+      // A path holding nothing is the page's own, as a static host serves 404.html there.
+      const page = Bun.file(join(site, "404.html"));
+      if (await page.exists())
+        return new Response(page, { status: 404, headers: { ...headers, "content-type": "text/html" } });
+      return new Response("not here", { status: 404 });
     },
   });
 

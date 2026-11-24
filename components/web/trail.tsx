@@ -7,7 +7,7 @@
 // its end, opens the input in its place. It begins at home, the start of the page, and
 // at home it is the expression button alone.
 
-import { href, hrefTo } from "../../chassis/web/href.ts";
+import { href, hrefTo } from "./link.ts";
 import { h, type Child } from "./jsx.ts";
 import { isRef, ref } from "../../engine/read/values.ts";
 import { q } from "../../language/shipped.ts";

@@ -3,14 +3,13 @@
 // drawn at its index, so it may propose its own removal from the list.
 
 import { h } from "./jsx.ts";
-import { isRef } from "../../engine/read/values.ts";
+import { q } from "../../language/shipped.ts";
 import type { Realization } from "../../chassis/web/chassis.ts";
 
-// Made knowing the direction row by its id, as the components find it (realized.ts).
-export const list =
-  (row: string): Realization =>
-  ([items = null, direction = null], io) => (
-    <div class={isRef(direction) && direction.$ref === row ? "list row" : "list"}>
-      {(Array.isArray(items) ? items : [items]).map((item, i) => io.draw(item, i))}
-    </div>
-  );
+export const list: Realization = ([items = null, direction = null], io) => (
+  <div class={direction !== null && io.read(q`${direction}.name`) === "row" ? "list row" : "list"}>
+    {(Array.isArray(items) ? items : [items]).map((item, i) => io.draw(item, i))}
+  </div>
+);
+
+export default list;

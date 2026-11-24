@@ -6,7 +6,7 @@
 // drawn by a component of its own, so a long brief is one drawing. What is not prose,
 // standing in a flow, is left to whoever draws the flow.
 
-import { hrefTo } from "../../chassis/web/href.ts";
+import { hrefTo } from "./link.ts";
 import { h, type Child } from "./jsx.ts";
 
 // A holon as the native whole gives it: its body as it is kept, and its types' names.

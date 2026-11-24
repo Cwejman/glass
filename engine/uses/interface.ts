@@ -15,8 +15,9 @@
 //   and sections, wholes, roots, is and taking, functions written in the language, one
 //     commit each.
 //
-// Which code realizes a component is the web components' own (components/web/realized.ts);
-// a component holon only declares. What exists is found by name in the store, and kept.
+// A component realized in code names its code on each surface, as the web's, under
+// realized, the path of its file from the repository's root; the chassis loads it by
+// that (chassis/web/realized.ts). What exists is found by name in the store, and kept.
 
 import type { Holon, Store } from "../../stores/store.ts";
 import { namesUsed, syntax, toRead } from "../../language/text.ts";
@@ -82,14 +83,23 @@ const says = {
   column: "One under another.",
 };
 
-// What a component declares, and nothing more: its code is the chassis's own.
-const declares = ["says", "input", "body"];
+// What a component declares, and nothing more.
+const declares = ["says", "input", "body", "realized"];
 
 const bodyOfData = {
   says: "For a component made of data, what it draws: most often a use held where it is written, over its placeholders.",
   shape: "json",
   optional: true,
 };
+
+const realizedKey = {
+  says: "The code realizing it on each surface, by the surface's name, as on the web: for now the path of its file from the repository's root, until code is read through git; its default export draws it.",
+  shape: "json",
+  optional: true,
+};
+
+// Each component realized on the web, by the file of its code.
+const onWeb = (file: string) => ({ realized: { web: `components/web/${file}.tsx` } });
 
 export type Shipped = { commits: { store: string; says: string; holons: number }[] };
 
@@ -183,7 +193,7 @@ export async function shipInterface(
     const reshaped: Holon = {
       ...componentType!,
       body: { ...componentType!.body, says: says.component },
-      mould: { ...declaring(componentType!.mould!), body: bodyOfData },
+      mould: { ...declaring(componentType!.mould!), body: bodyOfData, realized: realizedKey },
     };
 
     const native = (name: string, about: string, input: unknown[], body: Holon["body"] = {}): Holon => ({
@@ -258,23 +268,42 @@ export async function shipInterface(
       };
     };
     const components = [
-      await declared("Value", { input: [placeholder("value", kinds.value!)] }),
+      await declared("Value", {
+        ...onWeb("value"),
+        input: [placeholder("value", kinds.value!)],
+      }),
       await declared("List", {
+        ...onWeb("list"),
         says: says.List,
         input: [placeholder("items", kinds.list!), placeholder("direction", direction.id, true)],
       }),
-      await declared("Answer", { says: says.Answer, input: [placeholder("read", kinds.record!)] }),
+      await declared("Answer", {
+        ...onWeb("answer"),
+        says: says.Answer,
+        input: [placeholder("read", kinds.record!)],
+      }),
       await declared("ExpressionInput", {
+        ...onWeb("expression-input"),
         says: says.ExpressionInput,
         input: [placeholder("text", kinds.string!)],
       }),
-      await declared("Pill", { says: says.Pill, input: [placeholder("step", kinds.record!)] }),
+      await declared("Pill", {
+        ...onWeb("pill"),
+        says: says.Pill,
+        input: [placeholder("step", kinds.record!)],
+      }),
       await declared("Choose", {
+        ...onWeb("choose"),
         says: says.Choose,
         input: [placeholder("components", kinds.list!), placeholder("value", kinds.value!)],
       }),
-      await declared("Problem", { says: says.Problem, input: [placeholder("problem", kinds.string!)] }),
+      await declared("Problem", {
+        ...onWeb("problem"),
+        says: says.Problem,
+        input: [placeholder("problem", kinds.string!)],
+      }),
       await declared("Brief", {
+        ...onWeb("brief"),
         says: says.Brief,
         input: [placeholder("brief", (await typeNamed("brief")).id)],
       }),

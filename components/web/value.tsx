@@ -16,7 +16,7 @@
 // what is drawn once all of it is read, so no id shows on the way. An id is the
 // inspector's to show.
 
-import { href, hrefTo } from "../../chassis/web/href.ts";
+import { href, hrefTo } from "./link.ts";
 import { h, type Child } from "./jsx.ts";
 import { isRecord, isRef, ref, type Value } from "../../engine/read/values.ts";
 import { q } from "../../language/shipped.ts";
@@ -441,3 +441,5 @@ function remember(place: string | undefined, mode: Mode) {
     localStorage.setItem(key(place), mode);
   } catch {}
 }
+
+export default value;

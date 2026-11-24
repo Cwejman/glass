@@ -9,9 +9,6 @@
 // A text it proposed comes back to it as the read answers again, and is its own; any
 // other, as the address moving or a pill taken out, lets go of what was being typed.
 //
-// Enter submits the form the input stands in, so whoever keeps the address may mark a
-// step there.
-//
 // As it is typed, what may finish the word at the caret is offered beneath it
 // (complete.ts): the arrows move among the options, Tab or Enter takes one, Escape puts
 // them away. Enter takes an option only once the arrows have chosen one, so a text typed
@@ -245,3 +242,5 @@ export const expressionInput: Realization = (given, io): Drawn => {
   update(given);
   return { node, update };
 };
+
+export default expressionInput;

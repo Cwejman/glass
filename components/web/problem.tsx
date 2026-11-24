@@ -5,3 +5,5 @@ import { h } from "./jsx.ts";
 import type { Realization } from "../../chassis/web/chassis.ts";
 
 export const problem: Realization = ([said = null]) => <p class="note problem">{String(said)}</p>;
+
+export default problem;

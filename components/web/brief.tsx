@@ -11,7 +11,7 @@
 //
 // The reader says where a brief stands, so a brief says nothing of what holds it.
 
-import { hrefTo } from "../../chassis/web/href.ts";
+import { hrefTo } from "./link.ts";
 import { h, type Child } from "./jsx.ts";
 import { isRecord, isRef, ref, type Value } from "../../engine/read/values.ts";
 import { q } from "../../language/shipped.ts";
@@ -85,3 +85,5 @@ function holonsOf(wholes: Value): Holons {
   });
   return Object.assign({}, ...held) as unknown as Holons;
 }
+
+export default brief;

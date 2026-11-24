@@ -17,6 +17,11 @@ import { shipInterface } from "./interface.ts";
 
 export const id = (n: number) => String(n).padStart(15, "0");
 
+// The types a store's root and shape are of, and glass's own shape, by the ids glass
+// keeps them under, so a store shipped in the repository, standing on glass, stands on
+// this glass too, as the location's does (integrations/location/location.ts).
+export const glassIds = { store: "1M75HB35AC75002", shape: "1M75HB35AC75000", own: "1M75HB35AC75003" };
+
 const declared = { says: "Any JSON.", shape: "json", optional: true };
 const held = (n: number) => ({ $ref: id(n), $holds: true });
 const kinds = ["value", "number", "string", "list", "record", "holon"];
@@ -66,7 +71,7 @@ export const glass: Holon[] = [
     body: {},
   },
   {
-    id: id(4),
+    id: glassIds.store,
     instance: [],
     name: "store",
     mould: {
@@ -76,7 +81,7 @@ export const glass: Holon[] = [
     body: {},
   },
   {
-    id: id(5),
+    id: glassIds.shape,
     instance: [],
     name: "shape",
     mould: { admits: { says: "What it admits.", shape: { set: "ref" }, optional: true } },
@@ -115,7 +120,12 @@ export const glass: Holon[] = [
   thing(33, 2, { args: [{ $ref: id(100) }] }),
   // glass's types, in the wholes glass groups them in.
   { id: id(40), instance: [], name: "language", body: { holds: [1, 2, 10, 11, 12, 13, 14, 15].map(held) } },
-  { id: id(43), instance: [], name: "store", body: { holds: [4, 5].map(held) } },
+  {
+    id: id(43),
+    instance: [],
+    name: "store",
+    body: { holds: [glassIds.store, glassIds.shape].map(($ref) => ({ $ref, $holds: true })) },
+  },
   { id: id(44), instance: [], name: "prose", body: { holds: [6, 7, 8].map(held) } },
   { id: id(45), instance: [], name: "interface", body: { holds: [held(3)] } },
   {
@@ -154,11 +164,14 @@ export const glass: Holon[] = [
   thing(107, 7, { text: ["Within"] }),
   {
     id: id(90),
-    instance: [id(4)],
+    instance: [glassIds.store],
     name: "glass",
-    body: { shape: { $ref: id(91) }, contents: [40, 43, 44, 45, 41, 42, 80, 81, 82, 32, 33, 100].map(held) },
+    body: {
+      shape: { $ref: glassIds.own },
+      contents: [40, 43, 44, 45, 41, 42, 80, 81, 82, 32, 33, 100].map(held),
+    },
   },
-  { id: id(91), instance: [id(5)], name: "glass's own", body: {} },
+  { id: glassIds.own, instance: [glassIds.shape], name: "glass's own", body: {} },
 ];
 
 const made: string[] = [];

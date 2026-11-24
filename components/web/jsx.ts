@@ -1,5 +1,6 @@
 // TSX for components on the web: markup that becomes the page's own elements, with no
-// framework between. A tag is an element or a function of its props. `on…` props given a
+// framework between. The compiler turns every tag into a call of h (tsconfig.json,
+// jsxFactory), so each component imports h though it never names it. A tag is an element or a function of its props. `on…` props given a
 // function listen, named as the browser names the event, through the chassis, so a
 // render laid over another hands its handlers to the nodes kept (morph.ts). Every other
 // attribute is set as written, `false` leaving it off except where the attribute speaks

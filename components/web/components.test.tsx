@@ -10,12 +10,15 @@ import { cleanUp, id, notes, shipped } from "../../engine/uses/fixture.ts";
 import type { Value } from "../../engine/read/values.ts";
 import { buffer } from "../../stores/buffer/buffer.ts";
 import { begun, typed } from "../../stores/buffer/string.ts";
-import { addressed } from "../../site/address.ts";
+import type { Scope } from "../../integrations/location/location.ts";
+import startLocation from "../../integrations/location/machine.ts";
 import { applying, found, type Glass } from "../../language/shipped.ts";
 import { draw, drawingsAt, type Drawer, type Realization } from "../../chassis/web/chassis.ts";
 import { inspecting } from "../../site/inspector.tsx";
 import { finder } from "../../chassis/web/find.ts";
-import { components, namesOf, realizedIn, webComponents } from "./realized.ts";
+import { realizedOn } from "../../chassis/web/realized.ts";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 
 beforeAll(() => {
   if (!globalThis.document) GlobalRegistrator.register({ url: "https://glass.test/next/" });
@@ -45,6 +48,21 @@ function counting() {
   return { count, seen };
 }
 
+// What the tests name of glass, by route.
+const components = {
+  Value: "components/Value",
+  List: "components/List",
+  Brief: "components/Brief",
+  Choose: "components/Choose",
+  Problem: "components/Problem",
+  Reader: "components/Reader",
+  row: "interface/row",
+};
+
+// A component's code, loaded from its source, by its path from the repository's root.
+const repo = join(import.meta.dir, "../..");
+const load = (path: string) => import(join(repo, path)).then((module) => module.default);
+
 describe("the page's read over glass, the interface shipped", () => {
   // An engine over glass, what glass ships found by its routes, and the page's way of
   // drawing a read over them.
@@ -52,7 +70,11 @@ describe("the page's read over glass, the interface shipped", () => {
     const { engine } = await shipped();
     const glass = await found((read) => engine.read(read));
     const own = await found((read) => engine.read(read), components);
-    const told = await webComponents((read) => engine.read(read));
+    const told = await realizedOn((read) => engine.read(read), glass, "web", load, {
+      choose: components.Choose,
+      fallback: components.Value,
+      problem: components.Problem,
+    });
     const find = finder((read: Read) => engine.read(read), glass, [...told.realized.keys()], told.fallback);
     const parsed = async (text: string) => {
       const answer = await engine.read(applying(glass, "parse", text));
@@ -73,7 +95,7 @@ describe("the page's read over glass, the interface shipped", () => {
     await settled(() => see()?.textContent === "Second");
     expect(into.querySelector("h1")!.textContent).toBe("First");
     expect(into.querySelector(".words")!.textContent).toBe("Glass holds holons");
-    expect(see()!.getAttribute("href")).toBe(`?q=@${notes.second}`);
+    expect(see()!.getAttribute("href")).toBe(`/?q=@${notes.second}`);
     stop();
   });
 
@@ -91,25 +113,34 @@ describe("the page's read over glass, the interface shipped", () => {
     expect(await find([{ $ref: notes.brief }, 3])).toEqual({ component: own.Value, by: "fallback" });
   });
 
-  test("each realization names a component without a body, and each such component has a realization", async () => {
-    const { engine, glass, own, told } = await page();
-    const answer = await engine.read(applying(glass, "parse", "@glass:components"));
-    if (!("value" in answer)) throw new Error(answer.problem);
-    const components = await engine.read(answer.value as unknown as Read);
-    const held = "value" in components ? await engine.read(applying(glass, "holon", components.value)) : null;
-    const ids = ((held && "value" in held ? (held.value as any).body.holds : []) as { $ref: string }[]).map(
-      ({ $ref }) => $ref,
+  test("every component without a body names its code on the web, which draws it by its default export", async () => {
+    const { engine, glass, told } = await page();
+    const answer = await engine.read(
+      applying(
+        glass,
+        "parse",
+        `find(?c, [?c, "instance", @glass:interface/component]) | map(c => {name: c.name, body: c.body, code: c.realized.web})`,
+      ),
     );
-    const bodiless: string[] = [];
-    for (const id of ids) {
-      const read = await engine.read(applying(glass, "holon", { $ref: id }));
-      const holon = "value" in read ? (read.value as any) : null;
-      if (holon && holon.body.body === undefined) bodiless.push(holon.name as string);
-    }
-    expect(bodiless.length).toBeGreaterThan(0);
-    const realized = [...realizedIn(own).keys()];
-    expect(bodiless.sort()).toEqual(realized.map((id) => namesOf(own).get(id) ?? id).sort());
-    for (const id of realized) expect(ids).toContain(id);
+    if (!("value" in answer)) throw new Error(answer.problem);
+    const each = await engine.read(answer.value as unknown as Read);
+    if (!("value" in each)) throw new Error(each.problem);
+    const all = each.value as { name: string; body: unknown; code: string | null }[];
+
+    expect(
+      all
+        .filter(({ body }) => body === null)
+        .map(({ name }) => name)
+        .sort(),
+    ).toEqual(
+      all
+        .filter(({ code }) => code)
+        .map(({ name }) => name)
+        .sort(),
+    );
+    for (const { code } of all.filter(({ code }) => code)) expect(existsSync(join(repo, code!))).toBe(true);
+    expect([...told.realized.values()].every((realization) => typeof realization === "function")).toBe(true);
+    expect(told.realized.size).toBe(all.filter(({ code }) => code).length);
   });
 
   test("a brief is read as its name, its flow, a brief in its flow as a link, and its sections", async () => {
@@ -126,10 +157,10 @@ describe("the page's read over glass, the interface shipped", () => {
     expect(into.querySelector(".brief p")!.classList.contains("lede")).toBe(false);
     // A brief in its flow is a card leading to it, saying what it is.
     const face = into.querySelector<HTMLAnchorElement>(".brief .face a.card")!;
-    expect(face.getAttribute("href")).toBe(`?q=@${notes.inner}`);
+    expect(face.getAttribute("href")).toBe(`/?q=@${notes.inner}`);
     await settled(() => face.querySelector(".card-kind")!.textContent === "brief · in glass");
     expect(face.querySelector(".card-name")!.textContent).toBe("Inner");
-    expect(into.querySelector(".brief h2 a")!.getAttribute("href")).toBe(`?q=@${notes.part}`);
+    expect(into.querySelector(".brief h2 a")!.getAttribute("href")).toBe(`/?q=@${notes.part}`);
     stop();
   });
 
@@ -170,8 +201,8 @@ describe("the page's read over glass, the interface shipped", () => {
     // Home first, then each whole holding it.
     const wholes = [...into.querySelectorAll<HTMLAnchorElement>(".trail a")];
     expect(wholes.map((a) => a.textContent)).toEqual(["Glass", "glass"]);
-    expect(wholes[0]!.getAttribute("href")).toBe("?q=");
-    expect(wholes[1]!.getAttribute("href")).toBe(`?q=@${id(90)}`);
+    expect(wholes[0]!.getAttribute("href")).toBe("/");
+    expect(wholes[1]!.getAttribute("href")).toBe(`/?q=@${id(90)}`);
     stop();
   });
 
@@ -289,13 +320,13 @@ describe("the page's read over glass, the interface shipped", () => {
     const { into, stop } = await reading("");
     await settled(() => into.querySelector(".card .card-name")?.textContent === "glass");
     expect(into.querySelector(".start h1")!.textContent).toBe("Glass");
-    expect(into.querySelector(".card")!.getAttribute("href")).toBe(`?q=@${id(90)}`);
+    expect(into.querySelector(".card")!.getAttribute("href")).toBe(`/?q=@${id(90)}`);
     stop();
   });
 
   test("a card says what its holon is: a whole, how many it holds", async () => {
     const { into, stop } = await reading("");
-    const glass = () => into.querySelector<HTMLAnchorElement>(`.card[href="?q=@${id(90)}"]`);
+    const glass = () => into.querySelector<HTMLAnchorElement>(`.card[href="/?q=@${id(90)}"]`);
     await settled(() => glass()?.querySelector(".card-says")?.textContent === "12 held");
     expect(glass()!.querySelector(".card-kind")!.textContent).toBe("store");
     stop();
@@ -417,7 +448,7 @@ describe("the page's read over glass, the interface shipped", () => {
     expect(panel.querySelector(".shows .name")!.textContent).toBe("Second");
     expect(panel.querySelector(".shows code")!.textContent).toBe("@Second");
     expect(panel.textContent).toContain(notes.second);
-    expect(panel.querySelector("footer a")!.getAttribute("href")).toBe(`?q=@${own.Reader}`);
+    expect(panel.querySelector("footer a")!.getAttribute("href")).toBe(`/?q=@${own.Reader}`);
 
     window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     expect(document.querySelector(".inspector")).toBeNull();
@@ -492,10 +523,123 @@ describe("the page's read over glass, the interface shipped", () => {
     stop();
   });
 
-  test("a text's steps are drawn as pills; × takes one out, the text and the address following", async () => {
-    history.replaceState(null, "", "/next/?q=1 | add(2) | add(3)");
-    const { engine, glass, holon, into, stop, held, pills } = await reading("");
-    const unaddressed = await addressed(engine, glass, holon, into);
+  // The page as it stands: the browser's address projected by the location, and Reader
+  // drawn over its param q.
+  async function located(address: string, scope: Scope = "page") {
+    history.replaceState(null, "", address);
+    const { engine, glass, into, drawing } = await page();
+    await engine.mount("location", await startLocation({ scope }), { write: true });
+    const drawn = await drawing('Reader(get(@location:params, "q"))');
+    // The drawing stopped and the location let go, so it follows the browser no longer.
+    const stop = () => {
+      drawn();
+      void engine.unmount("location");
+    };
+    const asked = await engine.read(applying(glass, "parse", 'get(@location:params, "q")'));
+    if (!("value" in asked)) throw new Error(asked.problem);
+    const held = async () => {
+      const answer = await engine.read(asked.value as unknown as Read);
+      return "value" in answer ? answer.value : answer.problem;
+    };
+    const pills = () => [...into.querySelectorAll(".pill .said")].map((said) => said.textContent);
+    return { engine, glass, into, stop, held, pills };
+  }
+
+  test("the location projects the address, what it asks and the history, and a param written moves the address", async () => {
+    const { engine, glass, stop } = await located("/next/?q=@First&shown=cards#top");
+    const read = async (text: string) => {
+      const asked = await engine.read(applying(glass, "parse", text));
+      if (!("value" in asked)) throw new Error(asked.problem);
+      const answer = await engine.read(asked.value as unknown as Read);
+      if (!("value" in answer)) throw new Error(answer.problem);
+      return answer.value;
+    };
+    expect(await read('@location:address | holon | get("body")')).toEqual({
+      origin: location.origin,
+      path: "/next/",
+      hash: "#top",
+    });
+    expect(await read('@location:params | holon | get("body")')).toEqual({ q: "@First", shown: "cards" });
+    expect(await read('get(@location:history, "length")')).toBe(history.length);
+
+    const steps = history.length;
+    const params = await read("@location:params | holon");
+    const done = await engine.commit({
+      holons: [{ ...(params as any), body: { q: "@Second", shown: "cards" } }],
+      says: "asked anew",
+      at: {},
+    });
+    expect("refused" in done).toBe(false);
+    expect(decodeURIComponent(location.search)).toBe("?q=@Second&shown=cards");
+    expect(location.hash).toBe("#top");
+    expect(history.length).toBe(steps + 1);
+
+    const entries = await engine.commit({
+      holons: [{ ...((await read("@location:history | holon")) as any), body: { length: 1 } }],
+      says: "the history rewritten",
+      at: {},
+    });
+    // The location refuses it, and so it lands nowhere.
+    expect(entries).toMatchObject({ landed: {}, missed: { location: { refused: [{ rule: "location" }] } } });
+    stop();
+  });
+
+  test("a location takes only its page, unless it takes its whole origin, as a single-page app", async () => {
+    for (const scope of ["page", "origin"] as const) {
+      const { engine, glass, stop } = await located("/next/?q=@First", scope);
+      const asked = await engine.read(applying(glass, "parse", "@location:address | holon"));
+      if (!("value" in asked)) throw new Error(asked.problem);
+      const address = await engine.read(asked.value as unknown as Read);
+      if (!("value" in address)) throw new Error(address.problem);
+      const moving = (body: Record<string, string>) =>
+        engine.commit({ holons: [{ ...(address.value as any), body }], says: "moved", at: {} });
+
+      const elsewhere = await moving({ origin: "https://elsewhere.example", path: "/", hash: "" });
+      expect(elsewhere).toMatchObject({
+        landed: {},
+        missed: { location: { refused: [{ rule: "location" }] } },
+      });
+
+      const other = await moving({ origin: location.origin, path: "/other/", hash: "" });
+      if (scope === "page") {
+        expect(other).toMatchObject({
+          landed: {},
+          missed: { location: { refused: [{ rule: "location" }] } },
+        });
+        expect(location.pathname).toBe("/next/");
+      } else {
+        expect(other).toMatchObject({ landed: { location: {} } });
+        expect(location.pathname).toBe("/other/");
+        expect(decodeURIComponent(location.search)).toBe("?q=@First");
+      }
+      stop();
+    }
+  });
+
+  test("a location let go follows the browser no longer", async () => {
+    const { engine, glass, stop } = await located("/next/?q=@First");
+    const heads: unknown[] = [];
+    const parsed = await engine.read(applying(glass, "parse", 'get(@location:params, "q")'));
+    if (!("value" in parsed)) throw new Error(parsed.problem);
+    const unsubscribe = await engine.subscribe(parsed.value as unknown as Read, (answer) =>
+      heads.push("value" in answer ? answer.value : answer.problem),
+    );
+    history.replaceState(null, "", "/next/?q=@Second");
+    window.dispatchEvent(new Event("popstate"));
+    await settled(() => heads.at(-1) === "@Second");
+
+    unsubscribe();
+    stop();
+    await Bun.sleep(20);
+    const told = heads.length;
+    history.replaceState(null, "", "/next/?q=@First");
+    window.dispatchEvent(new Event("popstate"));
+    await Bun.sleep(50);
+    expect(heads.length).toBe(told);
+  });
+
+  test("a text's steps are drawn as pills; × takes one out, the address following as a step", async () => {
+    const { into, stop, held, pills } = await located("/next/?q=1 | add(2) | add(3)");
 
     await settled(() => pills().length === 3 && pills().every(Boolean));
     expect(pills()).toEqual(["1", "add(2)", "add(3)"]);
@@ -508,17 +652,13 @@ describe("the page's read over glass, the interface shipped", () => {
     expect(pills()).toEqual(["1", "add(3)"]);
     // The input holds none of what is asked: the pills say it.
     expect(into.querySelector<HTMLInputElement>(".expression-input input")!.value).toBe("");
-    await settled(() => history.length === steps + 1);
+    expect(history.length).toBe(steps + 1);
     expect(decodeURIComponent(location.search)).toBe("?q=add(1, 3)");
-
-    unaddressed();
     stop();
   });
 
-  test("× says the holons left by their names, and the last one taken out leaves the text blank", async () => {
-    history.replaceState(null, "", `/next/?q=@First | get("see")`);
-    const { engine, glass, holon, into, stop, held, pills } = await reading("");
-    const unaddressed = await addressed(engine, glass, holon, into);
+  test("× says the holons left by their names, and the last one taken out leaves the address blank", async () => {
+    const { into, stop, held, pills } = await located(`/next/?q=@First | get("see")`);
 
     await settled(() => pills().length === 2 && pills().every(Boolean));
     expect(pills()).toEqual(["@First", 'get("see")']);
@@ -526,38 +666,62 @@ describe("the page's read over glass, the interface shipped", () => {
     into.querySelectorAll<HTMLButtonElement>(".pill button")[1]!.click();
     await settled(() => pills().length === 1);
     expect(await held()).toBe("@First");
-    await settled(() => decodeURIComponent(location.search) === "?q=@First");
+    expect(decodeURIComponent(location.search)).toBe("?q=@First");
 
     into.querySelector<HTMLButtonElement>(".pill button")!.click();
     await settled(() => pills().length === 0);
-    expect(await held()).toBe("");
+    // An empty param is no param: the address asks nothing.
+    expect(await held()).toBe(null);
     // The answer before stays until the start is read, then the start alone is shown.
     await settled(() => into.querySelector(".answered header.start"));
     expect(into.querySelector(".note")).toBeNull();
-    await settled(() => location.search === "");
-
-    unaddressed();
+    expect(location.search).toBe("");
     stop();
   });
 
-  test("the address types into the buffer, and following a link in the page is a step of its own", async () => {
-    history.replaceState(null, "", "/next/?q=@First");
-    const { engine, glass, holon, into, stop, held } = await reading("");
-    const unaddressed = await addressed(engine, glass, holon, into);
-
+  test("the browser moving through its history moves the query", async () => {
+    const { into, stop, held } = await located("/next/?q=@First");
     expect(await held()).toBe("@First");
-    const see = () => into.querySelector<HTMLAnchorElement>(".holon .fields a[data-ref]");
-    await settled(() => see()?.textContent === "Second");
-    const steps = history.length;
+    await settled(() => into.querySelector("h1")?.textContent === "First");
 
-    see()!.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, button: 0 }));
+    history.replaceState(null, "", "/next/?q=@Second");
+    window.dispatchEvent(new Event("popstate"));
     await settled(() => into.querySelector("h1")?.textContent === "Second");
-    // The link leads by the holon's id, and is typed as the language says it: by name.
-    expect(decodeURIComponent(location.search)).toBe("?q=@Second");
-    expect(history.length).toBe(steps + 1);
     expect(await held()).toBe("@Second");
-
-    unaddressed();
     stop();
+  });
+
+  test("with the Navigation API, a link followed within the scope moves the location, no page loaded", async () => {
+    const navigation = Object.assign(new EventTarget(), {
+      entries: () => [{ url: location.href, key: "0", index: 0 }],
+      currentEntry: { url: location.href, key: "0", index: 0 },
+    });
+    (globalThis as { navigation?: EventTarget }).navigation = navigation;
+    try {
+      const { into, stop, held } = await located("/next/?q=@First", "origin");
+      const see = () => into.querySelector<HTMLAnchorElement>(".holon .fields a[data-ref]");
+      await settled(() => see()?.textContent === "Second");
+
+      let intercepted = false;
+      const going = Object.assign(new Event("navigate"), {
+        destination: { url: new URL(see()!.getAttribute("href")!, location.href).href },
+        canIntercept: true,
+        hashChange: false,
+        downloadRequest: null,
+        navigationType: "push",
+        intercept: () => void (intercepted = true),
+      });
+      navigation.dispatchEvent(going);
+      expect(intercepted).toBe(true);
+      // The browser, the navigation taken, commits the address and says so.
+      history.pushState(null, "", going.destination.url);
+      navigation.dispatchEvent(new Event("currententrychange"));
+
+      await settled(() => into.querySelector("h1")?.textContent === "Second");
+      expect(await held()).toBe(`@${notes.second}`);
+      stop();
+    } finally {
+      delete (globalThis as { navigation?: EventTarget }).navigation;
+    }
   });
 });

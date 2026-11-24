@@ -58,11 +58,12 @@ describe("the interface shipped", () => {
     expect(await valueOf(engine, 'get(@glass:interface/row, "says")')).toContain("Side by side");
   });
 
-  test("a component declares what it says, its input, and its body, and nothing more", async () => {
+  test("a component declares what it says, its input, its body, and its code on each surface, and nothing more", async () => {
     const { engine } = await shipped();
     expect(await valueOf(engine, 'keys(get(@glass:interface/component, "mould"))')).toEqual([
       "body",
       "input",
+      "realized",
       "says",
     ]);
 
@@ -71,7 +72,7 @@ describe("the interface shipped", () => {
       'map(get(@glass:components, "holds"), (c) => [get(c, "name"), keys(get(holon(c), "body"))])',
     )) as [string, string[]][];
     for (const [, keys] of declared)
-      expect(keys.filter((key) => !["says", "input", "body"].includes(key))).toEqual([]);
+      expect(keys.filter((key) => !["says", "input", "body", "realized"].includes(key))).toEqual([]);
     expect(declared.map(([name]) => name).sort()).toEqual(
       [
         "Answer",

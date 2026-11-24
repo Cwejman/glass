@@ -41,13 +41,6 @@ export function buffer(): Store {
     if (had.get(asked.act)?.commit !== asked.commit)
       throw new Error(`a head this buffer never had: ${asked.commit}`);
 
-    if ("holon" in question) return lines(kept([question.holon]).map(lineOf));
-    if ("holons" in question) return lines(kept(question.holons).map(lineOf));
-    if ("address" in question) return lines(kept([addressed(...question.address)]).map(lineOf));
-    if ("whole" in question) return lines(whole(question.whole).map(lineOf));
-    if ("facts" in question) return lines(facts(question.facts).map(json));
-    if ("said" in question) return lines(said(question.said).map(json));
-    if ("versions" in question) return lines(kept([question.versions]).map(lineOf));
     if ("act" in question) {
       const present = question.act === head?.act;
       return lines(
@@ -55,8 +48,11 @@ export function buffer(): Store {
       );
     }
 
-    const since = question.acts.since;
-    return lines(latest && latest.hash !== since ? [json(latest)] : []);
+    if ("acts" in question) {
+      const since = question.acts.since;
+      return lines(latest && latest.hash !== since ? [json(latest)] : []);
+    }
+    return present(holons, question);
   }
 
   // Takes the act over the present, unless it was judged against another head. The head
@@ -98,11 +94,30 @@ export function buffer(): Store {
     return () => void listeners.delete(listener);
   }
 
-  // ---- The present, asked
+  return { read, offer, subscribe };
+}
+
+// ---- The present, asked
+
+// What a store holding only the present answers of it: a holon, many, one by address, a
+// whole, facts, the holons saying a word, and a holon's versions, its present alone. A
+// buffer answers so, and so may an integration holding a present of its own.
+export function present(
+  holons: ReadonlyMap<string, Holon>,
+  question: Exclude<Question, { act: string } | { acts: { since?: string } }>,
+): Uint8Array {
+  if ("holon" in question) return lines(kept([question.holon]).map(lineOf));
+  if ("holons" in question) return lines(kept(question.holons).map(lineOf));
+  if ("address" in question) return lines(kept([addressed(...question.address)]).map(lineOf));
+  if ("whole" in question) return lines(whole(question.whole).map(lineOf));
+  if ("facts" in question) return lines(facts(question.facts).map(json));
+  if ("said" in question) return lines(said(question.said).map(json));
+  return lines(kept([question.versions]).map(lineOf));
 
   // The holons kept by these ids, in the order given, those not kept left out.
-  const kept = (ids: readonly (string | undefined)[]) =>
-    ids.flatMap((id) => (id !== undefined && holons.has(id) ? [holons.get(id)!] : []));
+  function kept(ids: readonly (string | undefined)[]) {
+    return ids.flatMap((id) => (id !== undefined && holons.has(id) ? [holons.get(id)!] : []));
+  }
 
   // The holon a whole holds under a name.
   function addressed(whole: string, name: string) {
@@ -149,8 +164,6 @@ export function buffer(): Store {
       .sort((x, y) => (x.e < y.e ? -1 : x.e > y.e ? 1 : 0))
       .filter((fact, i, all) => i === 0 || all[i - 1]!.e !== fact.e);
   }
-
-  return { read, offer, subscribe };
 }
 
 const json = (value: unknown) => JSON.stringify(value);

@@ -12,7 +12,7 @@
 //
 // The browser's own menu is still there with shift held.
 
-import { hrefTo } from "../chassis/web/href.ts";
+import { hrefTo } from "../components/web/link.ts";
 import { h, type Child } from "../components/web/jsx.ts";
 import type { Engine, Read } from "../engine/engine.ts";
 import { isRecord, isRef, ref, type Value } from "../engine/read/values.ts";

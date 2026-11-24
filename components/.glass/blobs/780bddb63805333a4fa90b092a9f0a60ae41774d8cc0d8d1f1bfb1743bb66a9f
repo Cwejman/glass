@@ -1,0 +1,26 @@
+{"body":{"body":{"$holds":true,"$ref":"1M7Z0CP5X2T0001"},"input":[{"$holds":true,"$ref":"1M7Z0CP5X2T0000"}],"says":"A text searched by: its steps as pills, each to be taken out, beside the text typed into."},"id":"1M6YD90YH1TJ00T","instance":["1M6YD90YH1TJ003"],"name":"Search"}
+{"body":{"input":[{"$holds":true,"$ref":"1M7Z0CF9HHJN00V"},{"$holds":true,"$optional":true,"$ref":"1M7Z0CF9HHJN00W"}],"realized":{"web":"components/web/list.tsx"},"says":"A list, each item drawn in turn by what draws it: in a column, or in a row where it is given one."},"id":"1M6YD90YH1TJ00V","instance":["1M6YD90YH1TJ003"],"name":"List"}
+{"body":{"input":[{"$holds":true,"$ref":"1M7Z0CF9HHJN012"}],"realized":{"web":"components/web/brief.tsx"},"says":"A brief: its name, its flow, and its sections read through after it, each with the flow of its own."},"id":"1M6YD90YH1TJ00W","instance":["1M6YD90YH1TJ003"],"name":"Brief"}
+{"body":{"body":{"$holds":true,"$ref":"1M7Z0CP5X2T0008"},"input":[{"$holds":true,"$ref":"1M7Z0CP5X2T0007"}],"says":"What one is looking at: the search for it, above what it gives."},"id":"1M6YD90YH1TJ00Y","instance":["1M6YD90YH1TJ003"],"name":"Reader"}
+{"body":{"input":[{"$holds":true,"$ref":"1M7Z0CF9HHJN00T"}],"realized":{"web":"components/web/value.tsx"},"says":"What a way of looking gives where it gives no set, drawn as what it is: a number, words, a list item under item, a record field by field, any holon in it as a face."},"id":"1M760BANMFZJ000","instance":["1M6YD90YH1TJ003"],"name":"Value"}
+{"body":{"input":[{"$holds":true,"$ref":"1M7Z0CF9HHJN00X"}],"realized":{"web":"components/web/answer.tsx"},"says":"A read, drawn as what it gives, again whenever that changes."},"id":"1M7Z0CF9HHJN00A","instance":["1M6YD90YH1TJ003"],"name":"Answer"}
+{"body":{"input":[{"$holds":true,"$ref":"1M7Z0CF9HHJN00Y"}],"realized":{"web":"components/web/expression-input.tsx"},"says":"A text, typed into: what is typed proposed back as what it is given, on Enter."},"id":"1M7Z0CF9HHJN00B","instance":["1M6YD90YH1TJ003"],"name":"ExpressionInput"}
+{"body":{"input":[{"$holds":true,"$ref":"1M7Z0CF9HHJN00Z"}],"realized":{"web":"components/web/pill.tsx"},"says":"A step of a read, said as text, which may be taken out of the read."},"id":"1M7Z0CF9HHJN00C","instance":["1M6YD90YH1TJ003"],"name":"Pill"}
+{"body":{"input":[{"$holds":true,"$ref":"1M7Z0CF9HHJN010"},{"$holds":true,"$ref":"1M7Z0CF9HHJN011"}],"realized":{"web":"components/web/choose.tsx"},"says":"The components that could draw a value, for the one drawing it to be chosen: none is guessed."},"id":"1M7Z0CF9HHJN00D","instance":["1M6YD90YH1TJ003"],"name":"Choose"}
+{"body":{},"id":"1M7Z0CF9HHJN00T","instance":["1M7Z0CEYH385001"],"name":"value"}
+{"body":{},"id":"1M7Z0CF9HHJN00V","instance":["1M7Z0CEYH385005"],"name":"items"}
+{"body":{},"id":"1M7Z0CF9HHJN00W","instance":["1M7Z0CF9HHJN000"],"name":"direction"}
+{"body":{},"id":"1M7Z0CF9HHJN00X","instance":["1M7Z0CEYH385006"],"name":"read"}
+{"body":{},"id":"1M7Z0CF9HHJN00Y","instance":["1M7Z0CEYH385003"],"name":"text"}
+{"body":{},"id":"1M7Z0CF9HHJN00Z","instance":["1M7Z0CEYH385006"],"name":"step"}
+{"body":{},"id":"1M7Z0CF9HHJN010","instance":["1M7Z0CEYH385005"],"name":"components"}
+{"body":{},"id":"1M7Z0CF9HHJN011","instance":["1M7Z0CEYH385001"],"name":"value"}
+{"body":{},"id":"1M7Z0CF9HHJN012","instance":["1M6YBY3G000000X"],"name":"brief"}
+{"body":{},"id":"1M7Z0CP5X2T0000","instance":["1M7Z0CEYH385003"],"name":"text"}
+{"body":{"args":[[{"$holds":true,"$ref":"1M7Z0CP5X2T0002"},{"$holds":true,"$ref":"1M7Z0CP5X2T0006"}],{"$ref":"1M7Z0CF9HHJN001"}],"fn":{"$ref":"1M6YD90YH1TJ00V"}},"id":"1M7Z0CP5X2T0001","instance":["1M7Z0CEYH385000"]}
+{"body":{},"id":"1M7Z0CP5X2T0007","instance":["1M7Z0CEYH385003"],"name":"text"}
+{"body":{"args":[[{"$holds":true,"$ref":"1M7Z0CP5X2T0009"},{"$holds":true,"$ref":"1M7Z0CP5X2T000A"}]],"fn":{"$ref":"1M6YD90YH1TJ00V"}},"id":"1M7Z0CP5X2T0008","instance":["1M7Z0CEYH385000"]}
+{"body":{"input":[{"$holds":true,"$ref":"1M86ADH5NMQX001"}],"realized":{"web":"components/web/problem.tsx"},"says":"What failed, said in place of the drawing that failed: drawn by the chassis wherever what a drawing is given, a read it asked, or its making fails."},"id":"1M86ADH5NMQX000","instance":["1M6YD90YH1TJ003"],"name":"Problem"}
+{"body":{},"id":"1M86ADH5NMQX001","instance":["1M7Z0CEYH385003"],"name":"problem"}
+{"body":{"contents":[{"$holds":true,"$ref":"1M6YD90YH1TJ00T"},{"$holds":true,"$ref":"1M760BANMFZJ000"},{"$holds":true,"$ref":"1M6YD90YH1TJ00V"},{"$holds":true,"$ref":"1M6YD90YH1TJ00W"},{"$holds":true,"$ref":"1M6YD90YH1TJ00Y"},{"$holds":true,"$ref":"1M7Z0CF9HHJN00A"},{"$holds":true,"$ref":"1M7Z0CF9HHJN00B"},{"$holds":true,"$ref":"1M7Z0CF9HHJN00C"},{"$holds":true,"$ref":"1M7Z0CF9HHJN00D"},{"$holds":true,"$ref":"1M86ADH5NMQX000"}],"dependencies":[{"$holds":true,"$ref":"1M87KXYJ5000001"}],"shape":{"$ref":"1M75HB35AC75003"}},"id":"1M87KXYJ5000000","instance":["1M75HB35AC75002"],"name":"components"}
+{"body":{"shape":{"$ref":"1M75HB35AC75003"}},"id":"1M87KXYJ5000001","instance":["1M75HB35AC75001"],"name":"glass"}

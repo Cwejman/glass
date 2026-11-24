@@ -66,14 +66,16 @@ export function fieldOf(stores: Stores, heads: Heads, carried: readonly Holon[] 
   const answers = new Map<string, Promise<unknown[]>>();
 
   // A store's answer to a question at the read's head, as the values its lines say. A
-  // store with no head yet holds nothing.
+  // store with no head yet holds nothing; one unmounted since the read began fails it.
   function ask(name: string, question: Question): Promise<unknown[]> {
     asked.add(name);
     const head = heads[name] as Head | null | undefined;
     if (!head) return Promise.resolve([]);
+    const mounted = stores.get(name);
+    if (!mounted) return Promise.reject(new Error(`the store ${name} was unmounted as it was read`));
 
     const key = `${name}\u0000${JSON.stringify(question)}`;
-    if (!answers.has(key)) answers.set(key, stores.get(name)!.store.read(head, question).then(linesOf));
+    if (!answers.has(key)) answers.set(key, mounted.store.read(head, question).then(linesOf));
     return answers.get(key)!;
   }
 

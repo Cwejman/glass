@@ -45,6 +45,7 @@ async function committed(holons: Holon[], says: string) {
 
 beforeAll(async () => {
   await Bun.write(join(site, "index.html"), '<html lang="en"></html>');
+  await Bun.write(join(site, "404.html"), '<html lang="en"></html>');
   await committed([{ id: "1M75HB35AC75004", instance: [], name: "notes", body: {} }], "a note");
   hosted = host({ port: 0, stores: { notes: folder }, site });
 });
@@ -82,4 +83,11 @@ test("nothing else of a store's folder is served, nor a store not hosted", async
   expect((await fetch(`${hosted.url}strata/notes/blobs/not-a-blob`)).status).toBe(404);
   expect((await fetch(`${hosted.url}strata/notes/index/blobs/x/y`)).status).toBe(404);
   expect((await fetch(`${hosted.url}strata/elsewhere/head`)).status).toBe(404);
+});
+
+test("a path holding nothing is served the page, as 404.html, so the page opens at any path", async () => {
+  const served = await fetch(`${hosted.url}some/where/deep`);
+  expect(served.status).toBe(404);
+  expect(served.headers.get("content-type")).toContain("text/html");
+  expect(await served.text()).toBe('<html lang="en"></html>');
 });

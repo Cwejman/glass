@@ -44,7 +44,8 @@ export type Glass = Found<typeof language>;
 export type Applied = Exclude<keyof Glass, "use" | "function" | "store" | "shape">;
 
 // What glass ships at routes, found in the store glass is mounted as: the language by
-// default, or any table of routes, as the components their own.
+// default, or any table of routes, as the components their own; a route naming its store,
+// components:Pill, is found there.
 export async function found<Routes extends Record<string, string> = typeof language>(
   read: Engine["read"],
   routes: Routes = language as unknown as Routes,
@@ -52,7 +53,7 @@ export async function found<Routes extends Record<string, string> = typeof langu
 ): Promise<Found<Routes>> {
   const declared = { says: "", shape: "json", optional: true };
   const text = `{${Object.entries(routes)
-    .map(([key, route]) => `${key}: @${store}:${route}`)
+    .map(([key, route]) => `${key}: @${route.includes(":") ? route : `${store}:${route}`}`)
     .join(", ")}}`;
 
   const asked = await read({
