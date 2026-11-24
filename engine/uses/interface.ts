@@ -61,7 +61,7 @@ const says = {
   Reader: "What one is looking at: the search for it, above what it gives.",
   Search: "A text searched by: its steps as pills, each to be taken out, beside the text typed into.",
   Answer: "A read, drawn as what it gives, again whenever that changes.",
-  ExpressionInput: "A text, typed into: each keystroke proposed back as what it is given.",
+  ExpressionInput: "A text, typed into: what is typed proposed back as what it is given, on Enter.",
   Pill: "A step of a read, said as text, which may be taken out of the read.",
   List: "A list, each item drawn in turn by what draws it: in a column, or in a row where it is given one.",
   Choose: "The components that could draw a value, for the one drawing it to be chosen: none is guessed.",
